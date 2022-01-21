@@ -30,7 +30,6 @@ class Mesh:
     # Running Cell Splitting for Land
     self._isLand()
 
-
   def _isLand(self):
       X = self.meshinfo['CoastMask']['X']
       Y = self.meshinfo['CoastMask']['Y']
@@ -57,7 +56,7 @@ class Mesh:
               self._cells.append(self.cells[0])
               self.cells.pop(0)
               continue              
-            tmpCells = []; runningValues=0;
+            tmpCells = []; runningValues=0
             for pt in Points:
               tmpCell = CellBox(pt[0],pt[1],Pointsdx,Pointsdy)
               tmpCell._leafDepth = self.cells[0]._leafDepth + 1
@@ -74,7 +73,7 @@ class Mesh:
             else:
               self.cells.pop(0)
               self.cells = self.cells + tmpCells 
-         self.cells = self._cells.copy(); self._cells=None;
+         self.cells = self._cells.copy(); self._cells=None
 
 
   def IceInformation(self):
@@ -152,3 +151,11 @@ class Mesh:
         if touchingBool == True:
             neighbours.append(jj)
       return neighbours
+
+
+  def AddWaypoints(self):
+    '''
+      Adding waypoint information
+    '''
+
+
