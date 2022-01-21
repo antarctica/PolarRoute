@@ -41,7 +41,3 @@ class CellBox:
       
   def _splitDomain(self):
     return np.array([[self.x,self.y],[self.x,self.cy],[self.cx,self.cy],[self.cx,self.y]]), self.dx/2, self.dy/2 
-
-  def _change_centroid(self,cx,cy):
-    self.cx = cx
-    self.cy = cy

@@ -171,8 +171,9 @@ class TravelTime:
 
         # Initialising the Dijkstra Info Dictionary
         self.DijkstraInfo = {}
+        self.Paths = {}
             
-    def value(self,index,cells):
+    def value(self,index):
         '''
         Function for computing the shortest travel-time from a cell to its neighbours by applying the Newtonian method for optimisation
         
@@ -208,7 +209,7 @@ class TravelTime:
                 Cell_n.cy = Cell_n.cy#self.OptInfo['WayPoints']['Lat'].iloc[waypoint_list.index(neighbour_index)]
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if (Cell_n.value >= self.Mesh.meshinfo['IceExtent']['MaxProportion']) or (Cell_n.isLand):
+            if (Cell_n.value >= self.Mesh.meshinfo['IceExtent']['MaxProportion']) or (Cell_s.value >= self.Mesh.meshinfo['IceExtent']['MaxProportion']) or (Cell_n.isLand) or (Cell_s.isLand):
                 TravelTime[lp_index] = np.inf
 
             # Determine relative degree difference between source and neighbour
@@ -218,42 +219,54 @@ class TravelTime:
             
             # Longitude
             if (abs(df_x) > (Cell_s.dx/2)) and (abs(df_y) < (Cell_s.dy/2)):
-                u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
-                u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-                x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + np.sign(df_x)*Cell_s.dx,Cell_s.cy))
-                a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx - np.sign(df_x)*Cell_n.dx,Cell_n.cy))
-                Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx),Cell_n.cy))
-                y  = optimize.newton(_F,0.0,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                try:
+                    u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
+                    u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
+                    x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + np.sign(df_x)*Cell_s.dx,Cell_s.cy))
+                    a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx - np.sign(df_x)*Cell_n.dx,Cell_n.cy))
+                    Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx),Cell_n.cy))
+                    y  = optimize.newton(_F,0.0,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
+                    TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                except:
+                    TravelTime[lp_index] = np.inf
             # Latitude
             elif (abs(df_x) < Cell_s.dx/2) and (abs(df_y) > Cell_s.dy/2):
-                u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
-                u2 = np.sign(df_y)*Cell_n.vector[1]; v2 = Cell_n.vector[0]
-                x  = _Euclidean_distance( (Cell_s.cy,Cell_s.cx), (Cell_s.cy + np.sign(df_y)*Cell_s.dy,Cell_s.cx))
-                a  = _Euclidean_distance( (Cell_n.cy,Cell_n.cx), (Cell_n.cy - np.sign(df_y)*Cell_n.dy,Cell_n.cx))
-                Y  = _Euclidean_distance((Cell_s.cy + np.sign(df_y)*(Cell_n.dy + Cell_s.dy), Cell_s.cx), (Cell_s.cy + np.sign(df_y)*(Cell_n.dy + Cell_s.dy),Cell_n.cx))
-                y  = optimize.newton(_F,0.0,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                try:
+                    u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
+                    u2 = np.sign(df_y)*Cell_n.vector[1]; v2 = Cell_n.vector[0]
+                    x  = _Euclidean_distance( (Cell_s.cy,Cell_s.cx), (Cell_s.cy + np.sign(df_y)*Cell_s.dy,Cell_s.cx))
+                    a  = _Euclidean_distance( (Cell_n.cy,Cell_n.cx), (Cell_n.cy - np.sign(df_y)*Cell_n.dy,Cell_n.cx))
+                    Y  = _Euclidean_distance((Cell_s.cy + np.sign(df_y)*(Cell_n.dy + Cell_s.dy), Cell_s.cx), (Cell_s.cy + np.sign(df_y)*(Cell_n.dy + Cell_s.dy),Cell_n.cx))
+                    y  = optimize.newton(_F,0.0,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
+                    TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                except:
+                    TravelTime[lp_index] = np.inf
             # Corner
             else:
-                u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
-                u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-                x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + np.sign(df_x)*Cell_s.dx,Cell_s.cy))
-                a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx - np.sign(df_x)*Cell_n.dx,Cell_n.cy))
-                Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx),Cell_n.cy))
-                y  = np.sign((Cell_n.cy - Cell_s.cy))*(Cell_s.dy/2)
-                u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
-                TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                try:
+                    u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
+                    u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
+                    x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + np.sign(df_x)*Cell_s.dx,Cell_s.cy))
+                    a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx - np.sign(df_x)*Cell_n.dx,Cell_n.cy))
+                    Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx),Cell_n.cy))
+                    y  = np.sign((Cell_n.cy - Cell_s.cy))*(Cell_s.dy/2)
+                    u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
+                    TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                except:
+                    TravelTime[lp_index] = np.inf
 
         return neighbours, TravelTime
 
-    def optimize(self):
+    def optimize(self,verbrose=False):
         '''
         Determining the shortest path between all waypoints
         '''
         for wpt in self.OptInfo['WayPoints'].iterrows():
             wpt_name  = wpt[1]['Name']
-            wpt_index = wpt[1]['Index']
+            wpt_index = int(wpt[1]['Index'])
+            if verbrose:
+                print('=== Processing Waypoint = {} ==='.format(wpt_name))
+
             #Initialising a column array of all the indexs
             self.DijkstraInfo[wpt_name] = {}
             self.DijkstraInfo[wpt_name]['CellIndex']       = np.arange(len(self.Mesh.cells))
@@ -268,7 +281,7 @@ class TravelTime:
                 # Determining the argument with the next lowest value and hasn't been visited
                 idx = self.DijkstraInfo[wpt_name]['CellIndex'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)][np.argmin(self.DijkstraInfo[wpt_name]['Cost'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)])]
                 # Finding the cost of the nearest neighbours
-                Neighbour_index,Points,TT = self.value(idx)
+                Neighbour_index,TT = self.value(idx)
                 Neighbour_cost = TT + self.DijkstraInfo[wpt_name]['Cost'][idx]
                 # Determining if the visited time is visited    
                 for jj_v,jj in enumerate(Neighbour_index):
@@ -278,6 +291,26 @@ class TravelTime:
                 # Defining the graph point as visited
                 self.DijkstraInfo[wpt_name]['PositionLocked'][idx] = True
     
+        # Using the Dijkstra information, save the paths
+        self.Paths ={}
+        self.Paths['from']          = []
+        self.Paths['to']            = []
+        self.Paths['PathIndices']   = [] 
+        self.Paths['Cost']          = [] 
+        for wpt_a in self.OptInfo['WayPoints'].iterrows():
+            wpt_a_name  = wpt_a[1]['Name']
+            wpt_a_index = int(wpt_a[1]['Index'])
+            for wpt_b in self.OptInfo['WayPoints'].iterrows():
+                wpt_b_name  = wpt_b[1]['Name']
+                wpt_b_index = int(wpt_b[1]['Index'])
+                if not wpt_a_name == wpt_b_name:
+                    self.Paths['from'].append(wpt_a_name)
+                    self.Paths['to'].append(wpt_b_name)
+                    self.Paths['PathIndices'].append(self.DijkstraInfo[wpt_a_name]['Paths'][wpt_b_index])
+                    self.Paths['PathIndices'].append(self.DijkstraInfo[wpt_a_name]['Paths'][wpt_b_index])
+                    self.Paths['Cost'].append(self.DijkstraInfo[wpt_a_name]['Cost'][wpt_b_index])
+
+
     def smooth(self):
         '''
             Given the current optimum paths smooth the pathways smooth the pathway between based on Great-circle smoothing
