@@ -153,11 +153,26 @@ def _Euclidean_distance(origin, destination):
 
 
 class TravelTime:
-    def __init__(self,Mesh,Waypoints):
-        # Load in the current cell structure
-        self.Mesh = Mesh
+    def __init__(self,Mesh,OptInfo):
+        # Load in the current cell structure & Optimisation Info
+        self.Mesh    = Mesh
+        self.OptInfo = OptInfo
 
-    def value(self,index,ShipSpeed=26.6):
+        # Initialising Waypoint information
+        self.OptInfo['WayPoints']['Index'] = np.nan
+        for idx,wpt in enumerate(self.OptInfo['WayPoints'].iterrows()):
+            Long = wpt[1]['Long']
+            Lat  = wpt[1]['Lat']
+            for index, cell in enumerate(self.Mesh.cells):
+                if (Long>=cell.x) and (Long<=(cell.x+cell.dx)) and (Lat>=cell.y) and (Lat<=(cell.y+cell.dy)):
+                    break
+            self.OptInfo['WayPoints']['Index'].iloc[idx] = index
+
+
+        # Initialising the Dijkstra Info Dictionary
+        self.DijkstraInfo = {}
+            
+    def value(self,index,cells):
         '''
         Function for computing the shortest travel-time from a cell to its neighbours by applying the Newtonian method for optimisation
         
@@ -165,6 +180,10 @@ class TravelTime:
         index - Index of the cell to process
         
         Output:
+
+        Bugs/Alterations:
+            - Include travel-time referencing cx and cy instead of dx,dy to allow for off-centre waypoints
+            - Correct case definitions for when the centroid not at centre
         
         '''
         # Determining the nearest neighbour index for the cell
@@ -173,11 +192,20 @@ class TravelTime:
         # Creating Blank travel-time array
         TravelTime = np.zeros((len(neighbours)))
 
+        # Determining if point is a waypoint
+        waypoint_list = self.OptInfo['WayPoints']['Index'].astype(int).to_list()   
+        Cell_s = self.Mesh.cells[index]
+        if index in waypoint_list:
+            Cell_s.cx = Cell_s.cx#self.OptInfo['WayPoints']['Long'].iloc[waypoint_list.index(index)]
+            Cell_s.cy = Cell_s.cy#self.OptInfo['WayPoints']['Lat'].iloc[waypoint_list.index(index)]
+                        
         # Looping over all the nearest neighbours 
         for lp_index, neighbour_index in enumerate(neighbours):
-            # Determining the cells to compute between source cell 's' and neighbour cell 'n'
-            Cell_s = self.Mesh.cells[index]
+            # Determining the cell for the neighbour
             Cell_n = self.Mesh.cells[neighbour_index]
+            if neighbour_index in waypoint_list:
+                Cell_n.cx = Cell_n.cx#self.OptInfo['WayPoints']['Long'].iloc[waypoint_list.index(neighbour_index)]
+                Cell_n.cy = Cell_n.cy#self.OptInfo['WayPoints']['Lat'].iloc[waypoint_list.index(neighbour_index)]
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
             if (Cell_n.value >= self.Mesh.meshinfo['IceExtent']['MaxProportion']) or (Cell_n.isLand):
@@ -186,7 +214,7 @@ class TravelTime:
             # Determine relative degree difference between source and neighbour
             df_x = Cell_n.cx - Cell_s.cx
             df_y = Cell_n.cy - Cell_s.cy
-            s    = ShipSpeed
+            s    = self.OptInfo['VehicleInfo']['Speed']
             
             # Longitude
             if (abs(df_x) > (Cell_s.dx/2)) and (abs(df_y) < (Cell_s.dy/2)):
@@ -223,38 +251,34 @@ class TravelTime:
         '''
         Determining the shortest path between all waypoints
         '''
-
-        # Determining 
-
-        for wpt in self.waypoints:
-
-            #Initialising a dictionary for saving of Dijkstra information for optimum pathsways
-
+        for wpt in self.OptInfo['WayPoints'].iterrows():
+            wpt_name  = wpt[1]['Name']
+            wpt_index = wpt[1]['Index']
             #Initialising a column array of all the indexs
-            DijkstraInfo = {}
-            DijkstraInfo['CellIndex']      = np.arange(len(self.cells))
-            DijkstraInfo['Cost']           = np.full((len(self.cells)),np.inf)
-            DijkstraInfo['PositionLocked'] = np.zeros((len(self.cells)),dtype=bool)
-            DijkstraInfo['Paths']          = {}
-            for djk in range(len(self.cells)):
-                DijkstraInfo['Paths'][djk] = [wpt]
-            DijkstraInfo['Cost'][wpt]    = 0.0
+            self.DijkstraInfo[wpt_name] = {}
+            self.DijkstraInfo[wpt_name]['CellIndex']       = np.arange(len(self.Mesh.cells))
+            self.DijkstraInfo[wpt_name]['Cost']            = np.full((len(self.Mesh.cells)),np.inf)
+            self.DijkstraInfo[wpt_name]['PositionLocked']  = np.zeros((len(self.Mesh.cells)),dtype=bool)
+            self.DijkstraInfo[wpt_name]['Paths']           = {}
+            for djk in range(len(self.Mesh.cells)):
+                self.DijkstraInfo[wpt_name]['Paths'][djk]  = [wpt_index]
+            self.DijkstraInfo[wpt_name]['Cost'][wpt_index] = 0.0
 
-            while (DijkstraInfo['PositionLocked'] == False).any():
+            while (self.DijkstraInfo[wpt_name]['PositionLocked'] == False).any():
                 # Determining the argument with the next lowest value and hasn't been visited
-                idx = DijkstraInfo['CellIndex'][(DijkstraInfo['PositionLocked']==False)][np.nanargmin(DijkstraInfo['Cost'][(DijkstraInfo['PositionLocked']==False)])]
+                idx = self.DijkstraInfo[wpt_name]['CellIndex'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)][np.argmin(self.DijkstraInfo[wpt_name]['Cost'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)])]
                 # Finding the cost of the nearest neighbours
                 Neighbour_index,Points,TT = self.value(idx)
-                Neighbour_cost = TT + DijkstraInfo['Cost'][idx]
+                Neighbour_cost = TT + self.DijkstraInfo[wpt_name]['Cost'][idx]
                 # Determining if the visited time is visited    
                 for jj_v,jj in enumerate(Neighbour_index):
-                    if Neighbour_cost[jj_v] < DijkstraInfo['Cost'][jj]:
-                        DijkstraInfo['Cost'][jj]  = Neighbour_cost[jj_v]
-                        DijkstraInfo['Paths'][jj] = DijkstraInfo['Paths'][idx] + [jj]
+                    if Neighbour_cost[jj_v] < self.DijkstraInfo[wpt_name]['Cost'][jj]:
+                        self.DijkstraInfo[wpt_name]['Cost'][jj]  = Neighbour_cost[jj_v]
+                        self.DijkstraInfo[wpt_name]['Paths'][jj] = self.DijkstraInfo[wpt_name]['Paths'][idx] + [jj]
                 # Defining the graph point as visited
-                DijkstraInfo['PositionLocked'][idx] = True
+                self.DijkstraInfo[wpt_name]['PositionLocked'][idx] = True
     
     def smooth(self):
         '''
-            Given the current optimum paths smooth the pathways
+            Given the current optimum paths smooth the pathways smooth the pathway between based on Great-circle smoothing
         '''

@@ -21,7 +21,6 @@ class CellBox:
     self.x              = X; self.dx = dx; self.y = Y; self.dy = dy
     self.cx             = self.x + dx/2.; self.cy = self.y + dy/2.
 
-
     # These include the corner points and the half-way points in the edge 
     self._bounding_points = [[self.x,self.y],
                              [self.x,self.y+self.dy/2],
@@ -42,3 +41,7 @@ class CellBox:
       
   def _splitDomain(self):
     return np.array([[self.x,self.y],[self.x,self.cy],[self.cx,self.cy],[self.cx,self.y]]), self.dx/2, self.dy/2 
+
+  def _change_centroid(self,cx,cy):
+    self.cx = cx
+    self.cy = cy
