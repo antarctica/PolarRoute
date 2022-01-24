@@ -130,25 +130,33 @@ def _Haversine_distance(origin, destination):
 
     return d
 
-def _Euclidean_distance(origin, destination):
+def _Euclidean_distance(origin, dest_dist,forward=True):
     """
     Replicating original route planner Euclidean distance 
     Inputs:
       origin      - tuple of floats e.g. (Long_orig,Lat_orig)
       destination - tuple of floats e.g. (Long_dest,Lat_dest)
+      Optional: forward - Boolean True or False
     Output:
-      Distance - Distance between two points in 'km'
+      Value - If 'forward' is True then returns Distance between 
+              two points in 'km'. If 'False' then return the 
+              Lat/Long position of a point.
 
     """
-    lon1,lat1 = origin
-    lon2,lat2 = destination
+
 
     kmperdeglat          = 111.386
     kmperdeglonAtEquator = 111.321
+    if forward:
+        lon1,lat1 = origin
+        lon2,lat2 = dest_dist
+        val = np.sqrt(((lat2-lat1)*kmperdeglat)**2 + ((lon2-lon1)*kmperdeglonAtEquator)**2)
+    else:
+        lon1,lat1     = origin
+        dist_x,dist_y = dest_dist        
+        val = [lon1+(dist_x/kmperdeglonAtEquator),lat1+(dist_y/kmperdeglat)]
 
-    d = np.sqrt(((lat2-lat1)*kmperdeglat)**2 + ((lon2-lon1)*kmperdeglonAtEquator)**2)
-
-    return d
+    return val
 
 
 
@@ -183,34 +191,50 @@ class TravelTime:
         Output:
 
         Bugs/Alterations:
-            - Include travel-time referencing cx and cy instead of dx,dy to allow for off-centre waypoints
-            - Correct case definitions for when the centroid not at centre
-        
+            - Return the crossing point in Lat/Long position
         '''
         # Determining the nearest neighbour index for the cell
         neighbours = self.Mesh.NearestNeighbours(index)
 
-        # Creating Blank travel-time array
-        TravelTime = np.zeros((len(neighbours)))
+        # Creating Blank travel-time and crossing point array
+        TravelTime  = np.zeros((len(neighbours)))
+        CrossPoints = np.zeros((len(neighbours),2))
+        CellPoints  = np.zeros((len(neighbours),2))
 
         # Determining if point is a waypoint
         waypoint_list = self.OptInfo['WayPoints']['Index'].astype(int).to_list()   
         Cell_s = self.Mesh.cells[index]
         if index in waypoint_list:
-            Cell_s.cx = Cell_s.cx#self.OptInfo['WayPoints']['Long'].iloc[waypoint_list.index(index)]
-            Cell_s.cy = Cell_s.cy#self.OptInfo['WayPoints']['Lat'].iloc[waypoint_list.index(index)]
-                        
+            Cell_s.cx = self.OptInfo['WayPoints']['Long'].iloc[waypoint_list.index(index)]
+            Cell_s.cy = self.OptInfo['WayPoints']['Lat'].iloc[waypoint_list.index(index)]
+            Cell_s.dxp = ((Cell_s.x + Cell_s.dx) - Cell_s.cx); Cell_s.dxm = (Cell_s.cx - Cell_s.x)
+            Cell_s.dyp = ((Cell_s.y + Cell_s.dy) - Cell_s.cy); Cell_s.dym = (Cell_s.cy - Cell_s.y)
+        else:
+            Cell_s.dxp = Cell_s.dx/2; Cell_s.dxm = Cell_s.dx/2
+            Cell_s.dyp = Cell_s.dy/2; Cell_s.dym = Cell_s.dy/2                      
+
+
         # Looping over all the nearest neighbours 
         for lp_index, neighbour_index in enumerate(neighbours):
             # Determining the cell for the neighbour
             Cell_n = self.Mesh.cells[neighbour_index]
-            if neighbour_index in waypoint_list:
-                Cell_n.cx = Cell_n.cx#self.OptInfo['WayPoints']['Long'].iloc[waypoint_list.index(neighbour_index)]
-                Cell_n.cy = Cell_n.cy#self.OptInfo['WayPoints']['Lat'].iloc[waypoint_list.index(neighbour_index)]
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
             if (Cell_n.value >= self.Mesh.meshinfo['IceExtent']['MaxProportion']) or (Cell_s.value >= self.Mesh.meshinfo['IceExtent']['MaxProportion']) or (Cell_n.isLand) or (Cell_s.isLand):
                 TravelTime[lp_index] = np.inf
+                continue
+
+            #Determining if the cell includes waypoint, then taking centroid to waypoint location
+            if neighbour_index in waypoint_list:
+                Cell_n.cx = self.OptInfo['WayPoints']['Long'].iloc[waypoint_list.index(neighbour_index)]
+                Cell_n.cy = self.OptInfo['WayPoints']['Lat'].iloc[waypoint_list.index(neighbour_index)]
+                Cell_n.dxp = ((Cell_n.x + Cell_n.dx) - Cell_n.cx); Cell_n.dxm = (Cell_n.cx - Cell_n.x)
+                Cell_n.dyp = ((Cell_n.y + Cell_n.dy) - Cell_n.cy); Cell_n.dym = (Cell_n.cy - Cell_n.y)
+            else:
+                Cell_n.dxp = Cell_n.dx/2; Cell_n.dxm = Cell_n.dx/2
+                Cell_n.dyp = Cell_n.dy/2; Cell_n.dym = Cell_n.dy/2            
+
+
 
             # Determine relative degree difference between source and neighbour
             df_x = Cell_n.cx - Cell_s.cx
@@ -218,44 +242,78 @@ class TravelTime:
             s    = self.OptInfo['VehicleInfo']['Speed']
             
             # Longitude
-            if (abs(df_x) > (Cell_s.dx/2)) and (abs(df_y) < (Cell_s.dy/2)):
+            if ((abs(df_x) > (Cell_s.dx/2)) and (abs(df_y) < (Cell_s.dy/2))):
                 try:
                     u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
                     u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-                    x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + np.sign(df_x)*Cell_s.dx,Cell_s.cy))
-                    a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx - np.sign(df_x)*Cell_n.dx,Cell_n.cy))
-                    Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx),Cell_n.cy))
-                    y  = optimize.newton(_F,0.0,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                    TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                    if np.sign(df_x) == 1:
+                        S_dx = Cell_s.dxp; N_dx = -Cell_n.dxm
+                    else:
+                        S_dx = -Cell_s.dxm; N_dx = Cell_n.dxp                        
+                    x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + S_dx,Cell_s.cy))
+                    a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
+                    Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
+                    θ  = np.arctan((Cell_n.cy - Cell_s.cy)/(Cell_n.cx - Cell_s.cx))
+                    y  = np.tan(θ)*(S_dx)
+                    y  = optimize.newton(_F,y,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
+                    TravelTime[lp_index]    = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                    CrossPoints[lp_index,:] = _Euclidean_distance((Cell_s.cx + S_dx,Cell_s.cy),(0.0,y),forward=False)
+                    CellPoints[lp_index,:]  = [Cell_n.cx,Cell_n.cy]
                 except:
-                    TravelTime[lp_index] = np.inf
+                    TravelTime[lp_index]    = np.inf
+                    CrossPoints[lp_index,:] = [np.nan,np.nan]
+                    CellPoints[lp_index,:]  = [Cell_n.cx,Cell_n.cy] 
             # Latitude
             elif (abs(df_x) < Cell_s.dx/2) and (abs(df_y) > Cell_s.dy/2):
                 try:
                     u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
                     u2 = np.sign(df_y)*Cell_n.vector[1]; v2 = Cell_n.vector[0]
-                    x  = _Euclidean_distance( (Cell_s.cy,Cell_s.cx), (Cell_s.cy + np.sign(df_y)*Cell_s.dy,Cell_s.cx))
-                    a  = _Euclidean_distance( (Cell_n.cy,Cell_n.cx), (Cell_n.cy - np.sign(df_y)*Cell_n.dy,Cell_n.cx))
-                    Y  = _Euclidean_distance((Cell_s.cy + np.sign(df_y)*(Cell_n.dy + Cell_s.dy), Cell_s.cx), (Cell_s.cy + np.sign(df_y)*(Cell_n.dy + Cell_s.dy),Cell_n.cx))
-                    y  = optimize.newton(_F,0.0,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                    TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                    if np.sign(df_y) == 1:
+                        S_dy = Cell_s.dyp; N_dy = -Cell_n.dym
+                    else:
+                        S_dy = -Cell_s.dym; N_dy = Cell_n.dyp    
+                    x  = _Euclidean_distance( (Cell_s.cy,Cell_s.cx), (Cell_s.cy + S_dy,Cell_s.cx))
+                    a  = _Euclidean_distance( (Cell_n.cy,Cell_n.cx), (Cell_n.cy + N_dy,Cell_n.cx))
+                    Y  = _Euclidean_distance((Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)), Cell_s.cx), (Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)),Cell_n.cx))
+                    θ  = np.arctan((Cell_n.cx - Cell_s.cx)/(Cell_n.cy - Cell_s.cy))
+                    y  = np.tan(θ)*(S_dy)
+                    y  = optimize.newton(_F,y,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
+                    TravelTime[lp_index]    = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                    CrossPoints[lp_index,:] = _Euclidean_distance((Cell_s.cx,Cell_s.cy + S_dy),(-y,0.0),forward=False)
+                    CellPoints[lp_index,:]  = [Cell_n.cx,Cell_n.cy]
                 except:
-                    TravelTime[lp_index] = np.inf
-            # Corner
+                    TravelTime[lp_index]    = np.inf
+                    CrossPoints[lp_index,:] = [np.nan,np.nan]
+                    CellPoints[lp_index,:]  = [Cell_n.cx,Cell_n.cy]       
             else:
                 try:
                     u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
                     u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-                    x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + np.sign(df_x)*Cell_s.dx,Cell_s.cy))
-                    a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx - np.sign(df_x)*Cell_n.dx,Cell_n.cy))
-                    Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(Cell_n.dx + Cell_s.dx),Cell_n.cy))
-                    y  = np.sign((Cell_n.cy - Cell_s.cy))*(Cell_s.dy/2)
+                    if np.sign(df_x) == 1:
+                        S_dx = Cell_s.dxp; N_dx = -Cell_n.dxm
+                    else:
+                        S_dx = -Cell_s.dxm; N_dx = Cell_n.dxp     
+                    if np.sign(df_y) == 1:
+                        S_dy = Cell_s.dyp; N_dy = -Cell_n.dym
+                    else:
+                        S_dy = -Cell_s.dym; N_dy = Cell_n.dyp    
+                    x  = _Euclidean_distance( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + S_dx,Cell_s.cy))
+                    a  = _Euclidean_distance( (Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
+                    Y  = _Euclidean_distance((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
+                    y  = S_dy
                     u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
-                    TravelTime[lp_index] = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                    TravelTime[lp_index]    = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                    CrossPoints[lp_index,:] = _Euclidean_distance((Cell_s.cx,Cell_s.cy),(0.0,y),forward=False)
+                    CellPoints[lp_index,:]  = [Cell_n.cx,Cell_n.cy]
                 except:
-                    TravelTime[lp_index] = np.inf
+                    TravelTime[lp_index]    = np.inf
+                    CrossPoints[lp_index,:] = [np.nan,np.nan]
+                    CellPoints[lp_index,:]  = [Cell_n.cx,Cell_n.cy]                    
 
-        return neighbours, TravelTime
+            CrossPoints[lp_index,0] = np.clip(CrossPoints[lp_index,0],Cell_n.x,(Cell_n.x+Cell_n.dx))
+            CrossPoints[lp_index,1] = np.clip(CrossPoints[lp_index,1],Cell_n.y,(Cell_n.y+Cell_n.dy))
+
+        return neighbours, TravelTime, CrossPoints, CellPoints
 
     def optimize(self,verbrose=False):
         '''
@@ -264,8 +322,16 @@ class TravelTime:
         for wpt in self.OptInfo['WayPoints'].iterrows():
             wpt_name  = wpt[1]['Name']
             wpt_index = int(wpt[1]['Index'])
+            wpt_long  = wpt[1]['Long']
+            wpt_lat   = wpt[1]['Lat']
             if verbrose:
                 print('=== Processing Waypoint = {} ==='.format(wpt_name))
+
+
+            # if (self.Mesh.cells[wpt_index].value >= self.Mesh.meshinfo['IceExtent']['MaxProportion']) or (self.Mesh.cells[wpt_index].isLand):
+            #     if verbrose:
+            #         print('--- Waypoint on land or in deep ice extent')
+            #     continue
 
             #Initialising a column array of all the indexs
             self.DijkstraInfo[wpt_name] = {}
@@ -274,20 +340,20 @@ class TravelTime:
             self.DijkstraInfo[wpt_name]['PositionLocked']  = np.zeros((len(self.Mesh.cells)),dtype=bool)
             self.DijkstraInfo[wpt_name]['Paths']           = {}
             for djk in range(len(self.Mesh.cells)):
-                self.DijkstraInfo[wpt_name]['Paths'][djk]  = [wpt_index]
+                self.DijkstraInfo[wpt_name]['Paths'][djk]  = [[wpt_long,wpt_lat]]
             self.DijkstraInfo[wpt_name]['Cost'][wpt_index] = 0.0
 
             while (self.DijkstraInfo[wpt_name]['PositionLocked'] == False).any():
                 # Determining the argument with the next lowest value and hasn't been visited
                 idx = self.DijkstraInfo[wpt_name]['CellIndex'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)][np.argmin(self.DijkstraInfo[wpt_name]['Cost'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)])]
                 # Finding the cost of the nearest neighbours
-                Neighbour_index,TT = self.value(idx)
-                Neighbour_cost = TT + self.DijkstraInfo[wpt_name]['Cost'][idx]
+                Neighbour_index,TT,CrossPoints, CellPoints = self.value(idx)
+                Neighbour_cost     = TT + self.DijkstraInfo[wpt_name]['Cost'][idx]
                 # Determining if the visited time is visited    
                 for jj_v,jj in enumerate(Neighbour_index):
                     if Neighbour_cost[jj_v] < self.DijkstraInfo[wpt_name]['Cost'][jj]:
-                        self.DijkstraInfo[wpt_name]['Cost'][jj]  = Neighbour_cost[jj_v]
-                        self.DijkstraInfo[wpt_name]['Paths'][jj] = self.DijkstraInfo[wpt_name]['Paths'][idx] + [jj]
+                        self.DijkstraInfo[wpt_name]['Cost'][jj]           = Neighbour_cost[jj_v]
+                        self.DijkstraInfo[wpt_name]['Paths'][jj]          = self.DijkstraInfo[wpt_name]['Paths'][idx] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                 # Defining the graph point as visited
                 self.DijkstraInfo[wpt_name]['PositionLocked'][idx] = True
     
@@ -295,7 +361,7 @@ class TravelTime:
         self.Paths ={}
         self.Paths['from']          = []
         self.Paths['to']            = []
-        self.Paths['PathIndices']   = [] 
+        self.Paths['Path']   = [] 
         self.Paths['Cost']          = [] 
         for wpt_a in self.OptInfo['WayPoints'].iterrows():
             wpt_a_name  = wpt_a[1]['Name']
@@ -306,9 +372,13 @@ class TravelTime:
                 if not wpt_a_name == wpt_b_name:
                     self.Paths['from'].append(wpt_a_name)
                     self.Paths['to'].append(wpt_b_name)
-                    self.Paths['PathIndices'].append(self.DijkstraInfo[wpt_a_name]['Paths'][wpt_b_index])
-                    self.Paths['PathIndices'].append(self.DijkstraInfo[wpt_a_name]['Paths'][wpt_b_index])
-                    self.Paths['Cost'].append(self.DijkstraInfo[wpt_a_name]['Cost'][wpt_b_index])
+                    try:
+                        self.Paths['Path'].append(self.DijkstraInfo[wpt_a_name]['Paths'][wpt_b_index])
+                        self.Paths['Cost'].append(self.DijkstraInfo[wpt_a_name]['Cost'][wpt_b_index])
+                    except:
+                        self.Paths['Path'].append(np.nan)
+                        self.Paths['Cost'].append(np.nan)
+
 
 
     def smooth(self):
