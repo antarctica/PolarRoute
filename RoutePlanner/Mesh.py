@@ -60,9 +60,8 @@ class Mesh:
             for pt in Points:
               tmpCell = CellBox(pt[0],pt[1],Pointsdx,Pointsdy)
               tmpCell._leafDepth = self.cells[0]._leafDepth + 1
-              # Determine if centre on any corners have land in
-              Values = np.mean(V.flatten()[ (X.flatten()>=tmpCell.x) & (X.flatten()<=(tmpCell.x+tmpCell.dx)) & (Y.flatten()>=tmpCell.y) & (Y.flatten()<=(tmpCell.y+tmpCell.dy))])
-              tmpCell.isLand = bool(int(Values))
+              Values         = np.mean(V.flatten()[ (X.flatten()>=tmpCell.x) & (X.flatten()<=(tmpCell.x+tmpCell.dx)) & (Y.flatten()>=tmpCell.y) & (Y.flatten()<=(tmpCell.y+tmpCell.dy))])
+              tmpCell.isLand = bool(np.ceil(Values))
               runningValues += Values
               tmpCells.append(tmpCell)
             runningValues = runningValues/4.
@@ -133,8 +132,8 @@ class Mesh:
       for cc in range(len(self.cells)):
           if self.cells[cc].isLand:
             continue
-          gVx = Vx.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]
-          gVy = Vy.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]
+          gVx = Vx.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]/1000
+          gVy = Vy.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]/1000
           self.cells[cc].vector = np.array([np.nanmean(gVx),np.nanmean(gVy)])
 
 
