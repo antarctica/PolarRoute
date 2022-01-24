@@ -6,6 +6,7 @@ from scipy import optimize
 import math
 from matplotlib.patches import Polygon
 import copy
+import random
 
 from RoutePlanner.CellBox import CellBox
 from RoutePlanner.Mesh import Mesh
@@ -227,72 +228,68 @@ class TravelTime:
             
             # Longitude
             if ((abs(df_x) > (Cell_s.dx/2)) and (abs(df_y) < (Cell_s.dy/2))):
+                u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
+                u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
+                if np.sign(df_x) == 1:
+                    S_dx = Cell_s.dxp; N_dx = -Cell_n.dxm
+                else:
+                    S_dx = -Cell_s.dxm; N_dx = Cell_n.dxp                        
+                x  = self.fdist( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + S_dx,Cell_s.cy))
+                a  = self.fdist( (Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
+                Y  = self.fdist((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
+                ang= np.arctan((Cell_n.cy - Cell_s.cy)/(Cell_n.cx - Cell_s.cx))
+                yinit  = np.tan(ang)*(S_dx)
                 try:
-                    u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
-                    u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-                    if np.sign(df_x) == 1:
-                        S_dx = Cell_s.dxp; N_dx = -Cell_n.dxm
-                    else:
-                        S_dx = -Cell_s.dxm; N_dx = Cell_n.dxp                        
-                    x  = self.fdist( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + S_dx,Cell_s.cy))
-                    a  = self.fdist( (Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
-                    Y  = self.fdist((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
-                    ang= np.arctan((Cell_n.cy - Cell_s.cy)/(Cell_n.cx - Cell_s.cx))
-                    y  = np.tan(ang)*(S_dx)
-                    y  = optimize.newton(_F,y,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                    TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,s)
-                    CrossPoints = self.fdist((Cell_s.cx + S_dx,Cell_s.cy),(0.0,y),forward=False)
-                    CellPoints  = [Cell_n.cx,Cell_n.cy]
+                    y  = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
                 except:
-                    TravelTime  = np.inf
-                    CrossPoints = [np.nan,np.nan]
-                    CellPoints  = [Cell_n.cx,Cell_n.cy] 
+                    y  = yinit
+                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                CrossPoints = self.fdist((Cell_s.cx + S_dx,Cell_s.cy),(0.0,y),forward=False)
+                CellPoints  = [Cell_n.cx,Cell_n.cy]
+
             # Latitude
             elif (abs(df_x) < Cell_s.dx/2) and (abs(df_y) > Cell_s.dy/2):
+                u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
+                u2 = np.sign(df_y)*Cell_n.vector[1]; v2 = Cell_n.vector[0]
+                if np.sign(df_y) == 1:
+                    S_dy = Cell_s.dyp; N_dy = -Cell_n.dym
+                else:
+                    S_dy = -Cell_s.dym; N_dy = Cell_n.dyp    
+                x  = self.fdist((Cell_s.cy,Cell_s.cx), (Cell_s.cy + S_dy,Cell_s.cx))
+                a  = self.fdist((Cell_n.cy,Cell_n.cx), (Cell_n.cy + N_dy,Cell_n.cx))
+                Y  = self.fdist((Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)), Cell_s.cx), (Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)),Cell_n.cx))
+                ang= np.arctan((Cell_n.cx - Cell_s.cx)/(Cell_n.cy - Cell_s.cy))
+                yinit  = np.tan(ang)*(S_dy)
                 try:
-                    u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
-                    u2 = np.sign(df_y)*Cell_n.vector[1]; v2 = Cell_n.vector[0]
-                    if np.sign(df_y) == 1:
-                        S_dy = Cell_s.dyp; N_dy = -Cell_n.dym
-                    else:
-                        S_dy = -Cell_s.dym; N_dy = Cell_n.dyp    
-                    x  = self.fdist((Cell_s.cy,Cell_s.cx), (Cell_s.cy + S_dy,Cell_s.cx))
-                    a  = self.fdist((Cell_n.cy,Cell_n.cx), (Cell_n.cy + N_dy,Cell_n.cx))
-                    Y  = self.fdist((Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)), Cell_s.cx), (Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)),Cell_n.cx))
-                    ang= np.arctan((Cell_n.cx - Cell_s.cx)/(Cell_n.cy - Cell_s.cy))
-                    y  = np.tan(ang)*(S_dy)
-                    y  = optimize.newton(_F,y,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                    TravelTime   = _T(y,x,a,Y,u1,v1,u2,v2,s)
-                    CrossPoints  = self.fdist((Cell_s.cx,Cell_s.cy + S_dy),(-y,0.0),forward=False)
-                    CellPoints   = [Cell_n.cx,Cell_n.cy]
+                    y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
                 except:
-                    TravelTime  = np.inf
-                    CrossPoints = [np.nan,np.nan]
-                    CellPoints  = [Cell_n.cx,Cell_n.cy]       
+                    y = yinit
+                TravelTime   = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                CrossPoints  = self.fdist((Cell_s.cx,Cell_s.cy + S_dy),(-y,0.0),forward=False)
+                CellPoints   = [Cell_n.cx,Cell_n.cy]    
             else:
-                try:
-                    u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
-                    u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-                    if np.sign(df_x) == 1:
-                        S_dx = Cell_s.dxp; N_dx = -Cell_n.dxm
-                    else:
-                        S_dx = -Cell_s.dxm; N_dx = Cell_n.dxp     
-                    if np.sign(df_y) == 1:
-                        S_dy = Cell_s.dyp; N_dy = -Cell_n.dym
-                    else:
-                        S_dy = -Cell_s.dym; N_dy = Cell_n.dyp    
-                    x  = self.fdist( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + S_dx,Cell_s.cy))
-                    a  = self.fdist( (Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
-                    Y  = self.fdist((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
-                    y  = S_dy
-                    u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
-                    TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,s)
-                    CrossPoints = self.fdist((Cell_s.cx,Cell_s.cy),(0.0,y),forward=False)
-                    CellPoints  = [Cell_n.cx,Cell_n.cy]
-                except:
-                    TravelTime  = np.inf
-                    CrossPoints = [np.nan,np.nan]
-                    CellPoints  = [Cell_n.cx,Cell_n.cy]  
+                u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
+                u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
+                if np.sign(df_x) == 1:
+                    S_dx = Cell_s.dxp; N_dx = -Cell_n.dxm
+                else:
+                    S_dx = -Cell_s.dxm; N_dx = Cell_n.dxp     
+                if np.sign(df_y) == 1:
+                    S_dy = Cell_s.dyp; N_dy = -Cell_n.dym
+                else:
+                    S_dy = -Cell_s.dym; N_dy = Cell_n.dyp    
+                x  = self.fdist( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + S_dx,Cell_s.cy))
+                a  = self.fdist( (Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
+                Y  = self.fdist((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
+                y  = S_dy
+                u1 = np.sign(df_y)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
+                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,s)
+                CrossPoints = self.fdist((Cell_s.cx,Cell_s.cy),(0.0,y),forward=False)
+                CellPoints  = [Cell_n.cx,Cell_n.cy]
+
+            CrossPoints[0] = np.clip(CrossPoints[0],Cell_n.x,(Cell_n.x+Cell_n.dx))
+            CrossPoints[1] = np.clip(CrossPoints[1],Cell_n.y,(Cell_n.y+Cell_n.dy))
+
 
             return TravelTime, CrossPoints, CellPoints
 
@@ -353,8 +350,7 @@ class TravelTime:
 
 
             TravelTime[lp_index], CrossPoints[lp_index,:], CellPoints[lp_index,:] = self._newtonian(Cell_s,Cell_n)
-            CrossPoints[lp_index,0] = np.clip(CrossPoints[lp_index,0],Cell_n.x,(Cell_n.x+Cell_n.dx))
-            CrossPoints[lp_index,1] = np.clip(CrossPoints[lp_index,1],Cell_n.y,(Cell_n.y+Cell_n.dy))
+
 
         return neighbours, TravelTime, CrossPoints, CellPoints
 
@@ -434,7 +430,7 @@ class TravelTime:
                         self.Paths['Path_Cost'].append(np.nan)
                         self.Paths['Cost'].append(np.nan)
 
-    def Smmothing(self):
+    def PathSmoothing(self):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
         '''
@@ -450,11 +446,12 @@ class TravelTime:
 
         # Looping over all the optimised paths
         for path_index in range(len(self.SmoothedPaths['Path_CellIndex'])):
-            path_edges     = self.SmoothedPaths['Path'][path_index][1:-1:2]
+
+            pt             = np.array(self.SmoothedPaths['Path'][path_index])
+            path_edges     = np.concatenate([pt,pt[-1,:][None,:]])[::2]
             path_cellIndex = self.SmoothedPaths['Path_CellIndex'][path_index]
             path_cost      = self.SmoothedPaths['Path_Cost'][path_index]
 
-            # Iterate the smoothing several times. This could be based on variance later
             for idxpt in range(len(path_edges)-2):
                 pt_sp  = path_edges[idxpt]
                 pt_cp  = path_edges[idxpt+1]
@@ -472,11 +469,14 @@ class TravelTime:
                 Cell_n.dyp = ((Cell_n.y + Cell_n.dy) - Cell_n.cy); Cell_n.dym = (Cell_n.cy - Cell_n.y)
                 TravelTime, CrossingPoint, delA = self._newtonian(Cell_s,Cell_n)
 
+                # Clipping so on reciever grid
                 CrossingPoint[0] = np.clip(CrossingPoint[0],Cell_n.x,(Cell_n.x+Cell_n.dx))
                 CrossingPoint[1] = np.clip(CrossingPoint[1],Cell_n.y,(Cell_n.y+Cell_n.dy))
+
 
                 path_edges[idxpt+1] = CrossingPoint
                 path_cost[idxpt+1]  = path_cost[idxpt] + TravelTime
 
+            # Now determining if you can get rid of a point 
             self.SmoothedPaths['Path'][path_index] = path_edges
-    
+
