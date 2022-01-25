@@ -15,14 +15,16 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from RoutePlanner.CellBox import CellBox
 from RoutePlanner.Mesh import Mesh
-from RoutePlanner.Function import _F,_dF,_T,_Haversine_distance,_Euclidean_distance
+from RoutePlanner.Function import NewtonianDistance, SmoothedNewtonianDistance
 
 class TravelTime:
-    def __init__(self,Mesh,OptInfo,fdist=_Euclidean_distance):
+    def __init__(self,Mesh,OptInfo,CostFunc=NewtonianDistance):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(Mesh)
         self.OptInfo = copy.copy(OptInfo)
 
+
+        self.CostFunc = CostFunc
 
         # ====== Waypoints ======        
         # Dropping waypoints outside domain
@@ -39,9 +41,6 @@ class TravelTime:
             self.OptInfo['WayPoints']['Index'].iloc[idx] = index
             self.Mesh.cells[index]._define_waypoints((Long,Lat))
         
-        # ====== Distance Metric ======
-        #Defining the distance function
-        self.fdist = fdist
 
         # ====== Dijkstra Formulation ======
         # Initialising the Dijkstra Info Dictionary
@@ -73,89 +72,6 @@ class TravelTime:
         self.Paths         = {}
         self.SmoothedPaths = {}
         self._paths_smoothed = False
-
-    def _newtonian(self,Cell_n,Cell_s,s):
-            # Determine relative degree difference between centre cell source and neighbour
-            df_x = (Cell_n.x+Cell_n.dx) -  (Cell_s.x+Cell_s.dx)
-            df_y = (Cell_n.y+Cell_n.dy) -  (Cell_s.y+Cell_s.dy)
-            
-            # Determining positive or negative cases
-            #dX
-            if np.sign(df_x) == 1:
-                S_dx = Cell_s.dxp; N_dx = -Cell_n.dxm
-            else:
-                S_dx = -Cell_s.dxm; N_dx = Cell_n.dxp  
-            #dY       
-            if np.sign(df_y) == 1:
-                S_dy = Cell_s.dyp; N_dy = -Cell_n.dym
-            else:
-                S_dy = -Cell_s.dym; N_dy = Cell_n.dyp    
-
-            # Longitude Cases - 2,-2
-            if ((abs(df_x) >= (Cell_s.dx/2)) and (abs(df_y) < (Cell_s.dy/2))):
-                u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
-                u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-
-                x  = self.fdist( (Cell_s.cx,Cell_s.cy), (Cell_s.cx + S_dx,Cell_s.cy))
-                a  = self.fdist( (Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
-                Y  = self.fdist((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
-                ang= np.arctan((Cell_n.cy - Cell_s.cy)/(Cell_n.cx - Cell_s.cx))
-                yinit  = np.tan(ang)*(S_dx)
-                try:
-                    y  = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                except:
-                    y  = yinit
-                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,s)
-                CrossPoints = self.fdist((Cell_s.cx + S_dx,Cell_s.cy),(0.0,y),forward=False)
-                CellPoints  = [Cell_n.cx,Cell_n.cy]
-
-            # Latitude Cases - 4,-4
-            elif (abs(df_x) < Cell_s.dx/2) and (abs(df_y) >= Cell_s.dy/2):
-                u1 = np.sign(df_y)*Cell_s.vector[1]; v1 = Cell_s.vector[0]
-                u2 = np.sign(df_y)*Cell_n.vector[1]; v2 = Cell_n.vector[0]
-   
-                x  = self.fdist((Cell_s.cy,Cell_s.cx), (Cell_s.cy + S_dy,Cell_s.cx))
-                a  = self.fdist((Cell_n.cy,Cell_n.cx), (Cell_n.cy + N_dy,Cell_n.cx))
-                Y  = self.fdist((Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)), Cell_s.cx), (Cell_s.cy + np.sign(df_y)*(abs(S_dy) + abs(N_dy)),Cell_n.cx))
-                ang= np.arctan((Cell_n.cx - Cell_s.cx)/(Cell_n.cy - Cell_s.cy))
-                yinit  = np.tan(ang)*(S_dy)
-                try:
-                    y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,s),fprime=_dF)
-                except:
-                    y = yinit
-                TravelTime   = _T(y,x,a,Y,u1,v1,u2,v2,s)
-                CrossPoints  = self.fdist((Cell_s.cx,Cell_s.cy + S_dy),(-y,0.0),forward=False)
-                CellPoints   = [Cell_n.cx,Cell_n.cy]    
-            
-            # Diagonal Cases - 1,-1,3,-3
-            elif (abs(df_x) >= Cell_s.dx/2) and (abs(df_y) >= Cell_s.dy/2):
-                u1 = np.sign(df_x)*Cell_s.vector[0]; v1 = Cell_s.vector[1]
-                u2 = np.sign(df_x)*Cell_n.vector[0]; v2 = Cell_n.vector[1]
-                
-
-                x  = self.fdist((Cell_s.cx,Cell_s.cy),(Cell_s.cx + S_dx,Cell_s.cy))
-                y  = self.fdist((Cell_s.cx+S_dx,Cell_s.cy),(Cell_s.cx + S_dx,Cell_s.cy+S_dy))
-                a  = self.fdist((Cell_n.cx,Cell_n.cy), (Cell_n.cx + N_dx,Cell_n.cy))
-                Y  = self.fdist((Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)), Cell_s.cy), (Cell_s.cx + np.sign(df_x)*(abs(S_dx) + abs(N_dx)),Cell_n.cy))
-                
-                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,s)
-                CrossPoints = self.fdist((Cell_s.cx+S_dx,Cell_s.cy),(0.0,y),forward=False)
-                CellPoints  = [Cell_n.cx,Cell_n.cy]
-
-            # Inside Cell
-            else:
-                TravelTime  = np.inf
-                CrossPoints = [np.nan,np.nan]
-                CellPoints  = [np.nan,np.nan]
-                #print('Failure - S=({},{}), N=({},{}) -  DiffX={},DiffY={},dX={},dY={}'.format(Cell_s.cx,Cell_s.cy,Cell_n.cx,Cell_n.cy,abs(df_x),abs(df_y),Cell_s.dx/2,Cell_s.dy/2))
-
-            CrossPoints[0] = np.clip(CrossPoints[0],Cell_n.x,(Cell_n.x+Cell_n.dx))
-            CrossPoints[1] = np.clip(CrossPoints[1],Cell_n.y,(Cell_n.y+Cell_n.dy))
-
-
-            return TravelTime, CrossPoints, CellPoints
-
-
 
     def NeighbourCost(self,index):
         '''
@@ -193,7 +109,7 @@ class TravelTime:
                 TravelTime[lp_index] = np.inf
                 continue
 
-            TravelTime[lp_index], CrossPoints[lp_index,:], CellPoints[lp_index,:] = self._newtonian(Cell_s,Cell_n,s)
+            TravelTime[lp_index], CrossPoints[lp_index,:], CellPoints[lp_index,:] = self.CostFunc(Cell_s,Cell_n,s).value()
 
         return neighbours, TravelTime, CrossPoints, CellPoints
 
@@ -225,7 +141,9 @@ class TravelTime:
             wpt_name  = wpt[1]['Name']
             if verbrose:
                 print('=== Processing Waypoint = {} ==='.format(wpt_name))
-            while (self.DijkstraInfo[wpt_name]['PositionLocked'] == False).any():
+
+            # Loop over all the points until all waypoints are visited
+            while (self.DijkstraInfo[wpt_name]['PositionLocked'][np.array(self.OptInfo['WayPoints']['Index'].astype(int))] == False).any():
                 # Determining the argument with the next lowest value and hasn't been visited
                 idx = self.DijkstraInfo[wpt_name]['CellIndex'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)][np.argmin(self.DijkstraInfo[wpt_name]['TotalCost'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)])]
                 # Finding the cost of the nearest neighbours
@@ -235,7 +153,7 @@ class TravelTime:
                 for jj_v,jj in enumerate(Neighbour_index):
                     if Neighbour_cost[jj_v] < self.DijkstraInfo[wpt_name]['TotalCost'][jj]:
                         self.DijkstraInfo[wpt_name]['TotalCost'][jj]              = Neighbour_cost[jj_v]
-                        self.DijkstraInfo[wpt_name]['Path']['FullPath'][jj]       = self.DijkstraInfo[wpt_name]['Path']['FullPath'][idx] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]]
+                        self.DijkstraInfo[wpt_name]['Path']['FullPath'][jj]       = self.DijkstraInfo[wpt_name]['Path']['FullPath'][idx]  + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][idx] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][idx] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]      = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx] + [jj]
@@ -257,7 +175,6 @@ class TravelTime:
             self._paths_smoothed = True
 
         self.SmoothedPaths = self.Paths.copy()
-        self.fdist         = _Haversine_distance
 
         # Looping over all the optimised paths
         for Path in self.SmoothedPaths:
@@ -283,11 +200,11 @@ class TravelTime:
                 Cell_n.cx = pt_np[0]; Cell_n.cy = pt_np[1]
                 Cell_n.dxp = ((Cell_n.x + Cell_n.dx) - Cell_n.cx); Cell_n.dxm = (Cell_n.cx - Cell_n.x)
                 Cell_n.dyp = ((Cell_n.y + Cell_n.dy) - Cell_n.cy); Cell_n.dym = (Cell_n.cy - Cell_n.y)
-                TravelTime, CrossingPoint, delA = self._newtonian(Cell_s,Cell_n,self.OptInfo['VehicleInfo']['Speed'])
-
+                TravelTime, CrossingPoint, delA = self.CostFunc(Cell_s,Cell_n,self.OptInfo['VehicleInfo']['Speed']).value()
+                
                 # Clipping so on reciever grid
-                CrossingPoint[0] = np.clip(CrossingPoint[0],Cell_n.x,(Cell_n.x+Cell_n.dx))
-                CrossingPoint[1] = np.clip(CrossingPoint[1],Cell_n.y,(Cell_n.y+Cell_n.dy))
+                # CrossingPoint[0] = np.clip(CrossingPoint[0],Cell_n.x,(Cell_n.x+Cell_n.dx))
+                # CrossingPoint[1] = np.clip(CrossingPoint[1],Cell_n.y,(Cell_n.y+Cell_n.dy))
 
 
                 path_edges[idxpt+1] = CrossingPoint

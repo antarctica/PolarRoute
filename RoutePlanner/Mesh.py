@@ -23,9 +23,10 @@ class Mesh:
           print('==================================================')
           print('Xmin={},Xmax={},dX={}  Ymin={},Ymax={},dY={}'.format(self.xmin,self.xmax,self.dx,self.ymin,self.ymax,self.dy))
     self.cells = []
-    for xx in np.arange(self.xmin,self.xmax,self.dx):
-      for yy in np.arange(self.ymin,self.ymax,self.dy):
-          self.cells.append(CellBox(xx,yy,self.dx,self.dy))
+
+    for yy in np.arange(self.ymin,self.ymax,self.dy):
+        for xx in np.arange(self.xmin,self.xmax,self.dx):
+            self.cells.append(CellBox(xx,yy,self.dx,self.dy))
 
     # Running Cell Splitting for Land
     self._isLand()
