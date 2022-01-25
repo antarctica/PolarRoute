@@ -318,37 +318,10 @@ class SmoothedNewtonianDistance:
 
     def _corner_case(self):
         '''
-            Currently wrong, waiting for Marias text alterations
+            Corner cases as outline in Part 4 of the latex formulations
         '''
-
-        def _T(y,x,a,Y,u1,v1,u2,v2,s):
-            d1 = x**2 + y**2
-            d2 = a**2 + (Y-y)**2
-            C1 = s**2 - u1**2 - v1**2
-            C2 = s**2 - u2**2 - v2**2
-            D1 = x*u1 + y*v1
-            D2 = a*u2 + (Y-y)*v2
-            X1 = np.sqrt(D1**2 + C1*(d1**2))
-            X2 = np.sqrt(D2**2 + C2*(d2**2))
-            t1 = (X1-D1)/C1
-            t2 = (X2-D2)/C2
-            T  = t1+t2 
-            return T
-
-
-        u1 = np.sign(self.df_x)*self.Cell_s.vector[0]; v1 = self.Cell_s.vector[1]
-        u2 = np.sign(self.df_x)*self.Cell_n.vector[0]; v2 = self.Cell_n.vector[1]
         
-        x  = self.fdist((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx + self.S_dx,self.Cell_s.cy))
-        y  = self.fdist((self.Cell_s.cx+self.S_dx,self.Cell_s.cy),(self.Cell_s.cx + self.S_dx,self.Cell_s.cy+self.S_dy))
-        a  = self.fdist((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx + self.N_dx,self.Cell_n.cy))
-        Y  = self.fdist((self.Cell_s.cx + np.sign(self.df_x)*(abs(self.S_dx) + abs(self.N_dx)), self.Cell_s.cy), (self.Cell_s.cx + np.sign(self.df_x)*(abs(self.S_dx) + abs(self.N_dx)),self.Cell_n.cy))
-        
-        TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
-        CrossPoints = self.fdist((self.Cell_s.cx+self.S_dx,self.Cell_s.cy),(0.0,y),forward=False)
-        CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
-
-        return TravelTime,CrossPoints,CellPoints
+        # Include Definition here
 
 class NewtonianDistance:
     def __init__(self,Cell_s,Cell_n,s):
