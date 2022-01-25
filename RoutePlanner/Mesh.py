@@ -132,8 +132,8 @@ class Mesh:
       for cc in range(len(self.cells)):
           if self.cells[cc].isLand:
             continue
-          gVx = Vx.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]/1000
-          gVy = Vy.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]/1000
+          gVx = Vx.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]
+          gVy = Vy.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]
           self.cells[cc].vector = np.array([np.nanmean(gVx),np.nanmean(gVy)])
 
 

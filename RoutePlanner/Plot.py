@@ -26,6 +26,9 @@ def PlotMesh(ms,figInfo=None):
                             [cell.x+cell.dx,cell.y+cell.dy],
                             [cell.x+cell.dx,cell.y],
                             [cell.x,cell.y]]
+
+        ax.quiver((cell.x+cell.dx/2),(cell.y+cell.dy/2),cell.vector[0],cell.vector[1],scale=2,width=0.002,color='gray')
+
         if cell.isLand:
             ax.add_patch(Polygon(Bounds, closed=True,fill=True,color='Green',edgecolor='Gray'))
         else:
@@ -39,7 +42,7 @@ def PlotMesh(ms,figInfo=None):
     ax.set_xlim([ms.meshinfo['Xmin'],ms.meshinfo['Xmax']])
     ax.set_ylim([ms.meshinfo['Ymin'],ms.meshinfo['Ymax']])
 
-def OptimisedPaths(ms,optimizer,Paths,figInfo=None):
+def OptimisedPaths(ms,optimizer,Paths,figInfo=None,routepoints=True):
     from matplotlib.patches import Polygon
     if type(figInfo) == type(None):
       fig,ax = plt.subplots(1,1,figsize=(15,10))
@@ -51,12 +54,14 @@ def OptimisedPaths(ms,optimizer,Paths,figInfo=None):
     PlotMesh(ms,figInfo=[fig,ax])
 
     # Constructing the cell paths information
-    for indx in range(len(Paths['Path'])):
-        if Paths['Cost'][indx][0] == np.inf:
+    for Path in Paths:
+        if Path['TotalCost'] == np.inf:
           continue
-        Points = np.array(Paths['Path'][indx])
+        Points = np.array(Path['Path']['FullPath'])
         ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
-        ax.scatter(Points[:,0],Points[:,1],15,marker='o',color='k')
+        if routepoints:
+          ax.scatter(Points[:,0],Points[:,1],15,marker='o',color='k')
+
 
     # Plotting Waypoints
     ax.scatter(optimizer.OptInfo['WayPoints']['Long'],optimizer.OptInfo['WayPoints']['Lat'],100,marker='^',color='r',zorder=100)
