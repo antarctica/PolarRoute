@@ -55,6 +55,15 @@ class CellBox:
         
         return Polygon(bounds, closed = True, fill = False, color = 'Grey', alpha = 1)
     
+    def getHighlight(self):
+        bounds = [[self.long, self.lat],
+                    [self.long, self.lat + self.height],
+                    [self.long + self.width, self.lat + self.height],
+                    [self.long + self.width, self.lat],
+                    [self.long, self.lat]]
+        
+        return Polygon(bounds, closed = True, fill = False, color = 'Red', alpha = 1)
+    
     def getWidth(self):
         return self.width * math.cos(self.lat)
     

@@ -107,13 +107,67 @@ class CellGrid:
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
         
+    def _getLeftNeightbours(self, selectedCellBox):
+        leftNeightbours = []
+        
+        for cellBox in self.cellBoxes:
+            if (cellBox.long + cellBox.width == selectedCellBox.long) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
+                    leftNeightbours.append(cellBox)
+        
+        return leftNeightbours
+                
+    def _getRightNeightbours(self, selectedCellBox):
+        rightNeightbours = []
+        
+        for cellBox in self.cellBoxes:
+            if (cellBox.long == selectedCellBox.long + selectedCellBox.width) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
+                rightNeightbours.append(cellBox)
+                
+        return rightNeightbours
+    
+    def _getTopNeightbours(self, selectedCellBox):
+        topNeightbours = []
+        
+        for cellBox in self.cellBoxes:
+            if (cellBox.lat == (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
+                topNeightbours.append(cellBox)
+                
+        return topNeightbours
+    
+    def _getBottomNeightbours(self, selectedCellBox):
+        bottomNeightbours = []
+        
+        for cellBox in self.cellBoxes:
+            if ((cellBox.lat + cellBox.height) == selectedCellBox.lat) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
+                bottomNeightbours.append(cellBox)
+                
+        return bottomNeightbours
+            
+    
+    def getNeightbours(self, selectedCellBox):
+        neightbours = self._getLeftNeightbours(selectedCellBox) + self._getRightNeightbours(selectedCellBox) + self._getTopNeightbours(selectedCellBox) + self._getBottomNeightbours(selectedCellBox)             
+        
+        return neightbours
+        
+    def highlightCells(self, selectedCellBoxes):
+        fig, ax = plt.subplots(1,1, figsize=(15,10))
+        ax.set_facecolor('xkcd:blue')
+        for cellBox in self.cellBoxes:
+            ax.add_patch(cellBox.getPolygon())
+            
+        for cellBox in selectedCellBoxes:
+            ax.add_patch(cellBox.getHighlight())
+            
+        ax.set_xlim(self._longMin, self._longMax)
+        ax.set_ylim(self._latMin, self._latMax)
+        
     def highlightCell(self, selectedCellBox):
         fig, ax = plt.subplots(1,1, figsize=(15,10))
         ax.set_facecolor('xkcd:blue')
         for cellBox in self.cellBoxes:
             ax.add_patch(cellBox.getPolygon())
         
-        ax.add_patch(selectedCellBox.getBorder())
+        ax.add_patch(selectedCellBox.getHighlight())
         
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
