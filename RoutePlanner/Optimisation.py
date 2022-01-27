@@ -154,7 +154,7 @@ class TravelTime:
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
 
-    def PlotPaths(self,figInfo=None,routepoints=False):
+    def PlotPaths(self,figInfo=None,routepoints=False,waypoints=None):
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
@@ -165,13 +165,19 @@ class TravelTime:
         self.Mesh.plot(figInfo=(fig,ax))
 
         # Constructing the cell paths information
+        if type(waypoints) == type(None):
+            waypointList = list(self.OptInfo['WayPoints']['Name'])
+        else:
+            waypointList = waypoints
+
         for Path in self.Paths:
-            if Path['TotalCost'] == np.inf:
-                continue
-            Points = np.array(Path['Path']['FullPath'])
-            ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
-            if routepoints:
-                ax.scatter(Points[:,0],Points[:,1],15,marker='o',color='k')
+            if (Path['from'] in waypointList) and (Path['to'] in waypointList):
+                if Path['TotalCost'] == np.inf:
+                    continue
+                Points = np.array(Path['Path']['FullPath'])
+                ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
+                if routepoints:
+                    ax.scatter(Points[:,0],Points[:,1],15,marker='o',color='k')
 
         # Plotting Waypoints
         ax.scatter(self.OptInfo['WayPoints']['Long'],self.OptInfo['WayPoints']['Lat'],100,marker='^',color='r',zorder=100)
