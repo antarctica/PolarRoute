@@ -1,18 +1,16 @@
-import pandas as pd
 import numpy as np
 from RoutePlanner.CellBox import CellBox
-from matplotlib.patches import Polygon
 import matplotlib.pylab as plt
 
 class CellGrid:
     
     def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
-        self._longMin = longMin
-        self._longMax = longMax
-        self._latMin = latMin
-        self._latMax = latMax
+        self._longMin    = longMin
+        self._longMax    = longMax
+        self._latMin     = latMin
+        self._latMax     = latMax
         
-        self._cellWidth = cellWidth
+        self._cellWidth  = cellWidth
         self._cellHeight = cellHeight
         
         self.cellBoxes = []
@@ -24,9 +22,8 @@ class CellGrid:
     
     def addIcePoints(self, icePoints):
         for cellBox in self.cellBoxes:
-            longLoc = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] < (cellBox.long + cellBox.width))]
+            longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] < (cellBox.long + cellBox.width))]
             latLongLoc = longLoc.loc[(icePoints['lat'] > cellBox.lat) & (icePoints['lat'] < (cellBox.lat + cellBox.height))]
-    
             cellBox.addIcePoints(latLongLoc)
         
     def addCurrentPoints(self, currentPoints):
@@ -63,23 +60,6 @@ class CellGrid:
         elif len(selectedCell) > 1:
             return "ERROR: Multiple cellBoxes have been found at lat =" + str(lat) + ", long =" + str(long) 
     
-    """
-    def getCellBox(self, lat, long):
-        selectedCell = []
-        
-        for cellBox in self.cellBoxes:
-            if(cellBox.lat == lat and cellBox.long == long):
-                selectedCell.append(cellBox) 
-        
-        # for inital debugging and should be replaced to throw errors correctly
-        if len(selectedCell) == 1:
-            return selectedCell[0]
-        elif len(selectedCell) == 0:
-            return "No cellBox was found at lat =" + str(lat) + ", long =" + str(long)
-        elif len(selectedCell) > 1:
-            return "ERROR: Multiple cellBoxes have been found at lat =" + str(lat) + ", long =" + str(long) 
-    """
-    
     def recursiveSplit(self, maxSplits):
         splitCellBoxes = []
         for cellBox in self.cellBoxes:
@@ -97,73 +77,93 @@ class CellGrid:
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
         
-    def plot(self):
-        fig, ax = plt.subplots(1,1, figsize=(15,10))
-        ax.set_facecolor('xkcd:blue')
+    def plot(self,figInfo=None):
+        if type(figInfo) == type(None):
+            fig,ax = plt.subplots(1,1,figsize=(15,10))
+            fig.patch.set_facecolor('white')
+            ax.set_facecolor('white')
+        else:
+            fig,ax = figInfo
+
         for cellBox in self.cellBoxes:
             ax.add_patch(cellBox.getPolygon())
             ax.add_patch(cellBox.getBorder())
-        
+
+            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC(),cellBox.getvC(),scale=2,width=0.002,color='gray')
+
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
         
     def _getLeftNeightbours(self, selectedCellBox):
         leftNeightbours = []
-        
-        for cellBox in self.cellBoxes:
+        leftNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
             if (cellBox.long + cellBox.width == selectedCellBox.long) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
+                    leftNeightbours_indx.append(idx)
                     leftNeightbours.append(cellBox)
-        
-        return leftNeightbours
-                
+        return leftNeightbours,leftNeightbours_indx           
     def _getRightNeightbours(self, selectedCellBox):
         rightNeightbours = []
-        
-        for cellBox in self.cellBoxes:
+        rightNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
             if (cellBox.long == selectedCellBox.long + selectedCellBox.width) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
+                rightNeightbours_indx.append(idx)
                 rightNeightbours.append(cellBox)
-                
-        return rightNeightbours
+        return rightNeightbours,rightNeightbours_indx
     
     def _getTopNeightbours(self, selectedCellBox):
-        topNeightbours = []
-        
-        for cellBox in self.cellBoxes:
+        topNeightbours      = []
+        topNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
             if (cellBox.lat == (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
                 topNeightbours.append(cellBox)
-                
-        return topNeightbours
+                topNeightbours_indx.append(idx)
+        return topNeightbours,topNeightbours_indx
     
     def _getBottomNeightbours(self, selectedCellBox):
-        bottomNeightbours = []
-        
-        for cellBox in self.cellBoxes:
+        bottomNeightbours      = []
+        bottomNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
             if ((cellBox.lat + cellBox.height) == selectedCellBox.lat) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
+                bottomNeightbours_indx.append(idx)
                 bottomNeightbours.append(cellBox)
-                
-        return bottomNeightbours
+        return bottomNeightbours,bottomNeightbours_indx
             
     
     def getNeightbours(self, selectedCellBox):
-        neightbours = self._getLeftNeightbours(selectedCellBox) + self._getRightNeightbours(selectedCellBox) + self._getTopNeightbours(selectedCellBox) + self._getBottomNeightbours(selectedCellBox)             
+        leftNeightbours,leftNeightbours_indx     = self._getLeftNeightbours(selectedCellBox)
+        rightNeightbours,rightNeightbours_indx   = self._getRightNeightbours(selectedCellBox)
+        topNeightbours,topNeightbours_indx       = self._getTopNeightbours(selectedCellBox)
+        bottomNeightbours,bottomNeightbours_indx = self._getBottomNeightbours(selectedCellBox)
+        neightbours       = leftNeightbours + rightNeightbours + topNeightbours + bottomNeightbours
+        neightbours_index = leftNeightbours_indx + rightNeightbours_indx + topNeightbours_indx + bottomNeightbours_indx
+        return neightbours,neightbours_index
         
-        return neightbours
-        
-    def highlightCells(self, selectedCellBoxes):
-        fig, ax = plt.subplots(1,1, figsize=(15,10))
-        ax.set_facecolor('xkcd:blue')
+    def highlightCells(self, selectedCellBoxes, figInfo=None):
+        if type(figInfo) == type(None):
+            fig,ax = plt.subplots(1,1,figsize=(15,10))
+            fig.patch.set_facecolor('white')
+            ax.set_facecolor('white')
+        else:
+            fig,ax = figInfo
+
         for cellBox in self.cellBoxes:
             ax.add_patch(cellBox.getPolygon())
-            
+
         for cellBox in selectedCellBoxes:
             ax.add_patch(cellBox.getHighlight())
+            ax.scatter(cellBox.cx,cellBox.cy,15,marker='o',color = 'Red')
             
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
         
-    def highlightCell(self, selectedCellBox):
-        fig, ax = plt.subplots(1,1, figsize=(15,10))
-        ax.set_facecolor('xkcd:blue')
+    def highlightCell(self, selectedCellBox, figInfo=None):
+        if type(figInfo) == type(None):
+            fig.patch.set_facecolor('white')
+            ax.set_facecolor('white')
+        else:
+            fig,ax = figInfo
+
         for cellBox in self.cellBoxes:
             ax.add_patch(cellBox.getPolygon())
         
