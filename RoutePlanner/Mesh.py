@@ -133,9 +133,13 @@ class Mesh:
       for cc in range(len(self.cells)):
           if self.cells[cc].isLand:
             continue
-          gVx = Vx.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]
-          gVy = Vy.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))]
-          self.cells[cc].vector = np.array([np.nanmean(gVx),np.nanmean(gVy)])
+          gVx = np.nanmean(Vx.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))])
+          gVy = np.nanmean(Vy.flatten()[ (X.flatten()>=self.cells[cc].x) & (X.flatten()<=(self.cells[cc].x+self.cells[cc].dx)) & (Y.flatten()>=self.cells[cc].y) & (Y.flatten()<=(self.cells[cc].y+self.cells[cc].dy))])
+      
+          if np.isnan(gVx) or np.isnan(gVy):
+            gVx = 0.0; gVy=0.0
+          
+          self.cells[cc].vector = np.array([gVx,gVy])
 
 
   def NearestNeighbours(self,ii):
