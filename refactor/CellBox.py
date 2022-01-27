@@ -120,8 +120,8 @@ class CellBox:
 
     # returns true or false if a cell is deemed homogenous, used to define a base case for recursive splitting.
     def isHomogenous(self):
-        lowerBound = 0.05
-        upperBound = 0.99
+        lowerBound = 0.15
+        upperBound = 0.75
         
          # If a cell contains any point which is considered land, return False
         depthList = self._icePoints['depth']
