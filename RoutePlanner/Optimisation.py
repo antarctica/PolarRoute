@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from RoutePlanner.CellBox import CellBox
+from RoutePlanner.CellBox_JS import CellBox
 from RoutePlanner.Mesh import Mesh
 from RoutePlanner.Function import NewtonianDistance, SmoothedNewtonianDistance
 

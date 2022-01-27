@@ -55,7 +55,7 @@ def find_packages():
     """
     modules = []
     for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-                                                      "HypoSVI")):
+                                                      "RoutePlanner")):
         if "__init__.py" in filenames:
             modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
     return [_i.replace(os.sep, ".") for _i in modules]
@@ -83,7 +83,7 @@ def setup_package():
         name="RoutePlanner",
         version=VERSION,
         description=find_meta("description"),
-        long_description=read("README.rst"),
+        long_description=read("README.md"),
         author=find_meta("author"),
         author_email=find_meta("email"),
         maintainer=find_meta("author"),
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         except Exception:
             pass
         # delete all shared libs from lib directory
-        path = os.path.join(SETUP_DIRECTORY, 'HypoSVI', 'lib')
+        path = os.path.join(SETUP_DIRECTORY, 'RoutePlanner', 'lib')
         for filename in glob.glob(path + os.sep + '*.pyd'):
             try:
                 os.remove(filename)
