@@ -154,11 +154,11 @@ class TravelTime:
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
 
-    def PlotPaths(self,figInfo=None,routepoints=False,waypoints=None):
+    def PlotPaths(self,figInfo=None,routepoints=False,waypoints=None,return_ax=True):
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
+            ax.set_facecolor('lightblue')
         else:
             fig,ax = figInfo
 
@@ -186,6 +186,9 @@ class TravelTime:
             Lat  = wpt[1]['Lat']
             Name = wpt[1]['Name']
             ax.text(Long,Lat,Name,color='r',zorder=100)
+
+        if return_ax:
+            return ax
 
 
     # def PathSmoothing(self):

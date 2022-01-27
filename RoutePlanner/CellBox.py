@@ -86,7 +86,7 @@ class CellBox:
                     [self.long + self.width, self.lat],
                     [self.long, self.lat]]
         if self.isLand() == False:
-            return Polygon(bounds, closed = True, fill = True, color = 'Blue', alpha = self.iceArea())
+            return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
         return Polygon(bounds, closed = True, fill = True, color = 'Brown', alpha=1)
         
     def getBorder(self):
@@ -160,7 +160,6 @@ class CellBox:
         '''
             INCLUDE 
         '''  
-
         s = ""
         s += self.getRange() + "\n"
         s += "    No. of IcePoint: " + str(self.getIcePointLength()) + "\n"
@@ -176,7 +175,6 @@ class CellBox:
         '''
             convert cellBox to JSON 
         '''  
-
         s = "{"
         s += "\"lat\":" + str(self.lat) + ","
         s += "\"long\":" + str(self.long) + ","
@@ -187,7 +185,7 @@ class CellBox:
         s += "}"
         return s
 
-    def isHomogenous(self):
+    def isHomogenous(self,splitLand,splitIce):
         '''
             returns true or false if a cell is deemed homogenous, used to define a base case for recursive splitting. 
         '''  
@@ -195,17 +193,15 @@ class CellBox:
         lowerBound = 0.15
         upperBound = 0.75
         
-         # If a cell contains any point which is considered land, return False
+
+        # If a cell contains any point which is considered land, return False
         depthList = self._icePoints['depth']
-        
-        
-         # If a cell contains only points condsidered land, return True
+        # If a cell contains only points condsidered land, return True
         if (depthList < 10).all():
             return True
         if (depthList < 10).any():
             return False
-        
-       
+    
         if self.iceArea() < lowerBound:
             return True
         if self.iceArea() > upperBound:
@@ -255,13 +251,12 @@ class CellBox:
 
         return splitBoxes
 
-    def recursiveSplit(self, maxSplits):
+    def recursiveSplit(self, maxSplits,splitLand=False,splitIce=True):
         '''
             INCLUDE 
         '''  
-
         splitCells = []
-        if self.isHomogenous() or (self.splitDepth >= maxSplits):
+        if self.isHomogenous(splitLand,splitIce) or (self.splitDepth >= maxSplits):
             splitCells.append(self)
             return splitCells
         else:
