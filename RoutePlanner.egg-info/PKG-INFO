@@ -1,0 +1,49 @@
+Metadata-Version: 1.2
+Name: RoutePlanner
+Version: 0.0.1
+Summary: RoutePlanner: Optimal Route Planner for SDA
+Home-page: UNKNOWN
+Author: Maria Fox, James Byrne, Jonathan Smith, Samuel Hall, George Coombs
+Author-email: jonsmi@bas.ac.uk
+Maintainer: Maria Fox, James Byrne, Jonathan Smith, Samuel Hall, George Coombs
+Maintainer-email: jonsmi@bas.ac.uk
+License: UNKNOWN
+Description: # RoutePlanner: Long-distance naval navigation route planner
+        ---
+        
+        ![GitHub last commit](https://img.shields.io/github/last-commit/antarctica/SDADT-pyRoutePlanner?style=plastic)
+        ![GitHub stars](https://img.shields.io/github/stars/antarctica/SDADT-pyRoutePlanner?style=social)
+        ![GitHub forks](https://img.shields.io/github/forks/antarctica/SDADT-pyRoutePlanner?style=social)
+        ![GitHub watchers](https://img.shields.io/github/watchers/antarctica/SDADT-pyRoutePlanner?style=social)
+        
+        ---
+        ## Introduction
+        A long-distance route planner for naval navigation around Antartica. This work is a refactor from the original Java code at [link](https://github.com/foxm1/RoutePlanner). 
+        
+        This work is currently under development! 
+        
+        ---
+        ## Installation
+        
+        The RoutePlanner software can be installed by using
+        ```
+          python setup.py install
+        ```
+        with an example Ipython/Jupyter Notebook given by file:
+        ```
+        example.ipynb
+        ```
+        
+        ---
+        ## BAS Developers
+        Maria Fox, James Byrne, Samuel Hall, Geoarge Coombs, Michael Thorne & Jonathan Smith
+        
+Keywords: BAS,SDT,DT
+Platform: UNKNOWN
+Classifier: Development Status :: Beta
+Classifier: Intended Audience :: BAS
+Classifier: Natural Language :: English
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Scientific/Engineering

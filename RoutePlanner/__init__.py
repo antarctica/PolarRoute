@@ -1,5 +1,5 @@
 name = "RoutePlanner"
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __description__ = "RoutePlanner: Optimal Route Planner for SDA"
 __license__ = "GPL v3.0"
 __author__ = "Maria Fox, James Byrne, Jonathan Smith, Samuel Hall, George Coombs"

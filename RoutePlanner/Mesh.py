@@ -6,7 +6,7 @@ from scipy import optimize
 import math
 from matplotlib.patches import Polygon
 
-from RoutePlanner.CellBox import CellBox
+from RoutePlanner.CellBox_JS import CellBox
 
 class Mesh:
   def __init__(self,MeshInfo,verbrose=True):
