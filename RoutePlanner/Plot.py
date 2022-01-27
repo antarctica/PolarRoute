@@ -30,14 +30,14 @@ def PlotMesh(ms,figInfo=None):
         ax.quiver((cell.x+cell.dx/2),(cell.y+cell.dy/2),cell.vector[0],cell.vector[1],scale=2,width=0.002,color='gray')
 
         if cell.isLand:
-            ax.add_patch(Polygon(Bounds, closed=True,fill=True,color='Green',edgecolor='Gray'))
+            ax.add_patch(Polygon(Bounds, closed=True,fill=True,facecolor ='Green',edgecolor='Gray'))
         else:
-            ax.add_patch(Polygon(Bounds, closed=True,fill=True,color='Blue',alpha=cell.value))
+            ax.add_patch(Polygon(Bounds, closed=True,fill=True,facecolor ='Blue',alpha=cell.value,edgecolor='Gray'))
             if cell.value > ms.meshinfo['IceExtent']['MaxProportion']:
-                qp = ax.add_patch(Polygon(Bounds, closed=True, fill= False))
+                qp = ax.add_patch(Polygon(Bounds, closed=True, fill= False,edgecolor='Gray'))
                 qp.set_hatch('/')
         
-        ax.add_patch(Polygon(Bounds, closed=True,fill=False,color='gray'))
+        ax.add_patch(Polygon(Bounds, closed=True,fill=False,edgecolor='Gray'))
 
     ax.set_xlim([ms.meshinfo['Xmin'],ms.meshinfo['Xmax']])
     ax.set_ylim([ms.meshinfo['Ymin'],ms.meshinfo['Ymax']])
