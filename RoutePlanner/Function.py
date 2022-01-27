@@ -470,10 +470,15 @@ class NewtonianDistance:
                                           (self.Cell_s.cx+(abs(self.Cell_s.dxp)+abs(self.Cell_n.dxm)),self.Cell_n.cy))
             ang         = math.atan((self.Cell_n.cy - self.Cell_s.cy)/(self.Cell_n.cx - self.Cell_s.cx))
             yinit       = math.tan(ang)*(self.Cell_s.dxp)
-            y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)
-            TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
-            CrossPoints = self.fdist((self.Cell_s.cx + self.Cell_s.dxp,self.Cell_s.cy),(0.0,y),forward=False)
-            CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            try:
+                y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)
+                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
+                CrossPoints = self.fdist((self.Cell_s.cx + self.Cell_s.dxp,self.Cell_s.cy),(0.0,y),forward=False)
+                CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            except:
+                TravelTime  = np.inf
+                CrossPoints = [np.nan,np.nan]
+                CellPoints  = [np.nan,np.nan]
 
         # Case -2 - Negative Longitude
         elif (self.df_x < self.Cell_s.dx/2) and (abs(self.df_y) < (self.Cell_s.dy/2)):
@@ -486,10 +491,15 @@ class NewtonianDistance:
                                           (self.Cell_s.cx-(abs(self.Cell_s.dxm)+abs(self.Cell_n.dxp)),self.Cell_n.cy))
             ang         = np.arctan((self.Cell_n.cy - self.Cell_s.cy)/(self.Cell_n.cx - self.Cell_s.cx))
             yinit       = math.tan(ang)*(-self.Cell_s.dxm)
-            y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)
-            TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
-            CrossPoints = self.fdist((self.Cell_s.cx - self.Cell_s.dxm,self.Cell_s.cy),(0.0,y),forward=False)
-            CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            try:
+                y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)
+                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
+                CrossPoints = self.fdist((self.Cell_s.cx - self.Cell_s.dxm,self.Cell_s.cy),(0.0,y),forward=False)
+                CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            except:
+                TravelTime  = np.inf
+                CrossPoints = [np.nan,np.nan]
+                CellPoints  = [np.nan,np.nan]
 
 
         # Case -4 - Positive Latitude
@@ -503,10 +513,15 @@ class NewtonianDistance:
                                      (self.Cell_n.cx, self.Cell_s.cy + (abs(self.Cell_s.dyp) + abs(self.Cell_n.dym))))
             ang         = np.arctan((self.Cell_n.cx - self.Cell_s.cx)/(self.Cell_n.cy - self.Cell_s.cy))
             yinit       = np.tan(ang)*(self.Cell_s.dyp)
-            y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)          
-            TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
-            CrossPoints = self.fdist((self.Cell_s.cx,self.Cell_s.cy+self.Cell_s.dyp),(-y,0.0),forward=False)
-            CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            try:
+                y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)          
+                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
+                CrossPoints = self.fdist((self.Cell_s.cx,self.Cell_s.cy+self.Cell_s.dyp),(-y,0.0),forward=False)
+                CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            except:
+                TravelTime  = np.inf
+                CrossPoints = [np.nan,np.nan]
+                CellPoints  = [np.nan,np.nan]
 
         # Case 4 - Negative Latitude
         elif (self.df_y > (self.Cell_s.dy/2)) and (abs(self.df_x) < (self.Cell_s.dx/2)):
@@ -519,10 +534,15 @@ class NewtonianDistance:
                                      (self.Cell_n.cx, self.Cell_s.cy - (abs(self.Cell_s.dyp) + abs(self.Cell_n.dym))))
             ang         = np.arctan((self.Cell_n.cx - self.Cell_s.cx)/(self.Cell_n.cy - self.Cell_s.cy))
             yinit       = np.tan(ang)*(-self.Cell_s.dym)
-            y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)
-            TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
-            CrossPoints = self.fdist((self.Cell_s.cx,self.Cell_s.cy-self.Cell_s.dym),(-y,0.0),forward=False)
-            CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            try:
+                y = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s),fprime=_dF,maxiter=350)
+                TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
+                CrossPoints = self.fdist((self.Cell_s.cx,self.Cell_s.cy-self.Cell_s.dym),(-y,0.0),forward=False)
+                CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+            except:
+                TravelTime  = np.inf
+                CrossPoints = [np.nan,np.nan]
+                CellPoints  = [np.nan,np.nan]
 
         # Case 1 - Top Right Corner 
         elif (self.df_y > (self.Cell_s.dy/2)) and (self.df_x > (self.Cell_s.dx/2)):
