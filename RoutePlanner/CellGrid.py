@@ -1,5 +1,6 @@
 import numpy as np
 from RoutePlanner.CellBox import CellBox
+from RoutePlanner.Function import NewtonianDistance
 import matplotlib.pylab as plt
 
 class CellGrid:
@@ -81,7 +82,7 @@ class CellGrid:
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
+            ax.set_facecolor('lightblue')
         else:
             fig,ax = figInfo
 
@@ -89,7 +90,7 @@ class CellGrid:
             ax.add_patch(cellBox.getPolygon())
             ax.add_patch(cellBox.getBorder())
 
-            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC(),cellBox.getvC(),scale=2,width=0.002,color='gray')
+            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
@@ -139,28 +140,54 @@ class CellGrid:
         neightbours_index = leftNeightbours_indx + rightNeightbours_indx + topNeightbours_indx + bottomNeightbours_indx
         return neightbours,neightbours_index
         
-    def highlightCells(self, selectedCellBoxes, figInfo=None):
+    def NewtonNeighbourCells(self,selectedCellBox,figInfo=None,localBounds=False,return_ax=True,shipSpeed=26.3*(1000/(60*60)),debugging=False):
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
+            ax.set_facecolor('lightblue')
         else:
             fig,ax = figInfo
 
         for cellBox in self.cellBoxes:
             ax.add_patch(cellBox.getPolygon())
 
+        # Plotting the neighbour cell boxes
+        selectedCellBoxes,idx = self.getNeightbours(selectedCellBox)
+        bounds=[]
         for cellBox in selectedCellBoxes:
+            bounds.append([cellBox.long,cellBox.lat])
+            bounds.append([cellBox.long+cellBox.width,cellBox.lat+cellBox.height])
             ax.add_patch(cellBox.getHighlight())
             ax.scatter(cellBox.cx,cellBox.cy,15,marker='o',color = 'Red')
-            
-        ax.set_xlim(self._longMin, self._longMax)
-        ax.set_ylim(self._latMin, self._latMax)
+            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
+        bounds = np.array(bounds)
+
+        for cellBox in selectedCellBoxes:
+            # Determining Newton crossing points
+            TravelTime, CrossPoints, CellPoints = NewtonianDistance(selectedCellBox,cellBox,shipSpeed,debugging=debugging).value() 
+            plt.scatter([selectedCellBox.cx,CrossPoints[0],cellBox.cx],[selectedCellBox.cy,CrossPoints[1],cellBox.cy],15,marker='o',color='k')
+            plt.plot([selectedCellBox.cx,CrossPoints[0],cellBox.cx],[selectedCellBox.cy,CrossPoints[1],cellBox.cy],color='k')
+
+
+        # Plotting the source cell box
+        ax.scatter(selectedCellBox.cx,selectedCellBox.cy,30,marker='s',color='k')
+        ax.quiver(selectedCellBox.cx,selectedCellBox.cy,selectedCellBox.getuC()*1000,selectedCellBox.getvC()*1000,scale=2,width=0.002,color='gray')
+
+        if localBounds:
+            ax.set_xlim([bounds[:,0].min(),bounds[:,0].max()])
+            ax.set_ylim([bounds[:,1].min(),bounds[:,1].max()])
+        else:
+            ax.set_xlim(self._longMin, self._longMax)
+            ax.set_ylim(self._latMin, self._latMax)
         
+        if return_ax:
+            return ax
+
     def highlightCell(self, selectedCellBox, figInfo=None):
         if type(figInfo) == type(None):
+            fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
+            ax.set_facecolor('lightblue')
         else:
             fig,ax = figInfo
 
