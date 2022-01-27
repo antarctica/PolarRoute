@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from matplotlib.patches import Polygon
+import math
 
 class CellBox:
     # _icePoints = []
@@ -41,10 +42,36 @@ class CellBox:
                     [self.long + self.width, self.lat],
                     [self.long, self.lat]]
 
-        return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
+        if self.isLand() == False:
+            return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
+        return Polygon(bounds, closed = True, fill = True, color = 'Brown', alpha = 1)
+        
+    def getBorder(self):
+        bounds = [[self.long, self.lat],
+                    [self.long, self.lat + self.height],
+                    [self.long + self.width, self.lat + self.height],
+                    [self.long + self.width, self.lat],
+                    [self.long, self.lat]]
+        
+        return Polygon(bounds, closed = True, fill = False, color = 'Grey', alpha = 1)
+    
+    def getHighlight(self):
+        bounds = [[self.long, self.lat],
+                    [self.long, self.lat + self.height],
+                    [self.long + self.width, self.lat + self.height],
+                    [self.long + self.width, self.lat],
+                    [self.long, self.lat]]
+        
+        return Polygon(bounds, closed = True, fill = False, color = 'Red', alpha = 1)
+    
+    def getWidth(self):
+        return self.width * math.cos(self.lat)
     
     def iceArea(self):
         return self._icePoints['iceArea'].mean()
+    
+    def depth(self):
+        return self._icePoints['depth'].mean()
 
     def getuC(self):
         return self._currentPoints['uC'].mean()
@@ -54,6 +81,19 @@ class CellBox:
     
     def getIcePoints(self):
         return self._icePoints
+    
+    def isLand(self):
+        minDepth = 10
+        if self.depth() <= minDepth:
+            return True
+        return False
+            
+    
+    def containsPoint(self, lat, long):
+        if (lat > self.lat) & (lat < self.lat + self.height):
+            if (long > self.long) & (long < self.long + self.width):
+                return True
+        return False
 
     def toString(self):
         s = ""
@@ -62,7 +102,8 @@ class CellBox:
         s += "    Ice Area: " + str(self.iceArea()) + "\n"
         s += "    split Depth: " + str(self.splitDepth) + "\n"
         s += "    uC: " + str(self.getuC()) + "\n"
-        s += "    vC: " + str(self.getvC())
+        s += "    vC: " + str(self.getvC()) + "\n"
+        s += "    depth: " + str(self.depth())
         return s
 
     # convert cellBox to JSON
@@ -77,15 +118,27 @@ class CellBox:
         s += "}"
         return s
 
-    # returns true or false if a cell is deemd homogenous, used to define a base case for recursive splitting.
+    # returns true or false if a cell is deemed homogenous, used to define a base case for recursive splitting.
     def isHomogenous(self):
-        lowerBound = 0.05
-        upperBound = 0.99
-
+        lowerBound = 0.15
+        upperBound = 0.75
+        
+         # If a cell contains any point which is considered land, return False
+        depthList = self._icePoints['depth']
+        
+        
+         # If a cell contains only points condsidered land, return True
+        if (depthList < 10).all():
+            return True
+        if (depthList < 10).any():
+            return False
+        
+       
         if self.iceArea() < lowerBound:
             return True
         if self.iceArea() > upperBound:
             return True
+        
         return False
 
     # splits the current cellbox into 4 corners, returns as a list of cellbox objects.
@@ -110,18 +163,18 @@ class CellBox:
             splitBox.splitDepth = self.splitDepth + 1
             
             #Split icePoints per box
-            longLoc = self._icePoints.loc[(self._icePoints['long'] > splitBox.long) & (
-                        self._icePoints['long'] < (splitBox.long + splitBox.width))]
-            latLongLoc = self._icePoints.loc[
-                (self._icePoints['lat'] > splitBox.lat) & (self._icePoints['lat'] < (splitBox.lat + splitBox.height))]
+            longLoc = self._icePoints.loc[(self._icePoints['long'] >= splitBox.long) & 
+                                          (self._icePoints['long'] < (splitBox.long + splitBox.width))]
+            latLongLoc = longLoc.loc[(self._icePoints['lat'] >= splitBox.lat) & 
+                                             (self._icePoints['lat'] < (splitBox.lat + splitBox.height))]
             
             splitBox.addIcePoints(latLongLoc)
             
             #Split currentPoints per box
-            longLoc = self._currentPoints.loc[(self._currentPoints['long'] > splitBox.long) & (
-                        self._currentPoints['long'] < (splitBox.long + splitBox.width))]
-            latLongLoc = self._currentPoints.loc[
-                (self._currentPoints['lat'] > splitBox.lat) & (self._currentPoints['lat'] < (splitBox.lat + splitBox.height))]
+            longLoc = self._currentPoints.loc[(self._currentPoints['long'] >= splitBox.long) & 
+                                              (self._currentPoints['long'] < (splitBox.long + splitBox.width))]
+            latLongLoc = longLoc.loc[(self._currentPoints['lat'] >= splitBox.lat) & 
+                                                 (self._currentPoints['lat'] < (splitBox.lat + splitBox.height))]
             
             splitBox.addCurrentPoints(latLongLoc)
 
