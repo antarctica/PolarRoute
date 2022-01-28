@@ -78,11 +78,12 @@ class CellGrid:
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
         
-    def plot(self,figInfo=None):
+    def plot(self,figInfo=None,currents=False):
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
             ax.set_facecolor('lightblue')
+            ax.patch.set_alpha(0.5)
         else:
             fig,ax = figInfo
 
@@ -90,7 +91,8 @@ class CellGrid:
             ax.add_patch(cellBox.getPolygon())
             ax.add_patch(cellBox.getBorder())
 
-            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
+            if currents:
+                ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
@@ -145,6 +147,7 @@ class CellGrid:
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
             ax.set_facecolor('lightblue')
+            ax.patch.set_alpha(0.5)
         else:
             fig,ax = figInfo
 
@@ -159,7 +162,7 @@ class CellGrid:
             bounds.append([cellBox.long+cellBox.width,cellBox.lat+cellBox.height])
             ax.add_patch(cellBox.getHighlight())
             ax.scatter(cellBox.cx,cellBox.cy,15,marker='o',color = 'Red')
-            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
+            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*0.5,cellBox.getvC()*0.5,scale=2,width=0.002,color='gray')
         bounds = np.array(bounds)
 
         for cellBox in selectedCellBoxes:
@@ -171,7 +174,7 @@ class CellGrid:
 
         # Plotting the source cell box
         ax.scatter(selectedCellBox.cx,selectedCellBox.cy,30,marker='s',color='k')
-        ax.quiver(selectedCellBox.cx,selectedCellBox.cy,selectedCellBox.getuC()*1000,selectedCellBox.getvC()*1000,scale=2,width=0.002,color='gray')
+        ax.quiver(selectedCellBox.cx,selectedCellBox.cy,selectedCellBox.getuC()*0.5,selectedCellBox.getvC()*0.5,scale=2,width=0.002,color='gray')
 
         if localBounds:
             ax.set_xlim([bounds[:,0].min(),bounds[:,0].max()])

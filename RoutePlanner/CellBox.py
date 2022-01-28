@@ -24,7 +24,6 @@ class CellBox:
         # Minimum Depth to be used in the land mask
         self.minDepth = 10
 
-
     def _define_waypoints(self,pt):
         self.cx,self.cy = pt
         self.cx_ub = (self.long + self.width) - self.cx
@@ -87,7 +86,7 @@ class CellBox:
                     [self.long, self.lat]]
         if self.isLand() == False:
             return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
-        return Polygon(bounds, closed = True, fill = True, color = 'Brown', alpha=1)
+        return Polygon(bounds, closed = True, fill = True, color = 'mediumseagreen', alpha=1)
         
     def getBorder(self):
         '''
@@ -131,13 +130,13 @@ class CellBox:
         '''
             INCLUDE 
         '''          
-        return self._currentPoints['uC'].mean()
+        return self._currentPoints['uC'].mean()*((60*60)/1000)
     
     def getvC(self):
         '''
             INCLUDE 
         '''  
-        return self._currentPoints['vC'].mean()
+        return self._currentPoints['vC'].mean()*((60*60)/1000)
     
     def getIcePoints(self):
         '''
@@ -185,7 +184,7 @@ class CellBox:
         s += "}"
         return s
 
-    def isHomogenous(self,splitLand,splitIce):
+    def isHomogenous(self):
         '''
             returns true or false if a cell is deemed homogenous, used to define a base case for recursive splitting. 
         '''  
@@ -256,7 +255,7 @@ class CellBox:
             INCLUDE 
         '''  
         splitCells = []
-        if self.isHomogenous(splitLand,splitIce) or (self.splitDepth >= maxSplits):
+        if self.isHomogenous() or (self.splitDepth >= maxSplits):
             splitCells.append(self)
             return splitCells
         else:

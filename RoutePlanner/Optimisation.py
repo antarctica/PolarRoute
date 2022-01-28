@@ -154,15 +154,16 @@ class TravelTime:
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
 
-    def PlotPaths(self,figInfo=None,routepoints=False,waypoints=None,return_ax=True):
+    def PlotPaths(self,figInfo=None,routepoints=False,waypoints=None,return_ax=True,currents=False):
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
             ax.set_facecolor('lightblue')
+            ax.patch.set_alpha(0.5)
         else:
             fig,ax = figInfo
 
-        self.Mesh.plot(figInfo=(fig,ax))
+        self.Mesh.plot(figInfo=(fig,ax),currents=currents)
 
         # Constructing the cell paths information
         if type(waypoints) == type(None):
@@ -171,7 +172,7 @@ class TravelTime:
             waypointList = waypoints
 
         for Path in self.Paths:
-            if (Path['from'] in waypointList) and (Path['to'] in waypointList):
+            if (Path['from'] in waypointList):
                 if Path['TotalCost'] == np.inf:
                     continue
                 Points = np.array(Path['Path']['FullPath'])
