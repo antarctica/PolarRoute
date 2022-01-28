@@ -1,2 +1,4 @@
 resources/icepoints2019-02-08.json
 resources/currentPoints.json
+*.pyc
+**/__pycache__
