@@ -193,13 +193,13 @@ class CellBox:
         upperBound = 0.75
         
 
-        # If a cell contains any point which is considered land, return False
-        depthList = self._icePoints['depth']
-        # If a cell contains only points condsidered land, return True
-        if (depthList < 10).all():
-            return True
-        if (depthList < 10).any():
-            return False
+        # # If a cell contains any point which is considered land, return False
+        # depthList = self._icePoints['depth']
+        # # If a cell contains only points condsidered land, return True
+        # if (depthList < 10).all():
+        #     return True
+        # if (depthList < 10).any():
+        #     return False
     
         if self.iceArea() < lowerBound:
             return True

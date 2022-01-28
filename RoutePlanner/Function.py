@@ -211,7 +211,6 @@ class NewtonianDistance:
             yinit       = np.tan(ang)*(self.Cell_s.cy_lb)
             if self.debugging:
                 print('Negative Lat: Yinit={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s={:.2f}'.format(yinit,x,a,Y,u1,v1,u2,v2,self.s))
-
             y = self.NewtonOptimisation(_F,_dF,yinit,x,a,Y,u1,v1,u2,v2,self.s)        
             TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s)
             CrossPoints = self.fdist((self.Cell_s.cx,self.Cell_s.cy-self.Cell_s.cy_lb),(-y,0.0),forward=False)
@@ -292,33 +291,33 @@ class NewtonianDistance:
         if self.debugging:
             print('============================================')
 
-
         # ======= Determining the Newton Value dependent on case
         # Case 2 - Positive Longitude
-        if (self.df_x > self.Cell_s.width/2) and (abs(self.df_y) < (self.Cell_s.height/2)):
+        if (self.df_x > self.Cell_s.width/2) and (abs(self.df_y) <= (self.Cell_s.height/2)):
             TravelTime,CrossPoints,CellPoints = _positive_longitude(self)
         # Case -2 - Negative Longitude
-        elif (self.df_x < self.Cell_s.width/2) and (abs(self.df_y) < (self.Cell_s.height/2)):
+        elif (self.df_x < -(self.Cell_s.width/2)) and (abs(self.df_y) <= (self.Cell_s.height/2)):
             TravelTime,CrossPoints,CellPoints = _negative_longitude(self)
         # Case -4 - Positive Latitude
-        elif (self.df_y > (self.Cell_s.height/2)) and (abs(self.df_x) < (self.Cell_s.width/2)):
+        elif (self.df_y > (self.Cell_s.height/2)) and (abs(self.df_x) <= (self.Cell_s.width/2)):
             TravelTime,CrossPoints,CellPoints = _positive_latitude(self)
         # Case 4 - Negative Latitude
-        elif (self.df_y < (self.Cell_s.height/2)) and (abs(self.df_x) < (self.Cell_s.width/2)):
+        elif (self.df_y < -(self.Cell_s.height/2)) and (abs(self.df_x) <= (self.Cell_s.width/2)):
             TravelTime,CrossPoints,CellPoints = _negative_latitude(self)
         # Case 1 - Top Right Corner 
         elif (self.df_y > (self.Cell_s.height/2)) and (self.df_x > (self.Cell_s.width/2)):
             TravelTime,CrossPoints,CellPoints = _top_right_corner(self)    
         # Case 3 - Bottom Right Corner 
-        elif (self.df_y < (self.Cell_s.height/2)) and (self.df_x > (self.Cell_s.width/2)):
+        elif (self.df_y < -(self.Cell_s.height/2)) and (self.df_x > (self.Cell_s.width/2)):
             TravelTime,CrossPoints,CellPoints = _bottom_right_corner(self)  
         # Case -1 - Bottom Left Corner 
-        elif (self.df_y < (self.Cell_s.height/2)) and (self.df_x < (self.Cell_s.width/2)):
+        elif (self.df_y < -(self.Cell_s.height/2)) and (self.df_x < -(self.Cell_s.width/2)):
             TravelTime,CrossPoints,CellPoints = _bottom_left_corner(self)
         # Case -3 - Top Left Corner 
-        elif (self.df_y > (self.Cell_s.height/2)) and (self.df_x < (self.Cell_s.width/2)):
+        elif (self.df_y > (self.Cell_s.height/2)) and (self.df_x < -(self.Cell_s.width/2)):
             TravelTime,CrossPoints,CellPoints = _top_left_corner(self)
         else:
+            print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}; (dx,dy)={:.2f},{:.2f}; (diffX,diffY)={:.2f},{:.2f}'.format(self.Cell_s.cx,self.Cell_s.cy,self.Cell_s.width/2,self.Cell_s.height/2,self.df_x,self.df_y))
             
             TravelTime  = np.inf
             CrossPoints = [np.nan,np.nan]
