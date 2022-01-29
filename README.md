@@ -1,4 +1,4 @@
-# RoutePlanner: Long-distance naval navigation route planner
+# RoutePlanner: Long-distance marine navigation route planner
 ---
 ## Introduction
 A long-distance route planner for naval navigation around Antartica. This work is a refactor from the original Java code at [link](https://github.com/foxm1/RoutePlanner). 
