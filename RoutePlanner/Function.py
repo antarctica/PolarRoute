@@ -346,305 +346,373 @@ class NewtonianDistance:
 
 
 
-# class SmoothedNewtonianDistance:
-#     def __init__(self,Mesh,Cell_s,Cell_n,s):
-
-#         self.Mesh   = Mesh
-#         self.Cell_s = Cell_s
-#         self.Cell_n = Cell_n
-#         self.s      = s
-#         self.fdist.value  = _Euclidean_distance
-#         self.R      = 6371
-
-#         # Determining the distance between the cell centres to 
-#         #be used in defining the case
-#         self.df_x = (self.Cell_n.x+self.Cell_n.dx) -  (self.Cell_s.x+self.Cell_s.dx)
-#         self.df_y = (self.Cell_n.y+self.Cell_n.dy) -  (self.Cell_s.y+self.Cell_s.dy)
+class NewtonianCurve:
+    def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=500,optimizer_tol=1e-7):
+        self.Mesh = Mesh
         
-#         # Determine the distance to the edge of the box. This
-#         #is important for waypoint cases
-#         if np.sign(self.df_x) == 1:
-#             self.S_dx = self.Cell_s.cx_ub; self.N_dx = -self.Cell_n.cx_lb
-#         else:
-#             self.S_dx = -self.Cell_s.cx_lb; self.N_dx = self.Cell_n.cx_ub  
-#         #dY       
-#         if np.sign(self.df_y) == 1:
-#             self.S_dy = self.Cell_s.cy_ub; self.N_dy = -self.Cell_n.cy_lb
-#         else:
-#             self.S_dy = -self.Cell_s.cy_lb; self.N_dy = self.Cell_n.cy_ub 
+        # Defining the Source Point (Sp), Crossing Point (Cp) and Neighbour Point(Np)
+        self.Sp   = Sp
+        self.Cp   = Cp
+        self.Np   = Np
+        self.Box1 = self.Mesh.getCellBox((self.Cp[1]+self.Sp[1])/2,(self.Cp[0]+self.Sp[0])/2)
+        self.Box2 = self.Mesh.getCellBox((self.Cp[1]+self.Np[1])/2,(self.Cp[0]+self.Np[0])/2) 
+
+        # Inside the code the base units are m/s. Changing the units of the inputs to match
+        self.unit_shipspeed = unit_shipspeed
+        self.unit_time      = unit_time
+        self.s              = self._unit_speed(s)
+        
+        # Information for distance metrics
+        self.R              = 6371
+        self.fdist          = _Euclidean_distance(self.Box1.lat+self.Box1.height)
+
+        # Optimisation Information
+        self.maxiter       = maxiter
+        self.optimizer_tol = optimizer_tol
+
+        # For Debugging purposes 
+        self.debugging     = debugging
+        self.debugging2    = False
+
+        # Determining the distance between the cell centres to 
+        self.df_x = (self.Box2.long+self.Box2.width/2) -  (self.Box1.long+self.Box1.width/2)
+        self.df_y = (self.Box2.lat+self.Box2.height/2) -  (self.Box1.lat+self.Box1.height/2)
+
+        # Determining positive of negative Long 
+        if np.sign(self.df_x) == 1:
+            self.Box1_dx = self.Box1.cx_ub; self.Box2_dx  = -self.Box2.cx_lb
+        else:
+            self.Box1_dx = -self.Box1.cx_lb; self.Box2_dx = self.Box2.cx_ub      
+        if np.sign(self.df_y) == 1:
+            self.Box1_dy = self.Box1.cy_ub; self.Box2_dy  = -self.Box2.cy_lb
+        else:
+            self.Box1_dy = -self.Box1.cy_lb; self.Box2_dy = self.Box2.cy_ub   
 
 
-#     def value(self):
+    def _unit_speed(self,Val):
+        if self.unit_shipspeed == 'km/hr':
+            Val = Val*(1000/(60*60))
+        if self.unit_shipspeed == 'knots':
+            Val = (Val*0.51)
+        return Val
 
-#         if ((abs(self.df_x) >= (self.Cell_s.dx/2)) and (abs(self.df_y) < (self.Cell_s.dy/2))):
-#             TravelTime, CrossPoints, CellPoints = self._long_case()
-#         elif (abs(self.df_x) < self.Cell_s.dx/2) and (abs(self.df_y) >= self.Cell_s.dy/2):
-#             TravelTime, CrossPoints, CellPoints = self._lat_case()
-#         elif (abs(self.df_x) >= self.Cell_s.dx/2) and (abs(self.df_y) >= self.Cell_s.dy/2):
-#             TravelTime, CrossPoints, CellPoints = self._corner_case()
-#         else:
-#             TravelTime  = np.inf
-#             CrossPoints = [np.nan,np.nan]
-#             CellPoints  = [np.nan,np.nan]
-
-#         CrossPoints[0] = np.clip(CrossPoints[0],self.Cell_n.x,(self.Cell_n.x+self.Cell_n.dx))
-#         CrossPoints[1] = np.clip(CrossPoints[1],self.Cell_n.y,(self.Cell_n.y+self.Cell_n.dy))
-
-#         return TravelTime, CrossPoints, CellPoints
-
-#     def _long_case(self):
-
-#         def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
-#             θ  = y/R + λ_s
-#             zl = x*math.cos(θ)
-#             ψ  = -(Y-y)/R + φ_r
-#             zr = a*math.cos(ψ)
-
-#             d1  = np.sqrt(zl**2 + y**2)
-#             d2  = np.sqrt(zl**2 + (Y-y)**2)
-#             C1  = s**2 - u1**2 - v1**2
-#             D1  = zl*u1 + y*v1
-#             X1  = np.sqrt(D1**2 + C1*(d1**2))
-#             C2  = s**2 - u2**2 - v2**2
-#             D2  = zr*u2 + (Y-y)*v2
-#             X2  = np.sqrt(D2**2 + C2*(d2**2))
-
-#             dzr = (-a*math.sin(ψ))/R
-#             dzl = (-x*math.sin(θ))/R
-
-#             F  = (X1+X2)*y - ((X1-D1)*X2*v1)/C1 + ((X2-D2)*X1*v2)/C2\
-#                 - Y*X1 + dzr*(zr-((X2-D2)/C2))*X1 + dzl*(zl-((X1-D1)/C1))*X2
-#             return F
-
-#         def _dF(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
-#             θ  = y/R + λ_s
-#             zl = x*math.cos(θ)
-#             ψ  = -(Y-y)/R + φ_r
-#             zr = a*math.cos(ψ)
-
-#             d1  = np.sqrt(zl**2 + y**2)
-#             d2  = np.sqrt(zl**2 + (Y-y)**2)
-#             C1  = s**2 - u1**2 - v1**2
-#             D1  = zl*u1 + y*v1
-#             X1  = np.sqrt(D1**2 + C1*(d1**2))
-#             C2  = s**2 - u2**2 - v2**2
-#             D2  = zr*u2 + (Y-y)*v2
-#             X2  = np.sqrt(D2**2 + C2*(d2**2))
-
-#             dzr = (-a*math.sin(ψ))/R
-#             dzl = (-x*math.sin(θ))/R
-#             dD1 = dzl*u1 + v1
-#             dD2 = dzr*u2 - v2
-#             dX1 = (D1*v1 + C1*y + dzl*(D1*u1 + C1*zl))/X1
-#             dX2 = (-v2*D2 - C2*(Y-y) + dzr*(D2*u2 + C2*zr))/X2        
-
-#             dF = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1))\
-#                 + (v2/C2)*(dX1*(X2-D2) + X1*(dX2-dD2))\
-#                 - Y*dX1 - (zr/(R**2))*(zr-((X2-D2)*u2)/C2)*X1\
-#                 - (zl/(R**2))*(zl-((X1-D1)*u1)/C1)*X2\
-#                 + dzr*(dzr-(u2/C2)*(dX2-dD2))*X1\
-#                 + dzl*(dzl-(u1/C1)*(dX1-dD1))*X2\
-#                 + dzr(zr-((X2-D2)*u2)/C2)*dX1 + dzl*(zl-((X1-D1)*u1)/C1)*dX2
-#             return dF 
-
-#         def _T(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
-#             θ  = y/R + λ_s
-#             zl = x*math.cos(θ)
-#             ψ  = -(Y-y)/R + φ_r
-#             zr = a*math.cos(ψ)
-
-#             d1  = np.sqrt(zl**2 + y**2)
-#             d2  = np.sqrt(zl**2 + (Y-y)**2)
-#             C1  = s**2 - u1**2 - v1**2
-#             D1  = zl*u1 + y*v1
-#             X1  = np.sqrt(D1**2 + C1*(d1**2))
-#             t1  = (X1-D1)/C1
-#             C2  = s**2 - u2**2 - v2**2
-#             D2  = zr*u2 + (Y-y)*v2
-#             X2  = np.sqrt(D2**2 + C2*(d2**2))
-#             t2  = (X2-D2)/C2
-#             TT  = t1 + t2
-#             return TT
-
-#         u1 = np.sign(self.df_x)*self.Cell_s.getuC(); v1 = self.Cell_s.getvC()
-#         u2 = np.sign(self.df_x)*self.Cell_n.getuC(); v2 = self.Cell_n.getvC()
-#         λ_s = self.Cell_s.cy
-#         φ_r = self.Cell_n.cy
-#         x     = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy), (self.Cell_s.cx + self.S_dx,self.Cell_s.cy))
-#         a     = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx + self.N_dx,self.Cell_n.cy))
-#         Y     = self.fdist.value((self.Cell_s.cx + np.sign(self.df_x)*(abs(self.S_dx) + abs(self.N_dx)), self.Cell_s.cy), (self.Cell_s.cx + np.sign(self.df_x)*(abs(self.S_dx) + abs(self.N_dx)),self.Cell_n.cy))
-#         ang   = np.arctan((self.Cell_n.cy - self.Cell_s.cy)/(self.Cell_n.cx - self.Cell_s.cx))
-#         yinit = np.tan(ang)*(self.S_dx)
-#         try:
-#             y  = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r),fprime=_dF)
-#         except:
-#             y  = yinit
-#         TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
-#         CrossPoints = self.fdist.value((self.Cell_s.cx + self.S_dx,self.Cell_s.cy),(0.0,y),forward=False)
-#         CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
-
-#         return TravelTime,CrossPoints,CellPoints
+    def _unit_time(self,Val):
+        if self.unit_time == 'days':
+            Val = Val/(60*60*24)
+        elif self.unit_time == 'hr':
+            Val = Val/(60*60)
+        elif self.unit_time == 'min':
+            Val = Val/(60)
+        elif self.unit_time == 's':
+            Val = Val
+        return Val
 
 
-#     def _lat_case(self):
-#         def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
-#             r1  = math.cos(λ)/math.cos(θ)
-#             r2  = math.cos(ψ)/math.cos(θ)
+    def _long_case(self):
+            def NewtonOptimisationLong(f,df,y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+                    if self.debugging2:
+                            print('---Initial y={:.2f}'.format(y0))
+                    if self.maxiter > 0:
+                        for iter in range(self.maxiter):
+                            F  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r)
+                            dF = df(y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r)
+                            if self.debugging2:
+                                print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'.format(iter,y0,F,dF))
+                            y0  = y0 - (F/dF)
+                            if F < self.optimizer_tol:
+                                break
+                    return y0
 
-#             d1  = np.sqrt(x**2 + (r1*y)**2)
-#             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
-#             C1  = s**2 - u1**2 - v1**2
-#             C2  = s**2 - u2**2 - v2**2
-#             D1  = x*u1 + r1*v1*Y
-#             D2  = a*u2 + r2*v2*(Y-y)
-#             X1  = np.sqrt(D1**2 + C1*(d1**2))
-#             X2  = np.sqrt(D2**2 + C2*(d2**2)) 
 
-#             F = ((r2**2)*X1 + (r1**2)*X2)*y - ((r1*(X1-D1)*X2*v2)/C1) + ((r2*(X2-D2)*X1*v2)/C2) - (r2**2)*Y*X1
-#             return F
+            def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+                θ  = y/R + λ_s
+                zl = x*np.cos(θ*(np.pi/180))
+                ψ  = -(Y-y)/R + φ_r
+                zr = a*np.cos(ψ*(np.pi/180))
 
-#         def _dF(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
-#             r1  = math.cos(λ)/math.cos(θ)
-#             r2  = math.cos(ψ)/math.cos(θ)
+                d1  = np.sqrt(zl**2 + y**2)
+                d2  = np.sqrt(zl**2 + (Y-y)**2)
+                C1  = s**2 - u1**2 - v1**2
+                D1  = zl*u1 + y*v1
+                X1  = np.sqrt(D1**2 + C1*(d1**2))
+                C2  = s**2 - u2**2 - v2**2
+                D2  = zr*u2 + (Y-y)*v2
+                X2  = np.sqrt(D2**2 + C2*(d2**2))
 
-#             d1  = np.sqrt(x**2 + (r1*y)**2)
-#             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
-#             C1  = s**2 - u1**2 - v1**2
-#             C2  = s**2 - u2**2 - v2**2
-#             D1  = x*u1 + r1*v1*Y
-#             D2  = a*u2 + r2*v2*(Y-y)
-#             X1  = np.sqrt(D1**2 + C1*(d1**2))
-#             X2  = np.sqrt(D2**2 + C2*(d2**2))   
+                dzr = (-a*np.sin(ψ))/R
+                dzl = (-x*np.sin(θ))/R
+
+                F  = (X1+X2)*y - ((X1-D1)*X2*v1)/C1 + ((X2-D2)*X1*v2)/C2\
+                    - Y*X1 + dzr*(zr-((X2-D2)/C2))*X1 + dzl*(zl-((X1-D1)/C1))*X2
+                return F
+
+            def _dF(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+                θ  = y/R + λ_s
+                zl = x*np.cos(θ*(np.pi/180))
+                ψ  = -(Y-y)/R + φ_r
+                zr = a*np.cos(ψ*(np.pi/180))
+
+                d1  = np.sqrt(zl**2 + y**2)
+                d2  = np.sqrt(zl**2 + (Y-y)**2)
+                C1  = s**2 - u1**2 - v1**2
+                D1  = zl*u1 + y*v1
+                X1  = np.sqrt(D1**2 + C1*(d1**2))
+                C2  = s**2 - u2**2 - v2**2
+                D2  = zr*u2 + (Y-y)*v2
+                X2  = np.sqrt(D2**2 + C2*(d2**2))
+
+                dzr = (-a*np.sin(ψ))/R
+                dzl = (-x*np.sin(θ))/R
+                dD1 = dzl*u1 + v1
+                dD2 = dzr*u2 - v2
+                dX1 = (D1*v1 + C1*y + dzl*(D1*u1 + C1*zl))/X1
+                dX2 = (-v2*D2 - C2*(Y-y) + dzr*(D2*u2 + C2*zr))/X2        
+
+                dF = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1))\
+                    + (v2/C2)*(dX1*(X2-D2) + X1*(dX2-dD2))\
+                    - Y*dX1 - (zr/(R**2))*(zr-((X2-D2)*u2)/C2)*X1\
+                    - (zl/(R**2))*(zl-((X1-D1)*u1)/C1)*X2\
+                    + dzr*(dzr-(u2/C2)*(dX2-dD2))*X1\
+                    + dzl*(dzl-(u1/C1)*(dX1-dD1))*X2\
+                    + dzr*(zr-((X2-D2)*u2)/C2)*dX1 + dzl*(zl-((X1-D1)*u1)/C1)*dX2
+                return dF 
+
+            def _T(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+                θ  = y/R + λ_s
+                zl = x*np.cos(θ*(np.pi/180))
+                ψ  = -(Y-y)/R + φ_r
+                zr = a*np.cos(ψ*(np.pi/180))
+
+                d1  = np.sqrt(zl**2 + y**2)
+                d2  = np.sqrt(zl**2 + (Y-y)**2)
+                C1  = s**2 - u1**2 - v1**2
+                D1  = zl*u1 + y*v1
+                X1  = np.sqrt(D1**2 + C1*(d1**2))
+                t1  = (X1-D1)/C1
+                C2  = s**2 - u2**2 - v2**2
+                D2  = zr*u2 + (Y-y)*v2
+                X2  = np.sqrt(D2**2 + C2*(d2**2))
+                t2  = (X2-D2)/C2
+                TT  = t1 + t2
+                return TT
+
+            u1    = sign(self.df_x)*self.Box1.getuC(); v1 = self.Box1.getvC()
+            u2    = sign(self.df_x)*self.Box2.getuC(); v2 = self.Box2.getvC()
+            λ_s   = self.Box1.cy
+            φ_r   = self.Box2.cy
+            x     = self.fdist.value((self.Box1.cx,self.Box1.cy), (self.Box1.cx + self.Box1_dx,self.Box1.cy))
+            a     = self.fdist.value((self.Box2.cx,self.Box2.cy), (self.Box2.cx + self.Box2_dx,self.Box2.cy))
+            Y     = sign(self.df_y)*self.fdist.value((self.Box1.cx + sign(self.df_x)*(abs(self.Box1_dx) + abs(self.Box2_dx)), self.Box1.cy),\
+                                                     (self.Box1.cx + sign(self.df_x)*(abs(self.Box1_dx) + abs(self.Box2_dx)),self.Box2.cy))
+            y0    = sign(self.df_y)*self.fdist.value((self.Box1.cx+self.Box1_dx,self.Box1.cy), (self.Box1.cx+self.Box1_dx,self.Cp[1]))
+            print(y0,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
+            y     = NewtonOptimisationLong(_F,_dF,y0,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
+
+            TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
+            CrossPoint  = self.fdist.value((self.Box1.cx+self.Box1_dx,self.Box1.cy),(0.0,y0),forward=False)
+            if self.debugging:
+                            print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}]'.format(TravelTime,CrossPoint[0],CrossPoint[1]))   
+
+            return TravelTime,np.array(CrossPoint)[None,:]
+
+
+
+    def _lat_case(self):
+        def NewtonOptimisationLat(f,df,y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+                if self.debugging2:
+                        print('---Initial y={:.2f}'.format(y0))
+                if self.maxiter > 0:
+                    for iter in range(self.maxiter):
+                        F  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ)
+                        dF = df(y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ)
+                        if self.debugging2:
+                            print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'.format(iter,y0,F,dF))
+                        y0  = y0 - (F/dF)
+                        if F < self.optimizer_tol:
+                            break
+                return y0
+
+        def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+            r1  = math.cos(λ*(np.pi/180))/math.cos(θ*(np.pi/180))
+            r2  = math.cos(ψ*(np.pi/180))/math.cos(θ*(np.pi/180))
+
+            d1  = np.sqrt(x**2 + (r1*y)**2)
+            d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
+            C1  = s**2 - u1**2 - v1**2
+            C2  = s**2 - u2**2 - v2**2
+            D1  = x*u1 + r1*v1*Y
+            D2  = a*u2 + r2*v2*(Y-y)
+            X1  = np.sqrt(D1**2 + C1*(d1**2))
+            X2  = np.sqrt(D2**2 + C2*(d2**2)) 
+
+            F = ((r2**2)*X1 + (r1**2)*X2)*y - ((r1*(X1-D1)*X2*v2)/C1) + ((r2*(X2-D2)*X1*v2)/C2) - (r2**2)*Y*X1
+            return F
+
+        def _dF(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+            r1  = math.cos(λ*(np.pi/180))/math.cos(θ*(np.pi/180))
+            r2  = math.cos(ψ*(np.pi/180))/math.cos(θ*(np.pi/180))
+
+            d1  = np.sqrt(x**2 + (r1*y)**2)
+            d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
+            C1  = s**2 - u1**2 - v1**2
+            C2  = s**2 - u2**2 - v2**2
+            D1  = x*u1 + r1*v1*Y
+            D2  = a*u2 + r2*v2*(Y-y)
+            X1  = np.sqrt(D1**2 + C1*(d1**2))
+            X2  = np.sqrt(D2**2 + C2*(d2**2))   
             
-#             dD1 = r1*v1
-#             dD2 = -r2*v2
-#             dX1 = (r1*(D1*v1 + r1*C1*y))/X1
-#             dX2 = (-r2*(D2*v2 + r2*C2*(Y-y)))
+            dD1 = r1*v1
+            dD2 = -r2*v2
+            dX1 = (r1*(D1*v1 + r1*C1*y))/X1
+            dX2 = (-r2*(D2*v2 + r2*C2*(Y-y)))
 
-#             dF = ((r2**2)*X1 + (r1**2)*X2) + y*((r2**2)*dX1 + (r1**2)*dX2)\
-#                 - ((r1*v1)/C1)*((dX1-dD1)*X2 + (X1-D1)*dX2)\
-#                 + ((r2*v2)/C2)*((dX2-dD2)*X1 + (X2-D2)*dX1)\
-#                 - (r2**2)*Y*dX1
+            dF = ((r2**2)*X1 + (r1**2)*X2) + y*((r2**2)*dX1 + (r1**2)*dX2)\
+                - ((r1*v1)/C1)*((dX1-dD1)*X2 + (X1-D1)*dX2)\
+                + ((r2*v2)/C2)*((dX2-dD2)*X1 + (X2-D2)*dX1)\
+                - (r2**2)*Y*dX1
 
-#             return dF
+            return dF
 
-#         def _T(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
-#             r1  = math.cos(λ)/math.cos(θ)
-#             r2  = math.cos(ψ)/math.cos(θ)
+        def _T(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+            r1  = math.cos(λ*(np.pi/180))/math.cos(θ*(np.pi/180))
+            r2  = math.cos(ψ*(np.pi/180))/math.cos(θ*(np.pi/180))
 
-#             d1  = np.sqrt(x**2 + (r1*y)**2)
-#             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
-#             C1  = s**2 - u1**2 - v1**2
-#             C2  = s**2 - u2**2 - v2**2
-#             D1  = x*u1 + r1*v1*Y
-#             D2  = a*u2 + r2*v2*(Y-y)
-#             X1  = np.sqrt(D1**2 + C1*(d1**2))
-#             X2  = np.sqrt(D2**2 + C2*(d2**2))
-#             t1  = (X1-D1)/C1
-#             t2  = (X2-D2)/C2
+            d1  = np.sqrt(x**2 + (r1*y)**2)
+            d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
+            C1  = s**2 - u1**2 - v1**2
+            C2  = s**2 - u2**2 - v2**2
+            D1  = x*u1 + r1*v1*Y
+            D2  = a*u2 + r2*v2*(Y-y)
+            X1  = np.sqrt(D1**2 + C1*(d1**2))
+            X2  = np.sqrt(D2**2 + C2*(d2**2))
+            t1  = (X1-D1)/C1
+            t2  = (X2-D2)/C2
 
-#             TT  = t1+t2
-#             return TT     
+            TT  = t1+t2
+            return TT     
 
-#         u1 = np.sign(self.df_y)*self.Cell_s.getvC(); v1 = self.Cell_s.getuC()
-#         u2 = np.sign(self.df_y)*self.Cell_n.getvC(); v2 = self.Cell_n.getuC()
+        u1 = sign(self.df_y)*self.Box1.getvC(); v1 = self.Box1.getuC()
+        u2 = sign(self.df_y)*self.Box2.getvC(); v2 = self.Box2.getuC()
 
-#         x  = self.fdist.value((self.Cell_s.cy,self.Cell_s.cx), (self.Cell_s.cy + self.S_dy,self.Cell_s.cx))
-#         a  = self.fdist.value((self.Cell_n.cy,self.Cell_n.cx), (self.Cell_n.cy + self.N_dy,self.Cell_n.cx))
-#         Y  = self.fdist.value((self.Cell_s.cy + np.sign(self.df_y)*(abs(self.S_dy) + abs(self.N_dy)), self.Cell_s.cx), (self.Cell_s.cy + np.sign(self.df_y)*(abs(self.S_dy) + abs(self.N_dy)),self.Cell_n.cx))
-#         ang= np.arctan((self.Cell_n.cx - self.Cell_s.cx)/(self.Cell_n.cy - self.Cell_s.cy))
-#         yinit  = np.tan(ang)*(self.S_dy)
+        x  = self.fdist.value((self.Box1.cx,self.Box1.cy), (self.Box1.cx,self.Box1.cy+self.Box1_dy))
+        a  = self.fdist.value((self.Box2.cx,self.Box2.cy), (self.Box2.cx,self.Box2.cy + self.Box2_dy))
+        Y  = self.fdist.value((self.Box1.cx,self.Box1.cy + sign(self.df_y)*(abs(self.Box1_dy) + abs(self.Box2_dy))),\
+                              (self.Box2.cx,self.Box1.cy + sign(self.df_y)*(abs(self.Box1_dy) + abs(self.Box2_dy))))
+
+        yinit  = sign(self.df_x)*self.fdist.value((self.Box1.cx,self.Box1.cy+self.Box1_dy), (self.Cp[0],self.Box1.cy+self.Box1_dy))
         
-#         λ=self.Cell_s.cy
-#         θ=self.Cell_s.cy + self.S_dy
-#         ψ=self.Cell_n.cy
+        λ=self.Sp[1]
+        θ=self.Cp[1]
+        ψ=self.Np[1]
 
-#         try:
-#             y  = optimize.newton(_F,yinit,args=(x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ),fprime=_dF)
-#         except:
-#             y  = yinit
-#         TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
-#         CrossPoints = self.fdist.value((self.Cell_s.cx + self.S_dx,self.Cell_s.cy),(0.0,y),forward=False)
-#         CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]        
+        y  = NewtonOptimisationLat(_F,_dF,yinit,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
 
-#         return TravelTime,CrossPoints,CellPoints
+        TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
+        CrossPoint  = self.fdist.value((self.Box1.cx,self.Box1.cy+self.Box1_dy),(y,0.0),forward=False)
+        if self.debugging:
+                        print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}]'.format(TravelTime,CrossPoint[0],CrossPoint[1]))   
 
-
-#     def _corner_case(self,start_p,crossing_p,end_p,start_index,end_index):
-#         '''
-#             Corner cases as outline in Part 4 of the latex formulations
-
-#             Bug/Corrections
-#                 - Return the new point locations
-#         '''
+        return TravelTime,np.array(CrossPoint)[None,:]
 
 
-#         # Defining the lat/long of the points
-#         Xs,Ys = start_p
-#         Xc,Yc = crossing_p
-#         Xe,Ye = end_p 
+    def _corner_case(self):
+        '''
+            Corner cases as outline in Part 4 of the latex formulations
 
-#         # # Determine the intersection point on the edge where end_p is assuming a straight path through corner
-#         Y_line = ((Yc-Ys)/(Xc-Xs))*(Xe-Xs) + Ys
+            Bug/Corrections
+                - Return the new point locations
+        '''
 
-#         CornerCells = []
-#         for index in self.Mesh.NearestNeighbours(start_index):
-#             cell = self.Mesh.cells[index]
-#             if ((((np.array(cell._bounding_points)[::2,:] - np.array([Xc,Yc])[None,:])**2).sum(axis=1)) == 0).any() & (index!=end_index):
-#                 CornerCells.append([index,cell.x+cell.dx/2,cell.y+cell.dy/2]) 
-#         CornerCells = np.array(CornerCells)
 
-#         # ====== Determining the crossing points & their corresponding index
-#         # Case 1 - Top Right
-#         if (np.sign(self.df_x) == 1) and (np.sign(self.df_y) == 1):
-#             if Ye > Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Crp1_x,Crp1_y = cell.x+cell.dx/2, cell.y
-#                 Crp2_x,Crp2_y = cell.x+cell.dx, cell.y+cell.dy/2
-#             elif Ye < Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Crp1_x,Crp1_y = cell.x, cell.y+cell.dy/2
-#                 Crp2_x,Crp2_y = cell.x+cell.dx/2, cell.y+cell.dy
+        # Defining the lat/long of the points
+        Xs,Ys = self.Sp
+        Xc,Yc = self.Cp
+        Xe,Ye = self.Np
 
-#         # Case -3 - Top Left
-#         if (np.sign(self.df_x) == -1) and (np.sign(self.df_y) == 1):
-#             if Ye > Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Crp1_x,Crp1_y = cell.x+cell.dx/2, cell.y
-#                 Crp2_x,Crp2_y = cell.x, cell.y+cell.dy/2
-#             elif Ye < Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Crp1_x,Crp1_y = cell.x + cell.dx, cell.y+cell.dy/2
-#                 Crp2_x,Crp2_y = cell.x+cell.dx/2, cell.y+cell.dy
+        # # Determine the intersection point on the edge where end_p is assuming a straight path through corner
+        Y_line = ((Yc-Ys)/(Xc-Xs))*(Xe-Xs) + Ys
 
-#         # Case -1 - Bottom Left
-#         if (np.sign(self.df_x) == -1) and (np.sign(self.df_y) == -1):
-#             if Ye > Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Crp1_x,Crp1_y = cell.x+cell.dx, cell.y+cell.dy/2
-#                 Crp2_x,Crp2_y = cell.x+cell.dx/2, cell.y
-#             elif Ye < Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Xr1,Yr1 = cell.x + cell.dx/2, cell.y+cell.dy
-#                 Xr2,Yr2 = cell.x, cell.y+cell.dy/2
 
-#         # Case 3 - Bottom Right
-#         if (np.sign(self.df_x) == -1) and (np.sign(self.df_y) == -1):
-#             if Ye > Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Crp1_x,Crp1_y = cell.x, cell.y+cell.dy/2
-#                 Crp2_x,Crp2_y = cell.x+cell.dx/2, cell.y
-#             elif Ye < Y_line:
-#                 idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
-#                 cell = self.Mesh.cells[idx]
-#                 Crp1_x,Crp1_y = cell.x + cell.dx/2, cell.y+cell.dy
-#                 Crp2_x,Crp2_y = cell.x + cell.dx, cell.y+cell.dy/2
+        print('--Corner Case: Xs=[{:.2f},{:.2f}]; Xc=[{:.2f},{:.2f}]; Xe=[{:.2f},{:.2f}];'.format(Xs,Ys,Xc,Yc,Xe,Ye))   
 
-#         # Appending the crossing points and their relative index
+        # Determining the cells in contact with the corner point
+        CornerCells = []
+        neighbours,neighbours_idx = self.Mesh.getNeightbours(self.Box1)
+        for idx in neighbours_idx:
+            cell = self.Mesh.cellBoxes[idx]
+            if ((((np.array(cell.getBounds()) - np.array([Xc,Yc])[None,:])**2).sum(axis=1)) == 0).any() and (cell.getBounds()!=self.Box2):
+                CornerCells.append([idx,cell.long+cell.width/2,cell.lat+cell.height/2]) 
+        CornerCells = np.array(CornerCells)
+
+
+        print(CornerCells)
+
+        # ====== Determining the crossing points & their corresponding index
+        # Case 1 - Top Right
+        if (np.sign(self.df_x) == 1) and (np.sign(self.df_y) == 1):
+            if Ye > Y_line:
+                idx           = int(CornerCells[CornerCells[:,1].argmin(),0])
+                cell          = self.Mesh.cellBoxes[idx]
+                Crp1_x,Crp1_y = cell.long+cell.width/2, cell.lat
+                Crp2_x,Crp2_y = cell.long+cell.width, cell.lat+cell.height/2
+            elif Ye < Y_line:
+                idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
+                cell = self.Mesh.cellBoxes[idx]
+                Crp1_x,Crp1_y = cell.long, cell.lat+cell.height/2
+                Crp2_x,Crp2_y = cell.long+cell.width/2, cell.lat+cell.height
+
+        # Case -3 - Top Left
+        if (np.sign(self.df_x) == -1) and (np.sign(self.df_y) == 1):
+            if Ye > Y_line:
+                idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
+                cell = self.Mesh.cellBoxes[idx]
+                Crp1_x,Crp1_y = cell.long+cell.width/2, cell.lat
+                Crp2_x,Crp2_y = cell.long, cell.lat+cell.height/2
+            elif Ye < Y_line:
+                idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
+                cell = self.Mesh.cells[idx]
+                Crp1_x,Crp1_y = cell.long + cell.width, cell.lat+cell.height/2
+                Crp2_x,Crp2_y = cell.long+cell.width/2, cell.lat+cell.height
+
+        # Case -1 - Bottom Left
+        if (np.sign(self.df_x) == -1) and (np.sign(self.df_y) == -1):
+            if Ye > Y_line:
+                idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
+                cell = self.Mesh.cellBoxes[idx]
+                Crp1_x,Crp1_y = cell.long+cell.width, cell.lat+cell.height/2
+                Crp2_x,Crp2_y = cell.long+cell.width/2, cell.lat
+            elif Ye < Y_line:
+                idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
+                cell = self.Mesh.cellBoxes[idx]
+                Xr1,Yr1 = cell.long + cell.width/2, cell.lat+cell.height
+                Xr2,Yr2 = cell.long, cell.lat+cell.height/2
+
+        # Case 3 - Bottom Right
+        if (np.sign(self.df_x) == -1) and (np.sign(self.df_y) == -1):
+            if Ye > Y_line:
+                idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
+                cell = self.Mesh.cellBoxes[idx]
+                Crp1_x,Crp1_y = cell.long, cell.lat+cell.height/2
+                Crp2_x,Crp2_y = cell.long+cell.width/2, cell.lat
+            elif Ye < Y_line:
+                idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
+                cell = self.Mesh.cellBoxes[idx]
+                Crp1_x,Crp1_y = cell.long + cell.width/2, cell.lat+cell.height
+                Crp2_x,Crp2_y = cell.long + cell.width, cell.lat+cell.height/2
+
+        # Appending the crossing points and their relative index
+        CrossPoint = [[Crp1_x,Crp1_y],[Crp2_x,Crp2_y]]
+        TravelTime = np.nan
+        if self.debugging:
+                        print('------ TravelTime={:.2f};CellPoints=[[{:.2f},{:.5f}],[{:.2f},{:.5f}]]'.format(TravelTime,CrossPoint[0][0],CrossPoint[0][1],CrossPoint[1][0],CrossPoint[1][1]))   
+
+        return TravelTime,np.array(CrossPoint)
+
+    def value(self):
+        if ((abs(self.df_x) >= (self.Box1.width/2)) and (abs(self.df_y) <= (self.Box1.height/2))):
+            TravelTime, CrossPoint = self._long_case()
+        elif (abs(self.df_x) < self.Box1.width/2) and (abs(self.df_y) >= self.Box1.height/2):
+            TravelTime, CrossPoint = self._lat_case()
+        elif (abs(self.df_x) > self.Box1.width/2) and (abs(self.df_y) > self.Box1.height/2):
+            TravelTime, CrossPoint = self._corner_case()
+        return TravelTime, CrossPoint

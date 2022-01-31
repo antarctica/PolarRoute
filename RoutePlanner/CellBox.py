@@ -99,6 +99,17 @@ class CellBox:
                     [self.long, self.lat]]
         return Polygon(bounds, closed = True, fill = False, color = 'Grey', alpha = 1)
     
+
+
+    def getBounds(self):
+        bounds = [[self.long, self.lat],
+                    [self.long, self.lat + self.height],
+                    [self.long + self.width, self.lat + self.height],
+                    [self.long + self.width, self.lat],
+                    [self.long, self.lat]]
+        return bounds
+
+
     def getHighlight(self):
         '''
             INCLUDE 
