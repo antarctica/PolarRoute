@@ -75,7 +75,7 @@ class CellBox:
         '''        
         return "Lat Range: " + self.getLatRange() + ", Long Range: " + self.getLongRange()
     
-    def getPolygon(self):
+    def getPolygon(self,fill=True):
         '''
             INCLUDE 
         '''        
@@ -85,7 +85,7 @@ class CellBox:
                     [self.long + self.width, self.lat],
                     [self.long, self.lat]]
         if self.isLand() == False:
-            return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
+            return Polygon(bounds, closed = True, fill = fill, color = 'White', alpha = self.iceArea())
         return Polygon(bounds, closed = True, fill = True, color = 'mediumseagreen', alpha=1)
         
     def getBorder(self):
@@ -130,13 +130,13 @@ class CellBox:
         '''
             INCLUDE 
         '''          
-        return self._currentPoints['uC'].mean()*((60*60)/1000)
+        return self._currentPoints['uC'].mean()
     
     def getvC(self):
         '''
             INCLUDE 
         '''  
-        return self._currentPoints['vC'].mean()*((60*60)/1000)
+        return self._currentPoints['vC'].mean()
     
     def getIcePoints(self):
         '''
@@ -193,13 +193,13 @@ class CellBox:
         upperBound = 0.75
         
 
-        # # If a cell contains any point which is considered land, return False
-        # depthList = self._icePoints['depth']
-        # # If a cell contains only points condsidered land, return True
-        # if (depthList < 10).all():
-        #     return True
-        # if (depthList < 10).any():
-        #     return False
+        # If a cell contains any point which is considered land, return False
+        depthList = self._icePoints['depth']
+        # If a cell contains only points condsidered land, return True
+        if (depthList < 10).all():
+            return True
+        if (depthList < 10).any():
+            return False
     
         if self.iceArea() < lowerBound:
             return True
@@ -219,10 +219,10 @@ class CellBox:
         halfHeight = self.height / 2
 
         # create 4 new cellBoxes
-        bottomLeft = CellBox(self.lat, self.long, halfWidth, halfHeight)
+        bottomLeft  = CellBox(self.lat, self.long, halfWidth, halfHeight)
         bottomRight = CellBox(self.lat, self.long + halfWidth, halfWidth, halfHeight)
-        topLeft = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight)
-        topRight = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight)
+        topLeft     = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight)
+        topRight    = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight)
 
         splitBoxes.append(bottomLeft)
         splitBoxes.append(bottomRight)
@@ -233,7 +233,7 @@ class CellBox:
             splitBox.splitDepth = self.splitDepth + 1
             
             #Split icePoints per box
-            longLoc = self._icePoints.loc[(self._icePoints['long'] >= splitBox.long) & 
+            longLoc    = self._icePoints.loc[(self._icePoints['long'] >= splitBox.long) & 
                                           (self._icePoints['long'] < (splitBox.long + splitBox.width))]
             latLongLoc = longLoc.loc[(self._icePoints['lat'] >= splitBox.lat) & 
                                              (self._icePoints['lat'] < (splitBox.lat + splitBox.height))]
@@ -250,7 +250,7 @@ class CellBox:
 
         return splitBoxes
 
-    def recursiveSplit(self, maxSplits,splitLand=False,splitIce=True):
+    def recursiveSplit(self, maxSplits):
         '''
             INCLUDE 
         '''  

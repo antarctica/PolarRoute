@@ -1,21 +1,27 @@
 import numpy as np
 import copy
+import pandas as pd
 import matplotlib.pylab as plt
 
+
 import warnings
-warnings.filterwarnings("ignore", category=RuntimeWarning) 
+# warnings.filterwarnings("ignore", category=RuntimeWarning) 
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from RoutePlanner.Function import NewtonianDistance
 
 class TravelTime:
-    def __init__(self,CellGrid,OptInfo,CostFunc=NewtonianDistance):
+    def __init__(self,CellGrid,OptInfo,CostFunc=NewtonianDistance,unit_shipspeed='km/hr',unit_time='days',zerocurrents=False):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
         self.OptInfo = copy.copy(OptInfo)
 
         self.CostFunc = CostFunc
+
+        self.unit_shipspeed = unit_shipspeed
+        self.unit_time      = unit_time
+        self.zero_currents  = zerocurrents
 
         # ====== Waypoints ======        
         # Dropping waypoints outside domain
@@ -43,9 +49,8 @@ class TravelTime:
             wpt_name  = wpt[1]['Name']
             wpt_index = int(wpt[1]['Index'])
             self.DijkstraInfo[wpt_name] = {}
-            self.DijkstraInfo[wpt_name]['CellIndex']       = np.arange(len(self.Mesh.cellBoxes))
-            self.DijkstraInfo[wpt_name]['TotalCost']       = np.full((len(self.Mesh.cellBoxes)),np.inf)
-            self.DijkstraInfo[wpt_name]['PositionLocked']  = np.zeros((len(self.Mesh.cellBoxes)),dtype=bool)
+            self.DijkstraInfo 
+            self.DijkstraInfo[wpt_name]['Info'] = pd.DataFrame({'CellIndex': np.arange(len(self.Mesh.cellBoxes)), 'TotalCost':np.full((len(self.Mesh.cellBoxes)),np.inf), 'PositionLocked': np.zeros((len(self.Mesh.cellBoxes)),dtype=bool)})
             self.DijkstraInfo[wpt_name]['Path']            = {}
             self.DijkstraInfo[wpt_name]['Path']['FullPath']         = {}
             self.DijkstraInfo[wpt_name]['Path']['CrossingPoints']   = {}
@@ -58,7 +63,7 @@ class TravelTime:
                 self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][djk] = []
                 self.DijkstraInfo[wpt_name]['Path']['CellIndex'][djk]      = [wpt_index]
                 self.DijkstraInfo[wpt_name]['Path']['Cost'][djk]           = [np.inf]
-            self.DijkstraInfo[wpt_name]['TotalCost'][wpt_index]       = 0.0
+            self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'] == wpt_index] = 0.0
             self.DijkstraInfo[wpt_name]['Path']['Cost'][wpt_index] = [0.0]
 
         # ====== Path Information ======
@@ -66,6 +71,25 @@ class TravelTime:
         self.Paths         = {}
         self.SmoothedPaths = {}
         self._paths_smoothed = False
+
+    def Dijkstra2Path(self):
+        self.Paths = []
+        for wpt_a in self.OptInfo['WayPoints'].iterrows():
+            wpt_a_name  = wpt_a[1]['Name']; wpt_a_index = int(wpt_a[1]['Index']); wpt_a_loc   = [[wpt_a[1]['Long'],wpt_a[1]['Lat']]]
+            for wpt_b in self.OptInfo['WayPoints'].iterrows():
+                wpt_b_name  = wpt_b[1]['Name']; wpt_b_index = int(wpt_b[1]['Index']); wpt_b_loc   = [[wpt_b[1]['Long'],wpt_b[1]['Lat']]]
+                if not wpt_a_name == wpt_b_name:
+                    Path = {}
+                    Path['from']                   = wpt_a_name
+                    Path['to']                     = wpt_b_name
+                    Path['TotalCost']              = float(self.DijkstraInfo[wpt_a_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_a_name]['Info']['CellIndex']==wpt_b_index])
+                    Path['Path']                   = {}
+                    Path['Path']['FullPath']       = np.array(wpt_a_loc+self.DijkstraInfo[wpt_a_name]['Path']['FullPath'][wpt_b_index]+wpt_b_loc)
+                    Path['Path']['CrossingPoints'] = np.array(self.DijkstraInfo[wpt_a_name]['Path']['CrossingPoints'][wpt_b_index])
+                    Path['Path']['CentroidPoints'] = np.array(wpt_a_loc+self.DijkstraInfo[wpt_a_name]['Path']['CentroidPoints'][wpt_b_index]+wpt_b_loc)
+                    Path['Path']['CellIndex']      = np.array(self.DijkstraInfo[wpt_a_name]['Path']['CellIndex'][wpt_b_index])
+                    Path['Path']['Cost']           = np.array(self.DijkstraInfo[wpt_a_name]['Path']['Cost'][wpt_b_index])
+                    self.Paths.append(Path)
 
     def NeighbourCost(self,index):
         '''
@@ -99,29 +123,10 @@ class TravelTime:
             if (Cell_n.iceArea() >= self.OptInfo['MaxIceExtent']) or (Cell_s.iceArea() >= self.OptInfo['MaxIceExtent']) or (Cell_n.isLand()) or (Cell_s.isLand()):
                 TravelTime[lp_index] = np.inf
                 continue
-            TravelTime[lp_index], CrossPoints[lp_index,:], CellPoints[lp_index,:] = self.CostFunc(Cell_s,Cell_n,s).value()
+            TravelTime[lp_index], CrossPoints[lp_index,:], CellPoints[lp_index,:] = self.CostFunc(Cell_s,Cell_n,s,unit_shipspeed=self.unit_shipspeed,unit_time=self.unit_time,zerocurrents=self.zero_currents).value()
 
         return neighbours_idx, TravelTime, CrossPoints, CellPoints
 
-
-    def Dijkstra2Path(self):
-        self.Paths = []
-        for wpt_a in self.OptInfo['WayPoints'].iterrows():
-            wpt_a_name  = wpt_a[1]['Name']; wpt_a_index = int(wpt_a[1]['Index']); wpt_a_loc   = [[wpt_a[1]['Long'],wpt_a[1]['Lat']]]
-            for wpt_b in self.OptInfo['WayPoints'].iterrows():
-                wpt_b_name  = wpt_b[1]['Name']; wpt_b_index = int(wpt_b[1]['Index']); wpt_b_loc   = [[wpt_b[1]['Long'],wpt_b[1]['Lat']]]
-                if not wpt_a_name == wpt_b_name:
-                    Path = {}
-                    Path['from']                   = wpt_a_name
-                    Path['to']                     = wpt_b_name
-                    Path['TotalCost']              = self.DijkstraInfo[wpt_a_name]['TotalCost'][wpt_b_index]  
-                    Path['Path']                   = {}
-                    Path['Path']['FullPath']       = np.array(wpt_a_loc+self.DijkstraInfo[wpt_a_name]['Path']['FullPath'][wpt_b_index]+wpt_b_loc)
-                    Path['Path']['CrossingPoints'] = np.array(self.DijkstraInfo[wpt_a_name]['Path']['CrossingPoints'][wpt_b_index])
-                    Path['Path']['CentroidPoints'] = np.array(wpt_a_loc+self.DijkstraInfo[wpt_a_name]['Path']['CentroidPoints'][wpt_b_index]+wpt_b_loc)
-                    Path['Path']['CellIndex']      = np.array(self.DijkstraInfo[wpt_a_name]['Path']['CellIndex'][wpt_b_index])
-                    Path['Path']['Cost']           = np.array(self.DijkstraInfo[wpt_a_name]['Path']['Cost'][wpt_b_index])
-                    self.Paths.append(Path)
 
     def Dijkstra(self,verbrose=False):
         '''
@@ -133,23 +138,28 @@ class TravelTime:
                 print('=== Processing Waypoint = {} ==='.format(wpt_name))
 
             # Loop over all the points until all waypoints are visited
-            while (self.DijkstraInfo[wpt_name]['PositionLocked'][np.array(self.OptInfo['WayPoints']['Index'].astype(int))] == False).any():
+            while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'].isin(np.array(self.OptInfo['WayPoints']['Index'].astype(int)))] == False).any():
+            #while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'] == False).any():
                 # Determining the argument with the next lowest value and hasn't been visited
-                idx = self.DijkstraInfo[wpt_name]['CellIndex'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)][np.argmin(self.DijkstraInfo[wpt_name]['TotalCost'][(self.DijkstraInfo[wpt_name]['PositionLocked']==False)])]
+                non_locked = self.DijkstraInfo[wpt_name]['Info'][self.DijkstraInfo[wpt_name]['Info']['PositionLocked']==False]
+                idx        = non_locked['CellIndex'].loc[non_locked['TotalCost'].idxmin()]
+
                 # Finding the cost of the nearest neighbours
                 Neighbour_index,TT,CrossPoints,CellPoints = self.NeighbourCost(idx)
-                Neighbour_cost     = TT + self.DijkstraInfo[wpt_name]['TotalCost'][idx]
+                Neighbour_cost  = TT + self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0]
+
                 # Determining if the visited time is visited    
                 for jj_v,jj in enumerate(Neighbour_index):
-                    if Neighbour_cost[jj_v] < self.DijkstraInfo[wpt_name]['TotalCost'][jj]:
-                        self.DijkstraInfo[wpt_name]['TotalCost'][jj]              = Neighbour_cost[jj_v]
+                    if Neighbour_cost[jj_v] <= self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj].iloc[0]:
+                        self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj] = Neighbour_cost[jj_v]
                         self.DijkstraInfo[wpt_name]['Path']['FullPath'][jj]       = self.DijkstraInfo[wpt_name]['Path']['FullPath'][idx]       + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][idx] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][idx] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]      = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx]      + [jj]
                         self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]           = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]           + [Neighbour_cost[jj_v]]
+                
                 # Defining the graph point as visited
-                self.DijkstraInfo[wpt_name]['PositionLocked'][idx] = True
+                self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx] = True
 
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
@@ -159,11 +169,11 @@ class TravelTime:
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
             ax.set_facecolor('lightblue')
-            ax.patch.set_alpha(0.5)
+            ax.patch.set_alpha(1.0)
         else:
             fig,ax = figInfo
 
-        self.Mesh.plot(figInfo=(fig,ax),currents=currents)
+        self.Mesh.plot(figInfo=(fig,ax),currents=currents,iceThreshold=self.OptInfo['MaxIceExtent'])
 
         # Constructing the cell paths information
         if type(waypoints) == type(None):
