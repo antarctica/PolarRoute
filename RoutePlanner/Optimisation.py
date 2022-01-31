@@ -9,7 +9,7 @@ import warnings
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from RoutePlanner.Function import NewtonianDistance
+from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
 
 class TravelTime:
     def __init__(self,CellGrid,OptInfo,CostFunc=NewtonianDistance,unit_shipspeed='km/hr',unit_time='days',zerocurrents=False):
@@ -40,6 +40,9 @@ class TravelTime:
                     break
             self.OptInfo['WayPoints']['Index'].iloc[idx] = index
             self.Mesh.cellBoxes[index]._define_waypoints((long,lat))
+
+
+        #JDS - If cell contains a waypoint make a copy, do not move the current centroid.
         
 
         # ====== Dijkstra Formulation ======
@@ -127,39 +130,49 @@ class TravelTime:
 
         return neighbours_idx, TravelTime, CrossPoints, CellPoints
 
+    def _dijkstra(self,wpt_name):
+        # Loop over all the points until all waypoints are visited
+        while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'].isin(np.array(self.OptInfo['WayPoints']['Index'].astype(int)))] == False).any():
+        #while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'] == False).any():
+            # Determining the argument with the next lowest value and hasn't been visited
+            non_locked = self.DijkstraInfo[wpt_name]['Info'][self.DijkstraInfo[wpt_name]['Info']['PositionLocked']==False]
+            idx        = non_locked['CellIndex'].loc[non_locked['TotalCost'].idxmin()]
 
-    def Dijkstra(self,verbrose=False):
+            # Finding the cost of the nearest neighbours
+            Neighbour_index,TT,CrossPoints,CellPoints = self.NeighbourCost(idx)
+            Neighbour_cost  = TT + self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0]
+
+            # Determining if the visited time is visited    
+            for jj_v,jj in enumerate(Neighbour_index):
+                if Neighbour_cost[jj_v] <= self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj].iloc[0]:
+                    self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj] = Neighbour_cost[jj_v]
+                    self.DijkstraInfo[wpt_name]['Path']['FullPath'][jj]       = self.DijkstraInfo[wpt_name]['Path']['FullPath'][idx]       + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
+                    self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][idx] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]]
+                    self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][idx] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
+                    self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]      = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx]      + [jj]
+                    self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]           = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]           + [Neighbour_cost[jj_v]]
+            
+            # Defining the graph point as visited
+            self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx] = True
+
+
+
+    def Dijkstra(self,verbrose=False,multiprocessing=False):
         '''
         Determining the shortest path between all waypoints
         '''
-        for wpt in self.OptInfo['WayPoints'].iterrows():
-            wpt_name  = wpt[1]['Name']
-            if verbrose:
-                print('=== Processing Waypoint = {} ==='.format(wpt_name))
 
-            # Loop over all the points until all waypoints are visited
-            while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'].isin(np.array(self.OptInfo['WayPoints']['Index'].astype(int)))] == False).any():
-            #while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'] == False).any():
-                # Determining the argument with the next lowest value and hasn't been visited
-                non_locked = self.DijkstraInfo[wpt_name]['Info'][self.DijkstraInfo[wpt_name]['Info']['PositionLocked']==False]
-                idx        = non_locked['CellIndex'].loc[non_locked['TotalCost'].idxmin()]
+        if multiprocessing:
+            import multiprocessing
+            pool_obj = multiprocessing.Pool()
+            answer = pool_obj.map(self._dijkstra,list(self.OptInfo['WayPoints']['Name']))
 
-                # Finding the cost of the nearest neighbours
-                Neighbour_index,TT,CrossPoints,CellPoints = self.NeighbourCost(idx)
-                Neighbour_cost  = TT + self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0]
-
-                # Determining if the visited time is visited    
-                for jj_v,jj in enumerate(Neighbour_index):
-                    if Neighbour_cost[jj_v] <= self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj].iloc[0]:
-                        self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj] = Neighbour_cost[jj_v]
-                        self.DijkstraInfo[wpt_name]['Path']['FullPath'][jj]       = self.DijkstraInfo[wpt_name]['Path']['FullPath'][idx]       + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
-                        self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][idx] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]]
-                        self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][idx] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
-                        self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]      = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx]      + [jj]
-                        self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]           = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]           + [Neighbour_cost[jj_v]]
-                
-                # Defining the graph point as visited
-                self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx] = True
+        else:
+            for wpt in self.OptInfo['WayPoints'].iterrows():
+                wpt_name  = wpt[1]['Name']
+                if verbrose:
+                    print('=== Processing Waypoint = {} ==='.format(wpt_name))
+                self._dijkstra(wpt_name)
 
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
@@ -202,52 +215,35 @@ class TravelTime:
             return ax
 
 
-    # def PathSmoothing(self):
-    #     '''
-    #         Given a series of pathways smooth without centroid locations using great circle smoothing
-    #     '''
+    def PathSmoothing(self,maxiter=1):
+        '''
+            Given a series of pathways smooth without centroid locations using great circle smoothing
+        '''
+        self.SmoothedPaths = self.Paths.copy()
 
-    #     if self._paths_smoothed:
-    #         print('Path smmothing has already been run, do you want to smooth again ?\nIf so re-run this function')
-    #     else:
-    #         self._paths_smoothed = True
-
-    #     self.SmoothedPaths = self.Paths.copy()
-
-    #     # Looping over all the optimised paths
-    #     for Path in self.SmoothedPaths:
-    #         path_fullpath   = Path['Path']['FullPath']
-    #         path_edges      = Path['Path']['CrossingPoints']
-    #         path_centroid   = Path['Path']['CentroidPoints']
-    #         path_cellIndex  = Path['Path']['CellIndex']
-    #         path_cost       = Path['Path']['Cost']
-
-    #         for idxpt in range(len(path_edges)-2):
-    #             pt_sp  = path_edges[idxpt]
-    #             pt_cp  = path_edges[idxpt+1]
-    #             pt_np  = path_edges[idxpt+2]
-    #             ind_sp = path_cellIndex[idxpt]
-    #             ind_np = path_cellIndex[idxpt+1]
-
-    #             # Determine Starting & Ending cells
-    #             Cell_s    = copy.copy(self.Mesh.cells[ind_sp])
-    #             Cell_s.cx = pt_sp[0]; Cell_s.cy = pt_sp[1]
-    #             Cell_s.dxp = ((Cell_s.x + Cell_s.dx) - Cell_s.cx); Cell_s.dxm = (Cell_s.cx - Cell_s.x)
-    #             Cell_s.dyp = ((Cell_s.y + Cell_s.dy) - Cell_s.cy); Cell_s.dym = (Cell_s.cy - Cell_s.y)
-    #             Cell_n    = copy.copy(self.Mesh.cells[ind_np])
-    #             Cell_n.cx = pt_np[0]; Cell_n.cy = pt_np[1]
-    #             Cell_n.dxp = ((Cell_n.x + Cell_n.dx) - Cell_n.cx); Cell_n.dxm = (Cell_n.cx - Cell_n.x)
-    #             Cell_n.dyp = ((Cell_n.y + Cell_n.dy) - Cell_n.cy); Cell_n.dym = (Cell_n.cy - Cell_n.y)
-    #             TravelTime, CrossingPoint, delA = self.CostFunc(Cell_s,Cell_n,self.OptInfo['VehicleInfo']['Speed']).value()
+        # Looping over all the optimised paths
+        for Path in self.SmoothedPaths:
+            startPoint      = Path['Path']['FullPath'][0,:][None,:]
+            endPoint        = Path['Path']['FullPath'][-1,:][None,:]
+            path_edges      = np.array(Path['Path']['CrossingPoints'])
+            iter=0
+            while iter < maxiter:
+                for idxpt in range(path_edges.shape[0]-2):
+                    pt_sp  = tuple(path_edges[idxpt,:])
+                    pt_cp  = tuple(path_edges[idxpt+1,:])
+                    pt_np  = tuple(path_edges[idxpt+2,:])
+                    print(pt_sp,pt_cp,pt_np)
+                    TravelTime, CrossingPoint = NewtonianCurve(self.Mesh,pt_sp,pt_cp,pt_np,self.OptInfo['VehicleInfo']['Speed']).value()
+                    if idxpt == 0:
+                        new_path_time = [TravelTime]
+                        new_path_cp   = CrossingPoint
+                    else:
+                        new_path_cp = np.concatenate([new_path_cp,CrossingPoint])
+                        new_path_time.append(TravelTime)
                 
-    #             # Clipping so on reciever grid
-    #             # CrossingPoint[0] = np.clip(CrossingPoint[0],Cell_n.x,(Cell_n.x+Cell_n.dx))
-    #             # CrossingPoint[1] = np.clip(CrossingPoint[1],Cell_n.y,(Cell_n.y+Cell_n.dy))
+                path_edges = np.concatenate([startPoint,new_path_cp,endPoint])
+                iter+=1
 
-
-    #             path_edges[idxpt+1] = CrossingPoint
-    #             path_cost[idxpt+1]  = path_cost[idxpt] + TravelTime
-
-    #         # Now determining if you can get rid of a point 
-    #         Path['Path']['CrossingPoints']   = path_edges
-    #         Path['Path']['FullPath']         = np.concatenate([path_fullpath[0,:][None,:],np.array(path_edges),path_fullpath[-1,:][None,:]])
+            Path['Path']['FullPath']       = path_edges
+            Path['Path']['CrossingPoints'] = path_edges
+                    
