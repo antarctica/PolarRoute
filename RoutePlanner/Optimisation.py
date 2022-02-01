@@ -232,7 +232,6 @@ class TravelTime:
                     pt_sp  = tuple(path_edges[idxpt,:])
                     pt_cp  = tuple(path_edges[idxpt+1,:])
                     pt_np  = tuple(path_edges[idxpt+2,:])
-                    print(pt_sp,pt_cp,pt_np)
                     TravelTime, CrossingPoint = NewtonianCurve(self.Mesh,pt_sp,pt_cp,pt_np,self.OptInfo['VehicleInfo']['Speed']).value()
                     if idxpt == 0:
                         new_path_time = [TravelTime]
