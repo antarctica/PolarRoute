@@ -177,20 +177,15 @@ class CellGrid:
             bounds.append([cellBox.long,cellBox.lat])
             bounds.append([cellBox.long+cellBox.width,cellBox.lat+cellBox.height])
             ax.add_patch(cellBox.getHighlight())
-            ax.scatter(cellBox.cx,cellBox.cy,15,marker='o',color = 'Red')
             ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*0.5,cellBox.getvC()*0.5,scale=2,width=0.002,color='gray')
         bounds = np.array(bounds)
 
         for cellBox in selectedCellBoxes:
             # Determining Newton crossing points
-            TravelTime, CrossPoints, CellPoints = NewtonianDistance(selectedCellBox,cellBox,shipSpeed,debugging=debugging).value() 
-            plt.scatter([selectedCellBox.cx,CrossPoints[0],cellBox.cx],[selectedCellBox.cy,CrossPoints[1],cellBox.cy],15,marker='o',color='k')
-            plt.plot([selectedCellBox.cx,CrossPoints[0],cellBox.cx],[selectedCellBox.cy,CrossPoints[1],cellBox.cy],color='k')
-
-
-        # Plotting the source cell box
-        ax.scatter(selectedCellBox.cx,selectedCellBox.cy,30,marker='s',color='k')
-        ax.quiver(selectedCellBox.cx,selectedCellBox.cy,selectedCellBox.getuC()*0.5,selectedCellBox.getvC()*0.5,scale=2,width=0.002,color='gray')
+            TravelTime, CrossPoints, CellPoints = NewtonianDistance(selectedCellBox,cellBox,shipSpeed,shipSpeed,debugging=debugging).value() 
+            ax.plot([selectedCellBox.long+selectedCellBox.width/2,CrossPoints[0],cellBox.long+cellBox.width/2],\
+                        [selectedCellBox.lat+selectedCellBox.height/2,CrossPoints[1],cellBox.lat+cellBox.height/2],marker='o',color='k')
+            ax.text(cellBox.long+cellBox.width/2,cellBox.lat+cellBox.height/2,'{:.2f}'.format(TravelTime),color='r',zorder=100)
 
         if localBounds:
             ax.set_xlim([bounds[:,0].min(),bounds[:,0].max()])
