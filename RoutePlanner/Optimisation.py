@@ -12,10 +12,10 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 from RoutePlanner.Function import NewtonianDistance
 
 class TravelTime:
-    def __init__(self,CellGrid,OptInfo,CostFunc=NewtonianDistance):
+    def __init__(self,CellGrid,CostFunc=NewtonianDistance):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
-        self.OptInfo = copy.copy(OptInfo)
+        self.OptInfo = copy.copy(CellGrid.OptInfo)
 
         self.CostFunc       = CostFunc
 
@@ -166,7 +166,7 @@ class TravelTime:
                     self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][idx] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]]
                     self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][idx] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                     self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]      = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx]      + [jj]
-                    self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]           = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]           + [Neighbour_cost[jj_v]]
+                    self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]           = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]           + list(TT[jj_v]+ self.DijkstraInfo[wpt_name]['Info']['TotalCost'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0])
             
             # Defining the graph point as visited
             self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx] = True
@@ -200,16 +200,9 @@ class TravelTime:
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
 
-    def PlotPaths(self,figInfo=None,routepoints=False,return_ax=True,currents=False):
-        if type(figInfo) == type(None):
-            fig,ax = plt.subplots(1,1,figsize=(15,10))
-            fig.patch.set_facecolor('white')
-            ax.set_facecolor('lightblue')
-            ax.patch.set_alpha(1.0)
-        else:
-            fig,ax = figInfo
+    def PlotPaths(self,routepoints=False,return_ax=True,currents=False):
 
-        self.Mesh.plot(figInfo=(fig,ax),currents=currents,iceThreshold=self.OptInfo['MaxIceExtent'])
+        ax = self.Mesh.plot(currents=currents,return_ax=True)
 
         # Constructing the cell paths information
         if type(self.OptInfo['Start Waypoints']) == type(None):
@@ -224,17 +217,21 @@ class TravelTime:
                     continue
                 Points = np.array(Path['Path']['FullPath'])
                 if routepoints:
-                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k',marker='o')
+                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
+                    quad = ax.scatter(Points[:,0],Points[:,1],30,Path['Path']['Cost'],zorder=99,cmap='hsv')
                 else:
                     ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
 
         # Plotting Waypoints
-        ax.scatter(self.OptInfo['WayPoints']['Long'],self.OptInfo['WayPoints']['Lat'],100,marker='^',color='r',zorder=100)
+        ax.scatter(self.OptInfo['WayPoints']['Long'],self.OptInfo['WayPoints']['Lat'],100,marker='^',color='k',zorder=100)
         for wpt in self.OptInfo['WayPoints'].iterrows():
             Long = wpt[1]['Long']
             Lat  = wpt[1]['Lat']
             Name = wpt[1]['Name']
-            ax.text(Long,Lat,Name,color='r',zorder=100)
+            ax.text(Long,Lat,Name,color='k',zorder=100)
+
+        if routepoints:
+            plt.colorbar(quad,ax=ax,label='Travel Time ({})'.format(self.unit_time))
 
         if return_ax:
             return ax

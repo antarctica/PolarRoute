@@ -147,7 +147,7 @@ class CellBox:
         return self._icePoints
     
     def isLand(self):
-        if self.depth() <= self.minDepth:
+        if (self.depth() <= self.minDepth):
             return True
         return False
             

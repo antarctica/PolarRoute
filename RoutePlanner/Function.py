@@ -6,7 +6,6 @@ def sign(x):
     s = math.copysign(1, x)
     return s   
 
-
 class _Euclidean_distance():
     """
     Replicating original route planner Euclidean distance 
@@ -97,8 +96,6 @@ class NewtonianDistance:
             return None
 
     def _unit_time(self,Val):
-        # newTime = []
-        # for Val in time:
         if self.unit_time == 'days':
             Val = Val/(60*60*24)
         elif self.unit_time == 'hr':
@@ -162,8 +159,7 @@ class NewtonianDistance:
             X2 = np.sqrt(D2**2 + C2*(a**2 + (Y-y)**2))
             t1 = (X1-D1)/C1
             t2 = (X2-D2)/C2
-            T  = t1+t2 
-            return T#[t1,t2]
+            return np.array([t1,t2])
 
 
         def _positive_longitude(self):
@@ -375,7 +371,7 @@ class NewtonianDistance:
 #####################################################################################################################################
 
 class NewtonianCurve:
-    def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=500,optimizer_tol=1e-7,zerocurrents=False):
+    def __init__(self,Mesh,Sp,Cp,Np,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=500,optimizer_tol=1e-7,zerocurrents=False):
         self.Mesh = Mesh
         
         # Defining the Source Point (Sp), Crossing Point (Cp) and Neighbour Point(Np)
@@ -387,11 +383,11 @@ class NewtonianCurve:
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
-        self.s1,self.s2              = self._unit_speed(s)
+        self.s              = self._unit_speed(s)
         
         # Information for distance metrics
         self.R              = 6371
-        self.fdist          = _Euclidean_distance()#scaleLongitude=self.Cp[1])
+        self.fdist          = _Euclidean_distance()
 
         # Optimisation Information
         self.maxiter       = maxiter
