@@ -40,241 +40,22 @@ class _Euclidean_distance():
             val = [lon1+(dist_x/self.m_per_longitude),lat1+(dist_y/self.m_per_latitude)]
         return val
 
-
-def WaypointCorrection(Cell,Wp,Cp,s):
-    '''
-    
-    
-    '''
-    fdist = _Euclidean_distance(scaleLongitude=(Cell.lat+Cell.height))
-    dS  = (Cell.width/2,Cell.height/2)
-    S   = (Cell.long+dS[0],Cell.lat+dS[1])
-    uS  = (Cell.getuC(),Cell.getvC())
-    x   = sign(Cp[0]-Wp[0])*self.fdist.value(Wp,(Wp[0]+(Cp[0]-Wp[0]),Wp[1]))
-    y   = sign(Cp[1]-Wp[1])*self.fdist.value(Wp,(Wp[0],Wp[1]+(Cp[0]-Wp[0])))
-    C1  = s**2 - uS[0]**2 - uS[1]**2
-    D1  = x*uS[0] + y*uS[1]
-    X1  = np.sqrt(D1**2 + C1*(x**2 + y**2))
-    return (X1-D1)/C1
-
-
-
-# class NewtonianDistance:
-#     def __init__(self,Cell_s,Cell_n,s1,s2,unit_shipspeed='km/hr',unit_time='days',zerocurrents=False,debugging=False,maxiter=500,optimizer_tol=1e-7):
-#         # Cell information
-#         self.Cell_s         = Cell_s
-#         self.Cell_n         = Cell_n
-
-#         # Inside the code the base units are m/s. Changing the units of the inputs to match
-#         self.unit_shipspeed = unit_shipspeed
-#         self.unit_time      = unit_time
-#         self.s1             = self._unit_speed(s1)
-#         self.s2             = self._unit_speed(s2)
-#         self.fdist          = _Euclidean_distance(scaleLongitude=(self.Cell_s.lat+self.Cell_s.height))
-
-#         if zerocurrents:
-#             self.zx = 0.0
-#         else:
-#             self.zx = 1.0
-
-#         # Optimisation Information
-#         self.maxiter   = maxiter
-#         self.optimizer_tol = optimizer_tol
-
-#         # For Debugging purposes 
-#         self.debugging = debugging
-
-#         # Determining the distance between the cell centres to 
-#         #be used in defining the case
-#         self.df_x = (self.Cell_n.long+self.Cell_n.width/2) -  (self.Cell_s.long+self.Cell_s.width/2)
-#         self.df_y = (self.Cell_n.lat+self.Cell_n.height/2) -  (self.Cell_s.lat+self.Cell_s.height/2)
-
-#     def NewtonOptimisation(self,f,df,x,a,Y,u1,v1,u2,v2,s1,s2):
-#             y0 = (Y*x)/(x+a)
-#             if self.debugging:
-#                     print('---Initial y={:.2f}'.format(y0))
-#             if self.maxiter > 0:
-#                 for iter in range(self.maxiter):
-#                     F  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
-#                     dF = df(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
-#                     if self.debugging:
-#                         print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'.format(iter,y0,F,dF))
-#                     y0  = y0 - (F/dF)
-#                     if F < self.optimizer_tol:
-#                         break
-#             return y0
-
-#     def _unit_speed(self,Val):
-#         if self.unit_shipspeed == 'km/hr':
-#             Val = Val*(1000/(60*60))
-#         if self.unit_shipspeed == 'knots':
-#             Val = (Val*0.51)
-#         return Val
-
-#     def _unit_time(self,Val):
-#         newVal = []
-#         for v in Val:
-#             if self.unit_time == 'days':
-#                 v = v/(60*60*24)
-#             elif self.unit_time == 'hr':
-#                 v = v/(60*60)
-#             elif self.unit_time == 'min':
-#                 v = v/(60)
-#             elif self.unit_time == 's':
-#                 v = v
-#             newVal.append(v)
-#         return newVal
-
-#     def _cellInfo(self):
-#         dS  = (self.Cell_s.width/2,self.Cell_s.height/2)
-#         S   = (self.Cell_s.long+dS[0],self.Cell_s.lat+dS[1])
-#         uS  = (self.Cell_s.getuC()*self.zx,self.Cell_s.getvC()*self.zx)
-#         dN  = (self.Cell_n.width/2,self.Cell_n.height/2)
-#         N   = (self.Cell_n.long+dN[0],self.Cell_n.lat+dN[1])
-#         uN  = (self.Cell_n.getuC()*self.zx,self.Cell_n.getvC()*self.zx)
-#         return S,dS,uS,N,dN,uN
-
-
-#     def value(self):
-#         def _F(y,x,a,Y,u1,v1,u2,v2,s1,s2):
-#             C1 = s1**2 - u1**2 - v1**2
-#             C2 = s2**2 - u2**2 - v2**2
-#             D1 = x*u1 + y*v1
-#             D2 = a*u2 + (Y-y)*v2
-#             X1 = np.sqrt(D1**2 + C1*(x**2 + y**2))
-#             X2 = np.sqrt(D2**2 + C2*(a**2 + (Y-y)**2))
-#             F  = X2*(y-((v1*(X1-D1))/C1)) + X1*(y-Y+((v2*(X2-D2))/C2)) 
-#             return F
-
-#         def _dF(y,x,a,Y,u1,v1,u2,v2,s1,s2):
-#             C1  = s1**2 - u1**2 - v1**2
-#             C2  = s2**2 - u2**2 - v2**2
-#             D1  = x*u1 + y*v1
-#             D2  = a*u2 + (Y-y)*v2
-#             X1  = np.sqrt(D1**2 + C1*(x**2 + y**2))
-#             X2  = np.sqrt(D2**2 + C2*(a**2 + (Y-y)**2))
-#             dD1 = v1
-#             dD2 = -v2
-#             dX1 = (D1*v1 + C1*y)/X1
-#             dX2 = (-D2*v2 - C2*(Y-y))/X2
-#             dF  = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1)) + (v2/C2)*(dX1*(X2-D2)+X1*(dX2-dD2)) - Y*dX1
-#             return dF
-
-#         def _T(y,x,a,Y,u1,v1,u2,v2,s1,s2):
-#             C1 = s1**2 - u1**2 - v1**2
-#             C2 = s2**2 - u2**2 - v2**2
-#             D1 = x*u1 + y*v1
-#             D2 = a*u2 + (Y-y)*v2
-#             X1 = np.sqrt(D1**2 + C1*(x**2 + y**2))
-#             X2 = np.sqrt(D2**2 + C2*(a**2 + (Y-y)**2))
-#             t1 = (X1-D1)/C1
-#             t2 = (X2-D2)/C2
-#             return [t1,t2]
-
-#         def _longitude(self):
-#             '''
-#                 Longitude Cases
-#             '''
-#             S,dS,uS,N,dN,uN = self._cellInfo()
-
-#             u1  = sign(self.df_x)*uS[0]; v1  = uS[1]
-#             u2  = sign(self.df_x)*uN[0]; v2  = uN[1]
-#             x   = self.fdist.value(S,(S[0]+sign(self.df_x)*dS[0],S[1]))
-#             a   = self.fdist.value(N,(N[0]-sign(self.df_x)*dN[0],N[1]))
-#             Y   = sign(self.df_y)* self.fdist.value((S[0]+sign(self.df_x)*(abs(dS[0])+abs(dN[0])), S[1]),\
-#                                                     (S[0]+sign(self.df_x)*(abs(dS[0])+abs(dN[0])), N[1]))
-#             y = self.NewtonOptimisation(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s1,self.s2)
-#             if self.debugging:
-#                 print('Long:y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-#             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-#             CrossPoints = self.fdist.value((S[0]+sign(self.df_x)*dS[0],S[1]),(0.0,y),forward=False)
-#             CellPoints  = [N[0],N[1]]
-#             if self.debugging:
-#                 print('------ TravelTime=[{:.2f},{:.2f}];CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime[0],TravelTime[1],CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
-#             return TravelTime,CrossPoints,CellPoints
-
-#         def _latitude(self):
-#             '''
-#                 Case -4
-#             '''
-#             S,dS,uS,N,dN,uN = self._cellInfo()
-#             u1  = sign(self.df_y)*uS[1]; v1 = uS[0]
-#             u2  = sign(self.df_y)*uN[1]; v2 = uN[0]
-#             x   = self.fdist.value(S,(S[0],S[1] + sign(self.df_y)*dS[1]))
-#             a   = self.fdist.value(N,(N[0],N[1] - sign(self.df_y)*dN[1]))
-#             Y   = sign(self.df_x)*self.fdist.value((S[0],S[1]+sign(self.df_y)*(abs(dS[1])+abs(dN[1]))),\
-#                                                     (N[0],S[1]+sign(self.df_y)*(abs(dS[1])+abs(dN[1]))))
-#             y = self.NewtonOptimisation(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s1,self.s2)
-#             if self.debugging:
-#                 print('Lat: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-#             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-#             CrossPoints = self.fdist.value((S[0],S[1] + sign(self.df_y)*dS[1]),(y,0.0),forward=False)
-#             CellPoints  = [N[0],N[1]]
-#             if self.debugging:
-#                 print('------ TravelTime=[{:.2f},{:.2f}];CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime[0],TravelTime[1],CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
-#             return TravelTime,CrossPoints,CellPoints
-
-#         def _corner(self):
-#             S,dS,uS,N,dN,uN = self._cellInfo()
-
-#             u1  = sign(self.df_x)*uS[0]; v1  = uS[1]
-#             u2  = sign(self.df_x)*uN[0]; v2  = uN[1]
-#             x   = self.fdist.value(S,(S[0]+sign(self.df_x)*dS[0],S[1]))
-#             a   = self.fdist.value(N,(N[0]-sign(self.df_x)*dN[0],N[1]))
-#             Y   = sign(self.df_y)* self.fdist.value((S[0]+sign(self.df_x)*(abs(dS[0])+abs(dN[0])), S[1]),\
-#                                                     (S[0]+sign(self.df_x)*(abs(dS[0])+abs(dN[0])), N[1]))
-#             y  = self.fdist.value((S[0]+sign(self.df_x)*dS[0],S[1]),(S[0]+sign(self.df_x)*dS[0],S[1]+sign(self.df_y)*dS[1]))
-#             if self.debugging:
-#                 print('Corner: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-#             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-#             CrossPoints = [S[0]+sign(self.df_x)*dS[0],S[1]+sign(self.df_y)*dS[1]]
-#             CellPoints  = [N[0],N[1]]
-#             if self.debugging:
-#                 print('------ TravelTime=[{:.2f},{:.2f}];CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime[0],TravelTime[1],CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
-#             return TravelTime,CrossPoints,CellPoints
-
-
-#         if self.debugging:
-#             print('============================================')
-#         # ======= Determining the Newton Value dependent on case
-#         if (abs(self.df_x) > self.Cell_s.width/2) and (abs(self.df_y) <= (self.Cell_s.height/2)):
-#             TravelTime,CrossPoints,CellPoints = _longitude(self)
-#         elif (abs(self.df_y) > (self.Cell_s.height/2)) and (abs(self.df_x) <= (self.Cell_s.width/2)):
-#             TravelTime,CrossPoints,CellPoints = _latitude(self)
-#         elif (abs(self.df_y) > (self.Cell_s.height/2)) and (abs(self.df_x) > (self.Cell_s.width/2)):
-#             TravelTime,CrossPoints,CellPoints = _corner(self)    
-#         else:
-#             print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}; (dx,dy)={:.2f},{:.2f}; (diffX,diffY)={:.2f},{:.2f}'.format(self.Cell_s.cx,self.Cell_s.cy,self.Cell_s.width/2,self.Cell_s.height/2,self.df_x,self.df_y))
-#             TravelTime  = [np.inf,np.inf]
-#             CrossPoints = [np.nan,np.nan]
-#             CellPoints  = [np.nan,np.nan]
-
-#         CrossPoints[0] = np.clip(CrossPoints[0],self.Cell_n.long,(self.Cell_n.long+self.Cell_n.width))
-#         CrossPoints[1] = np.clip(CrossPoints[1],self.Cell_n.lat,(self.Cell_n.lat+self.Cell_n.height))
-
-#         return TravelTime, CrossPoints, CellPoints
-
-
-
-
-
-
-
 # ================================================================
 # ================================================================
 # ================================================================
 # ================================================================
 class NewtonianDistance:
-    def __init__(self,Cell_s,Cell_n,s1,s2,unit_shipspeed='km/hr',unit_time='days',zerocurrents=False,debugging=False,maxiter=500,optimizer_tol=1e-7):
+    def __init__(self,Cell_S=None,Cell_N=None,Cell_S_Speed=None,Cell_N_Speed=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=False,debugging=False,maxiter=500,optimizer_tol=1e-7):
         # Cell information
-        self.Cell_s         = Cell_s
-        self.Cell_n         = Cell_n
+        self.Cell_s         = Cell_S
+        self.Cell_n         = Cell_N
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
-        self.s1             = self._unit_speed(s1)
-        self.s2             = self._unit_speed(s2)
+
+        self.s1             = self._unit_speed(Cell_S_Speed)
+        self.s2             = self._unit_speed(Cell_N_Speed)
         self.fdist          = _Euclidean_distance(scaleLongitude=(self.Cell_s.lat+self.Cell_s.height))
 
         if zerocurrents:
@@ -283,16 +64,12 @@ class NewtonianDistance:
             self.zx = 1.0
 
         # Optimisation Information
-        self.maxiter   = maxiter
+        self.maxiter       = maxiter
         self.optimizer_tol = optimizer_tol
 
         # For Debugging purposes 
-        self.debugging = debugging
+        self.debugging     = debugging
 
-        # Determining the distance between the cell centres to 
-        #be used in defining the case
-        self.df_x = (self.Cell_n.long+self.Cell_n.width/2) -  (self.Cell_s.long+self.Cell_s.width/2)
-        self.df_y = (self.Cell_n.lat+self.Cell_n.height/2) -  (self.Cell_s.lat+self.Cell_s.height/2)
 
     def NewtonOptimisation(self,f,df,x,a,Y,u1,v1,u2,v2,s1,s2):
             y0 = (Y*x)/(x+a)
@@ -310,13 +87,18 @@ class NewtonianDistance:
             return y0
 
     def _unit_speed(self,Val):
-        if self.unit_shipspeed == 'km/hr':
-            Val = Val*(1000/(60*60))
-        if self.unit_shipspeed == 'knots':
-            Val = (Val*0.51)
-        return Val
+        if type(Val) != type(None):
+            if self.unit_shipspeed == 'km/hr':
+                Val = Val*(1000/(60*60))
+            if self.unit_shipspeed == 'knots':
+                Val = (Val*0.51)
+            return Val
+        else:
+            return None
 
     def _unit_time(self,Val):
+        # newTime = []
+        # for Val in time:
         if self.unit_time == 'days':
             Val = Val/(60*60*24)
         elif self.unit_time == 'hr':
@@ -328,6 +110,23 @@ class NewtonianDistance:
 
         return Val
         
+    def WaypointCorrection(self,Wp,Cp,s):
+        '''
+        
+        
+        '''
+        dS  = (self.Cell_s.width/2,self.Cell_s.height/2)
+        S   = (self.Cell_s.long+dS[0],self.Cell_s.lat+dS[1])
+        uS  = (self.Cell_s.getuC(),self.Cell_s.getvC())
+
+        x   = sign(Cp[0]-Wp[0])*self.fdist.value(Wp,(Wp[0]+(Cp[0]-Wp[0]),Wp[1]))
+        y   = sign(Cp[1]-Wp[1])*self.fdist.value(Wp,(Wp[0],Wp[1]+(Cp[0]-Wp[0])))
+
+        C1  = s**2 - uS[0]**2 - uS[1]**2
+        D1  = x*uS[0] + y*uS[1]
+        X1  = np.sqrt(D1**2 + C1*(x**2 + y**2))
+        return self._unit_time((X1-D1)/C1)
+
 
     def value(self):
         def _F(y,x,a,Y,u1,v1,u2,v2,s1,s2):
@@ -364,7 +163,7 @@ class NewtonianDistance:
             t1 = (X1-D1)/C1
             t2 = (X2-D2)/C2
             T  = t1+t2 
-            return T
+            return T#[t1,t2]
 
 
         def _positive_longitude(self):
@@ -373,15 +172,15 @@ class NewtonianDistance:
             '''
             u1          = self.Cell_s.getuC()*self.zx; v1 = self.Cell_s.getvC()*self.zx
             u2          = self.Cell_n.getuC()*self.zx; v2 = self.Cell_n.getvC()*self.zx
-            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy), (self.Cell_s.cx + self.Cell_s.cx_ub,self.Cell_s.cy))
-            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx - self.Cell_n.cx_lb,self.Cell_n.cy))
-            Y           = sign(self.Cell_n.cy-self.Cell_s.cy)*self.fdist.value((self.Cell_s.cx+(abs(self.Cell_s.cx_ub)+abs(self.Cell_n.cx_lb)),self.Cell_s.cy),\
-                                     (self.Cell_s.cx+(abs(self.Cell_s.cx_ub)+abs(self.Cell_n.cx_lb)),self.Cell_n.cy))
+            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy), (self.Cell_s.cx + self.Cell_s.dcx,self.Cell_s.cy))
+            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx - self.Cell_n.dcx,self.Cell_n.cy))
+            Y           = sign(self.Cell_n.cy-self.Cell_s.cy)*self.fdist.value((self.Cell_s.cx+(abs(self.Cell_s.dcx)+abs(self.Cell_n.dcx)),self.Cell_s.cy),\
+                                     (self.Cell_s.cx+(abs(self.Cell_s.dcx)+abs(self.Cell_n.dcx)),self.Cell_n.cy))
             y = self.NewtonOptimisation(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s1,self.s2)
             if self.debugging:
                 print('Positve Long: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = self.fdist.value((self.Cell_s.cx + self.Cell_s.cx_ub,self.Cell_s.cy),(0.0,y),forward=False)
+            CrossPoints = self.fdist.value((self.Cell_s.cx + self.Cell_s.dcx,self.Cell_s.cy),(0.0,y),forward=False)
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
@@ -393,16 +192,16 @@ class NewtonianDistance:
             '''
             u1          = -self.Cell_s.getuC()*self.zx; v1 = self.Cell_s.getvC()*self.zx
             u2          = -self.Cell_n.getuC()*self.zx; v2 = self.Cell_n.getvC()*self.zx
-            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx-self.Cell_s.cx_lb,self.Cell_s.cy))
-            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy),(self.Cell_n.cx+self.Cell_n.cx_ub,self.Cell_n.cy))
+            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx-self.Cell_s.dcx,self.Cell_s.cy))
+            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy),(self.Cell_n.cx+self.Cell_n.dcx,self.Cell_n.cy))
             Y           = sign(self.Cell_n.cy-self.Cell_s.cy)*\
-                               self.fdist.value((self.Cell_s.cx-(abs(self.Cell_s.cx_lb)+abs(self.Cell_n.cx_ub)),self.Cell_s.cy),\
-                                          (self.Cell_s.cx-(abs(self.Cell_s.cx_lb)+abs(self.Cell_n.cx_ub)),self.Cell_n.cy))
+                               self.fdist.value((self.Cell_s.cx-(abs(self.Cell_s.dcx)+abs(self.Cell_n.dcx)),self.Cell_s.cy),\
+                                          (self.Cell_s.cx-(abs(self.Cell_s.dcx)+abs(self.Cell_n.dcx)),self.Cell_n.cy))
             y = self.NewtonOptimisation(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s1,self.s2)
             if self.debugging:
                 print('Negative Long: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = self.fdist.value((self.Cell_s.cx - self.Cell_s.cx_lb,self.Cell_s.cy),(0.0,y),forward=False)
+            CrossPoints = self.fdist.value((self.Cell_s.cx - self.Cell_s.dcx,self.Cell_s.cy),(0.0,y),forward=False)
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
@@ -415,16 +214,16 @@ class NewtonianDistance:
 
             u1          = -self.Cell_s.getvC()*self.zx; v1 = self.Cell_s.getuC()*self.zx
             u2          = -self.Cell_n.getvC()*self.zx; v2 = self.Cell_n.getuC()*self.zx
-            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx,self.Cell_s.cy + self.Cell_s.cy_ub))
-            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy),(self.Cell_n.cx,self.Cell_n.cy - self.Cell_n.cy_lb))
+            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx,self.Cell_s.cy + self.Cell_s.dcy))
+            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy),(self.Cell_n.cx,self.Cell_n.cy - self.Cell_n.dcy))
             Y           = sign(self.Cell_n.cx-self.Cell_s.cx)*\
-                          self.fdist.value((self.Cell_s.cx, self.Cell_s.cy + (abs(self.Cell_s.cy_ub) + abs(self.Cell_n.cy_lb))),\
-                                     (self.Cell_n.cx, self.Cell_s.cy + (abs(self.Cell_s.cy_ub) + abs(self.Cell_n.cy_lb))))
+                          self.fdist.value((self.Cell_s.cx, self.Cell_s.cy + (abs(self.Cell_s.dcy) + abs(self.Cell_n.dcy))),\
+                                     (self.Cell_n.cx, self.Cell_s.cy + (abs(self.Cell_s.dcy) + abs(self.Cell_n.dcy))))
             y = self.NewtonOptimisation(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s1,self.s2)
             if self.debugging:
                 print('Postive Lat: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy+self.Cell_s.cy_ub),(y,0.0),forward=False)
+            CrossPoints = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy+self.Cell_s.dcy),(y,0.0),forward=False)
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
@@ -438,16 +237,16 @@ class NewtonianDistance:
 
             u1          = -self.Cell_s.getvC()*self.zx; v1 = -self.Cell_s.getuC()*self.zx
             u2          = -self.Cell_n.getvC()*self.zx; v2 = -self.Cell_n.getuC()*self.zx
-            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx,self.Cell_s.cy - self.Cell_s.cy_lb))
-            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy),(self.Cell_n.cx,self.Cell_n.cy + self.Cell_n.cy_ub))
+            x           = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx,self.Cell_s.cy - self.Cell_s.dcy))
+            a           = self.fdist.value((self.Cell_n.cx,self.Cell_n.cy),(self.Cell_n.cx,self.Cell_n.cy + self.Cell_n.dcy))
             Y           = sign(self.Cell_n.cx-self.Cell_s.cx)*\
-                          self.fdist.value((self.Cell_s.cx, self.Cell_s.cy - (abs(self.Cell_s.cy_ub) + abs(self.Cell_n.cy_lb))),\
-                                     (self.Cell_n.cx, self.Cell_s.cy - (abs(self.Cell_s.cy_ub) + abs(self.Cell_n.cy_lb))))
+                          self.fdist.value((self.Cell_s.cx, self.Cell_s.cy - (abs(self.Cell_s.dcy) + abs(self.Cell_n.dcy))),\
+                                     (self.Cell_n.cx, self.Cell_s.cy - (abs(self.Cell_s.dcy) + abs(self.Cell_n.dcy))))
             y = self.NewtonOptimisation(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s1,self.s2)
             if self.debugging:
                 print('Negative Lat: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy-self.Cell_s.cy_lb),(y,0.0),forward=False)
+            CrossPoints = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy-self.Cell_s.dcy),(y,0.0),forward=False)
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
@@ -456,15 +255,15 @@ class NewtonianDistance:
         def _top_right_corner(self):
             u1 = self.Cell_s.getuC()*self.zx; v1 = self.Cell_s.getvC()*self.zx
             u2 = self.Cell_n.getuC()*self.zx; v2 = self.Cell_n.getvC()*self.zx
-            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx + self.Cell_s.cx_ub,self.Cell_s.cy))
-            y  = self.fdist.value((self.Cell_s.cx+self.Cell_s.cx_ub,self.Cell_s.cy),(self.Cell_s.cx+self.Cell_s.cx_ub,self.Cell_s.cy+self.Cell_s.cy_ub))
-            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx - self.Cell_n.cx_lb,self.Cell_n.cy))
-            Y  = self.fdist.value((self.Cell_s.cx+(abs(self.Cell_s.cx_ub) + abs(self.Cell_n.cx_lb)),self.Cell_s.cy),\
-                            (self.Cell_s.cx+(abs(self.Cell_s.cx_ub) + abs(self.Cell_n.cx_lb)),self.Cell_n.cy))
+            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx + self.Cell_s.dcx,self.Cell_s.cy))
+            y  = self.fdist.value((self.Cell_s.cx+self.Cell_s.dcx,self.Cell_s.cy),(self.Cell_s.cx+self.Cell_s.dcx,self.Cell_s.cy+self.Cell_s.dcy))
+            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx - self.Cell_n.dcx,self.Cell_n.cy))
+            Y  = self.fdist.value((self.Cell_s.cx+(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_s.cy),\
+                            (self.Cell_s.cx+(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_n.cy))
             if self.debugging:
                 print('Top Right: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = [self.Cell_s.cx+self.Cell_s.cx_ub,self.Cell_s.cy+self.Cell_s.cy_ub]
+            CrossPoints = [self.Cell_s.cx+self.Cell_s.dcx,self.Cell_s.cy+self.Cell_s.dcy]
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
@@ -473,15 +272,15 @@ class NewtonianDistance:
         def _bottom_right_corner(self):
             u1 = self.Cell_s.getuC()*self.zx; v1 = self.Cell_s.getvC()*self.zx
             u2 = self.Cell_n.getuC()*self.zx; v2 = self.Cell_n.getvC()*self.zx
-            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx + self.Cell_s.cx_ub,self.Cell_s.cy))
-            y  = -self.fdist.value((self.Cell_s.cx+self.Cell_s.cx_ub,self.Cell_s.cy),(self.Cell_s.cx+self.Cell_s.cx_ub,self.Cell_s.cy-self.Cell_s.cy_lb))
-            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx - self.Cell_n.cx_lb,self.Cell_n.cy))
-            Y  = -self.fdist.value((self.Cell_s.cx+(abs(self.Cell_s.cx_ub) + abs(self.Cell_n.cx_lb)),self.Cell_s.cy),\
-                            (self.Cell_s.cx+(abs(self.Cell_s.cx_ub) + abs(self.Cell_n.cx_lb)),self.Cell_n.cy))
+            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx + self.Cell_s.dcx,self.Cell_s.cy))
+            y  = -self.fdist.value((self.Cell_s.cx+self.Cell_s.dcx,self.Cell_s.cy),(self.Cell_s.cx+self.Cell_s.dcx,self.Cell_s.cy-self.Cell_s.dcy))
+            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx - self.Cell_n.dcx,self.Cell_n.cy))
+            Y  = -self.fdist.value((self.Cell_s.cx+(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_s.cy),\
+                            (self.Cell_s.cx+(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_n.cy))
             if self.debugging:
                 print('Bottom Right: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = [self.Cell_s.cx+self.Cell_s.cx_ub,self.Cell_s.cy-self.Cell_s.cy_lb]
+            CrossPoints = [self.Cell_s.cx+self.Cell_s.dcx,self.Cell_s.cy-self.Cell_s.dcy]
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
@@ -490,15 +289,15 @@ class NewtonianDistance:
         def _bottom_left_corner(self):
             u1 = -self.Cell_s.getuC()*self.zx; v1 = self.Cell_s.getvC()*self.zx
             u2 = -self.Cell_n.getuC()*self.zx; v2 = self.Cell_n.getvC()*self.zx
-            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx - self.Cell_s.cx_lb,self.Cell_s.cy))
-            y  = -self.fdist.value((self.Cell_s.cx-self.Cell_s.cx_lb,self.Cell_s.cy),(self.Cell_s.cx-self.Cell_s.cx_lb,self.Cell_s.cy-self.Cell_s.cy_lb))
-            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx + self.Cell_n.cx_ub,self.Cell_n.cy))
-            Y  = -self.fdist.value((self.Cell_s.cx-(abs(self.Cell_s.cx_lb) + abs(self.Cell_n.cx_ub)),self.Cell_s.cy),\
-                             (self.Cell_s.cx-(abs(self.Cell_s.cx_lb) + abs(self.Cell_n.cx_ub)),self.Cell_n.cy))
+            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx - self.Cell_s.dcx,self.Cell_s.cy))
+            y  = -self.fdist.value((self.Cell_s.cx-self.Cell_s.dcx,self.Cell_s.cy),(self.Cell_s.cx-self.Cell_s.dcx,self.Cell_s.cy-self.Cell_s.dcy))
+            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx + self.Cell_n.dcx,self.Cell_n.cy))
+            Y  = -self.fdist.value((self.Cell_s.cx-(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_s.cy),\
+                             (self.Cell_s.cx-(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_n.cy))
             if self.debugging:
                 print('Bottom Left: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))    
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = [self.Cell_s.cx-self.Cell_s.cx_lb,self.Cell_s.cy-self.Cell_s.cy_lb]
+            CrossPoints = [self.Cell_s.cx-self.Cell_s.dcx,self.Cell_s.cy-self.Cell_s.dcy]
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))    
@@ -507,22 +306,25 @@ class NewtonianDistance:
         def _top_left_corner(self):
             u1 = -self.Cell_s.getuC()*self.zx; v1 = self.Cell_s.getvC()*self.zx
             u2 = -self.Cell_n.getuC()*self.zx; v2 = self.Cell_n.getvC()*self.zx
-            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx - self.Cell_s.cx_lb,self.Cell_s.cy))
-            y  = self.fdist.value((self.Cell_s.cx-self.Cell_s.cx_lb,self.Cell_s.cy),(self.Cell_s.cx-self.Cell_s.cx_lb,self.Cell_s.cy+self.Cell_s.cy_ub))
-            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx + self.Cell_n.cx_ub,self.Cell_n.cy))
-            Y  = self.fdist.value((self.Cell_s.cx-(abs(self.Cell_s.cx_lb) + abs(self.Cell_n.cx_ub)),self.Cell_s.cy),\
-                            (self.Cell_s.cx-(abs(self.Cell_s.cx_lb) + abs(self.Cell_n.cx_ub)),self.Cell_n.cy))
+            x  = self.fdist.value((self.Cell_s.cx,self.Cell_s.cy),(self.Cell_s.cx - self.Cell_s.dcx,self.Cell_s.cy))
+            y  = self.fdist.value((self.Cell_s.cx-self.Cell_s.dcx,self.Cell_s.cy),(self.Cell_s.cx-self.Cell_s.dcx,self.Cell_s.cy+self.Cell_s.dcy))
+            a  = -self.fdist.value((self.Cell_n.cx,self.Cell_n.cy), (self.Cell_n.cx + self.Cell_n.dcx,self.Cell_n.cy))
+            Y  = self.fdist.value((self.Cell_s.cx-(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_s.cy),\
+                            (self.Cell_s.cx-(abs(self.Cell_s.dcx) + abs(self.Cell_n.dcx)),self.Cell_n.cy))
             if self.debugging:
                 print('Top Left: y={:.2f};x={:.2f};a={:.2f};Y={:.2f};u1={:.5f};v1={:.5f};u2={:.5f};v2={:.5f};s1={:.2f};s2={:.2f}'.format(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
             TravelTime  = self._unit_time(_T(y,x,a,Y,u1,v1,u2,v2,self.s1,self.s2))
-            CrossPoints = [self.Cell_s.cx-self.Cell_s.cx_lb,self.Cell_s.cy+self.Cell_s.cy_ub]
+            CrossPoints = [self.Cell_s.cx-self.Cell_s.dcx,self.Cell_s.cy+self.Cell_s.dcy]
             CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
             if self.debugging:
                 print('------ TravelTime={:.2f};CrossPoints=[{:.2f},{:.2f}];CellPoints=[{:.2f},{:.5f}]'.format(TravelTime,CrossPoints[0],CrossPoints[1],CellPoints[0],CellPoints[1]))   
             return TravelTime,CrossPoints,CellPoints
 
 
-
+        # Determining the distance between the cell centres to 
+        #be used in defining the case
+        self.df_x = (self.Cell_n.long+self.Cell_n.width/2) -  (self.Cell_s.long+self.Cell_s.width/2)
+        self.df_y = (self.Cell_n.lat+self.Cell_n.height/2) -  (self.Cell_s.lat+self.Cell_s.height/2)
 
         if self.debugging:
             print('============================================')

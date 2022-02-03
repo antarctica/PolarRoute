@@ -16,20 +16,11 @@ class CellBox:
         self.cy     = self.lat  + self.height/2
 
         # Defining the Upper-bound (ub) and Lower-bound(lb) width from waypoints
-        self.cx_ub  = self.width/2
-        self.cx_lb  = self.width/2
-        self.cy_ub  = self.height/2
-        self.cy_lb  = self.height/2
+        self.dcx  = self.width/2
+        self.dcy  = self.height/2
 
         # Minimum Depth to be used in the land mask
         self.minDepth = 10
-
-    def _define_waypoints(self,pt):
-        self.cx,self.cy = pt
-        self.cx_ub = (self.long + self.width) - self.cx
-        self.cx_lb = self.cx - self.long
-        self.cy_ub = (self.lat + self.height) - self.cy
-        self.cy_lb = self.cy - self.lat
 
 
     def addIcePoints(self, icePoints):
@@ -166,6 +157,7 @@ class CellBox:
                 return True
         return False
 
+    # __repr__
     def toString(self):
         '''
             INCLUDE 
@@ -204,13 +196,13 @@ class CellBox:
         upperBound = 0.75
         
 
-        # # If a cell contains any point which is considered land, return False
-        # depthList = self._icePoints['depth']
-        # # If a cell contains only points condsidered land, return True
-        # if (depthList < 10).all():
-        #     return True
-        # if (depthList < 10).any():
-        #     return False
+        # If a cell contains any point which is considered land, return False
+        depthList = self._icePoints['depth']
+        # If a cell contains only points condsidered land, return True
+        if (depthList < 10).all():
+            return True
+        if (depthList < 10).any():
+            return False
     
         if self.iceArea() < lowerBound:
             return True
