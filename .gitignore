@@ -1,5 +1,7 @@
 resources/icepoints*.json
 resources/currentPoints.json
+resources/*.png
+resource/*.pdf
 *.pyc
 **/__pycache__
 Data
