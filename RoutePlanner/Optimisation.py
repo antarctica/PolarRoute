@@ -143,26 +143,27 @@ class TravelTime:
                 for jj_v,jj in enumerate(Neighbour_index):
                     if Neighbour_cost[jj_v] < self.DijkstraInfo[wpt_name]['TotalCost'][jj]:
                         self.DijkstraInfo[wpt_name]['TotalCost'][jj]              = Neighbour_cost[jj_v]
-                        self.DijkstraInfo[wpt_name]['Path']['FullPath'][jj]       = self.DijkstraInfo[wpt_name]['Path']['FullPath'][idx]  + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
+                        self.DijkstraInfo[wpt_name]['Path']['FullPath'][jj]       = self.DijkstraInfo[wpt_name]['Path']['FullPath'][idx]       + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CrossingPoints'][idx] + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]]
                         self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][jj] = self.DijkstraInfo[wpt_name]['Path']['CentroidPoints'][idx] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
-                        self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]      = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx] + [jj]
-                        self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]           = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx] + [Neighbour_cost[jj_v]]
+                        self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]      = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx]      + [jj]
+                        self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]           = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]           + [Neighbour_cost[jj_v]]
                 # Defining the graph point as visited
                 self.DijkstraInfo[wpt_name]['PositionLocked'][idx] = True
 
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
 
-    def PlotPaths(self,figInfo=None,routepoints=False,waypoints=None):
+    def PlotPaths(self,figInfo=None,routepoints=False,waypoints=None,return_ax=True,currents=False):
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
+            ax.set_facecolor('lightblue')
+            ax.patch.set_alpha(0.5)
         else:
             fig,ax = figInfo
 
-        self.Mesh.plot(figInfo=(fig,ax))
+        self.Mesh.plot(figInfo=(fig,ax),currents=currents)
 
         # Constructing the cell paths information
         if type(waypoints) == type(None):
@@ -171,7 +172,7 @@ class TravelTime:
             waypointList = waypoints
 
         for Path in self.Paths:
-            if (Path['from'] in waypointList) and (Path['to'] in waypointList):
+            if (Path['from'] in waypointList):
                 if Path['TotalCost'] == np.inf:
                     continue
                 Points = np.array(Path['Path']['FullPath'])
@@ -186,6 +187,9 @@ class TravelTime:
             Lat  = wpt[1]['Lat']
             Name = wpt[1]['Name']
             ax.text(Long,Lat,Name,color='r',zorder=100)
+
+        if return_ax:
+            return ax
 
 
     # def PathSmoothing(self):
