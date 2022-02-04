@@ -81,7 +81,7 @@ class CellGrid:
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
+            ax.set_facecolor('lightblue')
         else:
             fig,ax = figInfo
 
@@ -89,7 +89,7 @@ class CellGrid:
             ax.add_patch(cellBox.getPolygon())
             ax.add_patch(cellBox.getBorder())
 
-            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC(),cellBox.getvC(),scale=2,width=0.002,color='gray')
+            #ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC(),cellBox.getvC(),scale=2,width=0.002,color='gray')
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
