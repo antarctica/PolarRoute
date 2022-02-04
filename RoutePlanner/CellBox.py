@@ -34,50 +34,50 @@ class CellBox:
 
     def addIcePoints(self, icePoints):
         '''
-            INCLUDE 
+            updates the ice points contained within this cellBox to a pandas dataframe provided by parameter icePoints. 
         '''
         self._icePoints = icePoints
         
     def addCurrentPoints(self, currentPoints):
         '''
-            INCLUDE 
+            updates the current points contained within this cellBox to a pandas dataframe provided by parameter currentPoints.
         '''
         self._currentPoints = currentPoints
 
     def getIcePointLength(self):
         '''
-            INCLUDE 
+            Returns the number of ice points contained within this cellBox. 
         '''
         return len(self._icePoints)
     
     def getCurrentPointLength(self):
         '''
-            INCLUDE 
+            Returns the number of current points contained within this cellBox. 
         '''
         return len(self._currentPoints)
 
-    def getLatRange(self):
+    def _getLatRange(self):
         '''
-            INCLUDE 
+            Returns a string details the lat range of this cellBox, used by the _getRange() and toString() methods. 
         '''        
         return str(self.lat) + " to " + str(self.lat + self.height)
 
-    def getLongRange(self):
+    def _getLongRange(self):
         '''
-            INCLUDE 
+            Returns a string detailing the long range of this cellBox, used by the _getRange() and toString() methods. 
         '''
 
         return str(self.long) + " to " + str(self.long + self.width)
 
-    def getRange(self):
+    def _getRange(self):
         '''
-            INCLUDE 
+            Returns a string detailing the lat/long range of this cellBox, used by the toString() method. 
         '''        
-        return "Lat Range: " + self.getLatRange() + ", Long Range: " + self.getLongRange()
+        return "Lat Range: " + self._getLatRange() + ", Long Range: " + self._getLongRange()
     
     def getPolygon(self):
         '''
-            INCLUDE 
+            Returns a polygon object representing if a cellBox is considered land as well as the ice area within the cellBox 
         '''        
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
@@ -86,11 +86,11 @@ class CellBox:
                     [self.long, self.lat]]
         if self.isLand() == False:
             return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
-        return Polygon(bounds, closed = True, fill = True, color = 'mediumseagreen', alpha=1)
+        return Polygon(bounds, closed = True, fill = True, color = 'mediumseagreen', alpha=1)    
         
     def getBorder(self):
         '''
-            INCLUDE 
+            Returns a polygon object representing a grey border around this cellBox, to be used when plotting. 
         '''          
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
@@ -101,7 +101,7 @@ class CellBox:
     
     def getHighlight(self):
         '''
-            INCLUDE 
+            Returns polygon object representing a red border around this cellBox, to be used when plotting. 
         '''  
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
@@ -118,11 +118,14 @@ class CellBox:
         return self.width * math.cos(self.lat)
     
     def iceArea(self):
+        """
+            Returns mean ice area of all icepoints contained within this cellBox
+        """
         return self._icePoints['iceArea'].mean()
     
     def depth(self):
         '''
-            INCLUDE 
+            Returns mean depth of all icepoints contained within this cellBox
         '''          
         return self._icePoints['depth'].mean()
 
@@ -140,16 +143,14 @@ class CellBox:
     
     def getIcePoints(self):
         '''
-            INCLUDE 
+            Returns a pandas dataframe of all icepoints contained within this cellBox 
         '''  
         return self._icePoints
-    
-    def isLand(self):
-        if self.depth() <= self.minDepth:
-            return True
-        return False
             
     def containsPoint(self, lat, long):
+        """
+            Returns true if a given lat/long coordinate is contained within this cellBox.
+        """
         if (lat > self.lat) & (lat < self.lat + self.height):
             if (long > self.long) & (long < self.long + self.width):
                 return True
@@ -157,7 +158,7 @@ class CellBox:
 
     def toString(self):
         '''
-            INCLUDE 
+            Converts a cellBox to a String which may be printed to console for debugging purposes
         '''  
         s = ""
         s += self.getRange() + "\n"
@@ -184,29 +185,54 @@ class CellBox:
         s += "}"
         return s
 
+    def containsLand(self):
+        """
+            Returns True if any icepoint within the cell has a depth less than the specifed minimum depth.
+        """
+        depthList = self._icePoints['depth']
+        
+        if (depthList < self.minDepth).any():
+            return True
+        return False
+    
+    def isLand(self):
+        """
+            Returns True if all icepoints within the cell have a depth less than the specified minimum depth.
+        """
+        depthList = self._icePoints['depth']
+        if (depthList < self.minDepth).all():
+            return True
+        return False  
+    
     def isHomogenous(self):
         '''
-            returns true or false if a cell is deemed homogenous, used to define a base case for recursive splitting. 
+            returns true if a cell is deemed homogenous, used to define a base case for recursive splitting. 
         '''  
-
-        lowerBound = 0.15
-        upperBound = 0.75
-        
-
-        # # If a cell contains any point which is considered land, return False
-        # depthList = self._icePoints['depth']
-        # # If a cell contains only points condsidered land, return True
-        # if (depthList < 10).all():
-        #     return True
-        # if (depthList < 10).any():
-        #     return False
-    
-        if self.iceArea() < lowerBound:
+        # if a cell contains only land, it is homogenous and does not require splitting
+        if self.isLand():
             return True
-        if self.iceArea() > upperBound:
+        # if a cell contains both land and sea, it not homogenous and requires splitting
+        if self.containsLand():
+            return False
+        
+        
+        
+        
+        # TODO first interpretation of sea ice homogeneity. Requires refinement
+        threshold = 0.04
+        
+        percentIPsAboveThreshold = self._icePoints.loc[self._icePoints['iceArea'] > threshold].size / self._icePoints.size
+        
+        lowerBound = 0.05
+        upperBound = 0.90
+        
+        if percentIPsAboveThreshold < lowerBound:
+            return True
+        if percentIPsAboveThreshold > upperBound:
             return True
         
         return False
+        
 
     def split(self):
         '''
@@ -232,7 +258,7 @@ class CellBox:
         for splitBox in splitBoxes:
             splitBox.splitDepth = self.splitDepth + 1
             
-            #Split icePoints per box
+            #Split icePoints per cellBox
             longLoc = self._icePoints.loc[(self._icePoints['long'] >= splitBox.long) & 
                                           (self._icePoints['long'] < (splitBox.long + splitBox.width))]
             latLongLoc = longLoc.loc[(self._icePoints['lat'] >= splitBox.lat) & 
@@ -252,7 +278,8 @@ class CellBox:
 
     def recursiveSplit(self, maxSplits,splitLand=False,splitIce=True):
         '''
-            INCLUDE 
+            Recursively splits this cellBox until all split cellBoxes are considered homogenous (defined by the isHomogenous() function) 
+            or a the cellBox has reached a maximum split depth, given by parameter maxSplits.
         '''  
         splitCells = []
         if self.isHomogenous() or (self.splitDepth >= maxSplits):
