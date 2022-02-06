@@ -1,12 +1,10 @@
 README.md
 setup.py
 RoutePlanner/CellBox.py
-RoutePlanner/CellBox_JS.py
 RoutePlanner/CellGrid.py
 RoutePlanner/Function.py
-RoutePlanner/Mesh.py
+RoutePlanner/IO.py
 RoutePlanner/Optimisation.py
-RoutePlanner/Plot.py
 RoutePlanner/__init__.py
 RoutePlanner.egg-info/PKG-INFO
 RoutePlanner.egg-info/SOURCES.txt
