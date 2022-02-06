@@ -1,5 +1,7 @@
 resources/icepoints*.json
 resources/currentPoints.json
+Examples/.ipynb*
+./RoutePlanner.egg-info
 Plots
 *.pyc
 **/__pycache__
