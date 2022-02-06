@@ -1,6 +1,5 @@
 import numpy as np
 import math
-from scipy import optimize
 
 def sign(x):
     s = math.copysign(1, x)
