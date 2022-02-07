@@ -152,8 +152,8 @@ class CellBox:
         return False
             
     def containsPoint(self, lat, long):
-        if (lat > self.lat) & (lat < self.lat + self.height):
-            if (long > self.long) & (long < self.long + self.width):
+        if (lat >= self.lat) & (lat <= self.lat + self.height):
+            if (long >= self.long) & (long <= self.long + self.width):
                 return True
         return False
 
