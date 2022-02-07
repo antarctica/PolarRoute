@@ -21,12 +21,18 @@ class CellGrid:
                 self.cellBoxes.append(cellBox)
     
     def addIcePoints(self, icePoints):
+        """
+            Takes a dataframe containing ice points and assigns them to cellBoxes within the cellGrid
+        """
         for cellBox in self.cellBoxes:
             longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] < (cellBox.long + cellBox.width))]
             latLongLoc = longLoc.loc[(icePoints['lat'] > cellBox.lat) & (icePoints['lat'] < (cellBox.lat + cellBox.height))]
             cellBox.addIcePoints(latLongLoc)
         
     def addCurrentPoints(self, currentPoints):
+        """
+            Takes a dataframe containing current points and assigns then to cellBoxes within the cellGrid
+        """
         for cellBox in self.cellBoxes:
             longLoc = currentPoints.loc[(currentPoints['long'] > cellBox.long) & (currentPoints['long'] < (cellBox.long + cellBox.width))]
             latLongLoc = longLoc.loc[(currentPoints['lat'] > cellBox.lat) & (currentPoints['lat'] < (cellBox.lat + cellBox.height))]
@@ -34,9 +40,15 @@ class CellGrid:
             cellBox.addCurrentPoints(latLongLoc)
     
     def cellCount(self):
+        """
+            Returns the number of cellBoxes contained within this cellGrid
+        """
         return len(self.cellBoxes)
     
     def toJSON(self):
+        """
+            Returns this cellGrid converted to JSON format.
+        """
         json = "{ \"cellBoxes\":["
         for cellBox in self.cellBoxes:
             json += cellBox.toJSON() + ",\n"
@@ -46,6 +58,9 @@ class CellGrid:
         return json
     
     def getCellBox(self, lat, long):
+        """
+            Returns the CellBox which contains a point, given by parameters lat, long
+        """
         selectedCell = []
         
         for cellBox in self.cellBoxes:
@@ -61,6 +76,10 @@ class CellGrid:
             return "ERROR: Multiple cellBoxes have been found at lat =" + str(lat) + ", long =" + str(long) 
     
     def recursiveSplit(self, maxSplits):
+        """
+            Resursively step though all cellBoxes in this cellGrid, splitting them based on a cells 'isHomogenous' function
+            and a cellBoxes split depth.
+        """
         splitCellBoxes = []
         for cellBox in self.cellBoxes:
             splitCellBoxes += cellBox.recursiveSplit(maxSplits)
@@ -68,16 +87,31 @@ class CellGrid:
         self.cellBoxes = splitCellBoxes
         
     def splitAndReplace(self, cellBox):
+        """
+            Replaces a cellBox given by parameter 'cellBox' in this grid with 4 smaller cellBoxes representing
+            the four corners of the given cellBox
+        """
         splitCellBoxes = cellBox.split()
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
         
     def recursiveSplitAndReplace(self, cellBox, maxSplits):
+        """
+            Replaces a cellBox given by parameter 'cellBox' in this grid with 4 smaller cellBoxes representing the four
+            corners of the given cellBox. Recursively repeats this process with each of the 4 smaller cellBoxs until
+            either the cellBoxes 'isHomogenous' function is met, or the maximum split depth given by parameter 'maxSplits'
+            is reached.
+        """
         splitCellBoxes = cellBox.recursiveSplit(maxSplits)
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
         
     def plot(self,figInfo=None):
+        """
+            plots this cellGrid for display.
+
+            TODO - requires reworking as part of the plotting work-package
+        """
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
@@ -95,14 +129,23 @@ class CellGrid:
         ax.set_ylim(self._latMin, self._latMax)
         
     def _getLeftNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the left-hand-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
         leftNeightbours = []
         leftNeightbours_indx = []
         for idx,cellBox in enumerate(self.cellBoxes):
             if (cellBox.long + cellBox.width == selectedCellBox.long) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
                     leftNeightbours_indx.append(idx)
                     leftNeightbours.append(cellBox)
-        return leftNeightbours,leftNeightbours_indx           
+        return leftNeightbours,leftNeightbours_indx
+
     def _getRightNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the right-hand-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
         rightNeightbours = []
         rightNeightbours_indx = []
         for idx,cellBox in enumerate(self.cellBoxes):
@@ -112,6 +155,10 @@ class CellGrid:
         return rightNeightbours,rightNeightbours_indx
     
     def _getTopNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the top-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
         topNeightbours      = []
         topNeightbours_indx = []
         for idx,cellBox in enumerate(self.cellBoxes):
@@ -121,6 +168,10 @@ class CellGrid:
         return topNeightbours,topNeightbours_indx
     
     def _getBottomNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the bottom-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
         bottomNeightbours      = []
         bottomNeightbours_indx = []
         for idx,cellBox in enumerate(self.cellBoxes):
@@ -131,6 +182,10 @@ class CellGrid:
             
     
     def getNeightbours(self, selectedCellBox):
+        """
+            Returns a list of call cellBoxes touching a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
         leftNeightbours,leftNeightbours_indx     = self._getLeftNeightbours(selectedCellBox)
         rightNeightbours,rightNeightbours_indx   = self._getRightNeightbours(selectedCellBox)
         topNeightbours,topNeightbours_indx       = self._getTopNeightbours(selectedCellBox)
@@ -140,6 +195,10 @@ class CellGrid:
         return neightbours,neightbours_index
         
     def highlightCells(self, selectedCellBoxes, figInfo=None):
+        """
+            Adds a red-border to cellBoxes gien by parameter 'selectedCellBoxes' and plots this cellGrid.
+            TODO - requires rework as part of the plotting work-package
+        """
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
@@ -158,6 +217,10 @@ class CellGrid:
         ax.set_ylim(self._latMin, self._latMax)
         
     def highlightCell(self, selectedCellBox, figInfo=None):
+        """
+            Adds a red-border to a cellBox given by parameter 'selectedCellBox' and plots this cellGrid.
+            TODO - requires rework as part of the plotting work-package
+        """
         if type(figInfo) == type(None):
             fig.patch.set_facecolor('white')
             ax.set_facecolor('white')
