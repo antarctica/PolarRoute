@@ -9,7 +9,7 @@ import warnings
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from RoutePlanner.Function import NewtonianDistance
+from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
 
 class TravelTime:
     def __init__(self,CellGrid,CostFunc=NewtonianDistance):
@@ -218,7 +218,8 @@ class TravelTime:
                 Points = np.array(Path['Path']['FullPath'])
                 if routepoints:
                     ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
-                    quad = ax.scatter(Points[:,0],Points[:,1],30,Path['Path']['Cost'],zorder=99,cmap='hsv')
+                    ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='k')
+                    #quad = ax.scatter(Points[:,0],Points[:,1],30,Path['Path']['Cost'],zorder=99,cmap='hsv')
                 else:
                     ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
 
@@ -230,14 +231,14 @@ class TravelTime:
             Name = wpt[1]['Name']
             ax.text(Long,Lat,Name,color='k',zorder=100)
 
-        if routepoints:
-            plt.colorbar(quad,ax=ax,label='Travel Time ({})'.format(self.unit_time))
+        # if routepoints:
+        #     plt.colorbar(quad,ax=ax,label='Travel Time ({})'.format(self.unit_time))
 
         if return_ax:
             return ax
 
-
-    def PathSmoothing(self,maxiter=1):
+                    
+    def PathSmoothing(self,maxiter=50):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
         '''
@@ -245,22 +246,31 @@ class TravelTime:
 
         # Looping over all the optimised paths
         for Path in self.SmoothedPaths:
+
             startPoint = Path['Path']['FullPath'][0,:][None,:]
             endPoint   = Path['Path']['FullPath'][-1,:][None,:]
+
+            print('==================================================')
+            print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
 
             OrgcrossingPoints = np.concatenate([startPoint,
                                             Path['Path']['CrossingPoints'],
                                             endPoint])
 
             Points = OrgcrossingPoints.copy()
-            iter=0
-            for iter in range(20):
+            
+            for iter in range(maxiter):
                 for id in range(Points.shape[0]-2):
                     Sp  = tuple(Points[id,:])
                     Cp  = tuple(Points[id+1,:])
                     Np  = tuple(Points[id+2,:])
-                    nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'],debugging=0,maxiter=4)
+                    nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
                     TravelTime, CrossingPoint = nc.value()
+
+                    if (np.isnan(CrossingPoint)).any():
+                        CrossingPoint = np.array([[Cp[0],Cp[1]]])
+
+                    #Points[id+1,:] = CrossingPoint
 
                     if id == 0:
                         newPoints = CrossingPoint
@@ -272,4 +282,3 @@ class TravelTime:
 
             Path['Path']['FullPath']       = Points
             Path['Path']['CrossingPoints'] = Points
-                    
