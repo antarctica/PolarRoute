@@ -49,3 +49,28 @@ class TemporalCellGrid:
         cellGrid.addIcePoints(df)
 
         return cellGrid
+
+    def getMeanGrid(self, startTime, endTime):
+        # get all icePoints for the given time
+
+        # TODO requires rework in optimization work package
+        df = self._icePoints[self._icePoints.index.get_level_values('time') > startTime]
+        df = df[df.index.get_level_values('time') < endTime]
+
+        df = df.groupby(['XC', 'YC']).mean()
+
+        df = df.reset_index()
+        df = df.drop(['iter'], axis=1)
+        df = df.rename(columns={"XC": "long", "YC": "lat", "Depth": "depth", "SIarea": "iceArea"})
+
+        # Load current points
+        # TODO - replace with daily current data once it is available
+        currentPoints = pd.read_json('resources/currentPoints.json')
+        currentPoints = pd.DataFrame.from_records(currentPoints.currentPoints)
+
+        # create a cellGrid using datapoints for the given day
+        cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
+        cellGrid.addCurrentPoints(currentPoints)
+        cellGrid.addIcePoints(df)
+
+        return cellGrid
