@@ -3,4 +3,5 @@ resources/currentPoints.json
 Plots
 *.pyc
 **/__pycache__
+*.ipynb_checkpoints
 Data
