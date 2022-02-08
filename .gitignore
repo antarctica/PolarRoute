@@ -1,6 +1,5 @@
 resources/icepoints*.json
 resources/currentPoints.json
-RoutePlanner
 Plots
 *.pyc
 **/__pycache__
