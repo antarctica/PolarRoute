@@ -166,7 +166,7 @@ class CellGrid:
             if (cellBox.long + cellBox.width == selectedCellBox.long) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
                     leftNeightbours_indx.append(idx)
                     leftNeightbours.append(cellBox)
-        return leftNeightbours,leftNeightbours_indx           
+        return leftNeightbours,leftNeightbours_indx
 
     def _getRightNeightbours(self, selectedCellBox):
         """
@@ -254,8 +254,8 @@ class CellGrid:
         else:
             ax.set_xlim(self._longMin, self._longMax)
             ax.set_ylim(self._latMin, self._latMax)
-        
 
+        
     def highlightCell(self, selectedCellBox, figInfo=None):
         """
             Adds a red-border to a cellBox given by parameter 'selectedCellBox' and plots this cellGrid.
