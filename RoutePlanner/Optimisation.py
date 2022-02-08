@@ -241,6 +241,11 @@ class TravelTime:
     def PathSmoothing(self,maxiter=50):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
+
+
+            Bugs:
+                - Currently we loop over the whole path. I need to take the previous point in the loop, otherwise finding global minimum more difficult.
+
         '''
         self.SmoothedPaths = self.Paths.copy()
 
@@ -258,7 +263,8 @@ class TravelTime:
                                             endPoint])
 
             Points = OrgcrossingPoints.copy()
-            
+
+
             for iter in range(maxiter):
                 for id in range(Points.shape[0]-2):
                     Sp  = tuple(Points[id,:])
@@ -270,8 +276,6 @@ class TravelTime:
                     if (np.isnan(CrossingPoint)).any():
                         CrossingPoint = np.array([[Cp[0],Cp[1]]])
 
-                    #Points[id+1,:] = CrossingPoint
-
                     if id == 0:
                         newPoints = CrossingPoint
                     else:
@@ -279,6 +283,26 @@ class TravelTime:
 
                 Points = np.concatenate([startPoint,newPoints,endPoint])
 
+
+            # iter = 0
+            # while iter <= maxiter:
+            #     id = 0
+            #     while id <= (len(Points) - 3):
+            #         Sp  = tuple(Points[id,:])
+            #         Cp  = tuple(Points[id+1,:])
+            #         Np  = tuple(Points[id+2,:])
+            #         nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
+            #         TravelTime, CrossingPoint = nc.value()    
+
+            #         if (np.isnan(CrossingPoint)).any():
+            #             id+=1
+            #             continue
+            #         else:
+            #             Points[id+1,:] = CrossingPoint[0,:]
+            #             if CrossingPoint.shape[0] > 1:
+            #                 Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
+            #         id+=1
+            #     iter+=1
 
             Path['Path']['FullPath']       = Points
             Path['Path']['CrossingPoints'] = Points
