@@ -12,10 +12,12 @@ class CellBox:
         self.height = height
 
         # Defining the initial centroid information for cell
+        # TODO move these out of object attributes at to get methods.
         self.cx     = self.long + self.width/2
         self.cy     = self.lat  + self.height/2
 
         # Defining the Upper-bound (ub) and Lower-bound(lb) width from waypoints
+        # TODO move these out of object attributes at to get methods.
         self.cx_ub  = self.width/2
         self.cx_lb  = self.width/2
         self.cy_ub  = self.height/2
@@ -156,7 +158,7 @@ class CellBox:
                 return True
         return False
 
-    def toString(self):
+    def __str__(self):
         '''
             Converts a cellBox to a String which may be printed to console for debugging purposes
         '''  
@@ -256,6 +258,7 @@ class CellBox:
         splitBoxes.append(topRight)
 
         for splitBox in splitBoxes:
+            #TODO requires rework for optimization
             splitBox.splitDepth = self.splitDepth + 1
             
             #Split icePoints per cellBox
@@ -282,7 +285,8 @@ class CellBox:
             or a the cellBox has reached a maximum split depth, given by parameter maxSplits.
         '''  
         splitCells = []
-        if self.isHomogenous() or (self.splitDepth >= maxSplits):
+        #base case for recursive splitting. Do not split a cell if it is homogenous or the maximum split depth has been reached
+        if self.isHomogenous() or (self.splitDepth >= maxSplits): 
             splitCells.append(self)
             return splitCells
         else:
