@@ -15,7 +15,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
 
 NAME    = "RoutePlanner"
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 
 INCLUDE_DIRS = numpy.distutils.misc_util.get_numpy_include_dirs()
 
@@ -37,7 +37,8 @@ INSTALL_REQUIRES = [
     'numpy',
     'scipy',
     'pandas',
-    'netCDF4']
+    'netCDF4',
+    'xarray']
 
 
 def read(*parts):
