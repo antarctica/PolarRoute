@@ -77,7 +77,7 @@ class CellBox:
         '''        
         return "Lat Range: " + self._getLatRange() + ", Long Range: " + self._getLongRange()
     
-    def getPolygon(self):
+    def getPolygon(self,fill=True):
         '''
             Returns a polygon object representing if a cellBox is considered land as well as the ice area within the cellBox 
         '''        
@@ -89,7 +89,7 @@ class CellBox:
         if self.isLand() == False:
             return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
         return Polygon(bounds, closed = True, fill = True, color = 'mediumseagreen', alpha=1)    
-        
+
     def getBorder(self):
         '''
             Returns a polygon object representing a grey border around this cellBox, to be used when plotting. 
@@ -135,13 +135,13 @@ class CellBox:
         '''
             INCLUDE 
         '''          
-        return self._currentPoints['uC'].mean()*((60*60)/1000)
+        return self._currentPoints['uC'].mean()
     
     def getvC(self):
         '''
             INCLUDE 
         '''  
-        return self._currentPoints['vC'].mean()*((60*60)/1000)
+        return self._currentPoints['vC'].mean()
     
     def getIcePoints(self):
         '''
@@ -217,9 +217,6 @@ class CellBox:
         if self.containsLand():
             return False
         
-        
-        
-        
         # TODO first interpretation of sea ice homogeneity. Requires refinement
         threshold = 0.04
         
@@ -247,10 +244,10 @@ class CellBox:
         halfHeight = self.height / 2
 
         # create 4 new cellBoxes
-        bottomLeft = CellBox(self.lat, self.long, halfWidth, halfHeight)
+        bottomLeft  = CellBox(self.lat, self.long, halfWidth, halfHeight)
         bottomRight = CellBox(self.lat, self.long + halfWidth, halfWidth, halfHeight)
-        topLeft = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight)
-        topRight = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight)
+        topLeft     = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight)
+        topRight    = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight)
 
         splitBoxes.append(bottomLeft)
         splitBoxes.append(bottomRight)
@@ -279,7 +276,7 @@ class CellBox:
 
         return splitBoxes
 
-    def recursiveSplit(self, maxSplits,splitLand=False,splitIce=True):
+    def recursiveSplit(self, maxSplits):
         '''
             Recursively splits this cellBox until all split cellBoxes are considered homogenous (defined by the isHomogenous() function) 
             or a the cellBox has reached a maximum split depth, given by parameter maxSplits.

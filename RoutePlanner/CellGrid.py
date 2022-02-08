@@ -106,7 +106,7 @@ class CellGrid:
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
         
-    def plot(self,figInfo=None):
+    def plot(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
         """
             plots this cellGrid for display.
 
@@ -120,13 +120,27 @@ class CellGrid:
             fig,ax = figInfo
 
         for cellBox in self.cellBoxes:
+            if type(iceThreshold) != type(None):
+                if cellBox.iceArea() >= iceThreshold:
+                    qp = ax.add_patch(cellBox.getPolygon())
+                    qp.set_hatch('/')
+                else:
+                    ax.add_patch(cellBox.getPolygon())
+            else:
+                ax.add_patch(cellBox.getPolygon())
+            
+
             ax.add_patch(cellBox.getPolygon())
             ax.add_patch(cellBox.getBorder())
 
-            #ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC(),cellBox.getvC(),scale=2,width=0.002,color='gray')
+            if currents:
+                ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
+
+        if return_ax:
+            return ax
         
     def _getLeftNeightbours(self, selectedCellBox):
         """
@@ -202,7 +216,7 @@ class CellGrid:
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
+            ax.set_facecolor('lightblue')
         else:
             fig,ax = figInfo
 
