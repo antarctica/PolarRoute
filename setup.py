@@ -36,7 +36,8 @@ INSTALL_REQUIRES = [
     'matplotlib',
     'numpy',
     'scipy',
-    'pandas']
+    'pandas',
+    'netCDF4']
 
 
 def read(*parts):

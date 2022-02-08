@@ -16,20 +16,11 @@ class CellBox:
         self.cy     = self.lat  + self.height/2
 
         # Defining the Upper-bound (ub) and Lower-bound(lb) width from waypoints
-        self.cx_ub  = self.width/2
-        self.cx_lb  = self.width/2
-        self.cy_ub  = self.height/2
-        self.cy_lb  = self.height/2
+        self.dcx  = self.width/2
+        self.dcy  = self.height/2
 
         # Minimum Depth to be used in the land mask
         self.minDepth = 10
-
-    def _define_waypoints(self,pt):
-        self.cx,self.cy = pt
-        self.cx_ub = (self.long + self.width) - self.cx
-        self.cx_lb = self.cx - self.long
-        self.cy_ub = (self.lat + self.height) - self.cy
-        self.cy_lb = self.cy - self.lat
 
 
     def addIcePoints(self, icePoints):
@@ -99,6 +90,17 @@ class CellBox:
                     [self.long, self.lat]]
         return Polygon(bounds, closed = True, fill = False, color = 'Grey', alpha = 1)
     
+
+
+    def getBounds(self):
+        bounds = [[self.long, self.lat],
+                    [self.long, self.lat + self.height],
+                    [self.long + self.width, self.lat + self.height],
+                    [self.long + self.width, self.lat],
+                    [self.long, self.lat]]
+        return bounds
+
+
     def getHighlight(self):
         '''
             INCLUDE 
@@ -145,16 +147,17 @@ class CellBox:
         return self._icePoints
     
     def isLand(self):
-        if self.depth() <= self.minDepth:
+        if (self.depth() <= self.minDepth):
             return True
         return False
             
     def containsPoint(self, lat, long):
-        if (lat > self.lat) & (lat < self.lat + self.height):
-            if (long > self.long) & (long < self.long + self.width):
+        if (lat >= self.lat) & (lat <= self.lat + self.height):
+            if (long >= self.long) & (long <= self.long + self.width):
                 return True
         return False
 
+    # __repr__
     def toString(self):
         '''
             INCLUDE 

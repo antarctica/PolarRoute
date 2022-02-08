@@ -1,4 +1,6 @@
-resources/icepoints2019-02-08.json
+resources/icepoints*.json
 resources/currentPoints.json
+Plots
 *.pyc
 **/__pycache__
+Data

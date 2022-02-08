@@ -1,24 +1,28 @@
+from turtle import fillcolor
 import numpy as np
 from RoutePlanner.CellBox import CellBox
 from RoutePlanner.Function import NewtonianDistance
 import matplotlib.pylab as plt
+from matplotlib.patches import Polygon
 
 class CellGrid:
     
-    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
-        self._longMin    = longMin
-        self._longMax    = longMax
-        self._latMin     = latMin
-        self._latMax     = latMax
+    def __init__(self, OptInfo):
+        self.OptInfo = OptInfo
+
+        self._longMin    = self.OptInfo['Bounds Longitude'][0] 
+        self._longMax    = self.OptInfo['Bounds Longitude'][1]
+        self._latMin     = self.OptInfo['Bounds Latitude'][0]
+        self._latMax     = self.OptInfo['Bounds Latitude'][1]
         
-        self._cellWidth  = cellWidth
-        self._cellHeight = cellHeight
+        self._cellWidth  = self.OptInfo['Grid Spacing (dx,dy)'][0]
+        self._cellHeight = self.OptInfo['Grid Spacing (dx,dy)'][1]
         
         self.cellBoxes = []
 
-        for long in np.arange(longMin, longMax, cellWidth):
-            for lat in np.arange(latMin, latMax, cellHeight):
-                cellBox = CellBox(lat, long, cellWidth, cellHeight)
+        for long in np.arange(self._longMin, self._longMax, self._cellWidth):
+            for lat in np.arange(self._latMin, self._latMax, self._cellHeight):
+                cellBox = CellBox(lat, long, self._cellWidth, self._cellHeight)
                 self.cellBoxes.append(cellBox)
     
     def addIcePoints(self, icePoints):
@@ -78,31 +82,33 @@ class CellGrid:
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
         
-    def plot(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
+    def plot(self,figInfo=None,currents=False,return_ax=False):
         if type(figInfo) == type(None):
             fig,ax = plt.subplots(1,1,figsize=(15,10))
             fig.patch.set_facecolor('white')
-            ax.set_facecolor('lightblue')
+            ax.set_facecolor('steelblue')
             ax.patch.set_alpha(1.0)
         else:
             fig,ax = figInfo
 
         for cellBox in self.cellBoxes:
-            if type(iceThreshold) != type(None):
-                if cellBox.iceArea() >= iceThreshold:
-                    qp = ax.add_patch(cellBox.getPolygon())
-                    qp.set_hatch('/')
-                else:
-                    ax.add_patch(cellBox.getPolygon())
+            if cellBox.isLand():
+                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
+                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
+                continue
+
+
+            iceArea = cellBox.iceArea()
+            if iceArea >= self.OptInfo['MaxIceExtent']:
+                ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White'))
+                ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='Pink',alpha=0.4))
+                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
+            elif not np.isnan(iceArea):
+                ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White',alpha=iceArea))
+                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
             else:
-                ax.add_patch(cellBox.getPolygon())
-            
-
-            ax.add_patch(cellBox.getPolygon())
-            ax.add_patch(cellBox.getBorder())
-
-
-
+                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
+                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))                
 
             if currents:
                 ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
@@ -177,20 +183,15 @@ class CellGrid:
             bounds.append([cellBox.long,cellBox.lat])
             bounds.append([cellBox.long+cellBox.width,cellBox.lat+cellBox.height])
             ax.add_patch(cellBox.getHighlight())
-            ax.scatter(cellBox.cx,cellBox.cy,15,marker='o',color = 'Red')
             ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*0.5,cellBox.getvC()*0.5,scale=2,width=0.002,color='gray')
         bounds = np.array(bounds)
 
         for cellBox in selectedCellBoxes:
             # Determining Newton crossing points
-            TravelTime, CrossPoints, CellPoints = NewtonianDistance(selectedCellBox,cellBox,shipSpeed,debugging=debugging).value() 
-            plt.scatter([selectedCellBox.cx,CrossPoints[0],cellBox.cx],[selectedCellBox.cy,CrossPoints[1],cellBox.cy],15,marker='o',color='k')
-            plt.plot([selectedCellBox.cx,CrossPoints[0],cellBox.cx],[selectedCellBox.cy,CrossPoints[1],cellBox.cy],color='k')
-
-
-        # Plotting the source cell box
-        ax.scatter(selectedCellBox.cx,selectedCellBox.cy,30,marker='s',color='k')
-        ax.quiver(selectedCellBox.cx,selectedCellBox.cy,selectedCellBox.getuC()*0.5,selectedCellBox.getvC()*0.5,scale=2,width=0.002,color='gray')
+            TravelTime, CrossPoints, CellPoints = NewtonianDistance(selectedCellBox,cellBox,shipSpeed,shipSpeed,debugging=debugging).value() 
+            ax.plot([selectedCellBox.long+selectedCellBox.width/2,CrossPoints[0],cellBox.long+cellBox.width/2],\
+                        [selectedCellBox.lat+selectedCellBox.height/2,CrossPoints[1],cellBox.lat+cellBox.height/2],marker='o',color='k')
+            ax.text(cellBox.long+cellBox.width/2,cellBox.lat+cellBox.height/2,'{:.2f}'.format(TravelTime),color='r',zorder=100)
 
         if localBounds:
             ax.set_xlim([bounds[:,0].min(),bounds[:,0].max()])
