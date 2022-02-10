@@ -154,6 +154,19 @@ class CellGrid:
 
         if return_ax:
             return ax
+
+
+    def getIndex(self, selectedCellBox):
+        """
+            Returns the index of the selected cell
+        """
+        cell_index = []
+        for idx,cellBox in enumerate(self.cellBoxes):
+            if selectedCellBox==cellBox:
+                    cell_index.append(idx)
+        return cell_index
+
+
         
     def _getLeftNeightbours(self, selectedCellBox):
         """

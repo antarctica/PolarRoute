@@ -200,7 +200,7 @@ class TravelTime:
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
 
-    def PlotPaths(self,routepoints=False,return_ax=True,currents=False):
+    def PlotPaths(self,routepoints=False,return_ax=True,currents=False,xlim=None,ylim=None):
 
         ax = self.Mesh.plot(currents=currents,return_ax=True)
 
@@ -225,14 +225,21 @@ class TravelTime:
 
         # Plotting Waypoints
         ax.scatter(self.OptInfo['WayPoints']['Long'],self.OptInfo['WayPoints']['Lat'],100,marker='^',color='k',zorder=100)
-        for wpt in self.OptInfo['WayPoints'].iterrows():
-            Long = wpt[1]['Long']
-            Lat  = wpt[1]['Lat']
-            Name = wpt[1]['Name']
-            ax.text(Long,Lat,Name,color='k',zorder=100)
+        # for wpt in self.OptInfo['WayPoints'].iterrows():
+        #     Long = wpt[1]['Long']
+        #     Lat  = wpt[1]['Lat']
+        #     Name = wpt[1]['Name']
+        #     ax.text(Long,Lat,Name,color='k',zorder=100)
 
         # if routepoints:
         #     plt.colorbar(quad,ax=ax,label='Travel Time ({})'.format(self.unit_time))
+
+
+        if type(xlim) != type(None):
+            ax.set_xlim(xlim)
+        if type(ylim) != type(None):
+            ax.set_ylim(ylim)
+
 
         if return_ax:
             return ax
@@ -255,6 +262,9 @@ class TravelTime:
             startPoint = Path['Path']['FullPath'][0,:][None,:]
             endPoint   = Path['Path']['FullPath'][-1,:][None,:]
 
+            if len(Path['Path']['CrossingPoints']) == 0:
+                continue
+
             print('==================================================')
             print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
 
@@ -264,45 +274,34 @@ class TravelTime:
 
             Points = OrgcrossingPoints.copy()
 
-
-            for iter in range(maxiter):
-                for id in range(Points.shape[0]-2):
+            iter = 0
+            while iter <= maxiter:
+                id = 0
+                while id <= (len(Points) - 3):
                     Sp  = tuple(Points[id,:])
                     Cp  = tuple(Points[id+1,:])
                     Np  = tuple(Points[id+2,:])
+
+
+                    # Remove crossing point if are the same location
+                    if (((np.array(Sp)-np.array(Cp))**2).sum() < 1e-4) or\
+                       (((np.array(Cp)-np.array(Np))**2).sum() < 1e-4):
+                        Points = np.delete(Points,id+1,axis=0)
+                        continue
+
+
                     nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
                     TravelTime, CrossingPoint = nc.value()
 
                     if (np.isnan(CrossingPoint)).any():
-                        CrossingPoint = np.array([[Cp[0],Cp[1]]])
-
-                    if id == 0:
-                        newPoints = CrossingPoint
+                        Points = np.delete(Points,id+1,axis=0)
+                        continue
                     else:
-                        newPoints = np.concatenate([newPoints,CrossingPoint])
-
-                Points = np.concatenate([startPoint,newPoints,endPoint])
-
-
-            # iter = 0
-            # while iter <= maxiter:
-            #     id = 0
-            #     while id <= (len(Points) - 3):
-            #         Sp  = tuple(Points[id,:])
-            #         Cp  = tuple(Points[id+1,:])
-            #         Np  = tuple(Points[id+2,:])
-            #         nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
-            #         TravelTime, CrossingPoint = nc.value()    
-
-            #         if (np.isnan(CrossingPoint)).any():
-            #             id+=1
-            #             continue
-            #         else:
-            #             Points[id+1,:] = CrossingPoint[0,:]
-            #             if CrossingPoint.shape[0] > 1:
-            #                 Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
-            #         id+=1
-            #     iter+=1
+                        Points[id+1,:] = CrossingPoint[0,:]
+                        if CrossingPoint.shape[0] > 1:
+                            Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
+                    id+=1
+                iter+=1
 
             Path['Path']['FullPath']       = Points
             Path['Path']['CrossingPoints'] = Points
