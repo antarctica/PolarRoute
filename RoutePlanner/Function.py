@@ -26,6 +26,9 @@ def Intersection_BoxLine(Cell_s,Cell_n,type):
     Px = ((X1*Y2 - Y1*X2)*(X3-X4) - (X1-X2)*(X3*Y4-Y3*X4))/D
     Py = ((X1*Y2-Y1*X2)*(Y3-Y4)-(Y1-Y2)*(X3*Y4-Y3*X4))/D
 
+    #print('XY1=({},{});XY2=({},{});XY3=({},{});XY4=({},{})\n type={};D={};Px={};Py={}'.format(X1,Y1,X2,Y2,X3,Y3,X4,Y4,type,D,Px,Py))
+
+
     return Px,Py
 
 
@@ -395,7 +398,7 @@ class NewtonianDistance:
 #####################################################################################################################################
 
 class NewtonianCurve:
-    def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=1000,optimizer_tol=1e-2,zerocurrents=False):
+    def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=100,optimizer_tol=1e-4,zerocurrents=False):
         self.Mesh = Mesh
         
         # Defining the Source Point (Sp), Crossing Point (Cp) and Neighbour Point(Np)
@@ -410,7 +413,7 @@ class NewtonianCurve:
         self.s              = self._unit_speed(s)
         
         # Information for distance metrics
-        self.R              = 6371*1000
+        self.R              = 6371*1000.
         self.fdist          = _Euclidean_distance()
 
         # Optimisation Information
@@ -533,15 +536,15 @@ class NewtonianCurve:
                 TT  = t1 + t2
                 return TT
 
-            λ_s   = self.Sp[1]
-            φ_r   = self.Np[1]
+            λ_s   = -self.Sp[1]
+            φ_r   = -self.Np[1]
             x     = self.fdist.value(self.Sp,(self.Cp[0],self.Sp[1]))
             a     = self.fdist.value(self.Np, (self.Cp[0],self.Np[1]))
-            Y     = sign(self.Np[1]-self.Sp[1])*self.fdist.value((self.Sp[0]+(self.Np[0]-self.Sp[0]),self.Sp[1]),\
+            Y     = -sign(self.Np[1]-self.Sp[1])*self.fdist.value((self.Sp[0]+(self.Np[0]-self.Sp[0]),self.Sp[1]),\
                                                                   (self.Sp[0]+(self.Np[0]-self.Sp[0]),self.Np[1]))
             u1    = sign(self.Np[0]-self.Sp[0])*self.zc*self.Box1.getuC(); v1 = self.zc*self.Box1.getvC()
             u2    = sign(self.Np[0]-self.Sp[0])*self.zc*self.Box2.getuC(); v2 = self.zc*self.Box2.getvC()
-            y = NewtonOptimisationLong(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
+            y = -NewtonOptimisationLong(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
             TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
             CrossPoint  = self.fdist.value((self.Cp[0],self.Sp[1]),(0.0,y),forward=False)
             return TravelTime,np.array(CrossPoint)[None,:]
@@ -627,18 +630,18 @@ class NewtonianCurve:
             TT  = t1+t2
             return TT     
 
-        λ=self.Sp[1]
-        θ=self.Cp[1]
-        ψ=self.Np[1]
+        λ=-self.Sp[1]
+        θ=-self.Cp[1]
+        ψ=-self.Np[1]
 
         x     = self.fdist.value(self.Sp,(self.Sp[0],self.Cp[1]))
         a     = self.fdist.value(self.Np, (self.Np[0],self.Cp[1]))
-        Y     = sign(self.Np[0]-self.Sp[0])*self.fdist.value((self.Sp[0],self.Sp[1]+(self.Np[1]-self.Sp[1])),\
+        Y     = -sign(self.Np[0]-self.Sp[0])*self.fdist.value((self.Sp[0],self.Sp[1]+(self.Np[1]-self.Sp[1])),\
                                                                 (self.Np[0],self.Sp[1]+(self.Np[1]-self.Sp[1])))
-        u1    = sign(self.Np[1]-self.Sp[1])*self.zc*self.Box1.getvC(); v1 = self.zc*self.Box1.getuC()
-        u2    = sign(self.Np[1]-self.Sp[1])*self.zc*self.Box2.getvC(); v2 = self.zc*self.Box2.getuC()
+        u1    = sign(self.Np[1]-self.Sp[1])*self.zc*self.Box1.getvC(); v1 = -self.zc*self.Box1.getuC()
+        u2    = sign(self.Np[1]-self.Sp[1])*self.zc*self.Box2.getvC(); v2 = -self.zc*self.Box2.getuC()
 
-        y = NewtonOptimisationLat(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
+        y = -NewtonOptimisationLat(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
         TravelTime  = _T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
         CrossPoint  = self.fdist.value((self.Sp[0],self.Cp[1]),(y,0.0),forward=False)        
         return TravelTime,np.array(CrossPoint)[None,:]
@@ -662,12 +665,12 @@ class NewtonianCurve:
         a = np.array(self.Box1.getBounds())
         b = np.array(self.Box2.getBounds())
         c = np.array([x for x in set([tuple(x) for x in a]) & set([tuple(x) for x in b])])
-        try:
-            Xc=c[0,0]; Yc=c[0,1]
-        except:
-            TravelTime = np.nan
-            CrossPoint = np.array([[np.nan,np.nan]])
-            return TravelTime,np.array(CrossPoint)   
+        Xc=c[0,0]; Yc=c[0,1]
+
+
+
+        #print('Cell Indices',self.Mesh.getIndex(self.Box1),self.Mesh.getIndex(self.Box2))
+
 
         # # Determine the intersection point on the edge where end_p is assuming a straight path through corner
         Y_line = ((Yc-Ys)/(Xc-Xs))*(Xe-Xs) + Ys
@@ -677,15 +680,16 @@ class NewtonianCurve:
         neighbours,neighbours_idx = self.Mesh.getNeightbours(self.Box1)
         for idx in neighbours_idx:
             cell = self.Mesh.cellBoxes[idx]
-            if ((((np.array(cell.getBounds()) - np.array([Xc,Yc])[None,:])**2).sum(axis=1))==0).any() and (cell.containsPoint(Ye,Xe) != True):
+            if ((((np.array(cell.getBounds()) - np.array([Xc,Yc])[None,:])**2).sum(axis=1))==0).any() and (idx!=self.Mesh.getIndex(self.Box1)[0]) and (idx!=self.Mesh.getIndex(self.Box2)[0]):
                 CornerCells.append([idx,cell.long+cell.width/2,cell.lat+cell.height/2]) 
         CornerCells = np.array(CornerCells)
+        #print(CornerCells)
 
-        if len(CornerCells) == 0:
-            print('Issue - No Corner Cp={};'.format(self.Cp))
-            TravelTime = np.nan
-            CrossPoint = np.array([[np.nan,np.nan]])
-            return TravelTime,np.array(CrossPoint)           
+        # if len(CornerCells) == 0:
+        #     print('Issue - No Corner Cp={};'.format(self.Cp))
+        #     TravelTime = np.nan
+        #     CrossPoint = np.array([[np.nan,np.nan]])
+        #     return TravelTime,np.array(CrossPoint)           
 
         # ====== Determining the crossing points & their corresponding index
         # Case 1 - Top Right
@@ -778,10 +782,17 @@ class NewtonianCurve:
             Bug - Some corner cases are actually Longitude. 
                   Need to correct to select corner case based on the angle of the line between the two cell centres.
         
+                - Large issue that loading the box information is currently incorrect and need to
+
+
+
         '''
 
 
         # Determining the cells to use
+        print('Sp=({},{});Cp=({},{});Np=({},{})'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1]))
+        print('Box1=({},{});Box2=({},{})'.format((self.Sp[1]+self.Cp[1])/2 , (self.Sp[0]+self.Cp[0])/2, (self.Np[1]+self.Cp[1])/2 , (self.Np[0]+self.Cp[0])/2))
+
         self.Box1 = self.Mesh.getCellBox( (self.Sp[1]+self.Cp[1])/2 , (self.Sp[0]+self.Cp[0])/2 )
         self.Box2 = self.Mesh.getCellBox( (self.Np[1]+self.Cp[1])/2 , (self.Np[0]+self.Cp[0])/2 ) 
 
@@ -789,10 +800,10 @@ class NewtonianCurve:
             self.df_x = (self.Box2.long+self.Box2.width/2) -  (self.Box1.long+self.Box1.width/2)
             self.df_y = (self.Box2.lat+self.Box2.height/2) -  (self.Box1.lat+self.Box1.height/2)
         except:
-            print('Issue - Box Incorrect! ')
             TravelTime = np.nan
             CrossPoint = np.array([[np.nan,np.nan]])
             return TravelTime, CrossPoint
+        
 
 
         if self.debugging>0:

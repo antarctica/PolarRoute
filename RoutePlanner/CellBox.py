@@ -18,10 +18,9 @@ class CellBox:
 
     
         # TODO move these out of object attributes at to get methods.
-
-        # Defining the Upper-bound (ub) and Lower-bound(lb) width from waypoints
         self.dcx  = self.width/2
         self.dcy  = self.height/2
+
 
         # Minimum Depth to be used in the land mask
         self.minDepth = 10
@@ -152,6 +151,7 @@ class CellBox:
             Returns a pandas dataframe of all icepoints contained within this cellBox 
         '''  
         return self._icePoints
+
             
     def containsPoint(self, lat, long):
         """
