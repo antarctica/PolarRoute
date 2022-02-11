@@ -12,6 +12,7 @@ def LoadIcePoints(NetCDF,startDate,endDate):
     DateRangeIndx = [np.argmin(abs(Dates - pd.to_datetime(DateRange[0]))),np.argmin(abs(Dates - pd.to_datetime(DateRange[1])))] 
 
     XC,YC = np.meshgrid(bsos['XC'][:].data,bsos['YC'][:].data)
+
     icePoints = pd.DataFrame({'time':pd.to_datetime(DateRangeIndx[0]),
                             'long':XC.flatten(),'lat':YC.flatten(),
                             'iceArea':np.mean(bsos['SIarea'][DateRangeIndx[0]:DateRangeIndx[1],...].data,axis=0).flatten(),
