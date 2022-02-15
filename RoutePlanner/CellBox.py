@@ -167,7 +167,7 @@ class CellBox:
             Converts a cellBox to a String which may be printed to console for debugging purposes
         '''  
         s = ""
-        s += self.getRange() + "\n"
+        s += self._getRange() + "\n"
         s += "    No. of IcePoint: " + str(self.getIcePointLength()) + "\n"
         s += "    Ice Area: " + str(self.iceArea()) + "\n"
         s += "    split Depth: " + str(self.splitDepth) + "\n"
