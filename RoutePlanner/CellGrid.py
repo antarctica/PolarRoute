@@ -123,7 +123,7 @@ class CellGrid:
             fig,ax = figInfo
 
         for cellBox in self.cellBoxes:
-            if cellBox.isLand():
+            if cellBox.containsLand():
                 ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
                 ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
                 continue
