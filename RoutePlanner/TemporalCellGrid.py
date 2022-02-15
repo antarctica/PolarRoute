@@ -1,6 +1,9 @@
 import pandas as pd
 import xarray as xr
 from RoutePlanner.CellGrid import CellGrid
+from netCDF4 import Dataset
+import numpy as np
+import datetime
 
 class TemporalCellGrid:
 
@@ -15,137 +18,90 @@ class TemporalCellGrid:
 
         self.cellGrids = []
 
-    def addIcePoints(self, icePointsPath):
-        """
-            takes a netCDF file containing sea-ice data given by parameter 'icePointsPath' and converts it to a
-            dataframe to be stored within this object.
-        """
-        ds = xr.open_dataset(icePointsPath)
-        df = ds.to_dataframe()
+    def _loadDailyIce(self, icePointsPath ,time):
+        bsos = Dataset(icePointsPath)
 
-        self._icePoints = df
+        Dates = pd.to_datetime('2012-12-01') + pd.to_timedelta(bsos['time'][:], unit='S')
+
+        timeindx = np.argmin(abs(Dates - pd.to_datetime(time)))
+
+        XC, YC = np.meshgrid(bsos['XC'][:].data, bsos['YC'][:].data)
+
+        icePoints = pd.DataFrame({'time': pd.to_datetime(Dates[timeindx]),
+                                  'long': XC.flatten(),
+                                  'lat': YC.flatten(),
+                                  'iceArea': bsos['SIarea'][timeindx, ...].data.flatten(),
+                                  'depth': bsos['Depth'][...].data.flatten()})
+        return icePoints
+
+    def addIcePoints(self, icePointsPath, startDate, endDate):
+        startDate = pd.to_datetime(startDate)
+        endDate = pd.to_datetime(endDate)
+
+        delta = endDate - startDate
+
+        icePoints = []
+        for i in range(delta.days + 1):
+            day = startDate + datetime.timedelta(days=i)
+
+            icePoints.append(self._loadDailyIce(icePointsPath, day))
+
+        icePoints = pd.concat(icePoints)
+
+        self._icePoints =  icePoints
+
+    def addCurrentPoints(self, currentPointsPath):
+        sose = Dataset(currentPointsPath)
+
+        currentPoints = pd.DataFrame({'long': sose['lon'][...].data.flatten(),
+                                      'lat': sose['lat'][...].data.flatten(),
+                                      'uC': sose['uC'][...].data.flatten(),
+                                      'vC': sose['vC'][...].data.flatten()})
+
+        currentPoints['time'] = ''
+        self._currentPoints = currentPoints
 
     def getGrid(self, time):
         """
             Returns a cellGrid for a selected time given by parameter 'time'
         """
-        # get all icePoints for the given time
-        df = self._icePoints[self._icePoints.index.get_level_values('time') == time]
-
-        # flatten the dataframe so as it may be used by the 'cellGrid' object.
-        # TODO - rework flattening as part of the optimization work-package
-        df = df.reset_index()
-        df = df.drop(['iter'], axis=1)
-        df = df.rename(columns={"XC": "long", "YC": "lat", "Depth": "depth", "SIarea": "iceArea"})
-
-        # Load current points
-        # TODO - replace with daily current data once it is available
-        currentPoints = pd.read_json('resources/currentPoints.json')
-        currentPoints = pd.DataFrame.from_records(currentPoints.currentPoints)
+        icePoints = self._icePoints.loc[self._icePoints['time'] == time]
 
         # create a cellGrid using datapoints for the given day
         cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
-        cellGrid.addCurrentPoints(currentPoints)
-        cellGrid.addIcePoints(df)
+        cellGrid.addCurrentPoints(self._currentPoints)
+        cellGrid.addIcePoints(icePoints)
 
         return cellGrid
 
     def getMeanGrid(self, startTime, endTime):
         # get all icePoints for the given time
 
-        # TODO requires rework in optimization work package
-        df = self._icePoints[self._icePoints.index.get_level_values('time') > startTime]
-        df = df[df.index.get_level_values('time') < endTime]
+        startTime = pd.to_datetime(startTime)
+        endTime = pd.to_datetime(endTime)
 
-        df = df.groupby(['XC', 'YC']).mean()
+        icePoints = self._icePoints[(self._icePoints['time'] >= startTime) & (self._icePoints['time'] <= endTime)]
+        icePoints = icePoints.groupby(['lat', 'long']).mean().reset_index()
 
-        df = df.reset_index()
-        df = df.drop(['iter'], axis=1)
-        df = df.rename(columns={"XC": "long", "YC": "lat", "Depth": "depth", "SIarea": "iceArea"})
-
-        # Load current points
-        # TODO - replace with daily current data once it is available
-        currentPoints = pd.read_json('resources/currentPoints.json')
-        currentPoints = pd.DataFrame.from_records(currentPoints.currentPoints)
+        icePoints['time'] = startTime.strftime("%Y-%m-%d") + " : " + endTime.strftime("%Y-%m-%d")
 
         # create a cellGrid using datapoints for the given day
         cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
-        cellGrid.addCurrentPoints(currentPoints)
-        cellGrid.addIcePoints(df)
+        cellGrid.addCurrentPoints(self._currentPoints)
+        cellGrid.addIcePoints(icePoints)
 
         return cellGrid
 
+    def getGrids(self, startTime, endTime, step):
+        cellGrids = []
+        endTime = pd.to_datetime(endTime)
 
+        tempStart = pd.to_datetime(startTime)
+        tempEnd = tempStart + pd.to_timedelta(step, unit='D')
 
-class TemporalCellGrid:
+        while(tempEnd < endTime):
+            cellGrids.append(self.getMeanGrid(tempStart, tempEnd))
+            tempStart = tempEnd + pd.to_timedelta(1, unit='D')
+            tempEnd = tempStart + pd.to_timedelta(step, unit='D')
 
-    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
-        self._longMin = longMin
-        self._longMax = longMax
-        self._latMin = latMin
-        self._latMax = latMax
-
-        self._cellWidth = cellWidth
-        self._cellHeight = cellHeight
-
-        self.cellGrids = []
-
-    def addIcePoints(self, icePointsPath):
-        """
-            takes a netCDF file containing sea-ice data given by parameter 'icePointsPath' and converts it to a
-            dataframe to be stored within this object.
-        """
-        ds = xr.open_dataset(icePointsPath)
-        df = ds.to_dataframe()
-
-        self._icePoints = df
-
-    def getGrid(self, time):
-        """
-            Returns a cellGrid for a selected time given by parameter 'time'
-        """
-        # get all icePoints for the given time
-        df = self._icePoints[self._icePoints.index.get_level_values('time') == time]
-
-        # flatten the dataframe so as it may be used by the 'cellGrid' object.
-        # TODO - rework flattening as part of the optimization work-package
-        df = df.reset_index()
-        df = df.drop(['iter'], axis=1)
-        df = df.rename(columns={"XC": "long", "YC": "lat", "Depth": "depth", "SIarea": "iceArea"})
-
-        # Load current points
-        # TODO - replace with daily current data once it is available
-        currentPoints = pd.read_json('resources/currentPoints.json')
-        currentPoints = pd.DataFrame.from_records(currentPoints.currentPoints)
-
-        # create a cellGrid using datapoints for the given day
-        cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
-        cellGrid.addCurrentPoints(currentPoints)
-        cellGrid.addIcePoints(df)
-
-        return cellGrid
-
-    def getMeanGrid(self, startTime, endTime):
-        # get all icePoints for the given time
-
-        # TODO requires rework in optimization work package
-        df = self._icePoints[self._icePoints.index.get_level_values('time') > startTime]
-        df = df[df.index.get_level_values('time') < endTime]
-
-        df = df.groupby(['XC', 'YC']).mean()
-
-        df = df.reset_index()
-        df = df.drop(['iter'], axis=1)
-        df = df.rename(columns={"XC": "long", "YC": "lat", "Depth": "depth", "SIarea": "iceArea"})
-
-        # Load current points
-        # TODO - replace with daily current data once it is available
-        currentPoints = pd.read_json('resources/currentPoints.json')
-        currentPoints = pd.DataFrame.from_records(currentPoints.currentPoints)
-
-        # create a cellGrid using datapoints for the given day
-        cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
-        cellGrid.addCurrentPoints(currentPoints)
-        cellGrid.addIcePoints(df)
-
-        return cellGrid
+        return cellGrids

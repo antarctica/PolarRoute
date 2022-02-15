@@ -6,23 +6,21 @@ import matplotlib.pylab as plt
 from matplotlib.patches import Polygon
 
 class CellGrid:
-    
-    def __init__(self, OptInfo):
-        self.OptInfo = OptInfo
 
-        self._longMin    = self.OptInfo['Bounds Longitude'][0] 
-        self._longMax    = self.OptInfo['Bounds Longitude'][1]
-        self._latMin     = self.OptInfo['Bounds Latitude'][0]
-        self._latMax     = self.OptInfo['Bounds Latitude'][1]
-        
-        self._cellWidth  = self.OptInfo['Grid Spacing (dx,dy)'][0]
-        self._cellHeight = self.OptInfo['Grid Spacing (dx,dy)'][1]
-        
+    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
+        self._longMin = longMin
+        self._longMax = longMax
+        self._latMin = latMin
+        self._latMax = latMax
+
+        self._cellWidth = cellWidth
+        self._cellHeight = cellHeight
+
         self.cellBoxes = []
 
-        for long in np.arange(self._longMin, self._longMax, self._cellWidth):
-            for lat in np.arange(self._latMin, self._latMax, self._cellHeight):
-                cellBox = CellBox(lat, long, self._cellWidth, self._cellHeight)
+        for long in np.arange(longMin, longMax, cellWidth):
+            for lat in np.arange(latMin, latMax, cellHeight):
+                cellBox = CellBox(lat, long, cellWidth, cellHeight)
                 self.cellBoxes.append(cellBox)
     
     def addIcePoints(self, icePoints):
@@ -125,14 +123,14 @@ class CellGrid:
             fig,ax = figInfo
 
         for cellBox in self.cellBoxes:
-            if cellBox.isLand():
+            if cellBox.containsLand():
                 ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
                 ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
                 continue
 
 
             iceArea = cellBox.iceArea()
-            if iceArea >= self.OptInfo['MaxIceExtent']:
+            if iceArea >= 0.8:
                 ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White'))
                 ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='Pink',alpha=0.4))
                 ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
@@ -206,8 +204,7 @@ class CellGrid:
                 bottomNeightbours_indx.append(idx)
                 bottomNeightbours.append(cellBox)
         return bottomNeightbours,bottomNeightbours_indx
-            
-    
+
     def getNeightbours(self, selectedCellBox):
         """
             Returns a list of call cellBoxes touching a cellBox given by parameter 'selectedCellBox'.
@@ -255,7 +252,6 @@ class CellGrid:
             ax.set_xlim(self._longMin, self._longMax)
             ax.set_ylim(self._latMin, self._latMax)
 
-        
     def highlightCell(self, selectedCellBox, figInfo=None):
         """
             Adds a red-border to a cellBox given by parameter 'selectedCellBox' and plots this cellGrid.
