@@ -245,7 +245,7 @@ class TravelTime:
             return ax
 
                     
-    def PathSmoothing(self,maxiter=50):
+    def PathSmoothing(self,maxiter=500):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
 
@@ -283,16 +283,10 @@ class TravelTime:
                     Np  = tuple(Points[id+2,:])
 
 
-                    # Remove crossing point if are the same location
-                    if (((np.array(Sp)-np.array(Cp))**2).sum() < 1e-4) or\
-                       (((np.array(Cp)-np.array(Np))**2).sum() < 1e-4):
-                        Points = np.delete(Points,id+1,axis=0)
-                        continue
-
-
                     nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
                     TravelTime, CrossingPoint = nc.value()
 
+                    # Removing Points
                     if (np.isnan(CrossingPoint)).any():
                         Points = np.delete(Points,id+1,axis=0)
                         continue

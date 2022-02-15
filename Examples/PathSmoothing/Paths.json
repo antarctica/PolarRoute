@@ -1,0 +1,1 @@
+{"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[-58.0, -58.0], [-60.0, -59.7543922934317], [-129.0, -58.0]]}, "properties": {"from": "LongPathStart", "to": "LongPathEnd", "Travel Time (d)": 6.562037681731275}}
