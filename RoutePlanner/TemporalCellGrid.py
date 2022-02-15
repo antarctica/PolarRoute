@@ -85,11 +85,23 @@ class TemporalCellGrid:
 
         icePoints['time'] = startTime.strftime("%Y-%m-%d") + " : " + endTime.strftime("%Y-%m-%d")
 
-
-
         # create a cellGrid using datapoints for the given day
         cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
         cellGrid.addCurrentPoints(self._currentPoints)
         cellGrid.addIcePoints(icePoints)
 
         return cellGrid
+
+    def getGrids(self, startTime, endTime, step):
+        cellGrids = []
+        endTime = pd.to_datetime(endTime)
+
+        tempStart = pd.to_datetime(startTime)
+        tempEnd = tempStart + pd.to_timedelta(step, unit='D')
+
+        while(tempEnd < endTime):
+            cellGrids.append(self.getMeanGrid(tempStart, tempEnd))
+            tempStart = tempEnd + pd.to_timedelta(1, unit='D')
+            tempEnd = tempStart + pd.to_timedelta(step, unit='D')
+
+        return cellGrids
