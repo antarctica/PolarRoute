@@ -221,7 +221,7 @@ class CellGrid:
         return bottomNeightbours,bottomNeightbours_indx
             
     
-    def getNeightbours(self, selectedCellBox):
+    def getNeightbours(self, selectedCellBox,neighbouridx=False):
         """
             Returns a list of call cellBoxes touching a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
@@ -232,7 +232,7 @@ class CellGrid:
         bottomNeightbours,bottomNeightbours_indx = self._getBottomNeightbours(selectedCellBox)
         neightbours       = leftNeightbours + rightNeightbours + topNeightbours + bottomNeightbours
         neightbours_index = leftNeightbours_indx + rightNeightbours_indx + topNeightbours_indx + bottomNeightbours_indx
-        return neightbours,neightbours_index
+        return neightbours,neightbours_index, 
         
     def highlightCells(self, selectedCellBoxes, figInfo=None):
         """
