@@ -12,10 +12,10 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
 
 class TravelTime:
-    def __init__(self,CellGrid,CostFunc=NewtonianDistance):
+    def __init__(self,CellGrid,OptInfo,CostFunc=NewtonianDistance):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
-        self.OptInfo = copy.copy(CellGrid.OptInfo)
+        self.OptInfo = copy.copy(OptInfo)
 
         self.CostFunc       = CostFunc
 
@@ -133,14 +133,14 @@ class TravelTime:
         # Looping over all the nearest neighbours 
         for lp_index, Cell_n in enumerate(neighbours):
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if (Cell_n.iceArea() >= self.OptInfo['MaxIceExtent']) or (Cell_s.iceArea() >= self.OptInfo['MaxIceExtent']) or (Cell_n.isLand()) or (Cell_s.isLand()):
+            if (Cell_n.iceArea() >= self.OptInfo['MaxIceExtent']) or (Cell_s.iceArea() >= self.OptInfo['MaxIceExtent']) or (Cell_n.containsLand()) or (Cell_s.containsLand()):
                 TravelTime[lp_index] = np.inf
                 continue
 
             Cell_s_speed = self.speedFunction(Cell_s)
             Cell_n_speed = self.speedFunction(Cell_n)
 
-            CostF    = self.CostFunc(Cell_S=Cell_s,Cell_N=Cell_n,Cell_S_Speed=Cell_s_speed,Cell_N_Speed=Cell_n_speed,unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
+            CostF    = self.CostFunc(self.Mesh,Cell_S=Cell_s,Cell_N=Cell_n,Cell_S_Speed=Cell_s_speed,Cell_N_Speed=Cell_n_speed,unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
                         
             TravelTime[lp_index,:],CrossPoints[lp_index,:],CellPoints[lp_index,:] = CostF.value()
 
@@ -200,7 +200,7 @@ class TravelTime:
         # Chaning Dijkstra Information to Paths
         self.Dijkstra2Path()
 
-    def PlotPaths(self,routepoints=False,return_ax=True,currents=False,xlim=None,ylim=None):
+    def PlotPaths(self,Paths,routepoints=False,return_ax=True,currents=False,xlim=None,ylim=None):
 
         ax = self.Mesh.plot(currents=currents,return_ax=True)
 
@@ -211,7 +211,7 @@ class TravelTime:
             waypointList = self.OptInfo['Start Waypoints']
 
 
-        for Path in self.Paths:
+        for Path in Paths:
             if (Path['from'] in waypointList):
                 if Path['TotalCost'] == np.inf:
                     continue
@@ -254,10 +254,16 @@ class TravelTime:
                 - Currently we loop over the whole path. I need to take the previous point in the loop, otherwise finding global minimum more difficult.
 
         '''
-        self.SmoothedPaths = self.Paths.copy()
+        import copy
+        self.SmoothedPaths = []
+        Pths = copy.deepcopy(self.Paths)
 
         # Looping over all the optimised paths
-        for Path in self.SmoothedPaths:
+        for indx_Path in range(len(Pths)):
+            
+            Path = Pths[indx_Path]
+            if Path['TotalCost'] == np.inf:
+                continue
 
             startPoint = Path['Path']['FullPath'][0,:][None,:]
             endPoint   = Path['Path']['FullPath'][-1,:][None,:]
@@ -282,20 +288,35 @@ class TravelTime:
                     Cp  = tuple(Points[id+1,:])
                     Np  = tuple(Points[id+2,:])
 
+                    # # Remove crossing point if are the same location
+                    # if (((np.array(Sp)-np.array(Cp))**2).sum() < 1e-4) or\
+                    # (((np.array(Cp)-np.array(Np))**2).sum() < 1e-4):
+                    #     Points = np.delete(Points,id+1,axis=0)
+                    #     continue
+
 
                     nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
-                    TravelTime, CrossingPoint = nc.value()
-
-                    # Removing Points
-                    if (np.isnan(CrossingPoint)).any():
-                        Points = np.delete(Points,id+1,axis=0)
-                        continue
-                    else:
-                        Points[id+1,:] = CrossingPoint[0,:]
-                        if CrossingPoint.shape[0] > 1:
-                            Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
-                    id+=1
+                    
+                    try:
+                        TravelTime, CrossingPoint, Box1, Box2 = nc.value()
+                        # # Removing Points
+                        if Box1 == Box2:
+                            Points = np.delete(Points,id+1,axis=0)
+                            continue
+                        elif (Box1.containsLand()) or (Box2.containsLand()):
+                            id+=1
+                            continue   
+                        else:
+                            Points[id+1,:] = CrossingPoint[0,:]
+                            if CrossingPoint.shape[0] > 1:
+                                Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
+                        id+=1
+                    except:
+                        id+=1
                 iter+=1
 
             Path['Path']['FullPath']       = Points
             Path['Path']['CrossingPoints'] = Points
+
+
+            self.SmoothedPaths.append(Path)
