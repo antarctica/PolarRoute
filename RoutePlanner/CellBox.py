@@ -140,12 +140,12 @@ class CellBox:
         return self._icePoints
 
             
-    def containsPoint(self, lat, long):
+    def containsPoint(self,lat,long):
         """
             Returns true if a given lat/long coordinate is contained within this cellBox.
         """
-        if (lat > self.lat) & (lat <= self.lat + self.height):
-            if (long > self.long) & (long <= self.long + self.width):
+        if (lat >= self.lat) & (lat <= self.lat + self.height):
+            if (long >= self.long) & (long <= self.long + self.width):
                 return True
         return False
 
