@@ -85,22 +85,19 @@ class TravelTime:
                     Path['Time']               = float(self.DijkstraInfo[wpt_a_name]['Info']['Time'][self.DijkstraInfo[wpt_a_name]['Info']['CellIndex']==wpt_b_index])
                     if Path['Time'] == np.inf:
                         continue
+                    PathTT     = self.DijkstraInfo[wpt_a_name]['Path']['Cost'][wpt_b_index]
                     
-                    PathTT    = self.DijkstraInfo[wpt_a_name]['Path']['Cost'][wpt_b_index]
-
-                    # CellS     = self.Mesh.cellBoxes[wpt_a_index]
-                    # CostF     = self.CostFunc(self.Mesh,Cell_S=CellS,Cell_S_Speed=self.speedFunction(CellS),unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
-                    # Ts        = CostF.WaypointCorrection(tuple(wpt_a_loc[0]),\
+                    # CellS      = self.Mesh.cellBoxes[wpt_a_index]
+                    # CostF      = self.CostFunc(self.Mesh,Cell_S=CellS,Cell_S_Speed=self.speedFunction(CellS),unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
+                    # Ts         = CostF.WaypointCorrection(tuple(wpt_a_loc[0]),\
                     #                                       self.DijkstraInfo[wpt_a_name]['Path']['Points'][wpt_b_index][1],\
                     #                                       self.speedFunction(CellS))
-                    # CellE     = self.Mesh.cellBoxes[wpt_b_index]
-                    # CostF     = self.CostFunc(self.Mesh,Cell_S=CellE,Cell_S_Speed=self.speedFunction(CellE),unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
-                    # Te        = CostF.WaypointCorrection(tuple(wpt_b_loc[0]),\
+                    # CellE      = self.Mesh.cellBoxes[wpt_b_index]
+                    # CostF      = self.CostFunc(self.Mesh,Cell_S=CellE,Cell_S_Speed=self.speedFunction(CellE),unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
+                    # Te         = CostF.WaypointCorrection(tuple(wpt_b_loc[0]),\
                     #                                       self.DijkstraInfo[wpt_a_name]['Path']['Points'][wpt_b_index][-2],\
                     #                                       self.speedFunction(CellE))
-                    # print('Start = Original:{},New:{}'.format(PathTT[1],Ts))
-                    # print('End   = Original:{},New:{}'.format(PathTT[-1]-PathTT[-2],Te))
-                    # PathTT[1] = PathTT[0] + Ts
+                    # PathTT[1]  = PathTT[0] + Ts
                     # PathTT[-1] = PathTT[-2]+Te
 
                     # ===== Appending Path ===== 
@@ -108,8 +105,6 @@ class TravelTime:
                     Path['Path']['Points']     = np.array(wpt_a_loc+self.DijkstraInfo[wpt_a_name]['Path']['Points'][wpt_b_index][:-1]+wpt_b_loc)
                     Path['Path']['Time']       = PathTT
                     Paths.append(Path)
-        
-
         return Paths
         
 
@@ -167,27 +162,28 @@ class TravelTime:
             Neighbour_index,TT,CrossPoints,CellPoints = self.NeighbourCost(idx)
             Neighbour_cost  = np.sum(TT,axis=1) + self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0]
 
-            print(TT.shape)
-
             # Determining if the visited time is visited    
             for jj_v,jj in enumerate(Neighbour_index):
                 if Neighbour_cost[jj_v] <= self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj].iloc[0]:
                     self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==jj] = Neighbour_cost[jj_v]
                     self.DijkstraInfo[wpt_name]['Path']['Points'][jj]       = self.DijkstraInfo[wpt_name]['Path']['Points'][idx]       + [[CrossPoints[jj_v,0],CrossPoints[jj_v,1]]] + [[CellPoints[jj_v,0],CellPoints[jj_v,1]]]
                     self.DijkstraInfo[wpt_name]['Path']['CellIndex'][jj]     = self.DijkstraInfo[wpt_name]['Path']['CellIndex'][idx]   + [jj]
-                    self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]          = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]        + list(TT[jj_v,:]+ self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0])
+                    self.DijkstraInfo[wpt_name]['Path']['Cost'][jj]          = self.DijkstraInfo[wpt_name]['Path']['Cost'][idx]        + [TT[jj_v,0]+self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0]] + [TT[jj_v,0]+ TT[jj_v,1]+self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx].iloc[0]]
             
             # Defining the graph point as visited
             self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex']==idx] = True
 
 
 
-    def Paths(self,verbrose=False,multiprocessing=False):
+    def Paths(self,StartWaypoint=None,verbrose=False,multiprocessing=False):
         '''
         Determining the shortest path between all waypoints
         '''
 
-        source_waypoints = list(self.OptInfo['WayPoints']['Name'])
+        if type(StartWaypoint) == type(None):
+            source_waypoints = list(self.OptInfo['WayPoints']['Name'])
+        else:
+            source_waypoints = [StartWaypoint]
         end_waypoints    = list(self.OptInfo['WayPoints']['Name'])
 
         if multiprocessing:
@@ -206,7 +202,7 @@ class TravelTime:
          
 
                     
-    def PathSmoothing(self,maxiter=500):
+    def PathSmoothing(self,Paths,maxiter=500):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
 
@@ -216,8 +212,8 @@ class TravelTime:
 
         '''
         import copy
-        self.SmoothedPaths = []
-        Pths = copy.deepcopy(self.Paths)
+        SmoothedPaths = []
+        Pths = copy.deepcopy(Paths)
 
         # Looping over all the optimised paths
         for indx_Path in range(len(Pths)):
@@ -229,17 +225,12 @@ class TravelTime:
             startPoint = Path['Path']['Points'][0,:][None,:]
             endPoint   = Path['Path']['Points'][-1,:][None,:]
 
-            if len(Path['Path']['CrossingPoints']) == 0:
-                continue
-
             print('==================================================')
             print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
 
-            OrgcrossingPoints = np.concatenate([startPoint,
-                                            Path['Path']['CrossingPoints'],
+            Points = np.concatenate([startPoint,
+                                            Path['Path']['Points'][1:-1:2],
                                             endPoint])
-
-            Points = OrgcrossingPoints.copy()
 
             iter = 0
             while iter <= maxiter:
@@ -255,29 +246,27 @@ class TravelTime:
                     #     Points = np.delete(Points,id+1,axis=0)
                     #     continue
 
-
                     nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
-                    
-                    #try:
-                    TravelTime, CrossingPoint, Box1, Box2 = nc.value()
-                    # # Removing Points
-                    if (Box1 == Box2) or (type(Box1)==str) or (type(Box2)==str):
+                    CrossingPoint, Boxes = nc.value()
+
+                    Allowed = True
+                    for box in Boxes:
+                        
+                        if box.containsLand() or box.iceArea() >= self.OptInfo['MaxIceExtent']:
+                            Allowed = False
+                    if not Allowed:
                         id+=1
                         continue
-                    if (Box1.containsLand()) or (Box2.containsLand()):
-                        id+=1
-                        continue   
+
+                    if (np.isnan(CrossingPoint).any()):
+                            Points = np.delete(Points,id+1,axis=0)
                     else:
                         Points[id+1,:] = CrossingPoint[0,:]
                         if CrossingPoint.shape[0] > 1:
                             Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
                     id+=1
-                    #except:
-                    #    id+=1
                 iter+=1
 
             Path['Path']['Points']       = Points
-            Path['Path']['CrossingPoints'] = Points
-
-
-            self.SmoothedPaths.append(Path)
+            SmoothedPaths.append(Path)
+        return SmoothedPaths

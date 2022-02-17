@@ -1,7 +1,73 @@
+from tracemalloc import start
 import numpy as np
 from RoutePlanner.CellBox import CellBox
 import pandas as pd
 from shapely.geometry import Polygon
+
+def bearing(st,en):
+    long1,lat1 = st 
+    long2,lat2 = en  
+    dlong = long2-long1
+    dlat  = lat2-lat1
+    vector_1 = [0, 1]
+    vector_2 = [dlong, dlat]
+
+    if np.linalg.norm(vector_2) == 0:
+        return np.nan
+    unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
+    unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
+    dot_product = np.dot(unit_vector_1, unit_vector_2)
+    angle = np.arccos(dot_product)/(np.pi/180)*np.sign(vector_2[0])
+
+    if (angle==0) & (np.sign(dlat)==-1):
+        angle=180
+
+
+    if angle < 0:
+        angle = angle +360
+    angle
+    return angle
+
+def Intersection_BoxLine(Cell_s,Pt,type):
+    X1,Y1 = Cell_s.long+Cell_s.width/2,Cell_s.lat+Cell_s.height/2
+    X2,Y2 = Pt
+    if type==np.nan:
+        Px = np.nan
+        Py = np.nan
+        return Px,Py
+    if type == 2:
+        X3,Y3 = Cell_s.long+Cell_s.width,Cell_s.lat
+        X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat+Cell_s.height
+    if type == -4:
+        X3,Y3 = Cell_s.long,Cell_s.lat+Cell_s.height
+        X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat+Cell_s.height
+    if type == -2:
+        X3,Y3 = Cell_s.long,Cell_s.lat
+        X4,Y4 = Cell_s.long,Cell_s.lat+Cell_s.height
+    if type == 4:
+        X3,Y3 = Cell_s.long,Cell_s.lat
+        X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat
+    if type == 1:
+        Px = Cell_s.long + Cell_s.width/2 + Cell_s.width/2
+        Py = Cell_s.lat  + Cell_s.height/2 + Cell_s.height/2
+        return Px,Py
+    if type == -1:
+        Px = Cell_s.long + Cell_s.width/2  - Cell_s.width/2
+        Py = Cell_s.lat  + Cell_s.height/2 - Cell_s.height/2
+        return Px,Py
+    if type == 3:
+        Px = Cell_s.long + Cell_s.width/2 + Cell_s.width/2
+        Py = Cell_s.lat  + Cell_s.height/2 - Cell_s.height/2
+        return Px,Py
+    if type == -3:
+        Px = Cell_s.long + Cell_s.width/2 - Cell_s.width/2
+        Py = Cell_s.lat  + Cell_s.height/2 + Cell_s.height/2
+        return Px,Py
+    D  = (X1-X2)*(Y3-Y4) - (Y1-Y2)*(X3-X4)
+    Px = ((X1*Y2 - Y1*X2)*(X3-X4) - (X1-X2)*(X3*Y4-Y3*X4))/D
+    Py = ((X1*Y2-Y1*X2)*(Y3-Y4)-(Y1-Y2)*(X3*Y4-Y3*X4))/D
+    return Px,Py
+
 class CellGrid:
 
     def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
@@ -62,18 +128,10 @@ class CellGrid:
             Returns the CellBox which contains a point, given by parameters lat, long
         """
         selectedCell = []
-
         for cellBox in self.cellBoxes:
             if cellBox.containsPoint(lat, long):
                 selectedCell.append(cellBox)
-
-        # for inital debugging and should be replaced to throw errors correctly
-        if len(selectedCell) == 1:
-            return selectedCell[0]
-        elif len(selectedCell) == 0:
-            return "No cellBox was found at lat =" + str(lat) + ", long =" + str(long)
-        elif len(selectedCell) > 1:
-            return "ERROR: Multiple cellBoxes have been found at lat =" + str(lat) + ", long =" + str(long)
+        return selectedCell
 
     def recursiveSplit(self, maxSplits):
         """
@@ -129,98 +187,24 @@ class CellGrid:
         cases = []
         crossing_points = []
         for ncell in neightbours:
-            case,cp = self.getCase(selectedCellBox,ncell)
+            case  = self.getCase(selectedCellBox,(ncell.cx,ncell.cy))
+            cp    = self.getCrossingPoint(selectedCellBox,(ncell.cx,ncell.cy))
             cases.append(case)
             crossing_points.append(cp)
         neigh = pd.DataFrame({'Cell':neightbours,'idx':neightbours_index,'Case':cases,'Cp':crossing_points})
         return neigh
 
-    def getCase(self,cell,ncell):
-        """
-        
-        """
-        def Intersection_BoxLine(Cell_s,Cell_n,type):
-            X1,Y1 = Cell_s.long+Cell_s.width/2,Cell_s.lat+Cell_s.height/2
-            X2,Y2 = Cell_n.long+Cell_n.width/2,Cell_n.lat+Cell_n.height/2
-            if type==np.nan:
-                Px = np.nan
-                Py = np.nan
-                return Px,Py
+    def getCrossingPoint(self,cell,Pt):
+        case = self.getCase(cell,Pt)
+        crp = Intersection_BoxLine(cell,Pt,case)
+        return crp
 
-
-            if type == 2:
-                X3,Y3 = Cell_s.long+Cell_s.width,Cell_s.lat
-                X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat+Cell_s.height
-            if type == -4:
-                X3,Y3 = Cell_s.long,Cell_s.lat+Cell_s.height
-                X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat+Cell_s.height
-            if type == -2:
-                X3,Y3 = Cell_s.long,Cell_s.lat
-                X4,Y4 = Cell_s.long,Cell_s.lat+Cell_s.height
-            if type == 4:
-                X3,Y3 = Cell_s.long,Cell_s.lat
-                X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat
-
-            # Defining the corner cases
-            if type == 1:
-                Px = Cell_s.long + Cell_s.width/2 + Cell_s.width/2
-                Py = Cell_s.lat  + Cell_s.height/2 + Cell_s.height/2
-                return Px,Py
-            if type == -1:
-                Px = Cell_s.long + Cell_s.width/2  - Cell_s.width/2
-                Py = Cell_s.lat  + Cell_s.height/2 - Cell_s.height/2
-                return Px,Py
-            if type == 3:
-                Px = Cell_s.long + Cell_s.width/2 + Cell_s.width/2
-                Py = Cell_s.lat  + Cell_s.height/2 - Cell_s.height/2
-                return Px,Py
-            if type == -3:
-                Px = Cell_s.long + Cell_s.width/2 - Cell_s.width/2
-                Py = Cell_s.lat  + Cell_s.height/2 + Cell_s.height/2
-                return Px,Py
-
-
-            try:
-                D  = (X1-X2)*(Y3-Y4) - (Y1-Y2)*(X3-X4)
-                Px = ((X1*Y2 - Y1*X2)*(X3-X4) - (X1-X2)*(X3*Y4-Y3*X4))/D
-                Py = ((X1*Y2-Y1*X2)*(Y3-Y4)-(Y1-Y2)*(X3*Y4-Y3*X4))/D
-                return Px,Py
-            except:
-                Px = np.nan
-                Py = np.nan
-                return Px,Py 
-
-        def bearing(st,en):
-            long1,lat1 = st 
-            long2,lat2 = en  
-            dlong = long2-long1
-            dlat  = lat2-lat1
-            vector_1 = [0, 1]
-            vector_2 = [dlong, dlat]
-
-            unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
-            unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
-            dot_product = np.dot(unit_vector_1, unit_vector_2)
-            angle = np.arccos(dot_product)/(np.pi/180)*np.sign(vector_2[0])
-
-            if (angle==0) & (np.sign(dlat)==-1):
-                angle=180
-
-
-            if angle < 0:
-                angle = angle +360
-            angle
-            return angle
-
-
-
+    def getCase(self,cellBox,Pt):
         corners = []
-        for crn in cell.getBounds()[:-1]:
-            corners.append(bearing((cell.cx,cell.cy),(crn[0],crn[1])))
+        for crn in cellBox.getBounds()[:-1]:
+            corners.append(bearing((cellBox.cx,cellBox.cy),(crn[0],crn[1])))
         corners = np.sort(corners)
-
-        dbear = bearing((cell.cx,cell.cy),(ncell.cx,ncell.cy))
-
+        dbear = bearing((cellBox.cx,cellBox.cy),(Pt[0],Pt[1]))
         if  dbear == corners[0]:
             case = 1
         elif corners[0] < dbear < corners[1]:
@@ -239,7 +223,4 @@ class CellGrid:
             case = -4
         else:
             case = np.nan
-
-        crp = Intersection_BoxLine(cell,ncell,case)
-        
-        return case,crp
+        return case
