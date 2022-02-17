@@ -69,19 +69,6 @@ class CellBox:
         '''        
         return "Lat Range: " + self._getLatRange() + ", Long Range: " + self._getLongRange()
     
-    def getPolygon(self,fill=True):
-        '''
-            Returns a polygon object representing if a cellBox is considered land as well as the ice area within the cellBox 
-        '''        
-        bounds = [[self.long, self.lat],
-                    [self.long, self.lat + self.height],
-                    [self.long + self.width, self.lat + self.height],
-                    [self.long + self.width, self.lat],
-                    [self.long, self.lat]]
-        if self.isLand() == False:
-            return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
-        return Polygon(bounds, closed = True, fill = True, color = 'mediumseagreen', alpha=1)    
-
     def getBorder(self):
         '''
             Returns a polygon object representing a grey border around this cellBox, to be used when plotting. 
