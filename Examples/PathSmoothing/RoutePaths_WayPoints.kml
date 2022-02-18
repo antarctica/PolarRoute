@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="21854">
+        <Style id="21855">
+            <IconStyle id="21858">
+                <colorMode>normal</colorMode>
+                <scale>1</scale>
+                <heading>0</heading>
+                <Icon id="21859">
+                    <href>https://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png</href>
+                </Icon>
+            </IconStyle>
+            <LabelStyle id="21856">
+                <color>ff0000ff</color>
+                <colorMode>normal</colorMode>
+                <scale>0.8</scale>
+            </LabelStyle>
+            <LineStyle id="21857">
+                <color>ff0000ff</color>
+                <colorMode>normal</colorMode>
+            </LineStyle>
+        </Style>
+        <open>1</open>
+        <Placemark id="21861">
+            <name>Falklands</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21860">
+                <coordinates>300.12,-52.63472222222222,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21863">
+            <name>SouthGeorgia</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21862">
+                <coordinates>322.73583333333335,-54.87916666666667,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21865">
+            <name>SouthSandwichTrench</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21864">
+                <coordinates>334.94138888888887,-56.41138888888889,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21867">
+            <name>NorthPeninsula</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21866">
+                <coordinates>309.06,-63.03138888888889,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21869">
+            <name>MaudRise</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21868">
+                <coordinates>357.1725,-66.08277777777778,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21871">
+            <name>AmundsenSea</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21870">
+                <coordinates>230.30916666666667,-69.32305555555556,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21873">
+            <name>CentralWeddellSea</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21872">
+                <coordinates>315.0547222222222,-71.08472222222221,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21875">
+            <name>SouthOrkneyIslands</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21874">
+                <coordinates>314.6952777777778,-60.48611111111112,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21877">
+            <name>CentralScotiaSea</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21876">
+                <coordinates>315.76722222222224,-58.35805555555556,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21879">
+            <name>FilchnerTroughOverflow</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21878">
+                <coordinates>324.05305555555555,-76.99277777777777,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21881">
+            <name>FilchnerRonneIceShelf</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21880">
+                <coordinates>318.5011111111112,-77.96805555555555,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21883">
+            <name>ArgentineSea</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21882">
+                <coordinates>301.8661111111111,-43.0,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21885">
+            <name>BellingshausenSea</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21884">
+                <coordinates>277.1825,-70.90333333333334,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21887">
+            <name>MargueriteBay</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21886">
+                <coordinates>290.75638888888886,-68.38916666666667,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21889">
+            <name>Palmer</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21888">
+                <coordinates>292.86694444444447,-64.67861111111111,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21891">
+            <name>Brunt</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21890">
+                <coordinates>331.71527777777777,-74.04166666666667,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21893">
+            <name>NorthernWeddellSea</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21892">
+                <coordinates>325.79805555555555,-63.44861111111111,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21895">
+            <name>NorthWestGeorgiaRise</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21894">
+                <coordinates>323.0622222222222,-52.35694444444445,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21897">
+            <name>ShagRocksPassage</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21896">
+                <coordinates>311.84444444444443,-52.21388888888889,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21899">
+            <name>ElephantIsland</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21898">
+                <coordinates>304.8186111111111,-60.54722222222222,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21901">
+            <name>BurdwoodBank</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21900">
+                <coordinates>299.8611111111111,-54.48527777777778,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21903">
+            <name>A23bottom</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21902">
+                <coordinates>326.7390888888889,-62.43418611111111,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21905">
+            <name>A23top</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21904">
+                <coordinates>321.6415361111111,-57.02050833333333,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21907">
+            <name>SR4top</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21906">
+                <coordinates>310.2439777777778,-61.5827,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21909">
+            <name>SR4bottom</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21908">
+                <coordinates>330.68688055555555,-68.41325555555557,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21911">
+            <name>OrkneyPassageEntry</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21910">
+                <coordinates>331.42125555555555,-60.951438888888894,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21913">
+            <name>OrkneyPassageExit</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21912">
+                <coordinates>320.8237638888889,-60.694494444444445,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21915">
+            <name>WSDWsource1</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21914">
+                <coordinates>302.74699166666664,-66.77425833333334,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21917">
+            <name>WSDWsource2</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21916">
+                <coordinates>307.0253916666667,-70.76821111111111,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21919">
+            <name>LongPathStart</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21918">
+                <coordinates>302.0,-58.0,0.0</coordinates>
+            </Point>
+        </Placemark>
+        <Placemark id="21921">
+            <name>LongPathEnd</name>
+            <styleUrl>#21855</styleUrl>
+            <Point id="21920">
+                <coordinates>231.0,-58.0,0.0</coordinates>
+            </Point>
+        </Placemark>
+    </Document>
+</kml>

@@ -44,26 +44,6 @@ class TravelTime:
                     break
             self.OptInfo['WayPoints']['Index'].loc[idx] = index
 
-        # ====== Dijkstra Formulation ======
-        # Initialising the Dijkstra Info Dictionary
-        self.DijkstraInfo = {}
-        for wpt in self.OptInfo['WayPoints'].iterrows():
-            wpt_name  = wpt[1]['Name']
-            wpt_index = int(wpt[1]['Index'])
-            self.DijkstraInfo[wpt_name] = {}
-            self.DijkstraInfo 
-            self.DijkstraInfo[wpt_name]['Info'] = pd.DataFrame({'CellIndex': np.arange(len(self.Mesh.cellBoxes)), 'Time':np.full((len(self.Mesh.cellBoxes)),np.inf), 'PositionLocked': np.zeros((len(self.Mesh.cellBoxes)),dtype=bool)})
-            self.DijkstraInfo[wpt_name]['Path']            = {}
-            self.DijkstraInfo[wpt_name]['Path']['Points']           = {}
-            self.DijkstraInfo[wpt_name]['Path']['CellIndex']          = {}
-            self.DijkstraInfo[wpt_name]['Path']['Cost']               = {}
-            for djk in range(len(self.Mesh.cellBoxes)):
-                self.DijkstraInfo[wpt_name]['Path']['Points'][djk]  = []
-                self.DijkstraInfo[wpt_name]['Path']['CellIndex'][djk] = [wpt_index]
-                self.DijkstraInfo[wpt_name]['Path']['Cost'][djk]      = [np.inf]
-            self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'] == wpt_index] = 0.0
-            self.DijkstraInfo[wpt_name]['Path']['Cost'][wpt_index] = [0.0]
-
     def speedFunction(self,Cell):
         if self.variableSpeed == True:
             S = self.OptInfo['VehicleInfo']['Speed']*(1-np.sqrt(Cell.iceArea()))
@@ -71,12 +51,16 @@ class TravelTime:
             S = self.OptInfo['VehicleInfo']['Speed']
         return S
 
-    def Dijkstra2Path(self):
+    def Dijkstra2Path(self,StartWaypoints,EndWaypoints):
         Paths = []
-        for wpt_a in self.OptInfo['WayPoints'].iterrows():
-            wpt_a_name  = wpt_a[1]['Name']; wpt_a_index = int(wpt_a[1]['Index']); wpt_a_loc   = [[wpt_a[1]['Long'],wpt_a[1]['Lat']]]
-            for wpt_b in self.OptInfo['WayPoints'].iterrows():
-                wpt_b_name  = wpt_b[1]['Name']; wpt_b_index = int(wpt_b[1]['Index']); wpt_b_loc   = [[wpt_b[1]['Long'],wpt_b[1]['Lat']]]
+
+        wpts_s = self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'].isin(StartWaypoints)]
+        wpts_e = self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'].isin(EndWaypoints)]
+
+        for idx,wpt_a in wpts_s.iterrows():
+            wpt_a_name  = wpt_a['Name']; wpt_a_index = int(wpt_a['Index']); wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
+            for idy,wpt_b in wpts_e.iterrows():
+                wpt_b_name  = wpt_b['Name']; wpt_b_index = int(wpt_b['Index']); wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
                 if not wpt_a_name == wpt_b_name:
                     # ==== Correcting Path for waypoints off cell
                     Path = {}
@@ -150,10 +134,13 @@ class TravelTime:
 
         return neighbours_idx, TravelTime, CrossPoints, CellPoints
 
-    def _dijkstra(self,wpt_name):
-        # Loop over all the points until all waypoints are visited
-        while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'].isin(np.array(self.OptInfo['WayPoints']['Index'].astype(int)))] == False).any():
+    def _dijkstra(self,wpt_name,end_waypoints):
 
+
+        Wpts = self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'].isin(end_waypoints)]
+
+        # Loop over all the points until all waypoints are visited
+        while (self.DijkstraInfo[wpt_name]['Info']['PositionLocked'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'].isin(np.array(Wpts['Index'].astype(int)))] == False).any():
 
             non_locked = self.DijkstraInfo[wpt_name]['Info'][self.DijkstraInfo[wpt_name]['Info']['PositionLocked']==False]
             idx        = non_locked['CellIndex'].loc[non_locked['Time'].idxmin()]
@@ -175,16 +162,35 @@ class TravelTime:
 
 
 
-    def Paths(self,StartWaypoint=None,verbrose=False,multiprocessing=False):
+    def Paths(self,source_waypoints=None,end_waypoints=None,verbrose=False,multiprocessing=False):
         '''
         Determining the shortest path between all waypoints
         '''
 
-        if type(StartWaypoint) == type(None):
+        # Subsetting the waypoints
+        if type(source_waypoints) == type(None):
             source_waypoints = list(self.OptInfo['WayPoints']['Name'])
-        else:
-            source_waypoints = [StartWaypoint]
-        end_waypoints    = list(self.OptInfo['WayPoints']['Name'])
+        if type(end_waypoints) == type(None):
+            end_waypoints = list(self.OptInfo['WayPoints']['Name'])
+
+        # Initialising the Dijkstra Info Dictionary
+        self.DijkstraInfo = {}
+        for wpt in source_waypoints:
+            wpt_name  = wpt
+            wpt_index = self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'] == wpt_name]['Index'].iloc[0]
+            self.DijkstraInfo[wpt_name] = {}
+            self.DijkstraInfo 
+            self.DijkstraInfo[wpt_name]['Info'] = pd.DataFrame({'CellIndex': np.arange(len(self.Mesh.cellBoxes)), 'Time':np.full((len(self.Mesh.cellBoxes)),np.inf), 'PositionLocked': np.zeros((len(self.Mesh.cellBoxes)),dtype=bool)})
+            self.DijkstraInfo[wpt_name]['Path']            = {}
+            self.DijkstraInfo[wpt_name]['Path']['Points']           = {}
+            self.DijkstraInfo[wpt_name]['Path']['CellIndex']          = {}
+            self.DijkstraInfo[wpt_name]['Path']['Cost']               = {}
+            for djk in range(len(self.Mesh.cellBoxes)):
+                self.DijkstraInfo[wpt_name]['Path']['Points'][djk]  = []
+                self.DijkstraInfo[wpt_name]['Path']['CellIndex'][djk] = [wpt_index]
+                self.DijkstraInfo[wpt_name]['Path']['Cost'][djk]      = [np.inf]
+            self.DijkstraInfo[wpt_name]['Info']['Time'][self.DijkstraInfo[wpt_name]['Info']['CellIndex'] == wpt_index] = 0.0
+            self.DijkstraInfo[wpt_name]['Path']['Cost'][wpt_index] = [0.0]
 
         if multiprocessing:
             import multiprocessing
@@ -195,9 +201,9 @@ class TravelTime:
             for wpt in source_waypoints:
                 if verbrose:
                     print('=== Processing Waypoint = {} ==='.format(wpt))
-                self._dijkstra(wpt)
+                self._dijkstra(wpt,end_waypoints)
 
-        return self.Dijkstra2Path()
+        return self.Dijkstra2Path(source_waypoints,end_waypoints)
 
          
 
@@ -240,18 +246,11 @@ class TravelTime:
                     Cp  = tuple(Points[id+1,:])
                     Np  = tuple(Points[id+2,:])
 
-                    # # Remove crossing point if are the same location
-                    # if (((np.array(Sp)-np.array(Cp))**2).sum() < 1e-4) or\
-                    # (((np.array(Cp)-np.array(Np))**2).sum() < 1e-4):
-                    #     Points = np.delete(Points,id+1,axis=0)
-                    #     continue
-
                     nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
                     CrossingPoint, Boxes = nc.value()
 
                     Allowed = True
                     for box in Boxes:
-                        
                         if box.containsLand() or box.iceArea() >= self.OptInfo['MaxIceExtent']:
                             Allowed = False
                     if not Allowed:
@@ -259,7 +258,7 @@ class TravelTime:
                         continue
 
                     if (np.isnan(CrossingPoint).any()):
-                            Points = np.delete(Points,id+1,axis=0)
+                        Points = np.delete(Points,id+1,axis=0)
                     else:
                         Points[id+1,:] = CrossingPoint[0,:]
                         if CrossingPoint.shape[0] > 1:

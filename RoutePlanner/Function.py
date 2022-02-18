@@ -1,4 +1,6 @@
 import numpy as np
+from shapely.geometry import Polygon
+
 class _Euclidean_distance():
     """
     Replicating original route planner Euclidean distance 
@@ -673,13 +675,16 @@ class NewtonianCurve:
             elif Ye < Y_line:
                 idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
 
-        cell    = self.Mesh.cellBoxes[idx]
-        Crp1 = self.Mesh.getCrossingPoint(self.Box1,(cell.cx,cell.cy))
-        Crp2 = self.Mesh.getCrossingPoint(cell,(self.Box2.cx,self.Box2.cy))
+        Box    = self.Mesh.cellBoxes[idx]
+        Crp1 = self.Mesh.getCrossingPoint(self.Box1,(Box.cx,Box.cy))
+        Crp2 = self.Mesh.getCrossingPoint(Box,(self.Box2.cx,self.Box2.cy))
+
+        print('Sp=({},{});Cp=({},{});Np=({},{});CrossPoint={};lenCorner={}'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1],len(CornerCells)))
+
 
         # Appending the crossing points and their relative index
         CrossPoint = [Crp1,Crp2]
-        return np.array(CrossPoint)
+        return np.array(CrossPoint), Box
 
 
     def value(self):
@@ -690,35 +695,54 @@ class NewtonianCurve:
 
         self.Box1 = list(set(self.Mesh.getCellBox(self.Sp[0],self.Sp[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
         self.Box2 = list(set(self.Mesh.getCellBox(self.Np[0],self.Np[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
+
+
         Boxes     = []
 
         # For the interesting case when the crossing point does not share a Box with the Start or End Point
+
+        # == Shortest Distance does not work in all cases CORRECT THIS ! 
         if (len(self.Box1) == 0) or (len(self.Box2) == 0):
             CrossPoint = []
             if (len(self.Box1) == 0):
-                for c in self.Mesh.getCellBox(self.Sp[0],self.Sp[1]):
-                    crp = self.Mesh.getCrossingPoint(c,(self.Cp[0],self.Cp[1]))
-                    common_cells = list(set(self.Mesh.getCellBox(crp[0],crp[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
-                    if len(common_cells) == 1:
-                        bx1 = list(set(self.Mesh.getCellBox(crp[0],crp[1])).intersection(self.Mesh.getCellBox(self.Sp[0],self.Sp[1])))[0]
-                        bx2 = common_cells[0]
-                        Boxes.append(bx1)
-                        Boxes.append(bx2)
-                        CrossPoint.append(crp)
-                        break
+                Cp_cells = self.Mesh.getCellBox(self.Cp[0],self.Cp[1])
+                Sp_cells = self.Mesh.getCellBox(self.Sp[0],self.Sp[1])
+                Distances      = []
+                CrossingPoints = []
+                Bxs = []
+                for Spc in Sp_cells:
+                    SPoly = Polygon(Spc.getBounds())
+                    for Cpc in Cp_cells:
+                        CPoly = Polygon(Cpc.getBounds())
+                        if SPoly.intersects(CPoly):
+                            crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
+                            if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0:
+                                continue
+                            CrossPoint.append(crp)
+                            Boxes.append(Spc)
+                            Boxes.append(Cpc)
             CrossPoint.append(self.Cp)
             if (len(self.Box2) == 0):
-                for c in self.Mesh.getCellBox(self.Np[0],self.Np[1]):
-                    crp = self.Mesh.getCrossingPoint(c,(self.Cp[0],self.Cp[1]))
-                    common_cells = list(set(self.Mesh.getCellBox(crp[0],crp[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
-                    if len(common_cells) == 1:
-                        bx1 = common_cells[0]
-                        bx2 = list(set(self.Mesh.getCellBox(crp[0],crp[1])).intersection(self.Mesh.getCellBox(self.Np[0],self.Np[1])))[0]
-                        Boxes.append(bx1)
-                        Boxes.append(bx2)
-                        CrossPoint.append(crp)
-                        break
-            return np.array(CrossPoint),Boxes
+                Cp_cells = self.Mesh.getCellBox(self.Cp[0],self.Cp[1])
+                Sp_cells = self.Mesh.getCellBox(self.Np[0],self.Np[1])
+                Distances      = []
+                CrossingPoints = []
+                Bxs = []
+                for Spc in Sp_cells:
+                    SPoly = Polygon(Spc.getBounds())
+                    for Cpc in Cp_cells:
+                        CPoly = Polygon(Cpc.getBounds())
+                        if SPoly.intersects(CPoly):
+                            crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
+                            if abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
+                                continue
+                            CrossPoint.append(crp)
+                            Boxes.append(Spc)
+                            Boxes.append(Cpc)
+            if len(CrossPoint) ==0:
+                return np.array([np.nan,np.nan]),Boxes
+            else:
+                return np.array(CrossPoint),Boxes
 
         # For the interesting case that two points are on the edge of two cells
         if (len(self.Box1) > 1) or (len(self.Box2) > 1):
@@ -745,7 +769,8 @@ class NewtonianCurve:
         elif abs(case)==4:
             CrossPoint = self._lat_case(case)
         elif (abs(case)==1) or (abs(case)==3):
-            CrossPoint = self._corner_case(case,crossing_point)
+            CrossPoint,Box = self._corner_case(case,crossing_point)
+            Boxes.append(Box)
         else:
             print('Issue Sp=({:.2f},{:.2f});Cp=({:.2f},{:.2f});Np=({:.2f},{:.2f});'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1]))
 
