@@ -1,9 +1,8 @@
-
-
-from pkgutil import walk_packages
 import matplotlib.pylab as plt
 from matplotlib.patches import Polygon
 import numpy as np
+from simplekml import Kml, Color, Style
+
 
 def Mesh(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
     """
@@ -24,7 +23,6 @@ def Mesh(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
             ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
             continue
 
-
         iceArea = cellBox.iceArea()
         if iceArea >= 0.8:
             ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White'))
@@ -34,7 +32,8 @@ def Mesh(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
             ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White',alpha=iceArea))
             ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
         else:
-            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
+            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
+            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
 
         if currents:
             ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
@@ -100,3 +99,63 @@ def Paths(cellGrid,Paths,routepoints=False,figInfo=None,return_ax=False,Waypoint
 
         if return_ax:
             return ax
+
+
+
+def Paths2KML(Paths,File):
+    kml = Kml(open=1)
+    for path in Paths:
+        if np.isinf(path['Time']):
+            continue
+        linestring = kml.newlinestring(name="{} -> {}. TravelTime={} days".format(path['from'],path['to'],path['Time']))
+        if type=='Maps':
+            fullPath = path['Path']['Points']
+            fullPath[:,0] = fullPath[:,0]-360
+            fullPath = fullPath[:,::-1]
+            linestring.coords = fullPath
+        else:
+            linestring.coords = path['Path']['Points']
+    kml.save(File)
+
+
+def Mesh2KML(cellGrid,File,MaxIce=0.8):
+    kml = Kml(open=1)
+    for ii in range(len(cellGrid.cellBoxes)):
+        cell = kml.newmultigeometry(name="Cell Box {}".format(ii))
+        if type=='Maps':
+            bounds      = np.array(cellGrid.cellBoxes[ii].getBounds())
+            bounds[:,0] = bounds[:,0]-360
+            bounds = bounds[:,::-1]
+
+        cell.newpolygon(outerboundaryis=cellGrid.cellBoxes[ii].getBounds())
+        cell.style.linestyle.width = 0.1
+        if cellGrid.cellBoxes[ii].containsLand():
+            cell.style.polystyle.color = Color.changealpha("77", Color.green)
+            cell.style.linestyle.color = Color.changealpha("77", Color.green)
+        else:
+            cell.style.linestyle.color = Color.black
+            icearea = cellGrid.cellBoxes[ii].iceArea()
+            if not np.isnan(icearea):
+                if icearea > MaxIce:
+                    cell.style.linestyle.color = Color.changealpha("77", Color.pink)
+                else:
+                    cell.style.polystyle.color = Color.changealpha("{}".format(int(cellGrid.cellBoxes[ii].iceArea()*100)), Color.white)
+            else:
+                cell.style.polystyle.color = Color.changealpha("77", Color.green)
+                cell.style.linestyle.color = Color.changealpha("77", Color.green)
+    kml.save(File)
+
+def WayPoints2KML(Waypoints,File):
+    kml = Kml(open=1)
+    style = Style()
+    style.labelstyle.color = Color.red  
+    style.linestyle.color= Color.red
+    style.labelstyle.scale = 0.8  
+    style.iconstyle.icon.href = 'https://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png'
+    for ii,wpt in Waypoints.iterrows():
+        if type=='Maps':
+            pnt = kml.newpoint(name="{}".format(wpt['Name']), coords=[(wpt['Lat'],wpt['Long']-360)])
+        else:
+            pnt = kml.newpoint(name="{}".format(wpt['Name']), coords=[(wpt['Long'],wpt['Lat'])])
+        pnt.style = style
+    kml.save(File)
