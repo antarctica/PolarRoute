@@ -224,3 +224,21 @@ class CellGrid:
         else:
             case = np.nan
         return case
+
+    def toDataFrame(self):
+        DF = pd.DataFrame({'idx':np.arange(len(self.cellBoxes))})
+        Shape   = []
+        IceArea = []
+        IsLand  = []
+        for c in self.cellBoxes:
+            Shape.append(Polygon(c.getBounds()))
+            IceArea.append(c.iceArea())
+            IsLand.append(c.containsLand())
+
+        DF['Geometry'] = Shape
+        DF['Ice Area'] = IceArea
+        DF['Land']     = IsLand
+        return DF
+
+
+
