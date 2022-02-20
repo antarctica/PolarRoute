@@ -112,7 +112,7 @@ def MeshDF(cellGrid):
     from shapely.geometry import Polygon
     import geopandas as gpd
     Polygons = pd.DataFrame({'Index':np.arange(len(cellGrid.cellBoxes))})
-    Shape   = []; IceArea = []; IsLand  = []; dpth=[];vec=[]; Centroid=[];
+    Shape   = []; IceArea = []; IsLand  = []; dpth=[];vec=[]; CentroidCx=[];CentroidCy=[];
     for c in cellGrid.cellBoxes:
         bounds = np.array(c.getBounds())
         bounds[:,0] = bounds[:,0]-360
@@ -121,12 +121,14 @@ def MeshDF(cellGrid):
         IsLand.append(c.containsLand())
         dpth.append(c.depth())
         vec.append([c.getuC(),c.getvC()])
-        Centroid.append([c.cx-360,c.cy])
+        CentroidCx.append(c.cx-360)
+        CentroidCy.append(c.cy)
 
     Polygons['geometry'] = Shape
     Polygons['Ice Area'] = IceArea
     Polygons['Land']     = IsLand
-    Polygons['Centroid'] = Centroid
+    Polygons['Cx']       = CentroidCx
+    Polygons['Cy']       = CentroidCy
     Polygons['Vector']   = vec
     Polygons['Depth']    = dpth
     Polygons = gpd.GeoDataFrame(Polygons,crs={'init': 'epsg:4326'}, geometry='geometry')

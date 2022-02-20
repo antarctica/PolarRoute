@@ -175,6 +175,16 @@ class CellGrid:
         return cell_index
 
     def getNeightbours(self, selectedCellBox):
+        """
+            Getting the neighbours and returnign idx, case, cp and cell information
+
+            BUG - Currently this is very slow as the Polygon intersection is slower than before.
+            Optimising the running of the code should improve this section as its a overarching requirement
+            for all routeplanes etc
+        
+        """
+
+
         SPoly = Polygon(selectedCellBox.getBounds())
         neightbours      = []
         neightbours_index = []
