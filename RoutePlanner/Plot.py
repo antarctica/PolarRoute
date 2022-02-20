@@ -159,3 +159,98 @@ def WayPoints2KML(Waypoints,File):
             pnt = kml.newpoint(name="{}".format(wpt['Name']), coords=[(wpt['Long'],wpt['Lat'])])
         pnt.style = style
     kml.save(File)
+
+
+#  =============
+from folium.plugins import FloatImage, BoatMarker
+from branca.colormap import linear
+
+# Example Maps http://leaflet-extras.github.io/leaflet-providers/preview/
+#icons can be found at https://fontawesome.com/icons
+
+def MapWaypoints(json,map):
+    for pt in json['features']:
+        loc = pt['geometry']['coordinates']
+        folium.Marker(
+        location=[loc[1], loc[0]],
+        name='WayPoints',
+        # icon=folium.Icon(color="red",icon="cloud"),
+
+
+        icon=folium.DivIcon(html=f"""
+            <div><svg>
+                <rect x="0", y="0" width="10" height="10", fill="red", opacity="1.0" 
+            </svg></div>"""),
+
+
+        popup="<b>{} [{},{}]</b>".format(pt['properties']['name'],loc[0],loc[1])
+        ).add_to(map)    
+    return map
+
+def MapMesh(DF,map):
+
+
+    LandDF = DF[DF['Land'] == True]
+
+    IceDF  = DF[DF['Land'] == False]
+    ThickIceDF = IceDF[IceDF['Ice Area'] >= 0.8*100]
+    ThinIceDF  = IceDF[IceDF['Ice Area'] < 0.8*100]
+
+    # ==== Plotting Ice ==== 
+    colormap = linear.Reds_09.scale(min(ThinIceDF['Ice Area']),
+                                                max(ThinIceDF['Ice Area']))
+    style_function = lambda x: {
+        'fillColor': colormap(x['properties']['Ice Area']),
+        'color': 'gray',
+        'weight': 0.5,
+        'fillOpacity': 0.3
+    }
+    folium.GeoJson(
+        ThinIceDF,
+        style_function=style_function,
+        tooltip=folium.GeoJsonTooltip(
+            fields=['Ice Area', 'Land','Centroid','Depth','Vector'],
+            aliases=['Ice Area (%)', 'Land','Centroid [Long,Lat]','Depth(m)','Vector (m/s)'],
+            localize=True
+        ),
+        name='Ice Grid'
+    ).add_to(map)
+    # colormap.add_to(map)
+    # colormap.caption = 'Ice Area'
+    # colormap.add_to(map)
+    style_function = lambda x: {
+        'fillColor': 'white',
+        'color': 'gray',
+        'weight': 0.5,
+        'fillOpacity': 0.5
+    }
+    folium.GeoJson(
+        ThickIceDF,
+        style_function=style_function,
+        tooltip=folium.GeoJsonTooltip(
+            fields=['Ice Area', 'Land','Centroid','Depth','Vector'],
+            aliases=['Ice Area (%)', 'Land','Centroid [Long,Lat]','Depth(m)','Vector (m/s)'],
+            localize=True
+        ),
+        name='No-Go Ice Grid'
+    ).add_to(map)
+
+    # ===== Plotting Land =====
+    style_function = lambda x: {
+        'fillColor': 'green',
+        'color': 'gray',
+        'weight': 0.5,
+        'fillOpacity': 0.3
+    }
+    folium.GeoJson(
+        LandDF,
+        style_function=style_function,
+        tooltip=folium.GeoJsonTooltip(
+            fields=['Ice Area', 'Land','Centroid','Depth','Vector'],
+            aliases=['Ice Area (%)', 'Land','Centroid [Long,Lat]','Depth(m)','Vector (m/s)'],
+            localize=True
+        ),
+        name='Land Grid'
+    ).add_to(map)
+
+    return map
