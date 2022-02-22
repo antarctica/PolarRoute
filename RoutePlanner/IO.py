@@ -28,6 +28,28 @@ def LoadCurrentPoints(NetCDF):
     return currentPoints
 
 
+def GreatCircle(Start_p,End_p):
+    import pyproj
+    import numpy as np
+    startlong, startlat = Start_p
+    endlong, endlat     = End_p
+    startlong = startlong-360
+    endlong   = endlong-360
+
+    # calculate distance between points
+    g = pyproj.Geod(ellps='WGS84')
+    (az12, az21, dist) = g.inv(startlong, startlat, endlong, endlat)
+
+    # calculate line string along path with segments <= 1 km
+    lonlats = g.npts(startlong, startlat, endlong, endlat,
+                    1 + int(dist / 1000))
+
+    lonlats = np.array(lonlats)
+    lonlats[:,0] = lonlats[:,0]+360
+
+    return lonlats
+
+
 def SDAPosition(PATH):
     #PATH = '/Users/jsmith/Documents/Research/Researcher_BAS/RoutePlanning/SDADT-Positions'
     pts = [];tms = [];hding=[]

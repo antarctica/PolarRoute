@@ -208,7 +208,7 @@ class TravelTime:
          
 
                     
-    def PathSmoothing(self,Paths,maxiter=500):
+    def PathSmoothing(self,Paths,maxiter=1000,minimumDiff=1e-4,debugging=0):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
 
@@ -241,12 +241,13 @@ class TravelTime:
             iter = 0
             while iter <= maxiter:
                 id = 0
+
                 while id <= (len(Points) - 3):
                     Sp  = tuple(Points[id,:])
                     Cp  = tuple(Points[id+1,:])
                     Np  = tuple(Points[id+2,:])
 
-                    nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'])
+                    nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'],zerocurrents=self.zero_currents,debugging=debugging)
                     CrossingPoint, Boxes = nc.value()
 
                     Allowed = True
@@ -264,7 +265,24 @@ class TravelTime:
                         if CrossingPoint.shape[0] > 1:
                             Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
                     id+=1
+
+                if iter!=0:
+                    if Points.shape == oldPoints.shape:
+                        if np.mean(np.sqrt((Points-oldPoints)**2)) < minimumDiff:
+                            break
+                
+                if iter == maxiter:
+                    print('Maximum number of iterations met !')
+                
+                oldPoints = copy.deepcopy(Points)
+
+
+
+
+
                 iter+=1
+
+            print('{} iterations to convergence'.format(iter-1))
 
             Path['Path']['Points']       = Points
             SmoothedPaths.append(Path)

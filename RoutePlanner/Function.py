@@ -1,5 +1,8 @@
 import numpy as np
 from shapely.geometry import Polygon
+import warnings
+warnings.filterwarnings("ignore")
+
 
 class _Euclidean_distance():
     """
@@ -502,11 +505,13 @@ class NewtonianCurve:
                 Np   = self.Np
                 Box1 = self.Box1
                 Box2 = self.Box2
+                sgn  = 1
             else:
                 Sp   = self.Np
                 Np   = self.Sp
                 Box1 = self.Box2
                 Box2 = self.Box1
+                sgn  = -1
 
 
             # If x or a < 1e-3
@@ -517,11 +522,12 @@ class NewtonianCurve:
             a     = self.fdist.value(Np, (Cp[0],Np[1]))
             Y     = np.sign(Np[1]-Sp[1])*self.fdist.value((Sp[0]+(Np[0]-Sp[0]),Sp[1]),\
                                                        (Sp[0]+(Np[0]-Sp[0]),Np[1]))
-            u1    = self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
-            u2    = self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
+            u1    = sgn*self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
+            u2    = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
             y     = NewtonOptimisationLong(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
             CrossPoint  = self.fdist.value((Cp[0],Sp[1]),(0.0,y),forward=False)
-            return np.array(CrossPoint)[None,:]
+            Box = self.Mesh.getCellBox(CrossPoint[0],CrossPoint[1])
+            return np.array(CrossPoint)[None,:], Box
 
 
 
@@ -613,26 +619,30 @@ class NewtonianCurve:
             Np   = self.Np
             Box1 = self.Box1
             Box2 = self.Box2
+            sgn  = 1
         else:
             Sp   = self.Np
             Np   = self.Sp
             Box1 = self.Box2
             Box2 = self.Box1   
+            sgn  = -1
 
         θ   = Cp[1]
-        λ   = Sp[1]
-        ψ   = Np[1]        
+        λ   = Np[1]#Sp[1]
+        ψ   = Sp[1]#Np[1]        
 
         x     = self.fdist.value(Sp,(Sp[0],Cp[1]))
         a     = self.fdist.value(Np, (Np[0],Cp[1]))
         Y     = np.sign(Np[0]-Sp[0])*self.fdist.value((Sp[0],Cp[1]),\
                                  (Np[0],Cp[1]))
-        u1    = self.zc*Box1.getvC(); v1 = self.zc*Box1.getuC()
-        u2    = self.zc*Box2.getvC(); v2 = self.zc*Box2.getuC()
+        u1    = sgn*self.zc*Box1.getvC(); v1 = self.zc*Box1.getuC()
+        u2    = sgn*self.zc*Box2.getvC(); v2 = self.zc*Box2.getuC()
 
         y = NewtonOptimisationLat(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
         CrossPoint  = self.fdist.value((Sp[0],Cp[1]),(y,0.0),forward=False) 
-        return np.array(CrossPoint)[None,:]
+        Box = self.Mesh.getCellBox(CrossPoint[0],CrossPoint[1])
+
+        return np.array(CrossPoint)[None,:], Box
 
 
     def _corner_case(self,case,crossing_point):
@@ -679,17 +689,26 @@ class NewtonianCurve:
         Crp1 = self.Mesh.getCrossingPoint(self.Box1,(Box.cx,Box.cy))
         Crp2 = self.Mesh.getCrossingPoint(Box,(self.Box2.cx,self.Box2.cy))
 
-        print('Sp=({},{});Cp=({},{});Np=({},{});CrossPoint={};lenCorner={}'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1],len(CornerCells)))
+        if self.debugging>0:
+            print('Sp=({},{});Cp=({},{});Np=({},{});lenCorner={}'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1],len(CornerCells)))
 
 
         # Appending the crossing points and their relative index
         CrossPoint = [Crp1,Crp2]
-        return np.array(CrossPoint), Box
+        Boxes=[]
+        for idx,pt in enumerate(CrossPoint):
+            Boxes += self.Mesh.getCellBox(pt[0],pt[1])
+
+
+        return np.array(CrossPoint), Boxes
 
 
     def value(self):
         '''
             Bug - Incorperate Travel-Time back in! 
+                - Do not allow path along any point on a cell that is land or full of ice
+                - re-introduce the Dijkstra for corner cases
+                - Variable Speed Function
 
         '''
 
@@ -700,8 +719,6 @@ class NewtonianCurve:
         Boxes     = []
 
         # For the interesting case when the crossing point does not share a Box with the Start or End Point
-
-        # == Shortest Distance does not work in all cases CORRECT THIS ! 
         if (len(self.Box1) == 0) or (len(self.Box2) == 0):
             CrossPoint = []
             if (len(self.Box1) == 0):
@@ -716,7 +733,7 @@ class NewtonianCurve:
                         CPoly = Polygon(Cpc.getBounds())
                         if SPoly.intersects(CPoly):
                             crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
-                            if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0:
+                            if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0 or  abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
                                 continue
                             CrossPoint.append(crp)
                             Boxes.append(Spc)
@@ -734,29 +751,30 @@ class NewtonianCurve:
                         CPoly = Polygon(Cpc.getBounds())
                         if SPoly.intersects(CPoly):
                             crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
-                            if abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
+                            if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0 or  abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
                                 continue
                             CrossPoint.append(crp)
-                            Boxes.append(Spc)
-                            Boxes.append(Cpc)
             if len(CrossPoint) ==0:
-                return np.array([np.nan,np.nan]),Boxes
+                return np.array([np.nan,np.nan]),[np.nan]
             else:
+                for pt in CrossPoint:
+                    Boxes += self.Mesh.getCellBox(pt[0],pt[1])
                 return np.array(CrossPoint),Boxes
 
         # For the interesting case that two points are on the edge of two cells
         if (len(self.Box1) > 1) or (len(self.Box2) > 1):
+            Boxes += self.Box1
+            Boxes += self.Box2
             return np.array([np.nan,np.nan]),Boxes
 
         self.Box1 = self.Box1[0]
         self.Box2 = self.Box2[0]
-        Boxes.append(self.Box1)
-        Boxes.append(self.Box2)
-
 
         # This is the horse shoe case where the all three points lie within the same cell cell. 
         #The crossing point should be removed in this sense
         if self.Box1 == self.Box2:
+            Boxes += [self.Box1]
+            Boxes += [self.Box2]
             return np.array([np.nan,np.nan]),Boxes
 
         # ======== Determining the case & Crossing Points ========
@@ -765,14 +783,19 @@ class NewtonianCurve:
         if self.debugging>0:
             print('===========================================================')
         if abs(case)==2:
-            CrossPoint = self._long_case(case)
+            CrossPoint,Box = self._long_case(case)
         elif abs(case)==4:
-            CrossPoint = self._lat_case(case)
+            CrossPoint,Box = self._lat_case(case)
         elif (abs(case)==1) or (abs(case)==3):
             CrossPoint,Box = self._corner_case(case,crossing_point)
-            Boxes.append(Box)
         else:
             print('Issue Sp=({:.2f},{:.2f});Cp=({:.2f},{:.2f});Np=({:.2f},{:.2f});'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1]))
-
+        Boxes += self.Mesh.getCellBox(self.Sp[0],self.Sp[1])
+        try:
+            Boxes += Box
+        except:
+            print('Issue with cell box')
+        Boxes += self.Mesh.getCellBox(self.Np[0],self.Np[1])
+        
 
         return CrossPoint, Boxes
