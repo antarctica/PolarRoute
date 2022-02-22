@@ -5,7 +5,7 @@ from simplekml import Kml, Color, Style
 from RoutePlanner.IO import SDAPosition, MeshDF
 import folium
 
-def PlotMesh(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
+def PlotMesh(cellGrid,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
     """
         plots this cellGrid for display.
         TODO - requires reworking as part of the plotting work-package
@@ -17,7 +17,7 @@ def PlotMesh(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None)
     else:
         fig,ax = figInfo
 
-    for cellBox in self.cellBoxes:
+    for cellBox in cellGrid.cellBoxes:
         if cellBox.containsLand():
             ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
             ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
@@ -38,8 +38,8 @@ def PlotMesh(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None)
         if currents:
             ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
 
-    ax.set_xlim(self._longMin, self._longMax)
-    ax.set_ylim(self._latMin, self._latMax)
+    ax.set_xlim(cellGrid._longMin, cellGrid._longMax)
+    ax.set_ylim(cellGrid._latMin, cellGrid._latMax)
 
     if return_ax:
         return ax
@@ -175,64 +175,75 @@ def MapMesh(DF,map):
     ThinIceDF  = IceDF[IceDF['Ice Area'] < 0.8*100]
 
     # ==== Plotting Ice ==== 
-    colormap = linear.Reds_09.scale(min(ThinIceDF['Ice Area']),
+    iceInfo = folium.FeatureGroup(name='Ice Mesh')
+    colormapIce = linear.Reds_09.scale(min(ThinIceDF['Ice Area']),
                                                 0.8*100)
-    style_function = lambda x: {
-        'fillColor': colormap(x['properties']['Ice Area']),
-        'color': 'gray',
-        'weight': 0.5,
-        'fillOpacity': 0.3
-    }
     folium.GeoJson(
         IceDF,
-        style_function=style_function,
-        tooltip=folium.GeoJsonTooltip(
-            fields=['Ice Area', 'Land','Cx','Cy','Depth','Vector'],
-            aliases=['Ice Area (%)', 'Land','Centroid Cx [Long]','Centroid Cy [Lat]','Depth(m)','Vector (m/s)'],
-            localize=True
-        ),
-        name='Ice Grid'
-    ).add_to(map)
-    # colormap.add_to(map)
-    # colormap.caption = 'Ice Area'
-    # colormap.add_to(map)
-    style_function = lambda x: {
-        'color': 'red',
-        'weight': 0.5,
-        'fillOpacity': 0.1
-    }
+        style_function=lambda x: {
+                'fillColor': colormapIce(x['properties']['Ice Area']),
+                'color': 'gray',
+                'weight': 0.5,
+                'fillOpacity': 0.3
+            }
+    ).add_to(iceInfo)
     folium.GeoJson(
         ThickIceDF,
-        style_function=style_function,
-        tooltip=folium.GeoJsonTooltip(
-            fields=['Ice Area', 'Land','Cx','Cy','Depth','Vector'],
-            aliases=['Ice Area (%)', 'Land','Centroid Cx [Long]','Centroid Cy [Lat]','Depth(m)','Vector (m/s)'],
-            localize=True
-        ),
-        name='No-Go Ice Grid'
-    ).add_to(map)
+        style_function=lambda x: {
+                'color': 'red',
+                'weight': 0.5,
+                'fillOpacity': 0.1
+            }
+    ).add_to(iceInfo)
+    iceInfo.add_to(map)
 
     # ===== Plotting Land =====
-    style_function = lambda x: {
-        'fillColor': 'green',
-        'color': 'gray',
-        'weight': 0.5,
-        'fillOpacity': 0.3
-    }
+    landInfo = folium.FeatureGroup(name='Land Mesh')
     folium.GeoJson(
         LandDF,
-        style_function=style_function,
+        style_function= lambda x: {
+                'fillColor': 'green',
+                'color': 'gray',
+                'weight': 0.5,
+                'fillOpacity': 0.3
+            }
+    ).add_to(landInfo)
+    landInfo.add_to(map)
+
+    # ===== Plotting Mesh Info =====
+    bathInfo = folium.FeatureGroup(name='Bathymetry Mesh',show=False)
+    colormap = linear.Reds_09.scale(min(ThinIceDF['Depth']),max(ThinIceDF['Depth']))
+    folium.GeoJson(
+        IceDF,
+        style_function=lambda x: {
+                'fillColor': colormap(x['properties']['Depth']),
+                'color': 'gray',
+                'weight': 0.5,
+                'fillOpacity': 0.3
+            }
+    ).add_to(bathInfo)
+    bathInfo.add_to(map)
+    # ===== Plotting Mesh Info =====
+    meshInfo = folium.FeatureGroup(name='Mesh Information',show=False)
+    folium.GeoJson(
+        DF,
+        style_function= lambda x: {
+                'fillColor': 'black',
+                'color': 'gray',
+                'weight': 0.5,
+                'fillOpacity': 0.
+            },
         tooltip=folium.GeoJsonTooltip(
             fields=['Ice Area', 'Land','Cx','Cy','Depth','Vector'],
             aliases=['Ice Area (%)', 'Land','Centroid Cx [Long]','Centroid Cy [Lat]','Depth(m)','Vector (m/s)'],
             localize=True
         ),
         name='Land Grid'
-    ).add_to(map)
-
+    ).add_to(meshInfo)
+    meshInfo.add_to(map)
     return map
 
-def InteractiveMap(cellGrid,Paths,Waypoints,SitesOfInterest=None,SDA=None):
+def InteractiveMap(cellGrid,Paths,Waypoints,SitesOfInterest=None,SDA=None,PathPoints=False):
     from folium.plugins import FloatImage, BoatMarker
     from branca.colormap import linear
     import folium
@@ -248,7 +259,7 @@ def InteractiveMap(cellGrid,Paths,Waypoints,SitesOfInterest=None,SDA=None):
     MshDF = MeshDF(cellGrid)
     m = MapMesh(MshDF,m)
     
-    m = MapPaths(Paths,m,PathPoints=False)
+    m = MapPaths(Paths,m,PathPoints=PathPoints)
 
     if type(SitesOfInterest) != type(None):
         m = MapResearchSites(SitesOfInterest,m)
@@ -265,7 +276,7 @@ def InteractiveMap(cellGrid,Paths,Waypoints,SitesOfInterest=None,SDA=None):
                                                 inner_icon_style='margin:0px;font-size:1.5em;-webkit-transform: rotate({0});-moz-transform: rotate({0});-ms-transform: rotate({0});-o-transform: rotate({0});transform: rotate({0});'.format(0))))
 
 
-    folium.plugins.FloatImage('https://raw.githubusercontent.com/antarctica/SDADT-pyRoutePlanner/PathOptimisation_16Feb2022/resources/Logo/Logo.jpg?token=GHSAT0AAAAAABRDXFOFKYWLFZMTD2JRU4VWYQSQLTQ',bottom=1,left=1).add_to(m)
+    folium.plugins.FloatImage('https://i.ibb.co/dr3TNf7/Large-Logo.jpg',bottom=1,left=1).add_to(m)
     folium.LayerControl(collapsed=True).add_to(m)
     return m
 
