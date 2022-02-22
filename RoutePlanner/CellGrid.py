@@ -109,50 +109,6 @@ class CellGrid:
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
 
-    def plot(self,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
-        """
-            plots this cellGrid for display.
-
-            TODO - requires reworking as part of the plotting work-package
-        """
-        if type(figInfo) == type(None):
-            fig,ax = plt.subplots(1,1,figsize=(15,10))
-            fig.patch.set_facecolor('white')
-            ax.set_facecolor('lightblue')
-        else:
-            fig,ax = figInfo
-
-        for cellBox in self.cellBoxes:
-            if cellBox.containsLand():
-                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
-                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
-                continue
-
-
-            iceArea = cellBox.iceArea()
-            if iceArea >= 0.8:
-                ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White'))
-                ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='Pink',alpha=0.4))
-                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
-            elif not np.isnan(iceArea):
-                ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White',alpha=iceArea))
-                ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
-            else:
-                ax.add_patch(cellBox.getPolygon())
-
-            ax.add_patch(cellBox.getPolygon())
-            ax.add_patch(cellBox.getBorder())
-
-
-            if currents:
-                ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
-
-        ax.set_xlim(self._longMin, self._longMax)
-        ax.set_ylim(self._latMin, self._latMax)
-
-        if return_ax:
-            return ax
-
     def getIndex(self, selectedCellBox):
         """
             Returns the index of the selected cell
@@ -228,55 +184,36 @@ class CellGrid:
         neightbours_index = leftNeightbours_indx + rightNeightbours_indx + topNeightbours_indx + bottomNeightbours_indx
         return neightbours,neightbours_index,
 
-    def highlightCells(self, selectedCellBoxes, figInfo=None):
+    def plot(self, highlightCellBoxes = {}, plotIce = True, plotCurrents = False, plotBorders = True):
         """
-            Adds a red-border to cellBoxes gien by parameter 'selectedCellBoxes' and plots this cellGrid.
-            TODO - requires rework as part of the plotting work-package
+            creates and displays a plot for this cellGrid
         """
-        if type(figInfo) == type(None):
-            fig,ax = plt.subplots(1,1,figsize=(15,10))
-            fig.patch.set_facecolor('white')
-            ax.set_facecolor('lightblue')
-        else:
-            fig,ax = figInfo
+        # Create plot figure
+        fig, ax = plt.subplots(1, 1, figsize = (15,10))
+        fig.patch.set_facecolor('white')
+        ax.set_facecolor('lightblue')
 
         for cellBox in self.cellBoxes:
-            ax.add_patch(cellBox.getPolygon())
+            # plot land
+            if cellBox.containsLand():
+                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
-        for cellBox in selectedCellBoxes:
-            ax.add_patch(cellBox.getHighlight())
-            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*0.5,cellBox.getvC()*0.5,scale=2,width=0.002,color='gray')
-        bounds = np.array(bounds)
+            # plot ice
+            if plotIce and not np.isnan(cellBox.iceArea()):
+                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
 
-        for cellBox in selectedCellBoxes:
-            # Determining Newton crossing points
-            TravelTime, CrossPoints, CellPoints = NewtonianDistance(selectedCellBox,cellBox,shipSpeed,shipSpeed,debugging=debugging).value()
-            ax.plot([selectedCellBox.long+selectedCellBox.width/2,CrossPoints[0],cellBox.long+cellBox.width/2],\
-                        [selectedCellBox.lat+selectedCellBox.height/2,CrossPoints[1],cellBox.lat+cellBox.height/2],marker='o',color='k')
-            ax.text(cellBox.long+cellBox.width/2,cellBox.lat+cellBox.height/2,'{:.2f}'.format(TravelTime),color='r',zorder=100)
+            # plot currents
+            if plotCurrents:
+                ax.quiver((cellBox.long + cellBox.width / 2), (cellBox.lat + cellBox.height / 2),
+                          cellBox.getuC(), cellBox.getvC(), scale=1, width=0.002, color='gray')
 
-        if localBounds:
-            ax.set_xlim([bounds[:,0].min(),bounds[:,0].max()])
-            ax.set_ylim([bounds[:,1].min(),bounds[:,1].max()])
-        else:
-            ax.set_xlim(self._longMin, self._longMax)
-            ax.set_ylim(self._latMin, self._latMax)
+            # plot borders
+            if plotBorders:
+                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='gray'))
 
-    def highlightCell(self, selectedCellBox, figInfo=None):
-        """
-            Adds a red-border to a cellBox given by parameter 'selectedCellBox' and plots this cellGrid.
-            TODO - requires rework as part of the plotting work-package
-        """
-        if type(figInfo) == type(None):
-            fig.patch.set_facecolor('white')
-            ax.set_facecolor('white')
-        else:
-            fig,ax = figInfo
-
-        for cellBox in self.cellBoxes:
-            ax.add_patch(cellBox.getPolygon())
-
-        ax.add_patch(selectedCellBox.getHighlight())
+        # plot highlighted cells
+        for cellBox in highlightCellBoxes:
+            ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
@@ -389,6 +326,13 @@ class CellGrid:
         crp = Intersection_BoxLine(cell,ncell,case)
         
         return case,crp
+
+    def getNeighbours(self, selectedCellBox):
+        neighbours = {}
+        for indx, cellBox in enumerate(self.cellBoxes):
+            if self.getNeighbourCase(selectedCellBox, cellBox) != 0:
+                neighbours[indx] = cellBox
+        return neighbours
 
     def getNeighbourCase(self, cellBoxA, cellBoxB):
         """
