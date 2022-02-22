@@ -153,7 +153,6 @@ class CellGrid:
         if return_ax:
             return ax
 
-
     def getIndex(self, selectedCellBox):
         """
             Returns the index of the selected cell
@@ -163,8 +162,6 @@ class CellGrid:
             if selectedCellBox==cellBox:
                     cell_index.append(idx)
         return cell_index
-
-
 
     def _getLeftNeightbours(self, selectedCellBox):
         """
@@ -284,9 +281,6 @@ class CellGrid:
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
 
-
-
-
     def getCase(self,cell,ncell):
         """
         
@@ -395,3 +389,45 @@ class CellGrid:
         crp = Intersection_BoxLine(cell,ncell,case)
         
         return case,crp
+
+    def getNeighbourCase(self, cellBoxA, cellBoxB):
+        """
+            Given two cellBoxes (cellBoxA, cellBoxB) returns a case number representing where the two cellBoxes are touching.
+
+            case 0 -> cellBoxes are not neighbours
+
+            case 1 -> cellBoxB is the North-East corner of cellBoxA
+            case 2 -> cellBoxB is East of cellBoxA
+            case 3 -> cellBoxB is the South-East corner of cellBoxA
+            case 4 -> cellBoxB is South of cellBoxA
+            case -1 -> cellBoxB is the South-West corner of cellBoxA
+            case -2 -> cellBoxB is West of cellBoxA
+            case -3 -> cellBoxB is the North-West corner of cellBoxA
+            case -4 -> cellBoxB is North of cellBoxA
+        """
+
+        if (cellBoxA.long + cellBoxA.width) == cellBoxB.long and (cellBoxA.lat + cellBoxA.height) == cellBoxB.lat:
+            return 1  # North-East
+        if (cellBoxA.long + cellBoxA.width == cellBoxB.long) and (
+                cellBoxB.lat < (cellBoxA.lat + cellBoxA.height)) and (
+                (cellBoxB.lat + cellBoxB.height) > cellBoxA.lat):
+            return 2  # East
+        if (cellBoxA.long + cellBoxA.width) == cellBoxB.long and (cellBoxA.lat == cellBoxB.lat + cellBoxB.height):
+            return 3  # South-East
+        if ((cellBoxB.lat + cellBoxB.height) == cellBoxA.lat) and (
+                (cellBoxB.long + cellBoxB.width) > cellBoxA.long) and (
+                cellBoxB.long < (cellBoxA.long + cellBoxA.width)):
+            return 4  # South
+        if cellBoxA.long == (cellBoxB.long + cellBoxB.width) and cellBoxA.lat == (cellBoxB.lat + cellBoxB.height):
+            return -1  # South-West
+        if (cellBoxB.long + cellBoxB.width == cellBoxA.long) and (
+                cellBoxB.lat < (cellBoxA.lat + cellBoxA.height)) and (
+                (cellBoxB.lat + cellBoxB.height) > cellBoxA.lat):
+            return -2  # West
+        if cellBoxA.long == (cellBoxB.long + cellBoxB.width) and (cellBoxA.lat + cellBoxA.height == cellBoxB.lat):
+            return -3  # North-West
+        if (cellBoxB.lat == (cellBoxA.lat + cellBoxA.height)) and (
+                (cellBoxB.long + cellBoxB.width) > cellBoxA.long) and (
+                cellBoxB.long < (cellBoxA.long + cellBoxA.width)):
+            return -4  # North
+        return 0  # Cells are not neighbours.
