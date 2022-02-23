@@ -345,12 +345,38 @@ class CellGrid:
         return DF
 
 
+    def getNeightbours(self, selectedCellBox):
+        """
+            Getting the neighbours and returnign idx, case, cp and cell information
 
-        crp = Intersection_BoxLine(cell,ncell,case)
+            BUG - Currently this is very slow as the Polygon intersection is slower than before.
+            Optimising the running of the code should improve this section as its a overarching requirement
+            for all routeplanes etc
+        
+        """
 
-        return case,crp
 
-    def getNeighbours(self, selectedCellBox):
+        SPoly = Polygon(selectedCellBox.getBounds())
+        neightbours      = []
+        neightbours_index = []
+        for idx,cellBox in enumerate(self.cellBoxes):
+            if cellBox != selectedCellBox:
+                NPoly = Polygon(cellBox.getBounds())
+                if SPoly.intersects(NPoly):
+                    neightbours_index.append(idx)
+                    neightbours.append(cellBox)
+        cases = []
+        crossing_points = []
+        for ncell in neightbours:
+            case  = self.getCase(selectedCellBox,(ncell.cx,ncell.cy))
+            cp    = self.getCrossingPoint(selectedCellBox,(ncell.cx,ncell.cy))
+            cases.append(case)
+            crossing_points.append(cp)
+        neigh = pd.DataFrame({'Cell':neightbours,'idx':neightbours_index,'Case':cases,'Cp':crossing_points})
+        return neigh
+
+
+    def getNeighboursNew(self, selectedCellBox):
         neighbours = {}
         for indx, cellBox in enumerate(self.cellBoxes):
             if self.getNeighbourCase(selectedCellBox, cellBox) != 0:
