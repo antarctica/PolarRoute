@@ -6,3 +6,4 @@ Plots
 *.ipynb_checkpoints
 Data
 .*
+/.vscode/
