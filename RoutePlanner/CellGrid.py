@@ -5,8 +5,8 @@ import pandas as pd
 from shapely.geometry import Polygon
 
 def bearing(st,en):
-    long1,lat1 = st 
-    long2,lat2 = en  
+    long1,lat1 = st
+    long2,lat2 = en
     dlong = long2-long1
     dlat  = lat2-lat1
     vector_1 = [0, 1]
@@ -174,14 +174,108 @@ class CellGrid:
                     cell_index.append(idx)
         return cell_index
 
+    def _getLeftNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the left-hand-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
+        leftNeightbours = []
+        leftNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
+            if (cellBox.long + cellBox.width == selectedCellBox.long) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
+                    leftNeightbours_indx.append(idx)
+                    leftNeightbours.append(cellBox)
+        return leftNeightbours,leftNeightbours_indx
+
+    def _getRightNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the right-hand-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
+        rightNeightbours = []
+        rightNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
+            if (cellBox.long == selectedCellBox.long + selectedCellBox.width) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
+                rightNeightbours_indx.append(idx)
+                rightNeightbours.append(cellBox)
+        return rightNeightbours,rightNeightbours_indx
+
+    def _getTopNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the top-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
+        topNeightbours      = []
+        topNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
+            if (cellBox.lat == (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
+                topNeightbours.append(cellBox)
+                topNeightbours_indx.append(idx)
+        return topNeightbours,topNeightbours_indx
+
+    def _getBottomNeightbours(self, selectedCellBox):
+        """
+            Returns a list of all cellBoxes touching the bottom-side of a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
+        bottomNeightbours      = []
+        bottomNeightbours_indx = []
+        for idx,cellBox in enumerate(self.cellBoxes):
+            if ((cellBox.lat + cellBox.height) == selectedCellBox.lat) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
+                bottomNeightbours_indx.append(idx)
+                bottomNeightbours.append(cellBox)
+        return bottomNeightbours,bottomNeightbours_indx
+
     def getNeightbours(self, selectedCellBox):
         """
-            Getting the neighbours and returnign idx, case, cp and cell information
+            Returns a list of call cellBoxes touching a cellBox given by parameter 'selectedCellBox'.
+            Also returns a list of indexes for the discovered cellBoxes
+        """
+        leftNeightbours,leftNeightbours_indx     = self._getLeftNeightbours(selectedCellBox)
+        rightNeightbours,rightNeightbours_indx   = self._getRightNeightbours(selectedCellBox)
+        topNeightbours,topNeightbours_indx       = self._getTopNeightbours(selectedCellBox)
+        bottomNeightbours,bottomNeightbours_indx = self._getBottomNeightbours(selectedCellBox)
+        neightbours       = leftNeightbours + rightNeightbours + topNeightbours + bottomNeightbours
+        neightbours_index = leftNeightbours_indx + rightNeightbours_indx + topNeightbours_indx + bottomNeightbours_indx
+        return neightbours,neightbours_index,
 
-            BUG - Currently this is very slow as the Polygon intersection is slower than before.
-            Optimising the running of the code should improve this section as its a overarching requirement
-            for all routeplanes etc
-        
+    def plot(self, highlightCellBoxes = {}, plotIce = True, plotCurrents = False, plotBorders = True):
+        """
+            creates and displays a plot for this cellGrid
+        """
+        # Create plot figure
+        fig, ax = plt.subplots(1, 1, figsize = (15,10))
+        fig.patch.set_facecolor('white')
+        ax.set_facecolor('lightblue')
+
+        for cellBox in self.cellBoxes:
+            # plot land
+            if cellBox.containsLand():
+                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+
+            # plot ice
+            if plotIce and not np.isnan(cellBox.iceArea()):
+                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
+
+            # plot currents
+            if plotCurrents:
+                ax.quiver((cellBox.long + cellBox.width / 2), (cellBox.lat + cellBox.height / 2),
+                          cellBox.getuC(), cellBox.getvC(), scale=1, width=0.002, color='gray')
+
+            # plot borders
+            if plotBorders:
+                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='gray'))
+
+        # plot highlighted cells
+        for cellBox in highlightCellBoxes:
+            ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
+
+        ax.set_xlim(self._longMin, self._longMax)
+        ax.set_ylim(self._latMin, self._latMax)
+
+    def getCase(self,cell,ncell):
+        """
+
         """
 
 
@@ -252,3 +346,55 @@ class CellGrid:
 
 
 
+        crp = Intersection_BoxLine(cell,ncell,case)
+
+        return case,crp
+
+    def getNeighbours(self, selectedCellBox):
+        neighbours = {}
+        for indx, cellBox in enumerate(self.cellBoxes):
+            if self.getNeighbourCase(selectedCellBox, cellBox) != 0:
+                neighbours[indx] = cellBox
+        return neighbours
+
+    def getNeighbourCase(self, cellBoxA, cellBoxB):
+        """
+            Given two cellBoxes (cellBoxA, cellBoxB) returns a case number representing where the two cellBoxes are touching.
+
+            case 0 -> cellBoxes are not neighbours
+
+            case 1 -> cellBoxB is the North-East corner of cellBoxA
+            case 2 -> cellBoxB is East of cellBoxA
+            case 3 -> cellBoxB is the South-East corner of cellBoxA
+            case 4 -> cellBoxB is South of cellBoxA
+            case -1 -> cellBoxB is the South-West corner of cellBoxA
+            case -2 -> cellBoxB is West of cellBoxA
+            case -3 -> cellBoxB is the North-West corner of cellBoxA
+            case -4 -> cellBoxB is North of cellBoxA
+        """
+
+        if (cellBoxA.long + cellBoxA.width) == cellBoxB.long and (cellBoxA.lat + cellBoxA.height) == cellBoxB.lat:
+            return 1  # North-East
+        if (cellBoxA.long + cellBoxA.width == cellBoxB.long) and (
+                cellBoxB.lat < (cellBoxA.lat + cellBoxA.height)) and (
+                (cellBoxB.lat + cellBoxB.height) > cellBoxA.lat):
+            return 2  # East
+        if (cellBoxA.long + cellBoxA.width) == cellBoxB.long and (cellBoxA.lat == cellBoxB.lat + cellBoxB.height):
+            return 3  # South-East
+        if ((cellBoxB.lat + cellBoxB.height) == cellBoxA.lat) and (
+                (cellBoxB.long + cellBoxB.width) > cellBoxA.long) and (
+                cellBoxB.long < (cellBoxA.long + cellBoxA.width)):
+            return 4  # South
+        if cellBoxA.long == (cellBoxB.long + cellBoxB.width) and cellBoxA.lat == (cellBoxB.lat + cellBoxB.height):
+            return -1  # South-West
+        if (cellBoxB.long + cellBoxB.width == cellBoxA.long) and (
+                cellBoxB.lat < (cellBoxA.lat + cellBoxA.height)) and (
+                (cellBoxB.lat + cellBoxB.height) > cellBoxA.lat):
+            return -2  # West
+        if cellBoxA.long == (cellBoxB.long + cellBoxB.width) and (cellBoxA.lat + cellBoxA.height == cellBoxB.lat):
+            return -3  # North-West
+        if (cellBoxB.lat == (cellBoxA.lat + cellBoxA.height)) and (
+                (cellBoxB.long + cellBoxB.width) > cellBoxA.long) and (
+                cellBoxB.long < (cellBoxA.long + cellBoxA.width)):
+            return -4  # North
+        return 0  # Cells are not neighbours.
