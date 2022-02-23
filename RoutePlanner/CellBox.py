@@ -72,7 +72,9 @@ class CellBox:
     def getPolygon(self,fill=True):
         '''
             Returns a polygon object representing if a cellBox is considered land as well as the ice area within the cellBox 
-        '''        
+        '''
+
+        # TODO remove as functionality depricated by getBounds().
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
                     [self.long + self.width, self.lat + self.height],
@@ -85,15 +87,14 @@ class CellBox:
     def getBorder(self):
         '''
             Returns a polygon object representing a grey border around this cellBox, to be used when plotting. 
-        '''          
+        '''
+        # TODO remove as functionality depricated by getBounds().
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
                     [self.long + self.width, self.lat + self.height],
                     [self.long + self.width, self.lat],
                     [self.long, self.lat]]
         return Polygon(bounds, closed = True, fill = False, color = 'Grey', alpha = 1)
-    
-
 
     def getBounds(self):
         bounds = [[self.long, self.lat],
@@ -103,11 +104,11 @@ class CellBox:
                     [self.long, self.lat]]
         return bounds
 
-
     def getHighlight(self):
         '''
             Returns polygon object representing a red border around this cellBox, to be used when plotting. 
-        '''  
+        '''
+        # TODO remove as functionality depricated by getBounds().
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
                     [self.long + self.width, self.lat + self.height],
@@ -152,7 +153,6 @@ class CellBox:
         '''  
         return self._icePoints
 
-            
     def containsPoint(self, lat, long):
         """
             Returns true if a given lat/long coordinate is contained within this cellBox.
@@ -176,7 +176,6 @@ class CellBox:
         s += "    depth: " + str(self.depth())
         return s
 
-    # convert cellBox to JSON
     def toJSON(self):
         '''
             convert cellBox to JSON 
@@ -235,7 +234,6 @@ class CellBox:
             return True
         
         return False
-        
 
     def split(self):
         '''
