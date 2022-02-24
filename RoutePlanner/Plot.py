@@ -10,6 +10,7 @@ import pandas as pd
 from branca.colormap import linear
 import folium
 import copy
+from folium.plugins import TimestampedGeoJson
 
 # Example Maps http://leaflet-extras.github.io/leaflet-providers/preview/
 #icons can be found at https://fontawesome.com/icons
@@ -111,7 +112,7 @@ def TimeMapPaths(Paths,map,starttime='2014-01-01T00:00:00'):
         for line in lines
     ]
 
-    folium.plugins.TimestampedGeoJson(
+    TimestampedGeoJson(
         {
             "type": "FeatureCollection",
             "features": features,
@@ -122,6 +123,53 @@ def TimeMapPaths(Paths,map,starttime='2014-01-01T00:00:00'):
     ).add_to(map)
     return map
 
+
+def TimeMapSDA(PATH,map):
+    #'/Users/jsmith/Documents/Research/Researcher_BAS/RoutePlanning/SDADT-Positions'
+    Info = SDAPosition(PATH)
+    lines=[]
+    Points = Info[['Long','Lat']].to_numpy()
+    Points[:,0] = Points[:,0]-360
+    entry = {}
+    entry['coordinates'] = Points.tolist()
+    entry['dates'] = Info['Time'].dt.strftime('%Y-%m-%dT%H:%M:%S').to_list()
+    entry['color'] = 'blue'
+    lines.append(entry)
+
+    features = [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": line["coordinates"],
+            },
+            "properties": {
+                "times": line["dates"],
+                "style": {
+                    "color": line["color"],
+                    "weight": line["weight"] if "weight" in line else 3,
+                    'color': 'blue'
+                },
+                'icon': 'circle',
+                'iconstyle': {'color': 'blue','iconSize': [1,1]}
+            },
+        }
+        for line in lines
+    ]
+
+
+
+    TimestampedGeoJson(
+        {
+            "type": "FeatureCollection",
+            "features": features,
+        },
+        period="PT1H",
+        auto_play=False,
+        add_last_point=True,
+        max_speed=50
+    ).add_to(map)
+    return map
 
 def MapMesh(cellGrid,map):
     DF = MeshDF(cellGrid)
@@ -138,7 +186,7 @@ def MapMesh(cellGrid,map):
                 'fillColor': 'white',
                 'color': 'gray',
                 'weight': 0.5,
-                'fillOpacity': colormapIce(x['properties']['Ice Area'])/100
+                'fillOpacity': x['properties']['Ice Area']/100
             }
     ).add_to(iceInfo)
     folium.GeoJson(
