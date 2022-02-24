@@ -7,9 +7,6 @@ import folium
 import pandas as pd
 
 #  =============
-from folium.plugins import FloatImage, BoatMarker
-from branca.colormap import linear
-from folium.plugins import FloatImage, BoatMarker
 from branca.colormap import linear
 import folium
 import copy
@@ -135,15 +132,13 @@ def MapMesh(cellGrid,map):
 
     # ==== Plotting Ice ==== 
     iceInfo = folium.FeatureGroup(name='Ice Mesh')
-    colormapIce = linear.Reds_09.scale(min(ThinIceDF['Ice Area']),
-                                                0.8*100)
     folium.GeoJson(
         IceDF,
         style_function=lambda x: {
-                'fillColor': colormapIce(x['properties']['Ice Area']),
+                'fillColor': 'white',
                 'color': 'gray',
                 'weight': 0.5,
-                'fillOpacity': 0.3
+                'fillOpacity': colormapIce(x['properties']['Ice Area'])/100
             }
     ).add_to(iceInfo)
     folium.GeoJson(
