@@ -172,7 +172,7 @@ def TimeMapSDA(PATH,map):
     return map
 
 
-def MapCurrents(cellGrid,map,show=False):
+def MapCurrents(cellGrid,map,show=False,scale=15):
     import folium
     from pyproj import Geod
     def bearing(st,en):
@@ -208,11 +208,10 @@ def MapCurrents(cellGrid,map,show=False):
     Currents = Currents.dropna()
     Currents['X'] = Currents['X'] - 360
 
-    sf=2
+
     vectors = folium.FeatureGroup(name='Currents',show=show)
     for idx,vec in Currents.iterrows():
-        
-        loc =[[vec['Y'],vec['X']],[vec['Y']+vec['V']*sf,vec['X']+vec['U']*sf]]
+        loc =[[vec['Y'],vec['X']],[vec['Y']+vec['V']*scale,vec['X']+vec['U']*scale]]
         folium.PolyLine(loc, color="black").add_to(vectors)
         # get pieces of the line
         pairs = [(loc[idx], loc[idx-1]) for idx, val in enumerate(loc) if idx != 0]
@@ -228,12 +227,12 @@ def MapCurrents(cellGrid,map,show=False):
     return map
 
 
-def MapMesh(cellGrid,map):
+def MapMesh(cellGrid,map,threshold=0.8):
     DF = MeshDF(cellGrid)
     LandDF = DF[DF['Land'] == True]
     IceDF  = DF[DF['Land'] == False]
-    ThickIceDF = IceDF[IceDF['Ice Area'] >= 0.8*100]
-    ThinIceDF  = IceDF[IceDF['Ice Area'] < 0.8*100]
+    ThickIceDF = IceDF[IceDF['Ice Area'] >= threshold*100]
+    ThinIceDF  = IceDF[IceDF['Ice Area'] < threshold*100]
 
     # ==== Plotting Ice ==== 
     iceInfo = folium.FeatureGroup(name='Ice Mesh')
@@ -251,7 +250,7 @@ def MapMesh(cellGrid,map):
         style_function=lambda x: {
                 'color': 'red',
                 'weight': 0.5,
-                'fillOpacity': 0.1
+                'fillOpacity': 0.0
             }
     ).add_to(iceInfo)
     iceInfo.add_to(map)
