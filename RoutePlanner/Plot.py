@@ -171,6 +171,63 @@ def TimeMapSDA(PATH,map):
     ).add_to(map)
     return map
 
+
+def MapCurrents(cellGrid,map,show=False):
+    import folium
+    from pyproj import Geod
+    def bearing(st,en):
+        import numpy as np
+        long1,lat1 = st
+        long2,lat2 = en
+        dlong = long2-long1
+        dlat  = lat2-lat1
+        vector_1 = [0, 1]
+        vector_2 = [dlong, dlat]
+        if np.linalg.norm(vector_2) == 0:
+            return np.nan
+        unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
+        unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
+        dot_product = np.dot(unit_vector_1, unit_vector_2)
+        angle = np.arccos(dot_product)/(np.pi/180)*np.sign(vector_2[0])
+        if (angle==0) & (np.sign(dlat)==-1):
+            angle=180
+        if angle < 0:
+            angle = angle +360
+        angle
+        return angle
+
+    cellGrid
+    X=[];Y=[];U=[];V=[];
+    for ii in range(len(cellGrid.cellBoxes)):
+        cellBox = cellGrid.cellBoxes[ii]
+        X.append(cellBox.cx)
+        Y.append(cellBox.cy)
+        U.append(cellBox.getuC())
+        V.append(cellBox.getvC())
+    Currents = pd.DataFrame({'X':X,'Y':Y,'U':U,'V':V})
+    Currents = Currents.dropna()
+    Currents['X'] = Currents['X'] - 360
+
+    sf=2
+    vectors = folium.FeatureGroup(name='Currents',show=show)
+    for idx,vec in Currents.iterrows():
+        
+        loc =[[vec['Y'],vec['X']],[vec['Y']+vec['V']*sf,vec['X']+vec['U']*sf]]
+        folium.PolyLine(loc, color="black").add_to(vectors)
+        # get pieces of the line
+        pairs = [(loc[idx], loc[idx-1]) for idx, val in enumerate(loc) if idx != 0]
+        # get rotations from forward azimuth of the line pieces and add an offset of 90°
+        geodesic = Geod(ellps='WGS84')
+        rotations = [geodesic.inv(pair[0][1], pair[0][0], pair[1][1], pair[1][0])[0]+90 for pair in pairs]
+        # create your arrow
+        for pair, rot in zip(pairs, rotations):
+            folium.RegularPolygonMarker(location=pair[0], color='black', fill=True, fill_color='black', fill_opacity=1,
+                                        number_of_sides=3, rotation=rot,radius=2).add_to(vectors)
+
+    vectors.add_to(map)
+    return map
+
+
 def MapMesh(cellGrid,map):
     DF = MeshDF(cellGrid)
     LandDF = DF[DF['Land'] == True]
