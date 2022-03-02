@@ -8,3 +8,4 @@ Data
 .*
 /.vscode/
 TestingNotebook.ipynb
+.DS_Store
