@@ -96,6 +96,27 @@ def PathsJSON(Paths):
         GeoJSON['features'].append(pt)
     return GeoJSON
 
+def JSON2Paths(file):
+    import json
+    import numpy as np
+    with open(file) as json_file:
+        data = json.load(json_file)
+
+    Paths = []
+    for feature in data['features']:
+        path = {}
+        path['from'] = feature['properties']['from']
+        path['to']   = feature['properties']['to']
+        path['Time'] = feature['properties']['Travel Time (d)']
+
+
+        points = np.array(feature['geometry']['coordinates'])
+        points[:,0] = points[:,0]+360
+        path['Path'] ={}
+        path['Path']['Points'] =points
+        Paths.append(path)
+    return Paths
+    
 def WaypointsJSON(Waypoints):
     GeoJSON = {}
     GeoJSON['type'] = "FeatureCollection"

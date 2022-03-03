@@ -352,7 +352,7 @@ class NewtonianDistance:
 #####################################################################################################################################
 
 class NewtonianCurve:
-    def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=1000,optimizer_tol=1e-3,zerocurrents=False):
+    def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=100,optimizer_tol=1e-3,zerocurrents=False):
         self.Mesh = Mesh
         
         # Defining the Source Point (Sp), Crossing Point (Cp) and Neighbour Point(Np)
@@ -675,11 +675,12 @@ class NewtonianCurve:
     
         # --- Setting crossing point in diagonal case
         if (abs(case)==1):
-            if Ye >= Y_line:
+            if Ye > Y_line:
                 idx           = int(CornerCells[CornerCells[:,1].argmin(),0])
-            elif Ye < Y_line:
+            elif Ye <= Y_line:
                 idx           = int(CornerCells[CornerCells[:,1].argmax(),0])
-        if abs(case)==3:
+
+        if (abs(case)==3):
             if Ye >= Y_line:
                 idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
             elif Ye < Y_line:
@@ -717,7 +718,6 @@ class NewtonianCurve:
 
 
         Boxes     = []
-
         # For the interesting case when the crossing point does not share a Box with the Start or End Point
         if (len(self.Box1) == 0) or (len(self.Box2) == 0):
             CrossPoint = []
@@ -754,6 +754,10 @@ class NewtonianCurve:
                             if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0 or  abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
                                 continue
                             CrossPoint.append(crp)
+                            Boxes.append(Spc)
+                            Boxes.append(Cpc)
+
+
             if len(CrossPoint) ==0:
                 return np.array([np.nan,np.nan]),[np.nan]
             else:
@@ -796,6 +800,4 @@ class NewtonianCurve:
         except:
             print('Issue with cell box')
         Boxes += self.Mesh.getCellBox(self.Np[0],self.Np[1])
-        
-
         return CrossPoint, Boxes

@@ -3,6 +3,8 @@ import numpy as np
 from RoutePlanner.CellBox import CellBox
 import pandas as pd
 from shapely.geometry import Polygon
+import matplotlib.pylab as plt
+from matplotlib.patches import Polygon as polygon
 
 def bearing(st,en):
     long1,lat1 = st
@@ -126,6 +128,9 @@ class CellGrid:
     def getCellBox(self, long, lat):
         """
             Returns the CellBox which contains a point, given by parameters lat, long
+
+            ISSUE - This is very slow ! 
+
         """
         selectedCell = []
         for cellBox in self.cellBoxes:
@@ -239,7 +244,7 @@ class CellGrid:
         neightbours_index = leftNeightbours_indx + rightNeightbours_indx + topNeightbours_indx + bottomNeightbours_indx
         return neightbours,neightbours_index,
 
-    def plot(self, highlightCellBoxes = {}, plotIce = True, plotCurrents = False, plotBorders = True):
+    def plot(self, highlightCellBoxes = {}, plotIce = True, plotCurrents = False, plotBorders = True, paths=None, routepoints=False,waypoints=None):
         """
             creates and displays a plot for this cellGrid
         """
@@ -251,11 +256,13 @@ class CellGrid:
         for cellBox in self.cellBoxes:
             # plot land
             if cellBox.containsLand():
-                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
             # plot ice
             if plotIce and not np.isnan(cellBox.iceArea()):
-                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
+                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
+            else:
+                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
             # plot currents
             if plotCurrents:
@@ -264,17 +271,38 @@ class CellGrid:
 
             # plot borders
             if plotBorders:
-                ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='gray'))
+                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='gray'))
 
         # plot highlighted cells
         for cellBox in highlightCellBoxes:
-            ax.add_patch(Polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
+            ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
+
+
+        # plot paths if supplied
+        if type(paths) != type(None):
+            for Path in paths:
+                if Path['Time'] == np.inf:
+                    continue
+                Points = np.array(Path['Path']['Points'])
+                if routepoints:
+                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
+                    ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='k')
+                else:
+                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
+
+
+        if type(waypoints) != type(None):
+            ax.scatter(waypoints['Long'],waypoints['Lat'],50,marker='^',color='k')
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
 
+
     def getCase(self,cell,ncell):
         """
+
+            ISSUE  - Polygon get neighbour is slow and needs to be sped up. 
+            The whole of getCase should be pre-computed when cellGrid is constructed
 
         """
 
