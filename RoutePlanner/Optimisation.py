@@ -207,17 +207,12 @@ class TravelTime:
 
          
 
-                    
     def PathSmoothing(self,Paths,maxiter=1000,minimumDiff=1e-4,debugging=0):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
-
-
-            Bugs:
-                - Currently we loop over the whole path. I need to take the previous point in the loop, otherwise finding global minimum more difficult.
-
         '''
         import copy
+
         SmoothedPaths = []
         Pths = copy.deepcopy(Paths)
 
@@ -247,6 +242,15 @@ class TravelTime:
                     Cp  = tuple(Points[id+1,:])
                     Np  = tuple(Points[id+2,:])
 
+                    if (np.sqrt((Sp[0]-Cp[0])**2 + (Sp[1]-Cp[1])**2) < 1e-4)  or (np.sqrt((Np[0]-Cp[0])**2 + (Np[1]-Cp[1])**2) < 1e-4):
+                        Points = np.delete(Points,id+1,axis=0)
+                        continue
+
+                    if abs(Sp[0]-Cp[0]) < 1e-4 or abs(Sp[1]-Cp[1]) < 1e-4  or abs(Np[0]-Cp[0]) < 1e-4 + abs(Np[1]-Cp[1] < 1e-4):
+                        Points = np.delete(Points,id+1,axis=0)
+                        continue
+
+
                     nc = NewtonianCurve(self.Mesh,Sp,Cp,Np,self.OptInfo['VehicleInfo']['Speed'],zerocurrents=self.zero_currents,debugging=debugging)
                     CrossingPoint, Boxes = nc.value()
 
@@ -268,17 +272,13 @@ class TravelTime:
 
                 if iter!=0:
                     if Points.shape == oldPoints.shape:
-                        if np.mean(np.sqrt((Points-oldPoints)**2)) < minimumDiff:
+                        if np.max(np.sqrt((Points-oldPoints)**2)) < minimumDiff:
                             break
                 
                 if iter == maxiter:
                     print('Maximum number of iterations met !')
                 
                 oldPoints = copy.deepcopy(Points)
-
-
-
-
 
                 iter+=1
 
