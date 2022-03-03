@@ -4,110 +4,18 @@ import numpy as np
 from simplekml import Kml, Color, Style
 from RoutePlanner.IO import SDAPosition, MeshDF
 import folium
-
-def PlotMesh(cellGrid,figInfo=None,currents=False,return_ax=False,iceThreshold=None):
-    """
-        plots this cellGrid for display.
-        TODO - requires reworking as part of the plotting work-package
-    """
-    if type(figInfo) == type(None):
-        fig,ax = plt.subplots(1,1,figsize=(15,10))
-        fig.patch.set_facecolor('white')
-        ax.set_facecolor('lightblue')
-    else:
-        fig,ax = figInfo
-
-    for cellBox in cellGrid.cellBoxes:
-        if cellBox.containsLand():
-            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
-            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
-            continue
-
-        iceArea = cellBox.iceArea()
-        if iceArea >= 0.8:
-            ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White'))
-            ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='Pink',alpha=0.4))
-            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
-        elif not np.isnan(iceArea):
-            ax.add_patch(Polygon(cellBox.getBounds(),closed=True,fill=True,color='White',alpha=iceArea))
-            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False,edgecolor='gray'))
-        else:
-            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = True, facecolor='mediumseagreen'))
-            ax.add_patch(Polygon(cellBox.getBounds(), closed = True, fill = False, edgecolor='gray'))
-
-        if currents:
-            ax.quiver((cellBox.long+cellBox.width/2),(cellBox.lat+cellBox.height/2),cellBox.getuC()*1000,cellBox.getvC()*1000,scale=2,width=0.002,color='gray')
-
-    ax.set_xlim(cellGrid._longMin, cellGrid._longMax)
-    ax.set_ylim(cellGrid._latMin, cellGrid._latMax)
-
-    if return_ax:
-        return ax
-
-
-def PlotMeshNeighbours(cellGrid,Xpoint,Ypoint,figInfo=None,return_ax=False):
-
-    if type(figInfo) == type(None):
-        fig,ax = plt.subplots(1,1,figsize=(15,10))
-        fig.patch.set_facecolor('white')
-        ax.set_facecolor('lightblue')
-    else:
-        fig,ax = figInfo
-
-    ax = PlotMesh(cellGrid,figInfo=[fig,ax],return_ax=True)
-    cell  = cellGrid.getCellBox(Xpoint,Ypoint)
-    neigh = cellGrid.getNeightbours(cell)
-    for ncell_indx,ncell in neigh.iterrows():
-        ax.add_patch(Polygon(ncell['Cell'].getBounds(), closed = True, fill = False, color = 'Red'))
-        ax.scatter(ncell['Cp'][0],ncell['Cp'][1],50,'b')
-        ax.scatter(ncell['Cell'].cx,ncell['Cell'].cy,50,'r')
-        ax.text(ncell['Cell'].cx+0.1,ncell['Cell'].cy+0.1,ncell['Case'])
-    ax.add_patch(Polygon(cell.getBounds(), closed = True, fill = False, color = 'Black'))
-    ax.scatter(cell.cx,cell.cy,50,'k')
-    ax.scatter(Xpoint,Ypoint,50,'m')
-
-    # Add in the xlims,ylims to neighbour grid cells
-
-    if return_ax:
-        return ax
-
-
-
-def PlotPaths(cellGrid,Paths,routepoints=False,figInfo=None,return_ax=False,Waypoints=None):
-        if type(figInfo) == type(None):
-            fig,ax = plt.subplots(1,1,figsize=(15,10))
-            fig.patch.set_facecolor('white')
-            ax.set_facecolor('lightblue')
-        else:
-            fig,ax = figInfo
-
-        ax = PlotMesh(cellGrid,figInfo=[fig,ax],return_ax=True)
-
-        for Path in Paths:
-            if Path['Time'] == np.inf:
-                continue
-            Points = np.array(Path['Path']['Points'])
-            if routepoints:
-                ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
-                ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='k')
-            else:
-                ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
-
-
-        if type(Waypoints) != type(None):
-            ax.scatter(Waypoints['Long'],Waypoints['Lat'],50,marker='^',color='k')
-
-        if return_ax:
-            return ax
+import pandas as pd
 
 #  =============
-from folium.plugins import FloatImage, BoatMarker
 from branca.colormap import linear
+import folium
+import copy
+from folium.plugins import TimestampedGeoJson
 
 # Example Maps http://leaflet-extras.github.io/leaflet-providers/preview/
 #icons can be found at https://fontawesome.com/icons
 
-import copy
+
 
 def MapWaypoints(DF,map):
     wpts = folium.FeatureGroup(name='WayPoints')
@@ -146,7 +54,7 @@ def MapResearchSites(DF,map):
 
 
 def MapPaths(Paths,map,PathPoints=True):
-    Pths       = folium.FeatureGroup(name='Paths')
+    Pths        = folium.FeatureGroup(name='Paths')
     Pths_points = folium.FeatureGroup(name='Path Points')
     for path in copy.deepcopy(Paths):
         points = path['Path']['Points']
@@ -168,23 +76,173 @@ def MapPaths(Paths,map,PathPoints=True):
         Pths_points.add_to(map)
     return map
 
-def MapMesh(DF,map):
+
+def TimeMapPaths(Paths,map,starttime='2014-01-01T00:00:00'):
+    lines=[]
+    for Path in copy.deepcopy(Paths):
+        Points = Path['Path']['Points']
+        Points[:,0] = Points[:,0]-360
+        Times  = pd.to_datetime(starttime) + pd.to_timedelta(Path['Path']['Time'],unit='D')
+
+        entry = {}
+        entry['coordinates'] = Points.tolist()
+        entry['dates'] = Times.strftime('%Y-%m-%dT%H:%M:%S').tolist()
+        entry['color'] = 'black'
+        lines.append(entry)
+
+
+    features = [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": line["coordinates"],
+            },
+            "properties": {
+                "times": line["dates"],
+                "style": {
+                    "color": line["color"],
+                    "weight": line["weight"] if "weight" in line else 3,
+                    'color': 'red'
+                },
+                'icon': 'circle',
+                'iconstyle': {'color': 'red','iconSize': [1,1]}
+            },
+        }
+        for line in lines
+    ]
+
+    TimestampedGeoJson(
+        {
+            "type": "FeatureCollection",
+            "features": features,
+        },
+        period="PT1H",
+        auto_play=False,
+        add_last_point=True,
+    ).add_to(map)
+    return map
+
+
+def TimeMapSDA(PATH,map):
+    #'/Users/jsmith/Documents/Research/Researcher_BAS/RoutePlanning/SDADT-Positions'
+    Info = SDAPosition(PATH)
+    lines=[]
+    Points = Info[['Long','Lat']].to_numpy()
+    Points[:,0] = Points[:,0]-360
+    entry = {}
+    entry['coordinates'] = Points.tolist()
+    entry['dates'] = Info['Time'].dt.strftime('%Y-%m-%dT%H:%M:%S').to_list()
+    entry['color'] = 'blue'
+    lines.append(entry)
+
+    features = [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "LineString",
+                "coordinates": line["coordinates"],
+            },
+            "properties": {
+                "times": line["dates"],
+                "style": {
+                    "color": line["color"],
+                    "weight": line["weight"] if "weight" in line else 3,
+                    'color': 'blue'
+                },
+                'icon': 'circle',
+                'iconstyle': {'color': 'blue','iconSize': [1,1]}
+            },
+        }
+        for line in lines
+    ]
+
+
+
+    TimestampedGeoJson(
+        {
+            "type": "FeatureCollection",
+            "features": features,
+        },
+        period="PT1H",
+        auto_play=False,
+        add_last_point=True,
+        max_speed=50
+    ).add_to(map)
+    return map
+
+
+def MapCurrents(cellGrid,map,show=False,scale=15):
+    import folium
+    from pyproj import Geod
+    def bearing(st,en):
+        import numpy as np
+        long1,lat1 = st
+        long2,lat2 = en
+        dlong = long2-long1
+        dlat  = lat2-lat1
+        vector_1 = [0, 1]
+        vector_2 = [dlong, dlat]
+        if np.linalg.norm(vector_2) == 0:
+            return np.nan
+        unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
+        unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
+        dot_product = np.dot(unit_vector_1, unit_vector_2)
+        angle = np.arccos(dot_product)/(np.pi/180)*np.sign(vector_2[0])
+        if (angle==0) & (np.sign(dlat)==-1):
+            angle=180
+        if angle < 0:
+            angle = angle +360
+        angle
+        return angle
+
+    cellGrid
+    X=[];Y=[];U=[];V=[];
+    for ii in range(len(cellGrid.cellBoxes)):
+        cellBox = cellGrid.cellBoxes[ii]
+        X.append(cellBox.cx)
+        Y.append(cellBox.cy)
+        U.append(cellBox.getuC())
+        V.append(cellBox.getvC())
+    Currents = pd.DataFrame({'X':X,'Y':Y,'U':U,'V':V})
+    Currents = Currents.dropna()
+    Currents['X'] = Currents['X'] - 360
+
+
+    vectors = folium.FeatureGroup(name='Currents',show=show)
+    for idx,vec in Currents.iterrows():
+        loc =[[vec['Y'],vec['X']],[vec['Y']+vec['V']*scale,vec['X']+vec['U']*scale]]
+        folium.PolyLine(loc, color="black").add_to(vectors)
+        # get pieces of the line
+        pairs = [(loc[idx], loc[idx-1]) for idx, val in enumerate(loc) if idx != 0]
+        # get rotations from forward azimuth of the line pieces and add an offset of 90°
+        geodesic = Geod(ellps='WGS84')
+        rotations = [geodesic.inv(pair[0][1], pair[0][0], pair[1][1], pair[1][0])[0]+90 for pair in pairs]
+        # create your arrow
+        for pair, rot in zip(pairs, rotations):
+            folium.RegularPolygonMarker(location=pair[0], color='black', fill=True, fill_color='black', fill_opacity=1,
+                                        number_of_sides=3, rotation=rot,radius=2).add_to(vectors)
+
+    vectors.add_to(map)
+    return map
+
+
+def MapMesh(cellGrid,map,threshold=0.8):
+    DF = MeshDF(cellGrid)
     LandDF = DF[DF['Land'] == True]
     IceDF  = DF[DF['Land'] == False]
-    ThickIceDF = IceDF[IceDF['Ice Area'] >= 0.8*100]
-    ThinIceDF  = IceDF[IceDF['Ice Area'] < 0.8*100]
+    ThickIceDF = IceDF[IceDF['Ice Area'] >= threshold*100]
+    ThinIceDF  = IceDF[IceDF['Ice Area'] < threshold*100]
 
     # ==== Plotting Ice ==== 
     iceInfo = folium.FeatureGroup(name='Ice Mesh')
-    colormapIce = linear.Reds_09.scale(min(ThinIceDF['Ice Area']),
-                                                0.8*100)
     folium.GeoJson(
         IceDF,
         style_function=lambda x: {
-                'fillColor': colormapIce(x['properties']['Ice Area']),
+                'fillColor': 'white',
                 'color': 'gray',
                 'weight': 0.5,
-                'fillOpacity': 0.3
+                'fillOpacity': x['properties']['Ice Area']/100
             }
     ).add_to(iceInfo)
     folium.GeoJson(
@@ -192,7 +250,7 @@ def MapMesh(DF,map):
         style_function=lambda x: {
                 'color': 'red',
                 'weight': 0.5,
-                'fillOpacity': 0.1
+                'fillOpacity': 0.0
             }
     ).add_to(iceInfo)
     iceInfo.add_to(map)
@@ -243,101 +301,136 @@ def MapMesh(DF,map):
     meshInfo.add_to(map)
     return map
 
-def InteractiveMap(cellGrid,Paths,Waypoints,SitesOfInterest=None,SDA=None,PathPoints=False):
-    from folium.plugins import FloatImage, BoatMarker
-    from branca.colormap import linear
-    import folium
-    import numpy as np
-    if type(SDA) != type(None):
-        SDA = SDAPosition('/Users/jsmith/Documents/Research/Researcher_BAS/RoutePlanning/SDADT-Positions')
-        Pos = SDA.iloc[np.argmax(SDA['Time'])]
-    else:
-        Pos = [-58,-63.7]
-    m = folium.Map(location=[Pos['Lat'],Pos['Long']-360],zoom_start=4.6,tiles=None)
-    folium.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}.png',attr="toner-bcg", name='Basemap').add_to(m)
-    
-    MshDF = MeshDF(cellGrid)
-    m = MapMesh(MshDF,m)
-    
-    m = MapPaths(Paths,m,PathPoints=PathPoints)
 
-    if type(SitesOfInterest) != type(None):
-        m = MapResearchSites(SitesOfInterest,m)
-    m = MapWaypoints(Waypoints,m)
+def BaseMap(location=[-58,-63.7],logo=True,logoPos=[10,90]):
+    map = folium.Map(location=location,zoom_start=4.6,tiles=None)
+    bsmap = folium.FeatureGroup(name='BaseMap')
+    folium.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}.png',attr="toner-bcg", name='Basemap').add_to(bsmap)
+    bsmap.add_to(map)
+    if logo:
+        folium.plugins.FloatImage('https://i.ibb.co/dr3TNf7/Large-Logo.jpg',bottom=logoPos[1],left=logoPos[0]).add_to(map)
+    return map
 
-    if type(SDA) != type(None):
-        m.add_child(folium.Marker(location=[Pos['Lat'],Pos['Long']-360],
-                                popup="SDA - Lat/Long[{},{}]".format(Pos['Lat'],Pos['Long']-360), 
-                                icon=folium.plugins.BeautifyIcon(icon='ship',
-                                                border_color='transparent',
-                                                background_color='transparent',
-                                                border_width=1,
-                                                text_color='#003EFF',
-                                                inner_icon_style='margin:0px;font-size:1.5em;-webkit-transform: rotate({0});-moz-transform: rotate({0});-ms-transform: rotate({0});-o-transform: rotate({0});transform: rotate({0});'.format(0))))
-
-
-    folium.plugins.FloatImage('https://i.ibb.co/dr3TNf7/Large-Logo.jpg',bottom=1,left=1).add_to(m)
-    folium.LayerControl(collapsed=True).add_to(m)
-    return m
-
+def LayerControl(map,collapsed=True):
+    folium.LayerControl(collapsed=collapsed).add_to(map)
+    return map
 
 #≠================================
+####DEPRICATED
 
 
-def Paths2KML(Paths,File):
-    kml = Kml(open=1)
-    for path in Paths:
-        if np.isinf(path['Time']):
-            continue
-        linestring = kml.newlinestring(name="{} -> {}. TravelTime={} days".format(path['from'],path['to'],path['Time']))
-        if type=='Maps':
-            fullPath = path['Path']['Points']
-            fullPath[:,0] = fullPath[:,0]-360
-            fullPath = fullPath[:,::-1]
-            linestring.coords = fullPath
-        else:
-            linestring.coords = path['Path']['Points']
-    kml.save(File)
+# def PlotPaths(cellGrid,Paths,routepoints=False,figInfo=None,return_ax=False,Waypoints=None):
+#         if type(figInfo) == type(None):
+#             fig,ax = plt.subplots(1,1,figsize=(15,10))
+#             fig.patch.set_facecolor('white')
+#             ax.set_facecolor('lightblue')
+#         else:
+#             fig,ax = figInfo
+
+#         ax = PlotMesh(cellGrid,figInfo=[fig,ax],return_ax=True)
+
+#         for Path in Paths:
+#             if Path['Time'] == np.inf:
+#                 continue
+#             Points = np.array(Path['Path']['Points'])
+#             if routepoints:
+#                 ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
+#                 ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='k')
+#             else:
+#                 ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
 
 
-def Mesh2KML(cellGrid,File,MaxIce=0.8):
-    kml = Kml(open=1)
-    for ii in range(len(cellGrid.cellBoxes)):
-        cell = kml.newmultigeometry(name="Cell Box {}".format(ii))
-        if type=='Maps':
-            bounds      = np.array(cellGrid.cellBoxes[ii].getBounds())
-            bounds[:,0] = bounds[:,0]-360
-            bounds = bounds[:,::-1]
+#         if type(Waypoints) != type(None):
+#             ax.scatter(Waypoints['Long'],Waypoints['Lat'],50,marker='^',color='k')
 
-        cell.newpolygon(outerboundaryis=cellGrid.cellBoxes[ii].getBounds())
-        cell.style.linestyle.width = 0.1
-        if cellGrid.cellBoxes[ii].containsLand():
-            cell.style.polystyle.color = Color.changealpha("77", Color.green)
-            cell.style.linestyle.color = Color.changealpha("77", Color.green)
-        else:
-            cell.style.linestyle.color = Color.black
-            icearea = cellGrid.cellBoxes[ii].iceArea()
-            if not np.isnan(icearea):
-                if icearea > MaxIce:
-                    cell.style.linestyle.color = Color.changealpha("77", Color.pink)
-                else:
-                    cell.style.polystyle.color = Color.changealpha("{}".format(int(cellGrid.cellBoxes[ii].iceArea()*100)), Color.white)
-            else:
-                cell.style.polystyle.color = Color.changealpha("77", Color.green)
-                cell.style.linestyle.color = Color.changealpha("77", Color.green)
-    kml.save(File)
+#         if return_ax:
+#             return ax
 
-def WayPoints2KML(Waypoints,File):
-    kml = Kml(open=1)
-    style = Style()
-    style.labelstyle.color = Color.red  
-    style.linestyle.color= Color.red
-    style.labelstyle.scale = 0.8  
-    style.iconstyle.icon.href = 'https://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png'
-    for ii,wpt in Waypoints.iterrows():
-        if type=='Maps':
-            pnt = kml.newpoint(name="{}".format(wpt['Name']), coords=[(wpt['Lat'],wpt['Long']-360)])
-        else:
-            pnt = kml.newpoint(name="{}".format(wpt['Name']), coords=[(wpt['Long'],wpt['Lat'])])
-        pnt.style = style
-    kml.save(File)
+
+
+# def PlotMeshNeighbours(cellGrid,Xpoint,Ypoint,figInfo=None,return_ax=False):
+
+#     if type(figInfo) == type(None):
+#         fig,ax = plt.subplots(1,1,figsize=(15,10))
+#         fig.patch.set_facecolor('white')
+#         ax.set_facecolor('lightblue')
+#     else:
+#         fig,ax = figInfo
+
+#     ax = PlotMesh(cellGrid,figInfo=[fig,ax],return_ax=True)
+#     cell  = cellGrid.getCellBox(Xpoint,Ypoint)
+#     neigh = cellGrid.getNeightbours(cell)
+#     for ncell_indx,ncell in neigh.iterrows():
+#         ax.add_patch(Polygon(ncell['Cell'].getBounds(), closed = True, fill = False, color = 'Red'))
+#         ax.scatter(ncell['Cp'][0],ncell['Cp'][1],50,'b')
+#         ax.scatter(ncell['Cell'].cx,ncell['Cell'].cy,50,'r')
+#         ax.text(ncell['Cell'].cx+0.1,ncell['Cell'].cy+0.1,ncell['Case'])
+#     ax.add_patch(Polygon(cell.getBounds(), closed = True, fill = False, color = 'Black'))
+#     ax.scatter(cell.cx,cell.cy,50,'k')
+#     ax.scatter(Xpoint,Ypoint,50,'m')
+
+#     # Add in the xlims,ylims to neighbour grid cells
+
+#     if return_ax:
+#         return ax
+
+
+
+
+# def Paths2KML(Paths,File):
+#     kml = Kml(open=1)
+#     for path in Paths:
+#         if np.isinf(path['Time']):
+#             continue
+#         linestring = kml.newlinestring(name="{} -> {}. TravelTime={} days".format(path['from'],path['to'],path['Time']))
+#         if type=='Maps':
+#             fullPath = path['Path']['Points']
+#             fullPath[:,0] = fullPath[:,0]-360
+#             fullPath = fullPath[:,::-1]
+#             linestring.coords = fullPath
+#         else:
+#             linestring.coords = path['Path']['Points']
+#     kml.save(File)
+
+
+# def Mesh2KML(cellGrid,File,MaxIce=0.8):
+#     kml = Kml(open=1)
+#     for ii in range(len(cellGrid.cellBoxes)):
+#         cell = kml.newmultigeometry(name="Cell Box {}".format(ii))
+#         if type=='Maps':
+#             bounds      = np.array(cellGrid.cellBoxes[ii].getBounds())
+#             bounds[:,0] = bounds[:,0]-360
+#             bounds = bounds[:,::-1]
+
+#         cell.newpolygon(outerboundaryis=cellGrid.cellBoxes[ii].getBounds())
+#         cell.style.linestyle.width = 0.1
+#         if cellGrid.cellBoxes[ii].containsLand():
+#             cell.style.polystyle.color = Color.changealpha("77", Color.green)
+#             cell.style.linestyle.color = Color.changealpha("77", Color.green)
+#         else:
+#             cell.style.linestyle.color = Color.black
+#             icearea = cellGrid.cellBoxes[ii].iceArea()
+#             if not np.isnan(icearea):
+#                 if icearea > MaxIce:
+#                     cell.style.linestyle.color = Color.changealpha("77", Color.pink)
+#                 else:
+#                     cell.style.polystyle.color = Color.changealpha("{}".format(int(cellGrid.cellBoxes[ii].iceArea()*100)), Color.white)
+#             else:
+#                 cell.style.polystyle.color = Color.changealpha("77", Color.green)
+#                 cell.style.linestyle.color = Color.changealpha("77", Color.green)
+#     kml.save(File)
+
+# def WayPoints2KML(Waypoints,File):
+#     kml = Kml(open=1)
+#     style = Style()
+#     style.labelstyle.color = Color.red  
+#     style.linestyle.color= Color.red
+#     style.labelstyle.scale = 0.8  
+#     style.iconstyle.icon.href = 'https://maps.google.com/mapfiles/kml/shapes/placemark_circle_highlight.png'
+#     for ii,wpt in Waypoints.iterrows():
+#         if type=='Maps':
+#             pnt = kml.newpoint(name="{}".format(wpt['Name']), coords=[(wpt['Lat'],wpt['Long']-360)])
+#         else:
+#             pnt = kml.newpoint(name="{}".format(wpt['Name']), coords=[(wpt['Long'],wpt['Lat'])])
+#         pnt.style = style
+#     kml.save(File)
