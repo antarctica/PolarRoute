@@ -46,7 +46,7 @@ class TravelTime:
 
     def speedFunction(self,Cell):
         if self.variableSpeed == True:
-            S = self.OptInfo['VehicleInfo']['Speed']*(1-np.sqrt(Cell.iceArea()))
+            S = self.OptInfo['VehicleInfo']['Speed']*(-5.95*Cell.iceArea()**3 + 7.03*Cell.iceArea()**2 - 3.00*Cell.iceArea() + 0.98)
         else:
             S = self.OptInfo['VehicleInfo']['Speed']
         return S
