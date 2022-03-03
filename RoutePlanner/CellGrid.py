@@ -128,6 +128,9 @@ class CellGrid:
     def getCellBox(self, long, lat):
         """
             Returns the CellBox which contains a point, given by parameters lat, long
+
+            ISSUE - This is very slow ! 
+
         """
         selectedCell = []
         for cellBox in self.cellBoxes:
@@ -297,6 +300,9 @@ class CellGrid:
 
     def getCase(self,cell,ncell):
         """
+
+            ISSUE  - Polygon get neighbour is slow and needs to be sped up. 
+            The whole of getCase should be pre-computed when cellGrid is constructed
 
         """
 

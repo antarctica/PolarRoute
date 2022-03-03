@@ -221,8 +221,7 @@ class CellBox:
         if self.containsLand():
             return False
 
-        # TODO first interpretation of sea ice homogeneity. Requires refinement
-        threshold = 0.04
+        threshold = 0.25
 
         percentIPsAboveThreshold = self._icePoints.loc[self._icePoints['iceArea'] > threshold].size / self._icePoints.size
 
