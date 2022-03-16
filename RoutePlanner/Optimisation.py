@@ -44,6 +44,22 @@ class TravelTime:
                     break
             self.OptInfo['WayPoints']['Index'].loc[idx] = index
 
+    def iceResistance(self, Cell):
+        hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
+
+        hull = self.OptInfo['VehicleInfo']['HullType']
+        beam = self.OptInfo['VehicleInfo']['Beam']
+        k, b, n = hull_params[hull]
+        g = 9.81  # m/s-2
+
+        V = self.OptInfo['VehicleInfo']['Speed']*(5./18.)  # assume km/h and convert to m/s
+
+        Fr = V/np.sqrt(g*Cell.iceArea()*Cell.iceThickness())
+
+        r = 0.5*k*(Fr**b)*Cell.iceDensity()*beam*Cell.iceThickness()*(V**2)*(Cell.iceArea()**n)
+
+        return r
+
     def speedFunction(self,Cell):
         if self.variableSpeed == True:
             S = self.OptInfo['VehicleInfo']['Speed']*(-5.95*Cell.iceArea()**3 + 7.03*Cell.iceArea()**2 - 3.00*Cell.iceArea() + 0.98)

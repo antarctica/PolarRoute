@@ -123,6 +123,19 @@ class CellBox:
         '''
         return self.width * math.cos(self.lat)
 
+    def iceDensity(self):
+        # TODO Look for data sources to find this from ice type (single/multi year etc.)
+        # Placeholder value from: https://doi.org/10.1016/0165-232X(95)00007-X
+        return 830.0
+
+    def iceThickness(self):
+        """
+            Returns mean ice area of all icepoints contained within this cellBox
+        """
+        # TODO Find data source for ice thickness and add that data to each cellBox
+        # return self._icePoints['iceThickness'].mean()
+        return 1.0
+
     def iceArea(self):
         """
             Returns mean ice area of all icepoints contained within this cellBox
