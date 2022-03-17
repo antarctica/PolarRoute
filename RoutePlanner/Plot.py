@@ -123,7 +123,6 @@ def TimeMapPaths(Paths,map,starttime='2014-01-01T00:00:00'):
     ).add_to(map)
     return map
 
-
 def TimeMapSDA(PATH,map):
     #'/Users/jsmith/Documents/Research/Researcher_BAS/RoutePlanning/SDADT-Positions'
     Info = SDAPosition(PATH)
@@ -136,6 +135,32 @@ def TimeMapSDA(PATH,map):
     entry['color'] = 'blue'
     lines.append(entry)
 
+
+    TMS = Info['Time'].dt.strftime('%Y-%m-%dT%H:%M:%S').to_list()
+    pointfeatures = [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": pt.tolist(),
+            },
+            'properties': {
+                'time': TMS[idx],
+                'style': {'color': ''},
+                'icon': 'circle',
+                'iconstyle': {
+                    'fillColor': '#black',
+                    'fillOpacity': 0.8,
+                    'stroke': 'true',
+                    'radius': 2
+                }
+    },
+
+        }
+        for idx,pt in enumerate(Points)
+    ]
+
+
     features = [
         {
             "type": "Feature",
@@ -146,9 +171,9 @@ def TimeMapSDA(PATH,map):
             "properties": {
                 "times": line["dates"],
                 "style": {
-                    "color": line["color"],
                     "weight": line["weight"] if "weight" in line else 3,
-                    'color': 'blue'
+                    'color': 'blue',
+                    "line-dasharray": [0.1, 1.8]
                 },
                 'icon': 'circle',
                 'iconstyle': {'color': 'blue','iconSize': [1,1]}
@@ -157,7 +182,7 @@ def TimeMapSDA(PATH,map):
         for line in lines
     ]
 
-
+    features =  features + pointfeatures
 
     TimestampedGeoJson(
         {
@@ -165,6 +190,7 @@ def TimeMapSDA(PATH,map):
             "features": features,
         },
         period="PT1H",
+        duration="P7D",
         auto_play=False,
         add_last_point=True,
         max_speed=50
