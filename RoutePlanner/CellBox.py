@@ -1,7 +1,49 @@
+"""
+Outlined in this section we will discuss the usage of the CellBox functionallity
+of the pyRoutePlanner. In this series of class distributions we house our discrete
+representation of input data. In each CellBox we determine the mean and variance of 
+the information goverining our nemerical world, this includes and is not limited to:
+Ocean Currents, Sea Ice Concentration, Bathemetric depth, whether on land.
+
+Example:
+    An example of running this code can be executed by running the following in a ipython/Jupyter Notebook::
+
+        from RoutePlanner import CellBox
+        ....
+
+Additional information on constructing document strings using the Google DocString method can be found at
+https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+
+Attributes:
+    Some of the key attributes that the CellBox comprises are ...
+
+Todo:
+    * Adding the addition of ...
+
+
+"""
+
 from matplotlib.patches import Polygon
 import math
 
 class CellBox:
+    """Exceptions are documented in the same way as classes.
+
+    Note:
+        Do not include the `self` parameter in the ``Args`` section.
+
+    Args:
+        lat    (:obj:`float`): ...
+        long   (:obj:`float`): ...
+        width  (:obj:`float`): ...
+        height (:obj:`float`): ...
+    Attributes:
+        ...
+    """
+
+
+
+
     splitDepth = 0
 
     def __init__(self, lat, long, width, height):
