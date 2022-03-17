@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'pyRoutePlanner'
-copyright = '2022, Jonathan Smith, Maria Fox, James Byrne, Samuel Hall, Geoarge Coombs, Michael Thorne'
-author = 'Jonathan Smith, Maria Fox, James Byrne, Samuel Hall, Geoarge Coombs, Michael Thorne'
+copyright = '2022, British Antartic Survey'
+author = 'British Antartic Survey - AI/ML Lab'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'
