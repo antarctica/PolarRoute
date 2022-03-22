@@ -240,7 +240,7 @@ class CellBox:
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
         '''
 
-        splitBoxes = []
+        splitBoxes = [0, 0, 0, 0]
 
         halfWidth = self.width / 2
         halfHeight = self.height / 2
@@ -251,10 +251,10 @@ class CellBox:
         topLeft     = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight)
         topRight    = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight)
 
-        splitBoxes.append(bottomLeft)
-        splitBoxes.append(bottomRight)
-        splitBoxes.append(topLeft)
-        splitBoxes.append(topRight)
+        splitBoxes[0] = bottomLeft
+        splitBoxes[1] = bottomRight
+        splitBoxes[2] = topLeft
+        splitBoxes[3] = topRight
 
         for splitBox in splitBoxes:
             #TODO requires rework for optimization
