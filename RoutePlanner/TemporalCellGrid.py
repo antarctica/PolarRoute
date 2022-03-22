@@ -48,6 +48,8 @@ class TemporalCellGrid:
 
         icePoints = pd.concat(icePoints)
 
+        icePoints['long'] = icePoints['long'].apply(lambda x: x if x <= 180 else x - 360)
+
         self._icePoints =  icePoints
 
     def addCurrentPoints(self, currentPointsPath):
@@ -59,6 +61,8 @@ class TemporalCellGrid:
                                       'vC': sose['vC'][...].data.flatten()})
 
         currentPoints['time'] = ''
+
+        currentPoints['long'] = currentPoints['long'].apply(lambda x: x if x <= 180 else x - 360)
         self._currentPoints = currentPoints
 
     def getGrid(self, time):
