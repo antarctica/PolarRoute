@@ -6,7 +6,7 @@ from shapely.geometry import Polygon
 import matplotlib.pylab as plt
 from matplotlib.patches import Polygon as polygon
 
-def bearing(st,en):
+def bearing(st,en): # Should be moved out of the CellBox.py file.
     long1,lat1 = st
     long2,lat2 = en
     dlong = long2-long1
@@ -30,7 +30,7 @@ def bearing(st,en):
     angle
     return angle
 
-def Intersection_BoxLine(Cell_s,Pt,type):
+def Intersection_BoxLine(Cell_s,Pt,type): # Should be moved out of the CellBox.py file
     X1,Y1 = Cell_s.long+Cell_s.width/2,Cell_s.lat+Cell_s.height/2
     X2,Y2 = Pt
     if type==np.nan:
@@ -83,6 +83,7 @@ class CellGrid:
 
         self.cellBoxes = []
 
+        # Initialise cellBoxes.
         for lat in np.arange(latMin, latMax, cellHeight):
             for long in np.arange(longMin, longMax, cellWidth):
                 cellBox = CellBox(lat, long, cellWidth, cellHeight)
@@ -127,6 +128,9 @@ class CellGrid:
             self.neighbourGraph[cellBoxIndx] = neighbourMap
 
     def neighbourTest(self, cellBox):
+        """
+            Returns a flattened list of all neighbours of a given cellBox.
+        """
         cellBoxIndx = self.cellBoxes.index(cellBox)
         neighboursIndx = []
 
@@ -168,6 +172,9 @@ class CellGrid:
     def cellCount(self):
         """
             Returns the number of cellBoxes contained within this cellGrid
+
+            DEPRECIATED
+            The list of cellBoxes now contains some empty indexes, so this is no longer accurate.
         """
         return len(self.cellBoxes)
 
@@ -201,6 +208,10 @@ class CellGrid:
         """
             Resursively step though all cellBoxes in this cellGrid, splitting them based on a cells 'isHomogenous' function
             and a cellBoxes split depth.
+
+            DEPRECIATED
+            This function does not update the neighbours graph and should not be used.
+            use function 'iternativeSplit() instead.
         """
         splitCellBoxes = []
         for cellBox in self.cellBoxes:
@@ -211,7 +222,9 @@ class CellGrid:
     def splitAndReplace(self, cellBox):
         """
             Replaces a cellBox given by parameter 'cellBox' in this grid with 4 smaller cellBoxes representing
-            the four corners of the given cellBox
+            the four corners of the given cellBox. A neighbours map is then created for each of the 4 new cellBoxes
+            and the neighbours map for all surrounding cell boxes is updated.
+
         """
         splitCellBoxes = cellBox.split()
 
@@ -392,10 +405,17 @@ class CellGrid:
         self.neighbourGraph.pop(cellBoxIndx)
 
     def iterativeSplit(self, splitAmount):
+        """
+            Iterates over all cellBoxes in the cellGrid a number of times defined by parameter 'splitAmount',
+            splitting and replacing each one if it is not homogenous.
+        """
         for i in range(0, splitAmount):
             self.splitGraph()
 
     def splitGraph(self):
+        """
+            Iterates once over all cellBoxes in the cellGrid, splitting and replacing each one if it is not homogenous.
+        """
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
             if cellBox is not None:
@@ -415,7 +435,10 @@ class CellGrid:
 
     def getIndex(self, selectedCellBox):
         """
-            Returns the index of the selected cell
+            Returns the index of the selected cell.
+
+            DEPRECIATED
+            Not needed as functionality is identical to self.cellBoxes.index(selectedCellBox) but slower.
         """
         cell_index = []
         for idx,cellBox in enumerate(self.cellBoxes):
@@ -427,6 +450,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the left-hand-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         leftNeightbours = []
         leftNeightbours_indx = []
@@ -440,6 +466,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the right-hand-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         rightNeightbours = []
         rightNeightbours_indx = []
@@ -453,6 +482,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the top-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         topNeightbours      = []
         topNeightbours_indx = []
@@ -466,6 +498,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the bottom-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         bottomNeightbours      = []
         bottomNeightbours_indx = []
@@ -479,6 +514,9 @@ class CellGrid:
         """
             Returns a list of call cellBoxes touching a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         leftNeightbours,leftNeightbours_indx     = self._getLeftNeightbours(selectedCellBox)
         rightNeightbours,rightNeightbours_indx   = self._getRightNeightbours(selectedCellBox)
@@ -522,7 +560,6 @@ class CellGrid:
         for cellBox in highlightCellBoxes:
             ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
 
-
         # plot paths if supplied
         if type(paths) != type(None):
             for Path in paths:
@@ -541,7 +578,6 @@ class CellGrid:
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
-
 
     def getCase(self,cell,ncell):
         """
@@ -617,18 +653,17 @@ class CellGrid:
         DF['Land']     = IsLand
         return DF
 
-
     def getNeightbours(self, selectedCellBox):
         """
-            Getting the neighbours and returnign idx, case, cp and cell information
+            Getting the neighbours and returning idx, case, cp and cell information
 
             BUG - Currently this is very slow as the Polygon intersection is slower than before.
             Optimising the running of the code should improve this section as its a overarching requirement
             for all routeplanes etc
-        
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
-
-
         SPoly = Polygon(selectedCellBox.getBounds())
         neightbours      = []
         neightbours_index = []
@@ -647,7 +682,6 @@ class CellGrid:
             crossing_points.append(cp)
         neigh = pd.DataFrame({'Cell':neightbours,'idx':neightbours_index,'Case':cases,'Cp':crossing_points})
         return neigh
-
 
     def getNeighboursNew(self, selectedCellBox):
         neighbours = {}
