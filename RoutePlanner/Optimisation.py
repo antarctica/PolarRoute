@@ -60,12 +60,32 @@ class TravelTime:
 
         return r
 
-    def speedFunction(self,Cell):
-        if self.variableSpeed == True:
-            S = self.OptInfo['VehicleInfo']['Speed']*(-5.95*Cell.iceArea()**3 + 7.03*Cell.iceArea()**2 - 3.00*Cell.iceArea() + 0.98)
+    def inverseResistance(self, Fl, Cell):
+        hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
+
+        hull = self.OptInfo['VehicleInfo']['HullType']
+        beam = self.OptInfo['VehicleInfo']['Beam']
+        k, b, n = hull_params[hull]
+        g = 9.81  # m/s-2
+
+        exp = 2.0 + b
+
+        vexp = 2*Fl/(k*Cell.iceDensity()*beam*Cell.iceThickness()*(Cell.iceArea()**n)*(g*Cell.iceThickness()*Cell.iceArea())**-(b/2))
+
+        vms = vexp**(1/exp)
+        v = vms*(18./5.)  # convert from m/s to km/h
+
+        return v
+
+    def speedFunction(self, Cell):
+        if self.variableSpeed:
+            if self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
+                s = self.OptInfo['VehicleInfo']['Speed']
+            else:
+                s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
         else:
-            S = self.OptInfo['VehicleInfo']['Speed']
-        return S
+            s = self.OptInfo['VehicleInfo']['Speed']
+        return s
 
     def Dijkstra2Path(self,StartWaypoints,EndWaypoints):
         Paths = []
