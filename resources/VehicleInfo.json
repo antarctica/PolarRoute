@@ -3,5 +3,5 @@
   'Unit': 'km/hr',
   'Beam': 24.0,
   'HullType': 'slender',
-  'ForceLimit': 96600.0
+  'ForceLimit': 96634.5
 }
