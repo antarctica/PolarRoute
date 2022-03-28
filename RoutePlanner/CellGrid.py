@@ -156,7 +156,7 @@ class CellGrid:
         """
         for cellBox in self.cellBoxes:
             longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] < (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(icePoints['lat'] > cellBox.lat) & (icePoints['lat'] < (cellBox.lat + cellBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] < (cellBox.lat + cellBox.height))]
             cellBox.addIcePoints(latLongLoc)
 
     def addCurrentPoints(self, currentPoints):
@@ -165,7 +165,7 @@ class CellGrid:
         """
         for cellBox in self.cellBoxes:
             longLoc = currentPoints.loc[(currentPoints['long'] > cellBox.long) & (currentPoints['long'] < (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(currentPoints['lat'] > cellBox.lat) & (currentPoints['lat'] < (cellBox.lat + cellBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] < (cellBox.lat + cellBox.height))]
 
             cellBox.addCurrentPoints(latLongLoc)
 
@@ -401,7 +401,12 @@ class CellGrid:
         if len(southWestCornerIndx) > 0:
             self.neighbourGraph[southWestCornerIndx[0]][1] = [southWestIndx]
 
-        self.cellBoxes[cellBoxIndx] = None
+        splitContainer = {"northEast": northEastIndx,
+                          "northWest": northWestIndx,
+                          "southEast": southEastIndx,
+                          "southWest": southWestIndx}
+
+        self.cellBoxes[cellBoxIndx] = splitContainer
         self.neighbourGraph.pop(cellBoxIndx)
 
     def iterativeSplit(self, splitAmount):
@@ -418,7 +423,7 @@ class CellGrid:
         """
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
-            if cellBox is not None:
+            if isinstance(cellBox, CellBox):
                 if cellBox.isHomogenous() == False:
                     self.splitAndReplace(cellBox)
 
@@ -536,7 +541,7 @@ class CellGrid:
         ax.set_facecolor('lightblue')
 
         for cellBox in self.cellBoxes:
-            if cellBox is not None:
+            if isinstance(cellBox, CellBox):
                 # plot land
                 if cellBox.containsLand():
                     ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
