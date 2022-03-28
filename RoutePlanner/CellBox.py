@@ -263,16 +263,16 @@ class CellBox:
             #Split icePoints per cellBox
             longLoc = self._icePoints.loc[(self._icePoints['long'] >= splitBox.long) &
                                           (self._icePoints['long'] < (splitBox.long + splitBox.width))]
-            latLongLoc = longLoc.loc[(self._icePoints['lat'] >= splitBox.lat) &
-                                             (self._icePoints['lat'] < (splitBox.lat + splitBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] >= splitBox.lat) &
+                                             (longLoc['lat'] < (splitBox.lat + splitBox.height))]
 
             splitBox.addIcePoints(latLongLoc)
 
             #Split currentPoints per box
             longLoc = self._currentPoints.loc[(self._currentPoints['long'] >= splitBox.long) &
                                               (self._currentPoints['long'] < (splitBox.long + splitBox.width))]
-            latLongLoc = longLoc.loc[(self._currentPoints['lat'] >= splitBox.lat) &
-                                                 (self._currentPoints['lat'] < (splitBox.lat + splitBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] >= splitBox.lat) &
+                                                 (longLoc['lat'] < (splitBox.lat + splitBox.height))]
 
             splitBox.addCurrentPoints(latLongLoc)
 

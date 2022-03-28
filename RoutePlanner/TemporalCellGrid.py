@@ -85,9 +85,9 @@ class TemporalCellGrid:
         endTime = pd.to_datetime(endTime)
 
         icePoints = self._icePoints[(self._icePoints['time'] >= startTime) & (self._icePoints['time'] <= endTime)]
-        icePoints = icePoints.groupby(['lat', 'long']).mean().reset_index()
+        #icePoints = icePoints.groupby(['lat', 'long']).mean().reset_index()
 
-        icePoints['time'] = startTime.strftime("%Y-%m-%d") + " : " + endTime.strftime("%Y-%m-%d")
+        #icePoints['time'] = startTime.strftime("%Y-%m-%d") + " : " + endTime.strftime("%Y-%m-%d")
 
         # create a cellGrid using datapoints for the given day
         cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
