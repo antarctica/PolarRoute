@@ -45,6 +45,15 @@ class TravelTime:
             self.OptInfo['WayPoints']['Index'].loc[idx] = index
 
     def iceResistance(self, Cell):
+        """
+                Function to find the ice resistance force at a given speed in a given cell.
+
+                Inputs:
+                Cell - Cell box object
+
+                Outputs:
+                r - Resistance force
+        """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
         hull = self.OptInfo['VehicleInfo']['HullType']
@@ -61,6 +70,16 @@ class TravelTime:
         return r
 
     def inverseResistance(self, Fl, Cell):
+        """
+        Function to find the fastest speed that keeps the ice resistance force below a given threshold.
+
+        Inputs:
+        Fl - Force limit
+        Cell - Cell box object
+
+        Outputs:
+        v - speed
+        """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
         hull = self.OptInfo['VehicleInfo']['HullType']
