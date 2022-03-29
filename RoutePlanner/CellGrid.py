@@ -6,7 +6,7 @@ from shapely.geometry import Polygon
 import matplotlib.pylab as plt
 from matplotlib.patches import Polygon as polygon
 
-def bearing(st,en):
+def bearing(st,en): # Should be moved out of the CellBox.py file.
     long1,lat1 = st
     long2,lat2 = en
     dlong = long2-long1
@@ -30,7 +30,7 @@ def bearing(st,en):
     angle
     return angle
 
-def Intersection_BoxLine(Cell_s,Pt,type):
+def Intersection_BoxLine(Cell_s,Pt,type): # Should be moved out of the CellBox.py file
     X1,Y1 = Cell_s.long+Cell_s.width/2,Cell_s.lat+Cell_s.height/2
     X2,Y2 = Pt
     if type==np.nan:
@@ -83,10 +83,72 @@ class CellGrid:
 
         self.cellBoxes = []
 
-        for long in np.arange(longMin, longMax, cellWidth):
-            for lat in np.arange(latMin, latMax, cellHeight):
+        # Initialise cellBoxes.
+        for lat in np.arange(latMin, latMax, cellHeight):
+            for long in np.arange(longMin, longMax, cellWidth):
                 cellBox = CellBox(lat, long, cellWidth, cellHeight)
                 self.cellBoxes.append(cellBox)
+
+        # Calculate initial neighbours graph.
+        gridWidth = (self._longMax - self._longMin) / self._cellWidth
+
+        self.neighbourGraph = {}
+        for cellBox in self.cellBoxes:
+            cellBoxIndx = self.cellBoxes.index(cellBox)
+            neighbourMap = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
+
+            # add east neighbours to neighbour graph
+            if (cellBoxIndx + 1) % gridWidth != 0:
+                neighbourMap[2].append(cellBoxIndx + 1)
+                # south-east neighbours
+                if (cellBoxIndx + gridWidth < len(self.cellBoxes)):
+                    neighbourMap[1].append(int((cellBoxIndx + gridWidth) + 1))
+                # north-east neighbours
+                if (cellBoxIndx - gridWidth >= 0):
+                    neighbourMap[3].append(int((cellBoxIndx - gridWidth) + 1))
+
+            # add west neighbours to neighbour graph
+            if (cellBoxIndx) % gridWidth != 0:
+                neighbourMap[-2].append(cellBoxIndx - 1)
+                # add south-west neighbours to neighbour graph
+                if (cellBoxIndx + gridWidth < len(self.cellBoxes)):
+                    neighbourMap[-3].append(int((cellBoxIndx + gridWidth) - 1))
+                # add north-west neighbours to neighbour graph
+                if (cellBoxIndx - gridWidth >= 0):
+                    neighbourMap[-1].append(int((cellBoxIndx - gridWidth) - 1))
+
+            # add south neighbours to neighbour graph
+            if (cellBoxIndx + gridWidth < len(self.cellBoxes)):
+                neighbourMap[-4].append(int(cellBoxIndx + gridWidth))
+
+            # add north neighbours to neighbour graph
+            if (cellBoxIndx - gridWidth >= 0):
+                neighbourMap[4].append(int(cellBoxIndx - gridWidth))
+
+            self.neighbourGraph[cellBoxIndx] = neighbourMap
+
+    def neighbourTest(self, cellBox):
+        """
+            Returns a flattened list of all neighbours of a given cellBox.
+        """
+        cellBoxIndx = self.cellBoxes.index(cellBox)
+        neighboursIndx = []
+
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][1])  # north-east
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][2])  # east
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][3])  # south-east
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][4])  # south
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-1])  # south-west
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-2])  # west
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-3])  # north-west
+        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-4])  # north
+
+        neighbours = []
+        for sublist in neighboursIndx:
+            for indx in sublist:
+                neighbours.append(self.cellBoxes[indx])
+
+        return neighbours
 
     def addIcePoints(self, icePoints):
         """
@@ -94,7 +156,7 @@ class CellGrid:
         """
         for cellBox in self.cellBoxes:
             longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] < (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(icePoints['lat'] > cellBox.lat) & (icePoints['lat'] < (cellBox.lat + cellBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] < (cellBox.lat + cellBox.height))]
             cellBox.addIcePoints(latLongLoc)
 
     def addCurrentPoints(self, currentPoints):
@@ -103,13 +165,16 @@ class CellGrid:
         """
         for cellBox in self.cellBoxes:
             longLoc = currentPoints.loc[(currentPoints['long'] > cellBox.long) & (currentPoints['long'] < (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(currentPoints['lat'] > cellBox.lat) & (currentPoints['lat'] < (cellBox.lat + cellBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] < (cellBox.lat + cellBox.height))]
 
             cellBox.addCurrentPoints(latLongLoc)
 
     def cellCount(self):
         """
             Returns the number of cellBoxes contained within this cellGrid
+
+            DEPRECIATED
+            The list of cellBoxes now contains some empty indexes, so this is no longer accurate.
         """
         return len(self.cellBoxes)
 
@@ -134,14 +199,19 @@ class CellGrid:
         """
         selectedCell = []
         for cellBox in self.cellBoxes:
-            if cellBox.containsPoint(lat, long):
-                selectedCell.append(cellBox)
+            if cellBox is not None:
+                if cellBox.containsPoint(lat, long):
+                    selectedCell.append(cellBox)
         return selectedCell
 
     def recursiveSplit(self, maxSplits):
         """
             Resursively step though all cellBoxes in this cellGrid, splitting them based on a cells 'isHomogenous' function
             and a cellBoxes split depth.
+
+            DEPRECIATED
+            This function does not update the neighbours graph and should not be used.
+            use function 'iternativeSplit() instead.
         """
         splitCellBoxes = []
         for cellBox in self.cellBoxes:
@@ -152,11 +222,210 @@ class CellGrid:
     def splitAndReplace(self, cellBox):
         """
             Replaces a cellBox given by parameter 'cellBox' in this grid with 4 smaller cellBoxes representing
-            the four corners of the given cellBox
+            the four corners of the given cellBox. A neighbours map is then created for each of the 4 new cellBoxes
+            and the neighbours map for all surrounding cell boxes is updated.
+
         """
         splitCellBoxes = cellBox.split()
-        self.cellBoxes.remove(cellBox)
+
         self.cellBoxes += splitCellBoxes
+
+        cellBoxIndx = self.cellBoxes.index(cellBox)
+
+        southWestIndx = self.cellBoxes.index(splitCellBoxes[0])
+        southEastIndx = self.cellBoxes.index(splitCellBoxes[1])
+        northWestIndx = self.cellBoxes.index(splitCellBoxes[2])
+        northEastIndx = self.cellBoxes.index(splitCellBoxes[3])
+
+        southNeighbourIndx = self.neighbourGraph[cellBoxIndx][4]
+        northNeighbourIndx = self.neighbourGraph[cellBoxIndx][-4]
+        eastNeighbourIndx = self.neighbourGraph[cellBoxIndx][2]
+        westNeighbourIndx = self.neighbourGraph[cellBoxIndx][-2]
+
+        # Create neighbour map for SW split cell.
+        SWneighbourMap = {1: [northEastIndx],
+                          2: [southEastIndx],
+                          3: [],
+                          4: [],
+                          -1: self.neighbourGraph[cellBoxIndx][-1],
+                          -2: [],
+                          -3: [],
+                          -4: [northWestIndx]}
+
+        for indx in southNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[southWestIndx], self.cellBoxes[indx]) == 3:
+                SWneighbourMap[3].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[southWestIndx], self.cellBoxes[indx]) == 4:
+                SWneighbourMap[4].append(indx)
+        for indx in westNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[southWestIndx], self.cellBoxes[indx]) == -2:
+                SWneighbourMap[-2].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[southWestIndx], self.cellBoxes[indx]) == -3:
+                SWneighbourMap[-3].append(indx)
+
+        self.neighbourGraph[southWestIndx] = SWneighbourMap
+
+        # Create neighbour map for NW split cell
+        NWneighbourMap = {1: [],
+                          2: [northEastIndx],
+                          3: [southEastIndx],
+                          4: [southWestIndx],
+                          -1: [],
+                          -2: [],
+                          -3: self.neighbourGraph[cellBoxIndx][-3],
+                          -4: []}
+
+        for indx in northNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[northWestIndx], self.cellBoxes[indx]) == -4:
+                NWneighbourMap[-4].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[northWestIndx], self.cellBoxes[indx]) == 1:
+                NWneighbourMap[1].append(indx)
+        for indx in westNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[northWestIndx], self.cellBoxes[indx]) == -2:
+                NWneighbourMap[-2].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[northWestIndx], self.cellBoxes[indx]) == -1:
+                NWneighbourMap[-1].append(indx)
+
+        self.neighbourGraph[northWestIndx] = NWneighbourMap
+
+        # Create neighbour map for NE split cell
+        NEneighbourMap = {1: self.neighbourGraph[cellBoxIndx][1],
+                          2: [],
+                          3: [],
+                          4: [southEastIndx],
+                          -1: [southWestIndx],
+                          -2: [northWestIndx],
+                          -3: [],
+                          -4: []}
+
+        for indx in northNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[northEastIndx], self.cellBoxes[indx]) == -4:
+                NEneighbourMap[-4].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[northEastIndx], self.cellBoxes[indx]) == -3:
+                NEneighbourMap[-3].append(indx)
+        for indx in eastNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[northEastIndx], self.cellBoxes[indx]) == 2:
+                NEneighbourMap[2].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[northEastIndx], self.cellBoxes[indx]) == 3:
+                NEneighbourMap[3].append(indx)
+
+        self.neighbourGraph[northEastIndx] = NEneighbourMap
+
+        # Create neighbour map for SE split cell
+        SEneighbourMap = {1: [],
+                          2: [],
+                          3: self.neighbourGraph[cellBoxIndx][3],
+                          4: [],
+                          -1: [],
+                          -2: [southWestIndx],
+                          -3: [northWestIndx],
+                          -4: [northEastIndx]}
+
+        for indx in southNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[southEastIndx], self.cellBoxes[indx]) == 4:
+                SEneighbourMap[4].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[southEastIndx], self.cellBoxes[indx]) == -1:
+                SEneighbourMap[-1].append(indx)
+        for indx in eastNeighbourIndx:
+            if self.getNeighbourCase(self.cellBoxes[southEastIndx], self.cellBoxes[indx]) == 2:
+                SEneighbourMap[2].append(indx)
+            if self.getNeighbourCase(self.cellBoxes[southEastIndx], self.cellBoxes[indx]) == 1:
+                SEneighbourMap[1].append(indx)
+
+        self.neighbourGraph[southEastIndx] = SEneighbourMap
+
+        # Update neighbour map of neighbours of the split box.
+
+        # Update north neighbour map
+        for indx in northNeighbourIndx:
+            self.neighbourGraph[indx][4].remove(cellBoxIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[northWestIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(northWestIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[northEastIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(northEastIndx)
+
+        # Update east neighbour map
+        for indx in eastNeighbourIndx:
+            self.neighbourGraph[indx][-2].remove(cellBoxIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[northEastIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(northEastIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[southEastIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(southEastIndx)
+
+        # Update south neighbour map
+        for indx in southNeighbourIndx:
+            self.neighbourGraph[indx][-4].remove(cellBoxIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[southEastIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(southEastIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[southWestIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(southWestIndx)
+
+        # Update west neighbour map
+        for indx in westNeighbourIndx:
+            self.neighbourGraph[indx][2].remove(cellBoxIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[northWestIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(northWestIndx)
+
+            crossingCase = self.getNeighbourCase(self.cellBoxes[indx], self.cellBoxes[southWestIndx])
+            if crossingCase != 0:
+                self.neighbourGraph[indx][crossingCase].append(southWestIndx)
+
+        # Update corner neighbour maps
+        northEastCornerIndx = self.neighbourGraph[cellBoxIndx][1]
+        if len(northEastCornerIndx) > 0:
+            self.neighbourGraph[northEastCornerIndx[0]][-1] = [northEastIndx]
+
+        northWestCornerIndx = self.neighbourGraph[cellBoxIndx][-3]
+        if len(northWestCornerIndx) > 0:
+            self.neighbourGraph[northWestCornerIndx[0]][3] = [northWestIndx]
+
+        southEastCornerIndx = self.neighbourGraph[cellBoxIndx][3]
+        if len(southEastCornerIndx) > 0:
+            self.neighbourGraph[southEastCornerIndx[0]][-3] = [southEastIndx]
+
+        southWestCornerIndx = self.neighbourGraph[cellBoxIndx][-1]
+        if len(southWestCornerIndx) > 0:
+            self.neighbourGraph[southWestCornerIndx[0]][1] = [southWestIndx]
+
+        splitContainer = {"northEast": northEastIndx,
+                          "northWest": northWestIndx,
+                          "southEast": southEastIndx,
+                          "southWest": southWestIndx}
+
+        self.cellBoxes[cellBoxIndx] = splitContainer
+        self.neighbourGraph.pop(cellBoxIndx)
+
+    def iterativeSplit(self, splitAmount):
+        """
+            Iterates over all cellBoxes in the cellGrid a number of times defined by parameter 'splitAmount',
+            splitting and replacing each one if it is not homogenous.
+        """
+        for i in range(0, splitAmount):
+            self.splitGraph()
+
+    def splitGraph(self):
+        """
+            Iterates once over all cellBoxes in the cellGrid, splitting and replacing each one if it is not homogenous.
+        """
+        for indx in range(0, len(self.cellBoxes) - 1):
+            cellBox = self.cellBoxes[indx]
+            if isinstance(cellBox, CellBox):
+                if cellBox.isHomogenous() == False:
+                    self.splitAndReplace(cellBox)
 
     def recursiveSplitAndReplace(self, cellBox, maxSplits):
         """
@@ -171,7 +440,10 @@ class CellGrid:
 
     def getIndex(self, selectedCellBox):
         """
-            Returns the index of the selected cell
+            Returns the index of the selected cell.
+
+            DEPRECIATED
+            Not needed as functionality is identical to self.cellBoxes.index(selectedCellBox) but slower.
         """
         cell_index = []
         for idx,cellBox in enumerate(self.cellBoxes):
@@ -183,6 +455,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the left-hand-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         leftNeightbours = []
         leftNeightbours_indx = []
@@ -196,6 +471,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the right-hand-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         rightNeightbours = []
         rightNeightbours_indx = []
@@ -209,6 +487,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the top-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         topNeightbours      = []
         topNeightbours_indx = []
@@ -222,6 +503,9 @@ class CellGrid:
         """
             Returns a list of all cellBoxes touching the bottom-side of a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         bottomNeightbours      = []
         bottomNeightbours_indx = []
@@ -235,6 +519,9 @@ class CellGrid:
         """
             Returns a list of call cellBoxes touching a cellBox given by parameter 'selectedCellBox'.
             Also returns a list of indexes for the discovered cellBoxes
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
         leftNeightbours,leftNeightbours_indx     = self._getLeftNeightbours(selectedCellBox)
         rightNeightbours,rightNeightbours_indx   = self._getRightNeightbours(selectedCellBox)
@@ -254,29 +541,29 @@ class CellGrid:
         ax.set_facecolor('lightblue')
 
         for cellBox in self.cellBoxes:
-            # plot land
-            if cellBox.containsLand():
-                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+            if isinstance(cellBox, CellBox):
+                # plot land
+                if cellBox.containsLand():
+                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
-            # plot ice
-            if plotIce and not np.isnan(cellBox.iceArea()):
-                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
-            else:
-                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                # plot ice
+                if plotIce and not np.isnan(cellBox.iceArea()):
+                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
+                else:
+                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
-            # plot currents
-            if plotCurrents:
-                ax.quiver((cellBox.long + cellBox.width / 2), (cellBox.lat + cellBox.height / 2),
-                          cellBox.getuC(), cellBox.getvC(), scale=1, width=0.002, color='gray')
+                # plot currents
+                if plotCurrents:
+                    ax.quiver((cellBox.long + cellBox.width / 2), (cellBox.lat + cellBox.height / 2),
+                              cellBox.getuC(), cellBox.getvC(), scale=1, width=0.002, color='gray')
 
-            # plot borders
-            if plotBorders:
-                ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='gray'))
+                # plot borders
+                if plotBorders:
+                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='gray'))
 
         # plot highlighted cells
         for cellBox in highlightCellBoxes:
             ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
-
 
         # plot paths if supplied
         if type(paths) != type(None):
@@ -296,7 +583,6 @@ class CellGrid:
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
-
 
     def getCase(self,cell,ncell):
         """
@@ -372,18 +658,17 @@ class CellGrid:
         DF['Land']     = IsLand
         return DF
 
-
     def getNeightbours(self, selectedCellBox):
         """
-            Getting the neighbours and returnign idx, case, cp and cell information
+            Getting the neighbours and returning idx, case, cp and cell information
 
             BUG - Currently this is very slow as the Polygon intersection is slower than before.
             Optimising the running of the code should improve this section as its a overarching requirement
             for all routeplanes etc
-        
+
+            DEPRECIATED
+            Functionality replaced by self.neighbourGraph
         """
-
-
         SPoly = Polygon(selectedCellBox.getBounds())
         neightbours      = []
         neightbours_index = []
@@ -402,7 +687,6 @@ class CellGrid:
             crossing_points.append(cp)
         neigh = pd.DataFrame({'Cell':neightbours,'idx':neightbours_index,'Case':cases,'Cp':crossing_points})
         return neigh
-
 
     def getNeighboursNew(self, selectedCellBox):
         neighbours = {}
