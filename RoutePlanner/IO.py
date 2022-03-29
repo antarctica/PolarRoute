@@ -151,22 +151,22 @@ def MeshJSON(cellGrid):
     return GeoJSON
     
 
+from RoutePlanner.CellBox import CellBox
 def MeshDF(cellGrid):
     from shapely.geometry import Polygon
     import geopandas as gpd
-    Polygons = pd.DataFrame({'Index':np.arange(len(cellGrid.cellBoxes))})
     Shape   = []; IceArea = []; IsLand  = []; dpth=[];vec=[]; CentroidCx=[];CentroidCy=[];
     for c in cellGrid.cellBoxes:
-        bounds = np.array(c.getBounds())
-        bounds[:,0] = bounds[:,0]-360
-        Shape.append(Polygon(bounds))
-        IceArea.append(c.iceArea()*100)
-        IsLand.append(c.containsLand())
-        dpth.append(c.depth())
-        vec.append([c.getuC(),c.getvC()])
-        CentroidCx.append(c.cx-360)
-        CentroidCy.append(c.cy)
-
+        if isinstance(c, CellBox):
+            bounds = np.array(c.getBounds())
+            Shape.append(Polygon(bounds))
+            IceArea.append(c.iceArea()*100)
+            IsLand.append(c.containsLand())
+            dpth.append(c.depth())
+            vec.append([c.getuC(),c.getvC()])
+            CentroidCx.append(c.cx)
+            CentroidCy.append(c.cy)
+    Polygons = pd.DataFrame({'Index':np.arange(len(Shape))})
     Polygons['geometry'] = Shape
     Polygons['Ice Area'] = IceArea
     Polygons['Land']     = IsLand
