@@ -100,6 +100,12 @@ def setup_package():
         package_data={"RoutePlanner": ["lib/*.so"]})
 
 
+    os.system('make ./.docs/html')
+    os.system('sphinx-build -b rinoh ./.docs/source ./.docs/_build/rinoh')
+    os.system('cp ./.docs/_build/rinoh/pyRoutePlanner.pdf .')
+    os.system('rm -rf ./.docs/_build')
+    os.system('rm -rf ./.docs/build')
+
 if __name__ == "__main__":
     # clean --all does not remove extensions automatically
     if 'clean' in sys.argv and '--all' in sys.argv:
