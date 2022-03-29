@@ -5,7 +5,11 @@ Plots
 **/__pycache__
 *.ipynb_checkpoints
 Data
-.*
 /.vscode/
 TestingNotebook.ipynb
 .DS_Store
+*.pdf
+*.html
+dist
+*.egg-info
+build
