@@ -282,7 +282,7 @@ class CellBox:
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
         '''
 
-        splitBoxes = []
+        splitBoxes = [0, 0, 0, 0]
 
         halfWidth = self.width / 2
         halfHeight = self.height / 2
@@ -293,10 +293,10 @@ class CellBox:
         topLeft     = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight)
         topRight    = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight)
 
-        splitBoxes.append(bottomLeft)
-        splitBoxes.append(bottomRight)
-        splitBoxes.append(topLeft)
-        splitBoxes.append(topRight)
+        splitBoxes[0] = bottomLeft
+        splitBoxes[1] = bottomRight
+        splitBoxes[2] = topLeft
+        splitBoxes[3] = topRight
 
         for splitBox in splitBoxes:
             #TODO requires rework for optimization
@@ -305,16 +305,16 @@ class CellBox:
             #Split icePoints per cellBox
             longLoc = self._icePoints.loc[(self._icePoints['long'] >= splitBox.long) &
                                           (self._icePoints['long'] < (splitBox.long + splitBox.width))]
-            latLongLoc = longLoc.loc[(self._icePoints['lat'] >= splitBox.lat) &
-                                             (self._icePoints['lat'] < (splitBox.lat + splitBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] >= splitBox.lat) &
+                                             (longLoc['lat'] < (splitBox.lat + splitBox.height))]
 
             splitBox.addIcePoints(latLongLoc)
 
             #Split currentPoints per box
             longLoc = self._currentPoints.loc[(self._currentPoints['long'] >= splitBox.long) &
                                               (self._currentPoints['long'] < (splitBox.long + splitBox.width))]
-            latLongLoc = longLoc.loc[(self._currentPoints['lat'] >= splitBox.lat) &
-                                                 (self._currentPoints['lat'] < (splitBox.lat + splitBox.height))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] >= splitBox.lat) &
+                                                 (longLoc['lat'] < (splitBox.lat + splitBox.height))]
 
             splitBox.addCurrentPoints(latLongLoc)
 
