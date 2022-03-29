@@ -20,7 +20,7 @@ from folium.plugins import TimestampedGeoJson
 def MapWaypoints(DF,map):
     wpts = folium.FeatureGroup(name='WayPoints')
     for id,wpt in DF.iterrows():
-        loc = [wpt['Lat'], wpt['Long']-360]
+        loc = [wpt['Lat'], wpt['Long']]
         folium.Marker(
             location=loc,
             icon=folium.plugins.BeautifyIcon(icon='circle',
