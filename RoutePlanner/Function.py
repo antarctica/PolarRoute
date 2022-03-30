@@ -39,10 +39,10 @@ class _Euclidean_distance():
 
 
 class NewtonianDistance:
-    def __init__(self,Mesh,Cell_S=None,Cell_N=None,Cell_S_Speed=None,Cell_N_Speed=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=False,debugging=False,maxiter=500,optimizer_tol=1e-7):
+    def __init__(self,Mesh,Sc=None,Nc=None,Sc_Speed=None,Nc_Speed=None,Case=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=False,debugging=False,maxiter=500,optimizer_tol=1e-7):
         # Cell information
-        self.Cell_s         = Cell_S
-        self.Cell_n         = Cell_N
+        self.Cell_s         = Sc
+        self.Cell_n         = Nc
 
         self.Mesh           = Mesh
 
@@ -50,9 +50,11 @@ class NewtonianDistance:
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
 
-        self.s1             = self._unit_speed(Cell_S_Speed)
-        self.s2             = self._unit_speed(Cell_N_Speed)
+        self.s1             = self._unit_speed(Sc_Speed)
+        self.s2             = self._unit_speed(Nc_Speed)
         self.fdist          = _Euclidean_distance(scaleLongitude=(self.Cell_s.lat+self.Cell_s.height))
+
+        self.Case           = Case
 
         if zerocurrents:
             self.zx = 0.0
@@ -308,7 +310,7 @@ class NewtonianDistance:
             return TravelTime,CrossPoints,CellPoints
 
 
-        case = self.Mesh.getCase(self.Cell_s,(self.Cell_n.cx,self.Cell_n.cy))
+        case = self.Case
 
         if self.debugging:
             print('============================================')
@@ -333,7 +335,7 @@ class NewtonianDistance:
         else:
             print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.format(self.Cell_s.cx,self.Cell_s.cy))
             
-            TravelTime  = np.inf
+            TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
 
