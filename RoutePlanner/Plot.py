@@ -58,7 +58,7 @@ def MapPaths(Paths,map,PathPoints=True):
     Pths_points = folium.FeatureGroup(name='Path Points')
     for path in copy.deepcopy(Paths):
         points = path['Path']['Points']
-        points[:,0] = points[:,0]-360
+        points[:,0] = points[:,0]
         points = points[:,::-1]
         folium.PolyLine(points,color="black", weight=2.5, opacity=1,
                         popup='{}->{}\n Travel-Time = {:.2f}days'.format(path['from'],path['to'],path['Time'])).add_to(Pths)
@@ -329,7 +329,7 @@ def MapMesh(cellGrid,map,threshold=0.8):
 
 
 def BaseMap(location=[-58,-63.7],logo=True,logoPos=[10,90]):
-    map = folium.Map(location=location,zoom_start=4.6,tiles=None)
+    map = folium.Map(location=location,zoom_start=2.6,tiles=None)
     bsmap = folium.FeatureGroup(name='BaseMap')
     folium.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}.png',attr="toner-bcg", name='Basemap').add_to(bsmap)
     bsmap.add_to(map)
