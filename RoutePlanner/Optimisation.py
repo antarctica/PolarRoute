@@ -85,12 +85,69 @@ class TravelTime:
                         break
             self.OptInfo['WayPoints']['index'].loc[idx] = index
 
-    def speedFunction(self,Cell):
-        if self.variableSpeed == True:
-            S = self.OptInfo['VehicleInfo']['Speed']*(-5.95*Cell.iceArea()**3 + 7.03*Cell.iceArea()**2 - 3.00*Cell.iceArea() + 0.98)
+    def iceResistance(self, Cell):
+        """
+                Function to find the ice resistance force at a given speed in a given cell.
+
+                Inputs:
+                Cell - Cell box object
+
+                Outputs:
+                r - Resistance force
+        """
+        hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
+
+        hull = self.OptInfo['VehicleInfo']['HullType']
+        beam = self.OptInfo['VehicleInfo']['Beam']
+        k, b, n = hull_params[hull]
+        g = 9.81  # m/s-2
+
+        V = self.OptInfo['VehicleInfo']['Speed']*(5./18.)  # assume km/h and convert to m/s
+
+        Fr = V/np.sqrt(g*Cell.iceArea()*Cell.iceThickness())
+
+        r = 0.5*k*(Fr**b)*Cell.iceDensity()*beam*Cell.iceThickness()*(V**2)*(Cell.iceArea()**n)
+
+        return r
+
+    def inverseResistance(self, Fl, Cell):
+        """
+        Function to find the fastest speed that keeps the ice resistance force below a given threshold.
+
+        Inputs:
+        Fl - Force limit
+        Cell - Cell box object
+
+        Outputs:
+        v - speed
+        """
+        hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
+
+        hull = self.OptInfo['VehicleInfo']['HullType']
+        beam = self.OptInfo['VehicleInfo']['Beam']
+        k, b, n = hull_params[hull]
+        g = 9.81  # m/s-2
+
+        exp = 2.0 + b
+
+        vexp = 2*Fl/(k*Cell.iceDensity()*beam*Cell.iceThickness()*(Cell.iceArea()**n)*(g*Cell.iceThickness()*Cell.iceArea())**-(b/2))
+
+        vms = vexp**(1/exp)
+        v = vms*(18./5.)  # convert from m/s to km/h
+
+        return v
+
+    def speedFunction(self, Cell):
+        if self.variableSpeed:
+            if Cell.iceArea() == 0.0:
+                s = self.OptInfo['VehicleInfo']['Speed']
+            elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
+                s = self.OptInfo['VehicleInfo']['Speed']
+            else:
+                s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
         else:
-            S = self.OptInfo['VehicleInfo']['Speed']
-        return S
+            s = self.OptInfo['VehicleInfo']['Speed']
+        return s
 
 
     def Dijkstra2Path(self,StartWaypoints,EndWaypoints):
