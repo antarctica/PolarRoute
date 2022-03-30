@@ -31,6 +31,8 @@ class _Euclidean_distance():
         lon1,lat1 = origin
         if forward:
             lon2,lat2 = dest_dist
+            lon2 = lon2+360
+            lon1 = lon1+360
             val = np.sqrt(((lat2-lat1)*self.m_per_latitude)**2 + ((lon2-lon1)*self.m_per_longitude)**2)
         else:
             dist_x,dist_y = dest_dist        
