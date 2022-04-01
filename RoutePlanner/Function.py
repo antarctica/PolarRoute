@@ -355,20 +355,485 @@ class NewtonianDistance:
 #####################################################################################################################################
 #####################################################################################################################################
 
+# class NewtonianCurve:
+#     def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=100,optimizer_tol=1e-3,zerocurrents=False):
+#         self.Mesh = Mesh
+        
+#         # Defining the Source Point (Sp), Crossing Point (Cp) and Neighbour Point(Np)
+#         self.Sp   = Sp
+#         self.Cp   = Cp
+#         self.Np   = Np
+
+
+#         # Inside the code the base units are m/s. Changing the units of the inputs to match
+#         self.unit_shipspeed = unit_shipspeed
+#         self.unit_time      = unit_time
+#         self.s              = self._unit_speed(s)
+        
+#         # Information for distance metrics
+#         self.R              = 6371*1000.
+#         self.fdist          = _Euclidean_distance()
+
+#         # Optimisation Information
+#         self.maxiter       = maxiter
+#         self.optimizer_tol = optimizer_tol
+
+#         # For Debugging purposes 
+#         self.debugging     = debugging
+        
+#         if zerocurrents:
+#             self.zc = 0.0
+#         else:
+#             self.zc = 1.0
+
+
+#     def _unit_speed(self,Val):
+#         if self.unit_shipspeed == 'km/hr':
+#             Val = Val*(1000/(60*60))
+#         if self.unit_shipspeed == 'knots':
+#             Val = (Val*0.51)
+#         return Val
+
+#     def _unit_time(self,Val):
+#         if self.unit_time == 'days':
+#             Val = Val/(60*60*24)
+#         elif self.unit_time == 'hr':
+#             Val = Val/(60*60)
+#         elif self.unit_time == 'min':
+#             Val = Val/(60)
+#         elif self.unit_time == 's':
+#             Val = Val
+#         return Val
+
+
+#     def _long_case(self,case):
+#             def NewtonOptimisationLong(f,df,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+#                     y0 = (Y*x)/(x+a)
+#                     if self.debugging>=2:
+#                             print('---Initial y={:.2f}'.format(y0))
+#                     if self.maxiter > 0:
+#                         for iter in range(self.maxiter):
+#                             F  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r)
+#                             dF = df(y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r)
+#                             if self.debugging>=2:
+#                                 print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'.format(iter,y0,F,dF))
+#                             y0  = y0 - (F/dF)
+#                             if abs(F) < self.optimizer_tol:
+#                                 break
+
+#                         if self.debugging>=2:
+#                             if abs(F) > self.optimizer_tol:
+#                                 print('--- Unusal Opt y={:.2f}; F={:.5f}; dF={:.2f}'.format(y0,F,dF))
+#                     return y0
+
+#             def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+
+#                 # Currents: U,v ; f,g
+
+
+#                 θ  = (y/R + λ_s)*(np.pi/180)
+#                 zl = x*np.cos(θ)
+#                 ψ  = (-(Y-y)/R + φ_r)*(np.pi/180)
+#                 zr = a*np.cos(ψ)
+
+#                 C1  = s**2 - u1**2 - v1**2
+#                 C2  = s**2 - u2**2 - v2**2
+#                 D1  = zl*u1 + y*v1
+#                 D2  = zr*u2 + (Y-y)*v2
+#                 X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
+#                 X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
+
+#                 dzr = (-zr*np.sin(ψ))/R
+#                 dzl = (-zl*np.sin(θ))/R
+
+#                 zr_term = (zr - (X2 - D2)*u2/C2)
+#                 zl_term = (zl - (X1 - D1)*u1/C1)
+#                 F = (X1+X2)*y - v1*(X1-D1)*X2/C1 - (Y - v2*(X2-D2)/C2)*X1 + dzr*zr_term*X1 + dzl*zl_term*X2
+#                 return F
+
+#             def _dF(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+#                 θ  = (y/R +  λ_s)*(np.pi/180)
+#                 zl = x*np.cos(θ)
+#                 ψ  = (-(Y-y)/R + φ_r)*(np.pi/180)
+#                 zr = a*np.cos(ψ)
+
+#                 C1  = s**2 - u1**2 - v1**2
+#                 C2  = s**2 - u2**2 - v2**2
+#                 D1  = zl*u1 + y*v1
+#                 D2  = zr*u2 + (Y-y)*v2
+#                 X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
+#                 X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
+
+#                 dzr = (-zr*np.sin(ψ))/R
+#                 dzl = (-zl*np.sin(θ))/R
+
+#                 dD1 = dzl*u1 + v1
+#                 dD2 = dzr*u2 - v2
+#                 dX1 = (D1*v1 + C1*y + dzl*(D1*u1 + C1*zl))/X1
+#                 dX2 = (-v2*D2 - C2*(Y-y) + dzr*(D2*u2 + C2*zr))/X2        
+
+#                 zr_term = (zr - (X2 - D2)*u2/C2)
+#                 zl_term = (zl - (X1 - D1)*u1/C1)
+
+#                 dF = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1))\
+#                     + (v2/C2)*(dX1*(X2-D2) + X1*(dX2-dD2))\
+#                     - Y*dX1 - (zr/(R**2))*zr_term*X1\
+#                     - (zl/(R**2))*zl_term*X2\
+#                     + dzr*(dzr-u2*(dX2-dD2))/C2*X1\
+#                     + dzl*(dzl-u1*(dX1-dD1))/C1*X2\
+#                     + dzr*zr_term*dX1 + dzl*zl_term*dX2
+#                 return dF 
+
+#             def _T(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+#                 θ  = (y/R + λ_s)*(np.pi/180)
+#                 zl = x*np.cos(θ)
+#                 ψ  = (-(Y-y)/R + φ_r)*(np.pi/180)
+#                 zr = a*np.cos(ψ)
+
+#                 C1  = s**2 - u1**2 - v1**2
+#                 C2  = s**2 - u2**2 - v2**2
+#                 D1  = zl*u1 + y*v1
+#                 D2  = zr*u2 + (Y-y)*v2
+#                 X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
+#                 X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
+
+#                 t1  = (X1-D1)/C1
+#                 t2  = (X2-D2)/C2
+#                 TT  = t1 + t2
+#                 return TT
+
+
+#             Cp = self.Cp
+#             if case == 2:   
+#                 Sp   = self.Sp
+#                 Np   = self.Np
+#                 Box1 = self.Box1
+#                 Box2 = self.Box2
+#                 sgn  = 1
+#             else:
+#                 Sp   = self.Np
+#                 Np   = self.Sp
+#                 Box1 = self.Box2
+#                 Box2 = self.Box1
+#                 sgn  = -1
+
+
+#             # If x or a < 1e-3
+#             λ_s  = Sp[1]
+#             φ_r  = Np[1]
+
+#             x     = self.fdist.value(Sp,(Cp[0],Sp[1]))
+#             a     = self.fdist.value(Np, (Cp[0],Np[1]))
+#             Y     = np.sign(Np[1]-Sp[1])*self.fdist.value((Sp[0]+(Np[0]-Sp[0]),Sp[1]),\
+#                                                        (Sp[0]+(Np[0]-Sp[0]),Np[1]))
+#             u1    = sgn*self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
+#             u2    = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
+#             y     = NewtonOptimisationLong(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
+#             CrossPoint  = self.fdist.value((Cp[0],Sp[1]),(0.0,y),forward=False)
+#             Box = self.Mesh.getCellBox(CrossPoint[0],CrossPoint[1])
+#             return np.array(CrossPoint)[None,:], Box
+
+
+
+#     def _lat_case(self,case):
+#         def NewtonOptimisationLat(f,df,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+#                 y0 = (Y*x)/(x+a)
+#                 if self.maxiter > 0:
+#                     for iter in range(self.maxiter):
+#                         F  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ)
+#                         dF = df(y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ)
+#                         y0  = y0 - (F/dF)
+#                 return y0
+
+#         def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+#             λ   = λ*(np.pi/180)
+#             ψ   = ψ*(np.pi/180)
+#             θ   = θ*(np.pi/180)
+#             r1  = np.cos(λ)/np.cos(θ)
+#             r2  = np.cos(ψ)/np.cos(θ)
+
+#             d1  = np.sqrt(x**2 + (r1*y)**2)
+#             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
+#             C1  = s**2 - u1**2 - v1**2
+#             C2  = s**2 - u2**2 - v2**2
+#             D1  = x*u1 + r1*v1*Y
+#             D2  = a*u2 + r2*v2*(Y-y)
+#             X1  = np.sqrt(D1**2 + C1*(d1**2))
+#             X2  = np.sqrt(D2**2 + C2*(d2**2)) 
+
+#             F = ((r2**2)*X1 + (r1**2)*X2)*y - ((r1*(X1-D1)*X2*v1)/C1) - r2*(r2*Y-v2*(X2-D2)/C2)*X1
+
+#             return F
+
+#         def _dF(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+#             λ   = λ*(np.pi/180)
+#             ψ   = ψ*(np.pi/180)
+#             θ   = θ*(np.pi/180)
+#             r1  = np.cos(λ)/np.cos(θ)
+#             r2  = np.cos(ψ)/np.cos(θ)
+
+
+#             d1  = np.sqrt(x**2 + (r1*y)**2)
+#             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
+#             C1  = s**2 - u1**2 - v1**2
+#             C2  = s**2 - u2**2 - v2**2
+#             D1  = x*u1 + r1*v1*Y
+#             D2  = a*u2 + r2*v2*(Y-y)
+#             X1  = np.sqrt(D1**2 + C1*(d1**2))
+#             X2  = np.sqrt(D2**2 + C2*(d2**2))   
+            
+#             dD1 = r1*v1
+#             dD2 = -r2*v2
+#             dX1 = (r1*(D1*v1 + r1*C1*y))/X1
+#             dX2 = (-r2*(D2*v2 + r2*C2*(Y-y)))/X2
+
+#             dF = ((r2**2)*X1 + (r1**2)*X2) + y*((r2**2)*dX1 + (r1**2)*dX2)\
+#                 - ((r1*v1)/C1)*((X1-D1)*dX2 + (dX1-dD1)*X2)\
+#                 + ((r2*v2)/C2)*((X2-D2)*dX1 + (dX2-dD2)*X1)\
+#                 - (r2**2)*Y*dX1
+
+#             return dF
+
+#         def _T(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+#             λ   = λ*(np.pi/180)
+#             ψ   = ψ*(np.pi/180)
+#             θ   = θ*(np.pi/180)
+#             r1  = np.cos(λ)/np.cos(θ)
+#             r2  = np.cos(ψ)/np.cos(θ)
+
+
+#             d1  = np.sqrt(x**2 + (r1*y)**2)
+#             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
+#             C1  = s**2 - u1**2 - v1**2
+#             C2  = s**2 - u2**2 - v2**2
+#             D1  = x*u1 + r1*v1*Y
+#             D2  = a*u2 + r2*v2*(Y-y)
+#             X1  = np.sqrt(D1**2 + C1*(d1**2))
+#             X2  = np.sqrt(D2**2 + C2*(d2**2))
+#             t1  = (X1-D1)/C1
+#             t2  = (X2-D2)/C2
+
+#             TT  = t1+t2
+#             return TT     
+
+
+#         Cp = self.Cp
+#         if case == -4:   
+#             Sp   = self.Sp
+#             Np   = self.Np
+#             Box1 = self.Box1
+#             Box2 = self.Box2
+#             sgn  = 1
+#         else:
+#             Sp   = self.Np
+#             Np   = self.Sp
+#             Box1 = self.Box2
+#             Box2 = self.Box1   
+#             sgn  = -1
+
+#         θ   = Cp[1]
+#         λ   = Np[1]#Sp[1]
+#         ψ   = Sp[1]#Np[1]        
+
+#         x     = self.fdist.value(Sp,(Sp[0],Cp[1]))
+#         a     = self.fdist.value(Np, (Np[0],Cp[1]))
+#         Y     = np.sign(Np[0]-Sp[0])*self.fdist.value((Sp[0],Cp[1]),\
+#                                  (Np[0],Cp[1]))
+#         u1    = sgn*self.zc*Box1.getvC(); v1 = self.zc*Box1.getuC()
+#         u2    = sgn*self.zc*Box2.getvC(); v2 = self.zc*Box2.getuC()
+
+#         y = NewtonOptimisationLat(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
+#         CrossPoint  = self.fdist.value((Sp[0],Cp[1]),(y,0.0),forward=False) 
+#         Box = self.Mesh.getCellBox(CrossPoint[0],CrossPoint[1])
+
+#         return np.array(CrossPoint)[None,:], Box
+
+
+#     def _corner_case(self,case,crossing_point):
+#         '''
+#         '''
+
+
+#         # Defining the lat/long of the points
+#         Xs,Ys = self.Sp
+#         Xc,Yc = crossing_point
+#         Xe,Ye = self.Np
+
+
+#         if (abs(Xs-Xc) < 1e-4) or (abs(Ys-Yc) < 1e-4) or (abs(Xe-Xc) < 1e-4) or (abs(Ye-Yc) < 1e-4):
+#             return np.nan,np.array([np.nan,np.nan])
+
+#         # # Determine the intersection point on the edge where end_p is assuming a straight path through corner
+#         Y_line = ((Yc-Ys)/(Xc-Xs))*(Xe-Xs) + Ys
+        
+#         # Determining the cells in contact with the corner point
+#         CornerCells = []
+#         neigh = self.Mesh.getNeightbours(self.Box1)
+#         neighbours     = neigh['Cell']
+#         neighbours_idx = neigh['idx']
+#         for idx in neighbours_idx:
+#             cell = self.Mesh.cellBoxes[idx]
+#             if ((((np.array(cell.getBounds()) - np.array([Xc,Yc])[None,:])**2).sum(axis=1))==0).any() and (idx!=self.Mesh.getIndex(self.Box1)[0]) and (idx!=self.Mesh.getIndex(self.Box2)[0]):
+#                 CornerCells.append([idx,cell.long+cell.width/2,cell.lat+cell.height/2]) 
+#         CornerCells = np.array(CornerCells)
+    
+#         # --- Setting crossing point in diagonal case
+#         if (abs(case)==1):
+#             if Ye > Y_line:
+#                 idx           = int(CornerCells[CornerCells[:,1].argmin(),0])
+#             elif Ye <= Y_line:
+#                 idx           = int(CornerCells[CornerCells[:,1].argmax(),0])
+
+#         if (abs(case)==3):
+#             if Ye >= Y_line:
+#                 idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
+#             elif Ye < Y_line:
+#                 idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
+
+#         Box    = self.Mesh.cellBoxes[idx]
+#         Crp1 = self.Mesh.getCrossingPoint(self.Box1,(Box.cx,Box.cy))
+#         Crp2 = self.Mesh.getCrossingPoint(Box,(self.Box2.cx,self.Box2.cy))
+
+#         if self.debugging>0:
+#             print('Sp=({},{});Cp=({},{});Np=({},{});lenCorner={}'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1],len(CornerCells)))
+
+
+#         # Appending the crossing points and their relative index
+#         CrossPoint = [Crp1,Crp2]
+#         Boxes=[]
+#         for idx,pt in enumerate(CrossPoint):
+#             Boxes += self.Mesh.getCellBox(pt[0],pt[1])
+
+
+#         return np.array(CrossPoint), Boxes
+
+
+#     def value(self):
+#         '''
+#             Bug - Incorperate Travel-Time back in! 
+#                 - Do not allow path along any point on a cell that is land or full of ice
+#                 - re-introduce the Dijkstra for corner cases
+#                 - Variable Speed Function
+
+#         '''
+
+#         self.Box1 = list(set(self.Mesh.getCellBox(self.Sp[0],self.Sp[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
+#         self.Box2 = list(set(self.Mesh.getCellBox(self.Np[0],self.Np[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
+
+
+#         Boxes     = []
+#         # For the interesting case when the crossing point does not share a Box with the Start or End Point
+#         if (len(self.Box1) == 0) or (len(self.Box2) == 0):
+#             CrossPoint = []
+#             if (len(self.Box1) == 0):
+#                 Cp_cells = self.Mesh.getCellBox(self.Cp[0],self.Cp[1])
+#                 Sp_cells = self.Mesh.getCellBox(self.Sp[0],self.Sp[1])
+#                 Distances      = []
+#                 CrossingPoints = []
+#                 Bxs = []
+#                 for Spc in Sp_cells:
+#                     SPoly = Polygon(Spc.getBounds())
+#                     for Cpc in Cp_cells:
+#                         CPoly = Polygon(Cpc.getBounds())
+#                         if SPoly.intersects(CPoly):
+#                             crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
+#                             if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0 or  abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
+#                                 continue
+#                             CrossPoint.append(crp)
+#                             Boxes.append(Spc)
+#                             Boxes.append(Cpc)
+#             CrossPoint.append(self.Cp)
+#             if (len(self.Box2) == 0):
+#                 Cp_cells = self.Mesh.getCellBox(self.Cp[0],self.Cp[1])
+#                 Sp_cells = self.Mesh.getCellBox(self.Np[0],self.Np[1])
+#                 Distances      = []
+#                 CrossingPoints = []
+#                 Bxs = []
+#                 for Spc in Sp_cells:
+#                     SPoly = Polygon(Spc.getBounds())
+#                     for Cpc in Cp_cells:
+#                         CPoly = Polygon(Cpc.getBounds())
+#                         if SPoly.intersects(CPoly):
+#                             crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
+#                             if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0 or  abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
+#                                 continue
+#                             CrossPoint.append(crp)
+#                             Boxes.append(Spc)
+#                             Boxes.append(Cpc)
+
+
+#             if len(CrossPoint) ==0:
+#                 return np.array([np.nan,np.nan]),[np.nan]
+#             else:
+#                 for pt in CrossPoint:
+#                     Boxes += self.Mesh.getCellBox(pt[0],pt[1])
+#                 return np.array(CrossPoint),Boxes
+
+#         # For the interesting case that two points are on the edge of two cells
+#         if (len(self.Box1) > 1) or (len(self.Box2) > 1):
+#             Boxes += self.Box1
+#             Boxes += self.Box2
+#             return np.array([np.nan,np.nan]),Boxes
+
+#         self.Box1 = self.Box1[0]
+#         self.Box2 = self.Box2[0]
+
+#         # This is the horse shoe case where the all three points lie within the same cell cell. 
+#         #The crossing point should be removed in this sense
+#         if self.Box1 == self.Box2:
+#             Boxes += [self.Box1]
+#             Boxes += [self.Box2]
+#             return np.array([np.nan,np.nan]),Boxes
+
+#         # ======== Determining the case & Crossing Points ========
+#         case           = self.Mesh.getCase(self.Box1,(self.Cp[0],self.Cp[1]))
+#         crossing_point = self.Mesh.getCrossingPoint(self.Box1,(self.Cp[0],self.Cp[1])) 
+#         if self.debugging>0:
+#             print('===========================================================')
+#         if abs(case)==2:
+#             CrossPoint,Box = self._long_case(case)
+#         elif abs(case)==4:
+#             CrossPoint,Box = self._lat_case(case)
+#         elif (abs(case)==1) or (abs(case)==3):
+#             CrossPoint,Box = self._corner_case(case,crossing_point)
+#         else:
+#             print('Issue Sp=({:.2f},{:.2f});Cp=({:.2f},{:.2f});Np=({:.2f},{:.2f});'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1]))
+#         Boxes += self.Mesh.getCellBox(self.Sp[0],self.Sp[1])
+#         try:
+#             Boxes += Box
+#         except:
+#             print('Issue with cell box')
+#         Boxes += self.Mesh.getCellBox(self.Np[0],self.Np[1])
+#         return CrossPoint, Boxes
+
+
 class NewtonianCurve:
-    def __init__(self,Mesh,Sp,Cp,Np,s,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=100,optimizer_tol=1e-3,zerocurrents=False):
+    def __init__(self,Mesh,DijkstraInfo,Sp,Cp,Ep,Sindex,Eindex,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=100,optimizer_tol=1e-3,zerocurrents=False):
+        '''
+        
+        
+            BUG:
+                - Currently the speed is fixed. Move the construction of the cellBox speed to a function of the cellBox
+        
+        '''
+
+        # Passing the Mesh information
         self.Mesh = Mesh
+
+        # Passing the Dijkstra Graph
+        self.DijkstraInfo = DijkstraInfo
         
         # Defining the Source Point (Sp), Crossing Point (Cp) and Neighbour Point(Np)
-        self.Sp   = Sp
-        self.Cp   = Cp
-        self.Np   = Np
-
+        self.Sp       = Sp
+        self.Cp       = Cp
+        self.Ep       = Ep
+        self.Sindex   = Sindex
+        self.Eindex   = Eindex
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
-        self.s              = self._unit_speed(s)
+        self.s              = self._unit_speed(26.3)
         
         # Information for distance metrics
         self.R              = 6371*1000.
@@ -381,11 +846,12 @@ class NewtonianCurve:
         # For Debugging purposes 
         self.debugging     = debugging
         
+
+        # zeroing currents if flagged
         if zerocurrents:
             self.zc = 0.0
         else:
             self.zc = 1.0
-
 
     def _unit_speed(self,Val):
         if self.unit_shipspeed == 'km/hr':
@@ -406,7 +872,7 @@ class NewtonianCurve:
         return Val
 
 
-    def _long_case(self,case):
+    def _long_case(self):
             def NewtonOptimisationLong(f,df,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
                     y0 = (Y*x)/(x+a)
                     if self.debugging>=2:
@@ -420,17 +886,12 @@ class NewtonianCurve:
                             y0  = y0 - (F/dF)
                             if abs(F) < self.optimizer_tol:
                                 break
-
                         if self.debugging>=2:
                             if abs(F) > self.optimizer_tol:
                                 print('--- Unusal Opt y={:.2f}; F={:.5f}; dF={:.2f}'.format(y0,F,dF))
                     return y0
 
             def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
-
-                # Currents: U,v ; f,g
-
-
                 θ  = (y/R + λ_s)*(np.pi/180)
                 zl = x*np.cos(θ)
                 ψ  = (-(Y-y)/R + φ_r)*(np.pi/180)
@@ -499,26 +960,23 @@ class NewtonianCurve:
 
                 t1  = (X1-D1)/C1
                 t2  = (X2-D2)/C2
-                TT  = t1 + t2
-                return TT
+                return [t1,t2]
 
 
             Cp = self.Cp
-            if case == 2:   
+            if self.case == 2:   
                 Sp   = self.Sp
-                Np   = self.Np
-                Box1 = self.Box1
-                Box2 = self.Box2
+                Np   = self.Ep
+                Box1 = self.Mesh.cellBoxes[self.Sindex]
+                Box2 = self.Mesh.cellBoxes[self.Eindex]
                 sgn  = 1
             else:
-                Sp   = self.Np
+                Sp   = self.Ep
                 Np   = self.Sp
-                Box1 = self.Box2
-                Box2 = self.Box1
+                Box1 = self.Mesh.cellBoxes[self.Eindex]
+                Box2 = self.Mesh.cellBoxes[self.Sindex]
                 sgn  = -1
 
-
-            # If x or a < 1e-3
             λ_s  = Sp[1]
             φ_r  = Np[1]
 
@@ -526,16 +984,19 @@ class NewtonianCurve:
             a     = self.fdist.value(Np, (Cp[0],Np[1]))
             Y     = np.sign(Np[1]-Sp[1])*self.fdist.value((Sp[0]+(Np[0]-Sp[0]),Sp[1]),\
                                                        (Sp[0]+(Np[0]-Sp[0]),Np[1]))
-            u1    = sgn*self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
-            u2    = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
-            y     = NewtonOptimisationLong(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
-            CrossPoint  = self.fdist.value((Cp[0],Sp[1]),(0.0,y),forward=False)
-            Box = self.Mesh.getCellBox(CrossPoint[0],CrossPoint[1])
-            return np.array(CrossPoint)[None,:], Box
+            u1          = sgn*self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
+            u2          = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
+            y           = NewtonOptimisationLong(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
 
+            CrossingPoints = np.array(self.fdist.value((Cp[0],Sp[1]),(0.0,y),forward=False))[None,:]
+            Indices        = np.array([self.Sindex,self.Eindex])
+            try:
+                TTs = np.array(_T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r))[None,:]
+            except:
+                TTs = np.array([np.nan,np.nan])[None,:]
+            return CrossingPoints,Indices,TTs
 
-
-    def _lat_case(self,case):
+    def _lat_case(self):
         def NewtonOptimisationLat(f,df,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
                 y0 = (Y*x)/(x+a)
                 if self.maxiter > 0:
@@ -618,17 +1079,17 @@ class NewtonianCurve:
 
 
         Cp = self.Cp
-        if case == -4:   
+        if self.case == -4:   
             Sp   = self.Sp
-            Np   = self.Np
-            Box1 = self.Box1
-            Box2 = self.Box2
+            Np   = self.Ep
+            Box1 = self.Mesh.cellBoxes[self.Sindex]
+            Box2 = self.Mesh.cellBoxes[self.Eindex]
             sgn  = 1
         else:
-            Sp   = self.Np
+            Sp   = self.Ep
             Np   = self.Sp
-            Box1 = self.Box2
-            Box2 = self.Box1   
+            Box1 = self.Mesh.cellBoxes[self.Eindex]
+            Box2 = self.Mesh.cellBoxes[self.Sindex]  
             sgn  = -1
 
         θ   = Cp[1]
@@ -639,169 +1100,84 @@ class NewtonianCurve:
         a     = self.fdist.value(Np, (Np[0],Cp[1]))
         Y     = np.sign(Np[0]-Sp[0])*self.fdist.value((Sp[0],Cp[1]),\
                                  (Np[0],Cp[1]))
-        u1    = sgn*self.zc*Box1.getvC(); v1 = self.zc*Box1.getuC()
-        u2    = sgn*self.zc*Box2.getvC(); v2 = self.zc*Box2.getuC()
+        u1          = sgn*self.zc*Box1.getvC(); v1 = self.zc*Box1.getuC()
+        u2          = sgn*self.zc*Box2.getvC(); v2 = self.zc*Box2.getuC()
+        y           = NewtonOptimisationLat(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
 
-        y = NewtonOptimisationLat(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ)
-        CrossPoint  = self.fdist.value((Sp[0],Cp[1]),(y,0.0),forward=False) 
-        Box = self.Mesh.getCellBox(CrossPoint[0],CrossPoint[1])
+        CrossingPoints  = np.array(self.fdist.value((Sp[0],Cp[1]),(y,0.0),forward=False))[None,:]
+        Indices         = np.array([self.Sindex,self.Eindex])
+        try:
+            TTs = np.array(_T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ))[None,:]
+        except:
+            TTs = np.array([np.nan,np.nan])[None,:]
+        return CrossingPoints,Indices,TTs
 
-        return np.array(CrossPoint)[None,:], Box
 
-
-    def _corner_case(self,case,crossing_point):
+    def _corner_case(self):
         '''
         '''
-
-
-        # Defining the lat/long of the points
+        # Separting out the Long/Lat of each of the points
         Xs,Ys = self.Sp
-        Xc,Yc = crossing_point
-        Xe,Ye = self.Np
+        Xc,Yc = self.Cp
+        Xe,Ye = self.Ep
 
-
-        if (abs(Xs-Xc) < 1e-4) or (abs(Ys-Yc) < 1e-4) or (abs(Xe-Xc) < 1e-4) or (abs(Ye-Yc) < 1e-4):
-            return np.nan,np.array([np.nan,np.nan])
-
-        # # Determine the intersection point on the edge where end_p is assuming a straight path through corner
-        Y_line = ((Yc-Ys)/(Xc-Xs))*(Xe-Xs) + Ys
-        
-        # Determining the cells in contact with the corner point
-        CornerCells = []
-        neigh = self.Mesh.getNeightbours(self.Box1)
-        neighbours     = neigh['Cell']
-        neighbours_idx = neigh['idx']
-        for idx in neighbours_idx:
-            cell = self.Mesh.cellBoxes[idx]
-            if ((((np.array(cell.getBounds()) - np.array([Xc,Yc])[None,:])**2).sum(axis=1))==0).any() and (idx!=self.Mesh.getIndex(self.Box1)[0]) and (idx!=self.Mesh.getIndex(self.Box2)[0]):
-                CornerCells.append([idx,cell.long+cell.width/2,cell.lat+cell.height/2]) 
-        CornerCells = np.array(CornerCells)
+        # === 1. Assess the cells that are shared commonly in the corner case ====
+        sourceNeighbourIndices = self.DijkstraInfo.loc[self.Sindex]
+        endNeighbourIndices    = self.DijkstraInfo.loc[self.Eindex]
     
-        # --- Setting crossing point in diagonal case
-        if (abs(case)==1):
+        commonIndices = list(set(sourceNeighbourIndices['neighbourIndex']).intersection(endNeighbourIndices['neighbourIndex']))
+        CornerCells = self.DijkstraInfo.loc[commonIndices]
+        Y_line = ((Yc-Ys)/(Xc-Xs))*(Xe-Xs) + Ys
+
+        if (Y_line != Y_line) or (len(commonIndices)==0):
+            CrossingPoints      = np.array([Xc,Yc])[None,:]
+            Indices             = np.array([self.Sindex,self.Eindex])
+            TTs                 = np.array([np.nan,np.nan])[None,:] # Setting NaN travel-times to updated on the next iterations when Long or Lat case is called
+            return CrossingPoints,Indices,TTs        
+        if (abs(self.case)==1):
             if Ye > Y_line:
-                idx           = int(CornerCells[CornerCells[:,1].argmin(),0])
+                newCell = CornerCells.loc[CornerCells['cY'].idxmin()]
             elif Ye <= Y_line:
-                idx           = int(CornerCells[CornerCells[:,1].argmax(),0])
-
-        if (abs(case)==3):
+                newCell = CornerCells.loc[CornerCells['cY'].idxmax()]
+        if (abs(self.case)==3):
             if Ye >= Y_line:
-                idx  = int(CornerCells[CornerCells[:,1].argmax(),0])
+                newCell = CornerCells.loc[CornerCells['cY'].idxmax()]
             elif Ye < Y_line:
-                idx  = int(CornerCells[CornerCells[:,1].argmin(),0])
+                newCell = CornerCells.loc[CornerCells['cY'].idxmin()]
 
-        Box    = self.Mesh.cellBoxes[idx]
-        Crp1 = self.Mesh.getCrossingPoint(self.Box1,(Box.cx,Box.cy))
-        Crp2 = self.Mesh.getCrossingPoint(Box,(self.Box2.cx,self.Box2.cy))
+        # === 3. Return the path crossing points and cell indices
+        try:
+            firstCrossingPoint  = np.array(sourceNeighbourIndices['neighbourCrossingPoints'])[np.where(np.array(sourceNeighbourIndices['neighbourIndex'])==newCell.name)[0][0],:]
+        except:
+            firstCrossingPoint  = np.array([np.nan,np.nan])
+        try:
+            secondCrossingPoint = np.array(newCell['neighbourCrossingPoints'])[np.where(np.array(newCell['neighbourIndex'])==endNeighbourIndices.name)[0][0],:]
+        except:
+            secondCrossingPoint = np.array([np.nan,np.nan])
+        CrossingPoints      = np.concatenate((firstCrossingPoint[None,:],secondCrossingPoint[None,:]))
+        Indices             = np.array([self.Sindex,newCell.name,self.Eindex])
+        TTs                 = np.array([[np.nan,np.nan],[np.nan,np.nan]]) # Setting NaN travel-times to updated on the next iterations when Long or Lat case is called
 
-        if self.debugging>0:
-            print('Sp=({},{});Cp=({},{});Np=({},{});lenCorner={}'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1],len(CornerCells)))
-
-
-        # Appending the crossing points and their relative index
-        CrossPoint = [Crp1,Crp2]
-        Boxes=[]
-        for idx,pt in enumerate(CrossPoint):
-            Boxes += self.Mesh.getCellBox(pt[0],pt[1])
-
-
-        return np.array(CrossPoint), Boxes
+        return CrossingPoints,Indices,TTs
 
 
     def value(self):
         '''
-            Bug - Incorperate Travel-Time back in! 
-                - Do not allow path along any point on a cell that is land or full of ice
-                - re-introduce the Dijkstra for corner cases
-                - Variable Speed Function
-
+            BUG:
+            --> 
         '''
 
-        self.Box1 = list(set(self.Mesh.getCellBox(self.Sp[0],self.Sp[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
-        self.Box2 = list(set(self.Mesh.getCellBox(self.Np[0],self.Np[1])).intersection(self.Mesh.getCellBox(self.Cp[0],self.Cp[1])))
+        sourceNeighbourIndices = self.DijkstraInfo.loc[self.Sindex]
+        endNeighbourIndices    = self.DijkstraInfo.loc[self.Eindex]
+        self.case = sourceNeighbourIndices['case'][np.where(np.array(sourceNeighbourIndices['neighbourIndex'])==endNeighbourIndices.name)[0][0]]
 
-
-        Boxes     = []
-        # For the interesting case when the crossing point does not share a Box with the Start or End Point
-        if (len(self.Box1) == 0) or (len(self.Box2) == 0):
-            CrossPoint = []
-            if (len(self.Box1) == 0):
-                Cp_cells = self.Mesh.getCellBox(self.Cp[0],self.Cp[1])
-                Sp_cells = self.Mesh.getCellBox(self.Sp[0],self.Sp[1])
-                Distances      = []
-                CrossingPoints = []
-                Bxs = []
-                for Spc in Sp_cells:
-                    SPoly = Polygon(Spc.getBounds())
-                    for Cpc in Cp_cells:
-                        CPoly = Polygon(Cpc.getBounds())
-                        if SPoly.intersects(CPoly):
-                            crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
-                            if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0 or  abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
-                                continue
-                            CrossPoint.append(crp)
-                            Boxes.append(Spc)
-                            Boxes.append(Cpc)
-            CrossPoint.append(self.Cp)
-            if (len(self.Box2) == 0):
-                Cp_cells = self.Mesh.getCellBox(self.Cp[0],self.Cp[1])
-                Sp_cells = self.Mesh.getCellBox(self.Np[0],self.Np[1])
-                Distances      = []
-                CrossingPoints = []
-                Bxs = []
-                for Spc in Sp_cells:
-                    SPoly = Polygon(Spc.getBounds())
-                    for Cpc in Cp_cells:
-                        CPoly = Polygon(Cpc.getBounds())
-                        if SPoly.intersects(CPoly):
-                            crp = self.Mesh.getCrossingPoint(Spc,(Cpc.cx,Cpc.cy))
-                            if abs(self.Sp[0]-crp[0]) == 0 or abs(self.Sp[1]-crp[1]) == 0 or  abs(self.Np[0]-crp[0]) == 0 or abs(self.Np[1]-crp[1]) == 0:
-                                continue
-                            CrossPoint.append(crp)
-                            Boxes.append(Spc)
-                            Boxes.append(Cpc)
-
-
-            if len(CrossPoint) ==0:
-                return np.array([np.nan,np.nan]),[np.nan]
-            else:
-                for pt in CrossPoint:
-                    Boxes += self.Mesh.getCellBox(pt[0],pt[1])
-                return np.array(CrossPoint),Boxes
-
-        # For the interesting case that two points are on the edge of two cells
-        if (len(self.Box1) > 1) or (len(self.Box2) > 1):
-            Boxes += self.Box1
-            Boxes += self.Box2
-            return np.array([np.nan,np.nan]),Boxes
-
-        self.Box1 = self.Box1[0]
-        self.Box2 = self.Box2[0]
-
-        # This is the horse shoe case where the all three points lie within the same cell cell. 
-        #The crossing point should be removed in this sense
-        if self.Box1 == self.Box2:
-            Boxes += [self.Box1]
-            Boxes += [self.Box2]
-            return np.array([np.nan,np.nan]),Boxes
-
-        # ======== Determining the case & Crossing Points ========
-        case           = self.Mesh.getCase(self.Box1,(self.Cp[0],self.Cp[1]))
-        crossing_point = self.Mesh.getCrossingPoint(self.Box1,(self.Cp[0],self.Cp[1])) 
         if self.debugging>0:
             print('===========================================================')
-        if abs(case)==2:
-            CrossPoint,Box = self._long_case(case)
-        elif abs(case)==4:
-            CrossPoint,Box = self._lat_case(case)
-        elif (abs(case)==1) or (abs(case)==3):
-            CrossPoint,Box = self._corner_case(case,crossing_point)
-        else:
-            print('Issue Sp=({:.2f},{:.2f});Cp=({:.2f},{:.2f});Np=({:.2f},{:.2f});'.format(self.Sp[0],self.Sp[1],self.Cp[0],self.Cp[1],self.Np[0],self.Np[1]))
-        Boxes += self.Mesh.getCellBox(self.Sp[0],self.Sp[1])
-        try:
-            Boxes += Box
-        except:
-            print('Issue with cell box')
-        Boxes += self.Mesh.getCellBox(self.Np[0],self.Np[1])
-        return CrossPoint, Boxes
+        if abs(self.case)==2:
+            CrossingPoints,Indices,TTs = self._long_case()
+        elif abs(self.case)==4:
+            CrossingPoints,Indices,TTs = self._lat_case()
+        elif (abs(self.case)==1) or (abs(self.case)==3):
+            CrossingPoints,Indices,TTs = self._corner_case()
+
+        return CrossingPoints,Indices,TTs

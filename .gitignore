@@ -13,3 +13,7 @@ TestingNotebook.ipynb
 dist
 *.egg-info
 build
+
+
+# Jonny's GitIgnores. Remove Later
+Examples/Path/cellGrid
