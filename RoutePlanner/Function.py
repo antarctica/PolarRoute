@@ -808,7 +808,7 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,Mesh,DijkstraInfo,Sp,Cp,Ep,Sindex,Eindex,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=100,optimizer_tol=1e-3,zerocurrents=False):
+    def __init__(self,Mesh,DijkstraInfo,OptInfo,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=100,optimizer_tol=1e-3,minimumDiff=1e-4,zerocurrents=False):
         '''
         
         
@@ -822,14 +822,10 @@ class NewtonianCurve:
 
         # Passing the Dijkstra Graph
         self.DijkstraInfo = DijkstraInfo
-        
-        # Defining the Source Point (Sp), Crossing Point (Cp) and Neighbour Point(Np)
-        self.Sp       = Sp
-        self.Cp       = Cp
-        self.Ep       = Ep
-        self.Sindex   = Sindex
-        self.Eindex   = Eindex
 
+        # Passing the optional Information
+        self.OptInfo = OptInfo
+        
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
@@ -842,6 +838,7 @@ class NewtonianCurve:
         # Optimisation Information
         self.maxiter       = maxiter
         self.optimizer_tol = optimizer_tol
+        self.minimumDiff   = minimumDiff
 
         # For Debugging purposes 
         self.debugging     = debugging
@@ -988,13 +985,15 @@ class NewtonianCurve:
             u2          = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
             y           = NewtonOptimisationLong(_F,_dF,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
 
+            # Updating the crossing points
             CrossingPoints = np.array(self.fdist.value((Cp[0],Sp[1]),(0.0,y),forward=False))[None,:]
             Indices        = np.array([self.Sindex,self.Eindex])
-            try:
-                TTs = np.array(_T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r))[None,:]
-            except:
-                TTs = np.array([np.nan,np.nan])[None,:]
-            return CrossingPoints,Indices,TTs
+
+            
+            # Clipping to domain size
+            CrossingPoints[0,1] = np.clip(CrossingPoints[0,1],np.max([Box1.cy-Box1.dcy,Box2.cy-Box2.dcy]),np.min([Box1.cy+Box1.dcy,Box2.cy+Box2.dcy]))
+            
+            return CrossingPoints,Indices
 
     def _lat_case(self):
         def NewtonOptimisationLat(f,df,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
@@ -1106,12 +1105,10 @@ class NewtonianCurve:
 
         CrossingPoints  = np.array(self.fdist.value((Sp[0],Cp[1]),(y,0.0),forward=False))[None,:]
         Indices         = np.array([self.Sindex,self.Eindex])
-        try:
-            TTs = np.array(_T(y,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ,θ,ψ))[None,:]
-        except:
-            TTs = np.array([np.nan,np.nan])[None,:]
-        return CrossingPoints,Indices,TTs
 
+        CrossingPoints[0,0] = np.clip(CrossingPoints[0,0],np.max([Box1.cx-Box1.dcx,Box2.cx-Box2.dcy]),np.min([Box1.cx+Box1.dcx,Box2.cx+Box2.dcx]))
+
+        return CrossingPoints,Indices
 
     def _corner_case(self):
         '''
@@ -1156,12 +1153,10 @@ class NewtonianCurve:
             secondCrossingPoint = np.array([np.nan,np.nan])
         CrossingPoints      = np.concatenate((firstCrossingPoint[None,:],secondCrossingPoint[None,:]))
         Indices             = np.array([self.Sindex,newCell.name,self.Eindex])
-        TTs                 = np.array([[np.nan,np.nan],[np.nan,np.nan]]) # Setting NaN travel-times to updated on the next iterations when Long or Lat case is called
-
-        return CrossingPoints,Indices,TTs
+        return CrossingPoints,Indices
 
 
-    def value(self):
+    def _updateCrossingPoint(self):
         '''
             BUG:
             --> 
@@ -1171,13 +1166,96 @@ class NewtonianCurve:
         endNeighbourIndices    = self.DijkstraInfo.loc[self.Eindex]
         self.case = sourceNeighbourIndices['case'][np.where(np.array(sourceNeighbourIndices['neighbourIndex'])==endNeighbourIndices.name)[0][0]]
 
+        # --- Updating the crossing Points ---
         if self.debugging>0:
             print('===========================================================')
         if abs(self.case)==2:
-            CrossingPoints,Indices,TTs = self._long_case()
+            CrossingPoints,Indices = self._long_case()
         elif abs(self.case)==4:
-            CrossingPoints,Indices,TTs = self._lat_case()
+            CrossingPoints,Indices = self._lat_case()
         elif (abs(self.case)==1) or (abs(self.case)==3):
-            CrossingPoints,Indices,TTs = self._corner_case()
+            CrossingPoints,Indices = self._corner_case()
 
-        return CrossingPoints,Indices,TTs
+
+        return CrossingPoints,Indices
+
+    def PathSmoothing(self,path,cellIndices):
+        import copy
+        self.path        = path
+        self.cellIndices = cellIndices
+        self.stage       = np.arange(len(path)-3)
+
+        iter = 0
+        while iter <= self.maxiter:
+            id = 0
+
+            # Creating some path info to refer back to for special cases
+            self.current_path         = copy.copy(self.path)
+            self.current_pathIndices  = copy.copy(self.cellIndices)
+
+            # Updating all points along path
+            while id <= (len(self.path) - 3):
+                self.Sp     = tuple(self.path[id,:])
+                self.Cp     = tuple(self.path[id+1,:])
+                self.Ep     = tuple(self.path[id+2,:])
+
+                self.Sindex = self.cellIndices[id]
+                self.Eindex = self.cellIndices[id+1]
+
+                CrossingPoints,Indices = self._updateCrossingPoint()
+
+
+                # ======== SmoothingCaseIssue - NaNs ==========
+                #    Issue: Returned NaN Value
+                # Solution: Don't Update Crossing Point
+                if np.isnan(CrossingPoints).any():
+                    id+=1
+                    
+                # ======== SmoothingCaseIssue - HorseShoe + Points ==========
+                #    Issue: Crossing Point moved outside the origional domain so add in new crossing points and cells
+                # Solution: Add in the new crossing points and vertices from the DijkstraInfo Graph
+
+                # 1. deter
+
+
+
+
+                # ======== SmoothingCaseIssue - Ice/Land Cell ==========
+                #    Issue: Entered an Inaccessible cell consisting of Land or inaccessible Ice content
+                # Solution: Do not update crossing points as entered a land cell
+                Allowed = True
+                Boxes = [self.Mesh.cellBoxes[i] for i in Indices]
+                for box in Boxes:
+                    if box.containsLand() or box.iceArea() >= self.OptInfo['MaxIceExtent']:
+                        Allowed = False
+                if not Allowed:
+                    id+=1
+                    continue
+
+
+
+
+
+                # Updating the Crossing and Indice Information
+                self.path[id+1,:]      = CrossingPoints[0,:]
+                self.cellIndices[id]   = Indices[0]
+                self.cellIndices[id+1] = Indices[-1]
+                if CrossingPoints.shape[0] > 1:
+                    self.path        = np.insert(self.path,id+2,CrossingPoints[1:,:],0)
+                    self.cellIndices = np.insert(cellIndices,id+1,Indices[1:-1],0)
+                    id+=1
+
+
+
+
+            # Stop optimisation if the points are within some minimum difference
+            if iter!=0:
+                if self.path.shape == self.current_path.shape:
+                    if np.max(np.sqrt((self.path-self.current_path)**2)) < self.minimumDiff:
+                        break
+
+
+
+
+
+

@@ -318,8 +318,8 @@ def MapMesh(cellGrid,map,threshold=0.8):
                 'fillOpacity': 0.
             },
         tooltip=folium.GeoJsonTooltip(
-            fields=['Ice Area', 'Land','Cx','Cy','Depth','Vector'],
-            aliases=['Ice Area (%)', 'Land','Centroid Cx [Long]','Centroid Cy [Lat]','Depth(m)','Vector (m/s)'],
+            fields=['Ice Area', 'Land','Cx','Cy','Depth','Vector','Index'],
+            aliases=['Ice Area (%)', 'Land','Centroid Cx [Long]','Centroid Cy [Lat]','Depth(m)','Vector (m/s)','Cell Index'],
             localize=True
         ),
         name='Land Grid'

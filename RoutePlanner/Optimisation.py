@@ -43,7 +43,7 @@ class TravelTime:
                         continue
                     for indx in indxs:
                         cases.append(case)
-                        neighIndx.append(indxs[0])
+                        neighIndx.append(indx)
                 neighDict = {}
                 neighDict['cX']    = cell.cx
                 neighDict['cY']    = cell.cy
@@ -198,7 +198,7 @@ class TravelTime:
         Bugs/Alterations:
             - If corner of cell is land in adjacent cell then also return 'inf'
         '''
-        # Determining the nearest neighbour index for the cellƒ
+        # Determining the nearest neighbour index for the cell
         Sc = self.Mesh.cellBoxes[minimumTravelTimeIndex]
         SourceGraph = self.DijkstraInfo[wpt_name].loc[minimumTravelTimeIndex]
 
@@ -248,6 +248,7 @@ class TravelTime:
         # Initalising zero traveltime at the source location
         SourceIndex = int(self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'] == wpt_name]['index'])
         self.DijkstraInfo[wpt_name].loc[SourceIndex,'traveltime'] = 0.0
+        self.DijkstraInfo[wpt_name].loc[SourceIndex,'pathIndex'].append(SourceIndex)
         
         # Updating Dijkstra as long as all the waypoints are not visited.
         while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
@@ -329,76 +330,13 @@ class TravelTime:
                 print('==================================================')
                 print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
 
-            Points = Path['Path']['Points'][::2]
-            cellIndices = np.array(list(Path['Path']['CellIndices']) + [Path['Path']['CellIndices'][-1]])
+            Points      = np.concatenate([startPoint,Path['Path']['Points'][1:-1:2],endPoint])
+            cellIndices = np.concatenate((Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]))
 
-            iter = 0
-            while iter <= maxiter:
-                id = 0
+            nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.OptInfo,zerocurrents=self.zero_currents,debugging=debugging)
+            nc.PathSmoothing(Points,cellIndices)
 
-                while id <= (len(Points) - 3):
-                    Sp  = tuple(Points[id,:])
-                    Cp  = tuple(Points[id+1,:])
-                    Ep  = tuple(Points[id+2,:])
-
-                    try:
-                        Sindex = cellIndices[id]
-                        Eindex = cellIndices[id+1]
-                    except:
-                        id+=1
-                        continue
-                    if Sindex == Eindex:
-                        id+=1
-                        continue                        
-
-
-                    # if (np.sqrt((Sp[0]-Cp[0])**2 + (Sp[1]-Cp[1])**2) < 1e-4)  or (np.sqrt((Ep[0]-Cp[0])**2 + (Ep[1]-Cp[1])**2) < 1e-4):
-                    #     Points = np.delete(Points,id+1,axis=0)
-                    #     continue
-
-                    # if abs(Sp[0]-Cp[0]) < 1e-4 or abs(Sp[1]-Cp[1]) < 1e-4  or abs(Ep[0]-Cp[0]) < 1e-4 + abs(Ep[1]-Cp[1] < 1e-4):
-                    #     Points = np.delete(Points,id+1,axis=0)
-                    #     continue
-                    nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],Sp,Cp,Ep,Sindex,Eindex,self.OptInfo['VehicleInfo']['Speed'],zerocurrents=self.zero_currents,debugging=debugging)
-                    CrossingPoint,Indices,TTs = nc.value()
-                    if np.isnan(CrossingPoint).any():
-                        id+=1
-                        continue                        
-
-
-                    # Skip Path construction if any of the cells are land & return to the previous iteration
-
-                    Boxes = [self.Mesh.cellBoxes[i] for i in Indices]
-                    Allowed = True
-                    for box in Boxes:
-                        if box.containsLand() or box.iceArea() >= self.OptInfo['MaxIceExtent']:
-                            Allowed = False
-                    if not Allowed:
-                        id+=1
-                        continue
-
-                    Points[id+1,:] = CrossingPoint[0,:]
-                    if CrossingPoint.shape[0] > 1:
-                        Points = np.insert(Points,id+2,CrossingPoint[1:,:],0)
-                    id+=1
-
-                if iter!=0:
-                    if Points.shape == oldPoints.shape:
-                        if np.max(np.sqrt((Points-oldPoints)**2)) < minimumDiff:
-                            break
-                
-                if verbose:
-                    if iter == maxiter:
-                        print('Maximum number of iterations met !')
-                    
-                oldPoints = copy.deepcopy(Points)
-
-                iter+=1
-
-            if verbose:
-                print('{} iterations to convergence'.format(iter-1))
-
-            Path['Path']['Points']       = Points
+            Path['Path']['Points']       = nc.path
             SmoothedPaths.append(Path)
 
         self.smoothedPaths = SmoothedPaths
