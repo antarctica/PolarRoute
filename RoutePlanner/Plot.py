@@ -334,7 +334,7 @@ def BaseMap(location=[-58,-63.7],logo=True,logoPos=[10,90]):
     folium.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}.png',attr="toner-bcg", name='Basemap').add_to(bsmap)
     bsmap.add_to(map)
     if logo:
-        folium.plugins.FloatImage('https://i.ibb.co/dr3TNf7/Large-Logo.jpg',bottom=logoPos[1],left=logoPos[0]).add_to(map)
+        folium.plugins.FloatImage('https://i.ibb.co/JH2zknX/Small-Logo.png',bottom=logoPos[1],left=logoPos[0]).add_to(map)
     return map
 
 def LayerControl(map,collapsed=True):

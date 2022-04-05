@@ -143,12 +143,13 @@ class TravelTime:
 
     def speedFunction(self, Cell):
         if self.variableSpeed:
-            if Cell.iceArea() == 0.0:
-                s = self.OptInfo['VehicleInfo']['Speed']
-            elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
-                s = self.OptInfo['VehicleInfo']['Speed']
-            else:
-                s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
+            # if Cell.iceArea() == 0.0:
+            #     s = self.OptInfo['VehicleInfo']['Speed']
+            # elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
+            #     s = self.OptInfo['VehicleInfo']['Speed']
+            # else:
+            #     s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
+            s = self.OptInfo['VehicleInfo']['Speed']*(-5.95*Cell.iceArea()**3 + 7.03*Cell.iceArea()**2 - 3.00*Cell.iceArea() + 0.98)
         else:
             s = self.OptInfo['VehicleInfo']['Speed']
         return s
