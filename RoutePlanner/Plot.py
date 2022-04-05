@@ -52,7 +52,6 @@ def MapResearchSites(DF,map):
     wpts.add_to(map)    
     return map
 
-
 def MapPaths(Paths,map,PathPoints=True):
     Pths        = folium.FeatureGroup(name='Paths')
     Pths_points = folium.FeatureGroup(name='Path Points')
@@ -60,7 +59,7 @@ def MapPaths(Paths,map,PathPoints=True):
         points = path['Path']['Points']
         points[:,0] = points[:,0]
         points = points[:,::-1]
-        folium.PolyLine(points,color="black", weight=2.5, opacity=1,
+        folium.PolyLine(points,color="black", weight=2.0, opacity=1,
                         popup='{}->{}\n Travel-Time = {:.2f}days'.format(path['from'],path['to'],path['Time'])).add_to(Pths)
         for idx in range(len(points)):
             loc = [points[idx,0],points[idx,1]]
@@ -68,7 +67,7 @@ def MapPaths(Paths,map,PathPoints=True):
                 location=loc,
                 icon=folium.DivIcon(html=f"""
                     <div><svg>
-                        <rect x="0", y="0" width="10" height="10", fill="black", opacity="1.0" 
+                        <rect x="0", y="0" width="10" height="10", fill="green", opacity="1.0" 
                     </svg></div>""")
             ).add_to(Pths_points)
     Pths.add_to(map)
@@ -328,7 +327,7 @@ def MapMesh(cellGrid,map,threshold=0.8):
     return map
 
 
-def BaseMap(location=[-58,-63.7],logo=True,logoPos=[10,90]):
+def BaseMap(location=[-58,-63.7],logo=True,logoPos=[5,88]):
     map = folium.Map(location=location,zoom_start=2.6,tiles=None)
     bsmap = folium.FeatureGroup(name='BaseMap')
     folium.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}.png',attr="toner-bcg", name='Basemap').add_to(bsmap)
