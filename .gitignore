@@ -17,3 +17,4 @@ build
 
 # Jonny's GitIgnores. Remove Later
 Examples/Path/cellGrid
+*.p
