@@ -3,8 +3,10 @@ import numpy as np
 from RoutePlanner.CellBox import CellBox
 import pandas as pd
 from shapely.geometry import Polygon
-import matplotlib.pylab as plt
-from matplotlib.patches import Polygon as polygon
+import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as MatplotPolygon
+import math
+#import geopandas as gpd
 
 def bearing(st,en): # Should be moved out of the CellBox.py file.
     long1,lat1 = st
@@ -72,11 +74,13 @@ def Intersection_BoxLine(Cell_s,Pt,type): # Should be moved out of the CellBox.p
 
 class CellGrid:
 
-    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
+    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight, j_grid=False):
         self._longMin = longMin
         self._longMax = longMax
         self._latMin = latMin
         self._latMax = latMax
+
+        self._j_grid = j_grid
 
         self._cellWidth = cellWidth
         self._cellHeight = cellHeight
@@ -86,12 +90,13 @@ class CellGrid:
         # Initialise cellBoxes.
         for lat in np.arange(latMin, latMax, cellHeight):
             for long in np.arange(longMin, longMax, cellWidth):
-                cellBox = CellBox(lat, long, cellWidth, cellHeight)
+                cellBox = CellBox(lat, long, cellWidth, cellHeight, j_grid)
                 self.cellBoxes.append(cellBox)
 
-        # Calculate initial neighbours graph.
         gridWidth = (self._longMax - self._longMin) / self._cellWidth
+        gridHeight = (self._latMax - self._latMin) / self._cellHeight
 
+        # Calculate initial neighbours graph.
         self.neighbourGraph = {}
         for cellBox in self.cellBoxes:
             cellBoxIndx = self.cellBoxes.index(cellBox)
@@ -127,6 +132,14 @@ class CellGrid:
 
             self.neighbourGraph[cellBoxIndx] = neighbourMap
 
+            # set gridCoord of cellBox
+            xCoord = cellBoxIndx % gridWidth
+            yCoord = abs(math.floor(cellBoxIndx / gridWidth) - (gridHeight - 1))
+            cellBox.setGridCoord(xCoord, yCoord)
+
+            # set focus of cellBox
+            cellBox.setFocus([])
+
     def neighbourTest(self, cellBox):
         """
             Returns a flattened list of all neighbours of a given cellBox.
@@ -155,8 +168,9 @@ class CellGrid:
             Takes a dataframe containing ice points and assigns them to cellBoxes within the cellGrid
         """
         for cellBox in self.cellBoxes:
-            longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] < (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] < (cellBox.lat + cellBox.height))]
+            longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] <= (cellBox.long + cellBox.width))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
+
             cellBox.addIcePoints(latLongLoc)
 
     def addCurrentPoints(self, currentPoints):
@@ -164,10 +178,22 @@ class CellGrid:
             Takes a dataframe containing current points and assigns then to cellBoxes within the cellGrid
         """
         for cellBox in self.cellBoxes:
-            longLoc = currentPoints.loc[(currentPoints['long'] > cellBox.long) & (currentPoints['long'] < (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] < (cellBox.lat + cellBox.height))]
+            longLoc = currentPoints.loc[(currentPoints['long'] > cellBox.long) & (currentPoints['long'] <= (cellBox.long + cellBox.width))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
 
             cellBox.addCurrentPoints(latLongLoc)
+            cellBox.setLand()
+
+    def addWindPoints(self, windPoints):
+        """
+            Takes a dataframe containing current points and assigns then to cellBoxes within the cellGrid
+        """
+        for cellBox in self.cellBoxes:
+            longLoc = windPoints.loc[(windPoints['long'] > cellBox.long) & (windPoints['long'] < (cellBox.long + cellBox.width))]
+            latLongLoc = longLoc.loc[(windPoints['lat'] > cellBox.lat) & (windPoints['lat'] < (cellBox.lat + cellBox.height))]
+
+            cellBox.addWindPoints(latLongLoc)
+            cellBox.setLand()
 
     def cellCount(self):
         """
@@ -193,13 +219,10 @@ class CellGrid:
     def getCellBox(self, long, lat):
         """
             Returns the CellBox which contains a point, given by parameters lat, long
-
-            ISSUE - This is very slow ! 
-
         """
         selectedCell = []
         for cellBox in self.cellBoxes:
-            if cellBox is not None:
+            if isinstance(cellBox, CellBox):
                 if cellBox.containsPoint(lat, long):
                     selectedCell.append(cellBox)
         return selectedCell
@@ -232,10 +255,10 @@ class CellGrid:
 
         cellBoxIndx = self.cellBoxes.index(cellBox)
 
-        southWestIndx = self.cellBoxes.index(splitCellBoxes[0])
-        southEastIndx = self.cellBoxes.index(splitCellBoxes[1])
-        northWestIndx = self.cellBoxes.index(splitCellBoxes[2])
-        northEastIndx = self.cellBoxes.index(splitCellBoxes[3])
+        northWestIndx = self.cellBoxes.index(splitCellBoxes[0])
+        northEastIndx = self.cellBoxes.index(splitCellBoxes[1])
+        southWestIndx = self.cellBoxes.index(splitCellBoxes[2])
+        southEastIndx = self.cellBoxes.index(splitCellBoxes[3])
 
         southNeighbourIndx = self.neighbourGraph[cellBoxIndx][4]
         northNeighbourIndx = self.neighbourGraph[cellBoxIndx][-4]
@@ -424,7 +447,7 @@ class CellGrid:
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
             if isinstance(cellBox, CellBox):
-                if cellBox.isHomogenous() == False:
+                if cellBox.shouldWeSplit():
                     self.splitAndReplace(cellBox)
 
     def recursiveSplitAndReplace(self, cellBox, maxSplits):
@@ -536,21 +559,30 @@ class CellGrid:
             creates and displays a plot for this cellGrid
         """
         # Create plot figure
-        fig, ax = plt.subplots(1, 1, figsize = (15,10))
+        fig, ax = plt.subplots(1, 1, figsize=(25, 11))
+
         fig.patch.set_facecolor('white')
         ax.set_facecolor('lightblue')
 
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
                 # plot land
-                if cellBox.containsLand():
-                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                if self._j_grid == True:
+                    if cellBox.landLocked:
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                else:
+                    if cellBox.containsLand():
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
                 # plot ice
                 if plotIce and not np.isnan(cellBox.iceArea()):
-                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
-                else:
-                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                    if cellBox.iceArea() >= 0.12:
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=1))
+                    elif cellBox.iceArea() >= 0.04:
+                        ax.add_patch(
+                            MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey', alpha=1))
+                #else:
+                    #ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
                 # plot currents
                 if plotCurrents:
@@ -559,11 +591,16 @@ class CellGrid:
 
                 # plot borders
                 if plotBorders:
-                    ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='gray'))
+                    ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='black'))
+
+                if self._j_grid == True:
+                    # plot %iceArea text
+                    if not np.isnan(cellBox.iceArea()):
+                        ax.text(cellBox.long, cellBox.lat, str(math.floor(cellBox.iceArea() * 100)) + "%", fontsize=8)
 
         # plot highlighted cells
         for cellBox in highlightCellBoxes:
-            ax.add_patch(polygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
+            ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
 
         # plot paths if supplied
         if type(paths) != type(None):
@@ -587,12 +624,7 @@ class CellGrid:
     def getCase(self,cell,ncell):
         """
 
-            ISSUE  - Polygon get neighbour is slow and needs to be sped up. 
-            The whole of getCase should be pre-computed when cellGrid is constructed
-
         """
-
-
         SPoly = Polygon(selectedCellBox.getBounds())
         neightbours      = []
         neightbours_index = []
@@ -645,17 +677,33 @@ class CellGrid:
 
     def toDataFrame(self):
         DF = pd.DataFrame({'idx':np.arange(len(self.cellBoxes))})
-        Shape   = []
-        IceArea = []
-        IsLand  = []
-        for c in self.cellBoxes:
-            Shape.append(Polygon(c.getBounds()))
-            IceArea.append(c.iceArea())
-            IsLand.append(c.containsLand())
+        shape   = []
+        iceArea = []
+        isLand  = []
+        currentuC = []
+        currentvC = []
+        windv10 = []
+        windu10 = []
 
-        DF['Geometry'] = Shape
-        DF['Ice Area'] = IceArea
-        DF['Land']     = IsLand
+        for cellBox in self.cellBoxes:
+            shape.append(Polygon(cellBox.getBounds()))
+            iceArea.append(cellBox.iceArea())
+            isLand.append(cellBox.containsLand())
+            currentuC.append(cellBox.getuC())
+            currentvC.append(cellBox.getvC())
+            windu10.append(cellBox.getWindu10())
+            windv10.append(cellBox.getWindv10())
+
+        DF['Geometry'] = shape
+        DF['Ice Area'] = iceArea
+        DF['Land']     = isLand
+        DF['Current uC'] = currentuC
+        DF['Current vC'] = currentvC
+        DF['Wind v10'] = windv10
+        DF['Wind u10'] = windu10
+
+        DF = gpd.GeoDataFrame(DF, crs={'init': 'epsg:4326'}, geometry='Geometry')
+        DF['Land'][np.isnan(DF['Ice Area'])] = True
         return DF
 
     def getNeightbours(self, selectedCellBox):
@@ -736,3 +784,74 @@ class CellGrid:
                 cellBoxB.long < (cellBoxA.long + cellBoxA.width)):
             return -4  # North
         return 0  # Cells are not neighbours.
+
+    def dumpMesh(self, fileLocation):
+        meshDump = ""
+        for cellBox in self.cellBoxes:
+            if isinstance(cellBox, CellBox):
+                meshDump += cellBox.meshDump()
+
+        f = open(fileLocation, "w")
+        f.write(meshDump)
+        f.close()
+
+    def dumpGraph(self, fileLocation):
+        graphDump = ""
+
+        maxIceArea = 0.8
+
+        for cellBox in self.cellBoxes:
+            if isinstance(cellBox, CellBox):
+                if (not cellBox.landLocked) and cellBox.iceArea() < maxIceArea:
+                    graphDump += cellBox.nodeString()
+
+                    cellBoxIndx = self.cellBoxes.index(cellBox)
+
+                    # case -3 neighbours
+                    nwneighbourIndx = self.neighbourGraph[cellBoxIndx][-3]
+                    for neighbour in nwneighbourIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":-3"
+                    # case -2 neighbours
+                    wneighboursIndx = self.neighbourGraph[cellBoxIndx][-2]
+                    for neighbour in wneighboursIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":-2"
+                    # case -1 neighbours
+                    swneighboursIndx = self.neighbourGraph[cellBoxIndx][-1]
+                    for neighbour in swneighboursIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":-1"
+                    # case -4 neighbours
+                    nneighbourIndx = self.neighbourGraph[cellBoxIndx][-4]
+                    for neighbour in nneighbourIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":-4"
+                    # case 4 neighbours
+                    sneighboursIndx = self.neighbourGraph[cellBoxIndx][4]
+                    for neighbour in sneighboursIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":4"
+                    # case 1 neighbours
+                    neneighbourIndx = self.neighbourGraph[cellBoxIndx][1]
+                    for neighbour in neneighbourIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":1"
+                    # case 2 neighbours
+                    eneighbourIndx = self.neighbourGraph[cellBoxIndx][2]
+                    for neighbour in eneighbourIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":2"
+                    # case 3 neighbours
+                    seneighbourIndx = self.neighbourGraph[cellBoxIndx][3]
+                    for neighbour in seneighbourIndx:
+                        if (not self.cellBoxes[neighbour].landLocked) and self.cellBoxes[neighbour].iceArea() < maxIceArea:
+                            graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":3"
+
+                    graphDump += "\n"
+
+
+
+        f = open(fileLocation, "w")
+        f.write(graphDump)
+        f.close()
