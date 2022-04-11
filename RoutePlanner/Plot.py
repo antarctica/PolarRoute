@@ -3,6 +3,7 @@ from matplotlib.patches import Polygon
 import numpy as np
 from simplekml import Kml, Color, Style
 from RoutePlanner.IO import SDAPosition, MeshDF
+from RoutePlanner.CellBox import CellBox
 import folium
 import pandas as pd
 
@@ -65,10 +66,12 @@ def MapPaths(Paths,map,PathPoints=True):
             loc = [points[idx,0],points[idx,1]]
             folium.Marker(
                 location=loc,
-                icon=folium.DivIcon(html=f"""
-                    <div><svg>
-                        <rect x="0", y="0" width="10" height="10", fill="green", opacity="1.0" 
-                    </svg></div>""")
+                icon=folium.plugins.BeautifyIcon(icon='circle',
+                                            border_color='transparent',
+                                            background_color='transparent',
+                                            border_width=1,
+                                            text_color='orange',
+                                            inner_icon_style='margin:0px;font-size:0.8em')
             ).add_to(Pths_points)
     Pths.add_to(map)
     if PathPoints:
@@ -80,7 +83,6 @@ def TimeMapPaths(Paths,map,starttime='2014-01-01T00:00:00'):
     lines=[]
     for Path in copy.deepcopy(Paths):
         Points = Path['Path']['Points']
-        Points[:,0] = Points[:,0]-360
         Times  = pd.to_datetime(starttime) + pd.to_timedelta(Path['Path']['Time'],unit='D')
 
         entry = {}
@@ -119,6 +121,8 @@ def TimeMapPaths(Paths,map,starttime='2014-01-01T00:00:00'):
         period="PT1H",
         auto_play=False,
         add_last_point=True,
+        max_speed=100,
+        min_speed=5
     ).add_to(map)
     return map
 
@@ -224,20 +228,23 @@ def MapCurrents(cellGrid,map,show=False,scale=15):
     cellGrid
     X=[];Y=[];U=[];V=[];
     for ii in range(len(cellGrid.cellBoxes)):
-        cellBox = cellGrid.cellBoxes[ii]
-        X.append(cellBox.cx)
-        Y.append(cellBox.cy)
-        U.append(cellBox.getuC())
-        V.append(cellBox.getvC())
+        cellbox = cellGrid.cellBoxes[ii]
+        if not isinstance(cellbox, CellBox):
+            continue
+
+        X.append(cellbox.cx)
+        Y.append(cellbox.cy)
+        U.append(cellbox.getuC())
+        V.append(cellbox.getvC())
     Currents = pd.DataFrame({'X':X,'Y':Y,'U':U,'V':V})
     Currents = Currents.dropna()
-    Currents['X'] = Currents['X'] - 360
+    Currents['X'] = Currents['X']
 
 
     vectors = folium.FeatureGroup(name='Currents',show=show)
     for idx,vec in Currents.iterrows():
         loc =[[vec['Y'],vec['X']],[vec['Y']+vec['V']*scale,vec['X']+vec['U']*scale]]
-        folium.PolyLine(loc, color="black").add_to(vectors)
+        folium.PolyLine(loc, color="gray",weight=1.4).add_to(vectors)
         # get pieces of the line
         pairs = [(loc[idx], loc[idx-1]) for idx, val in enumerate(loc) if idx != 0]
         # get rotations from forward azimuth of the line pieces and add an offset of 90°
@@ -245,8 +252,8 @@ def MapCurrents(cellGrid,map,show=False,scale=15):
         rotations = [geodesic.inv(pair[0][1], pair[0][0], pair[1][1], pair[1][0])[0]+90 for pair in pairs]
         # create your arrow
         for pair, rot in zip(pairs, rotations):
-            folium.RegularPolygonMarker(location=pair[0], color='black', fill=True, fill_color='black', fill_opacity=1,
-                                        number_of_sides=3, rotation=rot,radius=2).add_to(vectors)
+            folium.RegularPolygonMarker(location=pair[0], color='gray', fill=True, fill_color='gray', fill_opacity=1,
+                                        number_of_sides=3, rotation=rot,radius=2,weight=0.8).add_to(vectors)
 
     vectors.add_to(map)
     return map

@@ -2,11 +2,6 @@ import numpy as np
 import copy
 import pandas as pd
 
-import warnings
-# warnings.filterwarnings("ignore", category=RuntimeWarning) 
-from pandas.core.common import SettingWithCopyWarning
-warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
-
 from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
 from RoutePlanner.CellBox import CellBox
 
@@ -22,7 +17,7 @@ class TravelTime:
     def __init__(self,CellGrid,OptInfo,CostFunc=NewtonianDistance):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
-        self.OptInfo = copy.copy(OptInfo)
+        self.OptInfo = copy.copy(OptInfo['Route'])
 
         # Creating a blank path construct
         self.paths         = None
@@ -49,7 +44,7 @@ class TravelTime:
                 neighDict['cY']    = cell.cy
                 neighDict['case']  = cases
                 neighDict['neighbourIndex'] = neighIndx 
-            neighbourGraph[idx] = neighDict
+                neighbourGraph[idx] = neighDict
         self.neighbourGraph = pd.DataFrame().from_dict(neighbourGraph,orient='index')
         self.neighbourGraph['positionLocked'] = False
         self.neighbourGraph['traveltime']     = np.inf
@@ -199,7 +194,7 @@ class TravelTime:
             - If corner of cell is land in adjacent cell then also return 'inf'
         '''
         # Determining the nearest neighbour index for the cell
-        Sc = self.Mesh.cellBoxes[minimumTravelTimeIndex]
+        Sc          = self.Mesh.cellBoxes[minimumTravelTimeIndex]
         SourceGraph = self.DijkstraInfo[wpt_name].loc[minimumTravelTimeIndex]
 
         # Looping over idx
@@ -210,7 +205,7 @@ class TravelTime:
             
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']) or (Sc.iceArea() >= self.OptInfo['MaxIceExtent']) or (Nc.containsLand()) or (Sc.containsLand()):
+            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']) or (Nc.containsLand()):
                 SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
                 SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
                 continue
@@ -236,7 +231,7 @@ class TravelTime:
                 NeighbourGraph['pathCost']   = SourceGraph['pathCost']   + Neighbour_cost
                 NeighbourGraph['pathPoints'] = SourceGraph['pathPoints'] + [list(CrossPoints)] + [list(CellPoints)]
 
-            self.DijkstraInfo[wpt_name].loc[SourceGraph['neighbourIndex'][idx]] = NeighbourGraph
+            self.DijkstraInfo[wpt_name].loc[indx] = NeighbourGraph
 
         self.DijkstraInfo[wpt_name].loc[minimumTravelTimeIndex] = SourceGraph
 

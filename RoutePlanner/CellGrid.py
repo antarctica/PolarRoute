@@ -72,21 +72,28 @@ def Intersection_BoxLine(Cell_s,Pt,type): # Should be moved out of the CellBox.p
 
 class CellGrid:
 
-    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
-        self._longMin = longMin
-        self._longMax = longMax
-        self._latMin = latMin
-        self._latMax = latMax
+    def __init__(self, OptInfo):
 
-        self._cellWidth = cellWidth
-        self._cellHeight = cellHeight
+        self.OptInfo = OptInfo
+
+        self._longMin = self.OptInfo['Longitude Bounds (Min,Max,Width)'][0]
+        self._longMax = self.OptInfo['Longitude Bounds (Min,Max,Width)'][1]
+        self._latMin  = self.OptInfo['Latitude Bounds (Min,Max,Width)'][0]
+        self._latMax  = self.OptInfo['Latitude Bounds (Min,Max,Width)'][1]
+
+        self._cellWidth = self.OptInfo['Longitude Bounds (Min,Max,Width)'][2]
+        self._cellHeight = self.OptInfo['Latitude Bounds (Min,Max,Width)'][2]
+
+        self.threshold = self.OptInfo['Homogenous Params (Threshold,Min,Max)'][0]
+        self.lowerBound = self.OptInfo['Homogenous Params (Threshold,Min,Max)'][1]
+        self.upperBound = self.OptInfo['Homogenous Params (Threshold,Min,Max)'][2]
 
         self.cellBoxes = []
 
         # Initialise cellBoxes.
-        for lat in np.arange(latMin, latMax, cellHeight):
-            for long in np.arange(longMin, longMax, cellWidth):
-                cellBox = CellBox(lat, long, cellWidth, cellHeight)
+        for lat in np.arange(self._latMin, self._latMax, self._cellHeight):
+            for long in np.arange(self._longMin,self._longMax, self._cellWidth):
+                cellBox = CellBox(lat, long, self._cellWidth, self._cellHeight)
                 self.cellBoxes.append(cellBox)
 
         # Calculate initial neighbours graph.
@@ -215,7 +222,7 @@ class CellGrid:
         """
         splitCellBoxes = []
         for cellBox in self.cellBoxes:
-            splitCellBoxes += cellBox.recursiveSplit(maxSplits)
+            splitCellBoxes += cellBox.recursiveSplit(maxSplits,self.threshold,self.lowerBound,self.upperBound)
 
         self.cellBoxes = splitCellBoxes
 
@@ -424,7 +431,7 @@ class CellGrid:
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
             if isinstance(cellBox, CellBox):
-                if cellBox.isHomogenous() == False:
+                if cellBox.isHomogenous(self.threshold,self.lowerBound,self.upperBound) == False:
                     self.splitAndReplace(cellBox)
 
     def recursiveSplitAndReplace(self, cellBox, maxSplits):
