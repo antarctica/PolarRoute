@@ -7,16 +7,24 @@ import datetime
 
 class TemporalCellGrid:
 
-    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight):
-        self._longMin = longMin
-        self._longMax = longMax
-        self._latMin = latMin
-        self._latMax = latMax
+    def __init__(self, OptInfo):
+        self.OptInfo = OptInfo['Mesh']
 
-        self._cellWidth = cellWidth
-        self._cellHeight = cellHeight
+        self._longMin = self.OptInfo['Longitude Bounds (Min,Max,Width)'][0]
+        self._longMax = self.OptInfo['Longitude Bounds (Min,Max,Width)'][1]
+        self._latMin  = self.OptInfo['Latitude Bounds (Min,Max,Width)'][0]
+        self._latMax  = self.OptInfo['Latitude Bounds (Min,Max,Width)'][1]
+
+        self._cellWidth = self.OptInfo['Longitude Bounds (Min,Max,Width)'][2]
+        self._cellHeight = self.OptInfo['Latitude Bounds (Min,Max,Width)'][2]
 
         self.cellGrids = []
+
+
+        self.addIcePoints(self.OptInfo['Ice Data Path'], self.OptInfo['Date Range (Min,Max,dT)'][0], self.OptInfo['Date Range (Min,Max,dT)'][1])
+        self.addCurrentPoints(self.OptInfo['Current Data Path'])
+
+
 
     def _loadDailyIce(self, icePointsPath ,time):
         bsos = Dataset(icePointsPath)
@@ -73,18 +81,18 @@ class TemporalCellGrid:
         currentPoints['long'] = currentPoints['long'].apply(lambda x: x if x <= 180 else x - 360)
         self._currentPoints = currentPoints
 
-    def getGrid(self, time):
-        """
-            Returns a cellGrid for a selected time given by parameter 'time'
-        """
-        icePoints = self._icePoints.loc[self._icePoints['time'] == time]
+    # def getGrid(self, time):
+    #     """
+    #         Returns a cellGrid for a selected time given by parameter 'time'
+    #     """
+    #     icePoints = self._icePoints.loc[self._icePoints['time'] == time]
 
-        # create a cellGrid using datapoints for the given day
-        cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
-        cellGrid.addCurrentPoints(self._currentPoints)
-        cellGrid.addIcePoints(icePoints)
+    #     # create a cellGrid using datapoints for the given day
+    #     cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight)
+    #     cellGrid.addCurrentPoints(self._currentPoints)
+    #     cellGrid.addIcePoints(icePoints)
 
-        return cellGrid
+    #     return cellGrid
 
     def range(self, startTime, endTime, j_grid=False):
         # get all icePoints for the given time

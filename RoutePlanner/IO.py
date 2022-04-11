@@ -155,8 +155,8 @@ from RoutePlanner.CellBox import CellBox
 def MeshDF(cellGrid):
     from shapely.geometry import Polygon
     import geopandas as gpd
-    Shape   = []; IceArea = []; IsLand  = []; dpth=[];vec=[]; CentroidCx=[];CentroidCy=[];
-    for c in cellGrid.cellBoxes:
+    Shape   = []; IceArea = []; IsLand  = []; dpth=[];vec=[]; CentroidCx=[];CentroidCy=[];Index=[]
+    for idx,c in enumerate(cellGrid.cellBoxes):
         if isinstance(c, CellBox):
             bounds = np.array(c.getBounds())
             Shape.append(Polygon(bounds))
@@ -166,7 +166,8 @@ def MeshDF(cellGrid):
             vec.append([c.getuC(),c.getvC()])
             CentroidCx.append(c.cx)
             CentroidCy.append(c.cy)
-    Polygons = pd.DataFrame({'Index':np.arange(len(Shape))})
+            Index.append(int(idx))
+    Polygons = pd.DataFrame()
     Polygons['geometry'] = Shape
     Polygons['Ice Area'] = IceArea
     Polygons['Land']     = IsLand
@@ -174,6 +175,7 @@ def MeshDF(cellGrid):
     Polygons['Cy']       = CentroidCy
     Polygons['Vector']   = vec
     Polygons['Depth']    = dpth
+    Polygons['Index']    = Index
     Polygons = gpd.GeoDataFrame(Polygons,crs={'init': 'epsg:4326'}, geometry='geometry')
     Polygons['Land'][np.isnan(Polygons['Ice Area'])] = True
     return Polygons
