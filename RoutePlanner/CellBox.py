@@ -324,6 +324,7 @@ class CellBox:
             return True
         return False
 
+
     def maxCurrentVector(self):
         return self.width * 6 * self.height * 6
 
@@ -363,6 +364,7 @@ class CellBox:
 
         lowerBound = 0.05
         upperBound = 0.85
+
 
         if percentIPsAboveThreshold < lowerBound:
             return True
@@ -457,7 +459,7 @@ class CellBox:
 
         return splitBoxes
 
-    def recursiveSplit(self, maxSplits):
+    def recursiveSplit(self, maxSplits,threshold,lowerBound,upperBound):
         '''
             Recursively splits this cellBox until all split cellBoxes are considered homogenous (defined by the isHomogenous() function)
             or a the cellBox has reached a maximum split depth, given by parameter maxSplits.
@@ -466,6 +468,7 @@ class CellBox:
         # Base case for recursive splitting.
         # Do not split a cell if it is homogenous or the maximum split depth has been reached
         if self.isHomogenous() or (self.splitDepth >= maxSplits):
+
             splitCells.append(self)
             return splitCells
         else:

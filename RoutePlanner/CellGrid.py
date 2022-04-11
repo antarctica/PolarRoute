@@ -238,7 +238,7 @@ class CellGrid:
         """
         splitCellBoxes = []
         for cellBox in self.cellBoxes:
-            splitCellBoxes += cellBox.recursiveSplit(maxSplits)
+            splitCellBoxes += cellBox.recursiveSplit(maxSplits,self.threshold,self.lowerBound,self.upperBound)
 
         self.cellBoxes = splitCellBoxes
 
