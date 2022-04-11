@@ -309,6 +309,10 @@ class CellBox:
         """
             Returns True if any icepoint within the cell has a depth less than the specified minimum depth.
         """
+
+        if self._j_grid == True:
+            return self.isLandM()
+
         depthList = self._icePoints['depth']
 
         if (depthList < self.minDepth).any():
