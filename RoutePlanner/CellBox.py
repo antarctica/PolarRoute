@@ -104,7 +104,10 @@ class CellBox:
         meshDump += self.nodeString() + "; "  # add node string
         meshDump += str(self.getcy()) + ", " + str(self.getcx()) + "; "  # add lat,lon
         meshDump += str(self.iceArea()) + "; "  # add ice area
-        meshDump += str(self.griduC) + ", " + str(self.gridvC)
+        if np.isnan(self.griduC):
+            meshDump += str(0) + ", " + str(0)
+        else:
+            meshDump += str(self.griduC) + ", " + str(self.gridvC)
         meshDump += "\n"
 
         return meshDump
@@ -127,7 +130,7 @@ class CellBox:
         '''
             Returns the number of ice points contained within this cellBox.
         '''
-        return len(self._icePoints)
+        return self._icePoints.shape[0]
 
     def getCurrentPointLength(self):
         '''
@@ -323,6 +326,9 @@ class CellBox:
         """
             Returns True if all icepoints within the cell have a depth less than the specified minimum depth.
         """
+        if self._j_grid == True:
+            return self.isLandM()
+
         depthList = self._icePoints['depth']
         if (depthList < self.minDepth).all():
             return True

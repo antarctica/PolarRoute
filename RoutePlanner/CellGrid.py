@@ -474,6 +474,12 @@ class CellGrid:
                     cell_index.append(idx)
         return cell_index
 
+    def cellBoxByNodeString(self, nodeString):
+        for cellBox in self.cellBoxes:
+            if isinstance(cellBox, CellBox):
+                if cellBox.nodeString() == nodeString:
+                    return cellBox
+
     def _getLeftNeightbours(self, selectedCellBox):
         """
             Returns a list of all cellBoxes touching the left-hand-side of a cellBox given by parameter 'selectedCellBox'.
@@ -592,11 +598,12 @@ class CellGrid:
                 # plot borders
                 if plotBorders:
                     ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='black'))
-
+                """ 
                 if self._j_grid == True:
                     # plot %iceArea text
                     if not np.isnan(cellBox.iceArea()):
                         ax.text(cellBox.long, cellBox.lat, str(math.floor(cellBox.iceArea() * 100)) + "%", fontsize=8)
+                """
 
         # plot highlighted cells
         for cellBox in highlightCellBoxes:
