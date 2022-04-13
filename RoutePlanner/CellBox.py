@@ -309,12 +309,10 @@ class CellBox:
         """
             Returns True if any icepoint within the cell has a depth less than the specified minimum depth.
         """
-
         if self._j_grid == True:
             return self.isLandM()
 
         depthList = self._icePoints['depth']
-
         if (depthList < self.minDepth).any():
             return True
         return False
@@ -323,6 +321,10 @@ class CellBox:
         """
             Returns True if all icepoints within the cell have a depth less than the specified minimum depth.
         """
+        if self._j_grid == True:
+            return self.isLandM()
+
+        
         depthList = self._icePoints['depth']
         if (depthList < self.minDepth).all():
             return True
@@ -358,6 +360,9 @@ class CellBox:
 
         if self.isLand():
             return True
+
+
+            
         # if a cell contains both land and sea, it not homogenous and requires splitting
         if self.containsLand():
             return False

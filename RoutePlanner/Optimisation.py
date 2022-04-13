@@ -61,6 +61,8 @@ class TravelTime:
         self.zero_currents  = self.OptInfo['Zero Currents']
         self.variableSpeed  =self. OptInfo['VariableSpeed']
 
+        print('Zero Currets {}'.format(self.zero_currents))
+
 
         if type(self.OptInfo['WayPoints']) != pd.core.frame.DataFrame:
             self.OptInfo['WayPoints'] = pd.read_csv(self.OptInfo['WayPoints'])
@@ -205,7 +207,7 @@ class TravelTime:
             
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']) or (Nc.containsLand()):
+            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']) or (Nc.isLandM()):
                 SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
                 SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
                 continue
@@ -246,7 +248,8 @@ class TravelTime:
         self.DijkstraInfo[wpt_name].loc[SourceIndex,'pathIndex'].append(SourceIndex)
         
         # Updating Dijkstra as long as all the waypoints are not visited.
-        while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
+        #while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
+        while (self.DijkstraInfo[wpt_name]['positionLocked'] == False).any():    
 
             # Determining the index of the minimum traveltime that has not been visited
             minimumTravelTimeIndex = self.DijkstraInfo[wpt_name][self.DijkstraInfo[wpt_name]['positionLocked']==False]['traveltime'].idxmin()

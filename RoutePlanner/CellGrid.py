@@ -566,13 +566,6 @@ class CellGrid:
 
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
-                # plot land
-                if self._j_grid == True:
-                    if cellBox.landLocked:
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
-                else:
-                    if cellBox.containsLand():
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
                 # plot ice
                 if plotIce and not np.isnan(cellBox.iceArea()):
@@ -583,6 +576,17 @@ class CellGrid:
                             MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey', alpha=1))
                 #else:
                     #ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+
+                # plot land
+                if self._j_grid == True:
+                    if cellBox.landLocked:
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                else:
+                    if cellBox.containsLand():
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+
+
+
 
                 # plot currents
                 if plotCurrents:
