@@ -37,6 +37,8 @@ class TravelTime:
                     if len(indxs) == 0:
                         continue
                     for indx in indxs:
+                        if (self.Mesh.cellBoxes[indx].iceArea() >= self.OptInfo['MaxIceExtent']) or (self.Mesh.cellBoxes[indx].isLandM()):
+                            continue
                         cases.append(case)
                         neighIndx.append(indx)
                 neighDict = {}

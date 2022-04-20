@@ -569,18 +569,16 @@ class NewtonianDistance:
 
         if self.case==4:
             ptvl = -1.0
-            ptvl2= 1.0
         else:
             ptvl = 1.0
-            ptvl2=-1.0
 
         Sx  = self.Cell_s.cx; Sy  = self.Cell_s.cy; Sdx = self.Cell_s.dcx; Sdy = self.Cell_s.dcy; 
         Nx = self.Cell_n.cx; Ny = self.Cell_n.cy; Ndx = self.Cell_n.dcx; Ndy = self.Cell_n.dcy
 
         Su = ptvl*self.Cell_s.getvC()*self.zx
-        Sv = ptvl2*self.Cell_s.getuC()*self.zx
+        Sv = self.Cell_s.getuC()*self.zx
         Nu = ptvl*self.Cell_n.getvC()*self.zx
-        Nv = ptvl2*self.Cell_n.getuC()*self.zx
+        Nv = self.Cell_n.getuC()*self.zx
 
         Ssp=self.s1
         Nsp=self.s2
