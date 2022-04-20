@@ -270,6 +270,9 @@ class TravelTime:
         Determining the shortest path between all waypoints
         '''
 
+        self.source_waypoints = source_waypoints
+        self.end_waypoints    = end_waypoints
+
         # Subsetting the waypoints
         if type(source_waypoints) == type(None):
             source_waypoints = list(self.OptInfo['WayPoints']['Name'])
