@@ -29,8 +29,8 @@ class _Euclidean_distance():
         lon1,lat1 = origin
         if forward:
             lon2,lat2 = dest_dist
-            # lon2 = lon2+360
-            # lon1 = lon1+360
+            lon2 = lon2#+360
+            lon1 = lon1#+360
             val = np.sqrt(((lat2-lat1)*self.m_per_latitude)**2 + ((lon2-lon1)*self.m_per_longitude)**2)
         else:
             dist_x,dist_y = dest_dist        
@@ -376,12 +376,30 @@ class NewtonianDistance:
         self.maxiter       = maxiter
         self.optimizer_tol = optimizer_tol
 
+        # Optimisation Information
+        self.mLon  = 111.321*1000
+        self.mLat  = 111.386*1000.
+        
 
         # Defining a small distance 
         self.smallDist = 1e-4
 
         # For Debugging purposes 
         self.debugging     = debugging
+
+
+    def _dist(self,origin,dest_dist,cell,forward=True):
+        mLonScaled=self.mLon*np.cos(cell.cy*(np.pi/180))
+        lon1,lat1 = origin
+        if forward:
+            lon2,lat2 = dest_dist
+            # lon2 = lon2+360
+            # lon1 = lon1+360
+            val = np.sqrt(((lat2-lat1)*self.mLat)**2 + ((lon2-lon1)*mLonScaled)**2)
+        else:
+            dist_x,dist_y = dest_dist        
+            val = [lon1+(dist_x/self.mLat),lat1+(dist_y/mLonScaled)]
+        return val
 
 
     def NewtonOptimisation(self,f,df,x,a,Y,u1,v1,u2,v2,s1,s2):
@@ -456,42 +474,6 @@ class NewtonianDistance:
         dF  = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1)) + (v2/C2)*(dX1*(X2-D2)+X1*(dX2-dD2)) - Y*dX1
         return dF
 
-
-        #############################################################
-        #############################################################
-        # -------- Split Case Additions 
-        #############################################################
-        #############################################################
-
-        # # Java = 119 - 128 = Add in addition features of latitude correction 
-        # math.power(0.5,splitLevels)
-
-        # CELLLONG = 5
-        # CELLLAT  = 2.5
-
-        # public double splitDiv() {
-        #     return Math.pow(0.5D, (double)this.focus.size());
-        # }
-
-        #     GCoord f = from.getGCoord();
-        #     GCoord t = to.getGCoord();
-
-        #     double df = from.splitDiv() / 2.0D;
-        #     double dx1 = CELLLONG * df * kmperdeglonAtEquator * Math.cos(f.getLat());
-        #     double dy1 = CELLLAT * df * kmperdeglat;
-        #     double dt = to.splitDiv() / 2.0D;
-        #     double dx2 = CELLLONG * dt * kmperdeglonAtEquator * Math.cos(t.getLat());
-        #     double dy2 = CELLLAT * dt * kmperdeglat;
-        #     double ylatDiff = t.getLatDeg() - f.getLatDeg();
-        #     double ylonDiff = t.getLongDeg() - f.getLongDeg();
-        #     double big_yLt = ylatDiff * kmperdeglat;
-        #     double big_yLn = ylonDiff * kmperdeglonAtEquator * Math.cos((t.getLat() + f.getLat()) / 2.0D);
-
-        #     ylatDiff *= df/(df+dt); // Scale the y lat,lon to the corner of the from cell.
-        #     ylonDiff *= df/(df+dt);
-
-
-
     def _T(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
         '''
             Determines the traveltime for each leg between two cells given a crossing point 'y'
@@ -545,16 +527,16 @@ class NewtonianDistance:
         Nsp = self.s2
 
         # Representing the distance parameters identical to the formulation in publication
-        x           = self.fdist.value((Sx,Sy), (Sx+Sdx,Sy))
-        a           = self.fdist.value((Nx,Ny), (Nx-Ndx,Ny))
-        Y           = np.sign(Ny-Sy)*self.fdist.value((Sx+Sdx+Ndx,Sy),(Sx+Sdx+Sdx,Ny))
+        x           = self._dist((Sx,Sy), (Sx+Sdx,Sy),self.Cell_s)#self.fdist.value((Sx,Sy), (Sx+Sdx,Sy))
+        a           = self._dist((Nx,Ny), (Nx-Ndx,Ny),self.Cell_n)#self.fdist.value((Nx,Ny), (Nx-Ndx,Ny))
+        Y           = np.sign(Ny-Sy)*self._dist((Sx+Sdx+Ndx,Sy),(Sx+Sdx+Sdx,Ny),self.Cell_s)#np.sign(Ny-Sy)*self.fdist.value((Sx+Sdx+Ndx,Sy),(Sx+Sdx+Sdx,Ny))
 
         # Optimising to determine the y-value of the crossing point
         y = self.NewtonOptimisation(self._F,self._dF,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
 
         # Returning the traveltime and distance functions in the standard unit form
         TravelTime  = self._unit_time(self._T(y,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp))
-        CrossPoints = self.fdist.value((Sx+ptvl*Sdx,Sy),(0.0,y),forward=False)
+        CrossPoints = self._dist((Sx+ptvl*Sdx,Sy),(0.0,y),self.Cell_s,forward=False) #self.fdist.value((Sx+ptvl*Sdx,Sy),(0.0,y),forward=False)
         CellPoints  = [Nx,Ny]
 
         CrossPoints[1] = np.clip(CrossPoints[1],np.max([self.Cell_s.cy-self.Cell_s.dcy,self.Cell_n.cy-self.Cell_n.dcy])-self.smallDist,np.min([self.Cell_s.cy+self.Cell_s.dcy,self.Cell_n.cy+self.Cell_n.dcy])+self.smallDist)
@@ -583,12 +565,14 @@ class NewtonianDistance:
         Ssp=self.s1
         Nsp=self.s2
 
-        x           = self.fdist.value((Sx,Sy),(Sx,Sy+Sdy))
-        a           = self.fdist.value((Nx,Ny),(Nx,Ny-Ndy))
-        Y           = np.sign(Nx-Sx)*self.fdist.value((Sx,Sy+Sdy+Ndy),(Nx, Sy+Sdy+Ndy))
+        self._dist((Sx,Sy),(Sx,Sy+Sdy),self.Cell_s)
+
+        x           = self._dist((Sx,Sy),(Sx,Sy+Sdy),self.Cell_s)#self.fdist.value((Sx,Sy),(Sx,Sy+Sdy))
+        a           = self._dist((Nx,Ny),(Nx,Ny-Ndy),self.Cell_n)#self.fdist.value((Nx,Ny),(Nx,Ny-Ndy))
+        Y           = np.sign(Nx-Sx)*self._dist((Sx,Sy+Sdy+Ndy),(Nx, Sy+Sdy+Ndy),self.Cell_s)#np.sign(Nx-Sx)*self.fdist.value((Sx,Sy+Sdy+Ndy),(Nx, Sy+Sdy+Ndy))
         y           = self.NewtonOptimisation(self._F,self._dF,x,a,Y,Sv,Su,Nv,Nu,Ssp,Nsp)
         TravelTime  = self._unit_time(self._T(y,x,a,Y,Sv,Su,Nv,Nu,Ssp,Nsp))
-        CrossPoints = self.fdist.value((Sx,Sy+ptvl*Sdy),(y,0.0),forward=False)
+        CrossPoints = self._dist((Sx,Sy+ptvl*Sdy),(y,0.0),self.Cell_s,forward=False)#self.fdist.value((Sx,Sy+ptvl*Sdy),(y,0.0),forward=False)
         CellPoints  = [Nx,Ny]
 
         CrossPoints[0] = np.clip(CrossPoints[0],np.max([self.Cell_s.cx-self.Cell_s.dcx,self.Cell_n.cx-self.Cell_n.dcx])-self.smallDist,np.min([self.Cell_s.cx+self.Cell_s.dcx,self.Cell_n.cx+self.Cell_n.dcx])+self.smallDist)
