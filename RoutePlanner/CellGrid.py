@@ -575,18 +575,17 @@ class CellGrid:
                 # plot land
                 if self._j_grid == True:
                     if cellBox.landLocked:
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='lime'))
                 else:
                     if cellBox.containsLand():
                         ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
                 # plot ice
                 if plotIce and not np.isnan(cellBox.iceArea()):
-                    if cellBox.iceArea() >= 0.12:
+                    if cellBox.iceArea() >= 0.04:
                         ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=1))
-                    elif cellBox.iceArea() >= 0.04:
-                        ax.add_patch(
-                            MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey', alpha=1))
+                        if cellBox.iceArea() < 0.8:
+                            ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey', alpha=(1-cellBox.iceArea())))
                 #else:
                     #ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
@@ -598,12 +597,13 @@ class CellGrid:
                 # plot borders
                 if plotBorders:
                     ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='black'))
-                """ 
+
+
                 if self._j_grid == True:
                     # plot %iceArea text
                     if not np.isnan(cellBox.iceArea()):
                         ax.text(cellBox.long, cellBox.lat, str(math.floor(cellBox.iceArea() * 100)) + "%", fontsize=8)
-                """
+
 
         # plot highlighted cells
         for cellBox in highlightCellBoxes:

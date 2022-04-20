@@ -102,12 +102,14 @@ class CellBox:
     def meshDump(self):
         meshDump = ""
         meshDump += self.nodeString() + "; "  # add node string
+        meshDump += "0 "
         meshDump += str(self.getcy()) + ", " + str(self.getcx()) + "; "  # add lat,lon
         meshDump += str(self.iceArea()) + "; "  # add ice area
         if np.isnan(self.griduC):
-            meshDump += str(0) + ", " + str(0)
+            meshDump += str(0) + ", " + str(0) + ", "
         else:
-            meshDump += str(self.griduC) + ", " + str(self.gridvC)
+            meshDump += str(self.griduC) + ", " + str(self.gridvC) + ", "
+        meshDump += str(self._icePoints.shape[0])
         meshDump += "\n"
 
         return meshDump
