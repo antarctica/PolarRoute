@@ -390,12 +390,12 @@ class CellBox:
         if self._j_grid == False:
             return not self.isHomogenous()
 
-        dataLimit = 3000
+        dataLimit = 1
 
         if self._icePoints.shape[0] < dataLimit:
             return False
 
-        splittingPercentage = 0.12
+        splittingPercentage = 0.50
         splitMinProp = 0.05
         splitMaxProp = 0.85
 
