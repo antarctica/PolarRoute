@@ -95,8 +95,8 @@ class TemporalCellGrid:
     #     return cellGrid
 
     def range(self, startTime, endTime, j_grid=False):
-        # get all icePoints for the given time
-
+        """
+         # get all icePoints for the given time
         startDate = pd.to_datetime(startTime)
         endDate = pd.to_datetime(endTime)
 
@@ -112,15 +112,21 @@ class TemporalCellGrid:
 
         # convert long from 0:360 to -180:180
         icePoints['long'] = icePoints['long'].apply(lambda x: x if x <= 180 else x - 360)
+        """
+
+        icePointsAll = xr.open_dataset(self._icePointsPath, autoclose=True)
+        icePoints = icePointsAll.sel(time=slice(startTime, endTime))
 
         # create a cellGrid using datapoints for the given day
         cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight, j_grid)
         cellGrid.addCurrentPoints(self._currentPoints)
         cellGrid.addIcePoints(icePoints)
 
+        icePoints.close()
+
         return cellGrid
 
-    def getGrids(self, startTime, endTime, step):
+    def getGrids(self, startTime, endTime, step, j_grid=False):
         cellGrids = []
         endTime = pd.to_datetime(endTime)
 
@@ -128,7 +134,7 @@ class TemporalCellGrid:
         tempEnd = tempStart + pd.to_timedelta(step, unit='D')
 
         while(tempEnd <= endTime):
-            cellGrids.append(self.range(tempStart, tempEnd))
+            cellGrids.append(self.range(tempStart, tempEnd, j_grid))
             tempStart = tempEnd + pd.to_timedelta(1, unit='D')
             tempEnd = tempStart + pd.to_timedelta(step, unit='D')
 
