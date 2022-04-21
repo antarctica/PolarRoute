@@ -168,10 +168,31 @@ class CellGrid:
             Takes a dataframe containing ice points and assigns them to cellBoxes within the cellGrid
         """
         for cellBox in self.cellBoxes:
+            """
             longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] <= (cellBox.long + cellBox.width))]
             latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
 
             cellBox.addIcePoints(latLongLoc)
+            """
+            latMin = cellBox.lat
+            longMin = cellBox.long
+
+            if longMin < 0:
+                longMin += 360
+
+            longMax = longMin + cellBox.width
+            latMax = latMin + cellBox.height
+
+            icePointCut = icePoints.sel(YC=slice(latMin, latMax), XC=slice(longMin, longMax))
+            # icePointCut = icePointCut.sel()
+            ipSlice = icePointCut.to_dataframe()
+
+            ipSlice = ipSlice.reset_index()
+            ipSlice = ipSlice.rename(columns={'XC': 'long', 'YC': 'lat', 'Depth': 'depth', 'SIarea': 'iceArea'})
+            ipSlice['long'] = ipSlice['long'].apply(lambda x: x if x <= 180 else x - 360)
+
+            cellBox.addIcePoints(ipSlice)
+
 
     def addCurrentPoints(self, currentPoints):
         """
