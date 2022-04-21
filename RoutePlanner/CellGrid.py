@@ -637,14 +637,14 @@ class CellGrid:
                     continue
                 Points = np.array(Path['Path']['Points'])
                 if routepoints:
-                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
-                    ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='k')
+                    ax.plot(Points[:,0],Points[:,1],linewidth=3.0,color='b')
+                    ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='b')
                 else:
-                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
+                    ax.plot(Points[:,0],Points[:,1],linewidth=3.0,color='b')
 
 
         if type(waypoints) != type(None):
-            ax.scatter(waypoints['Long'],waypoints['Lat'],50,marker='^',color='k')
+            ax.scatter(waypoints['Long'],waypoints['Lat'],150,marker='^',color='r')
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
