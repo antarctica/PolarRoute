@@ -453,22 +453,22 @@ class CellGrid:
         self.cellBoxes[cellBoxIndx] = splitContainer
         self.neighbourGraph.pop(cellBoxIndx)
 
-    def iterativeSplit(self, splitAmount):
+    def iterativeSplit(self, splitAmount,splittingPercentage, splitMinProp, splitMaxProp):
         """
             Iterates over all cellBoxes in the cellGrid a number of times defined by parameter 'splitAmount',
             splitting and replacing each one if it is not homogenous.
         """
         for i in range(0, splitAmount):
-            self.splitGraph()
+            self.splitGraph(splittingPercentage, splitMinProp, splitMaxProp)
 
-    def splitGraph(self):
+    def splitGraph(self, splittingPercentage, splitMinProp, splitMaxProp):
         """
             Iterates once over all cellBoxes in the cellGrid, splitting and replacing each one if it is not homogenous.
         """
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
             if isinstance(cellBox, CellBox):
-                if cellBox.shouldWeSplit():
+                if cellBox.shouldWeSplit(splittingPercentage, splitMinProp, splitMaxProp):
                     self.splitAndReplace(cellBox)
 
     def recursiveSplitAndReplace(self, cellBox, maxSplits):
@@ -609,6 +609,9 @@ class CellGrid:
                             ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey', alpha=(1-cellBox.iceArea())))
                 #else:
                     #ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+
+                if cellBox.iceArea() > 0.8 and not np.isnan(cellBox.iceArea()):
+                    ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
 
                 # plot currents
                 if plotCurrents:

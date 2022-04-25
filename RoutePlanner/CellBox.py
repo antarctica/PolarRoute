@@ -385,7 +385,7 @@ class CellBox:
 
         return False
 
-    def shouldWeSplit(self):
+    def shouldWeSplit(self, splittingPercentage, splitMinProp, splitMaxProp):
 
         if self._j_grid == False:
             return not self.isHomogenous()
@@ -394,10 +394,6 @@ class CellBox:
 
         if self._icePoints.shape[0] < dataLimit:
             return False
-
-        splittingPercentage = 0.50
-        splitMinProp = 0.05
-        splitMaxProp = 0.85
 
         propOver = self._icePoints.loc[self._icePoints['iceArea'] > splittingPercentage]
 
