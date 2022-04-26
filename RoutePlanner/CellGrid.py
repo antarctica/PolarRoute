@@ -2,7 +2,7 @@ from tracemalloc import start
 import numpy as np
 from RoutePlanner.CellBox import CellBox
 import pandas as pd
-from shapely.geometry import Polygon
+#from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MatplotPolygon
 import math
@@ -204,6 +204,13 @@ class CellGrid:
 
             cellBox.addCurrentPoints(latLongLoc)
             cellBox.setLand()
+
+    def addDataPoints(self, dataPoints):
+        for cellBox in self.cellBoxes:
+            longLoc = dataPoints.loc[(dataPoints['long'] > cellBox.long) & (dataPoints['long'] <= (cellBox.long + cellBox.width))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
+
+            cellBox.addDataPoints(latLongLoc)
 
     def addWindPoints(self, windPoints):
         """
@@ -593,6 +600,18 @@ class CellGrid:
 
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
+                # plot ice
+                if plotIce and not np.isnan(cellBox.iceArea()):
+                    if self._j_grid == True:
+                        if cellBox.iceArea() >= 0.04:
+                            ax.add_patch(
+                                MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=1))
+                            if cellBox.iceArea() < 0.8:
+                                ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey',
+                                                            alpha=(1 - cellBox.iceArea())))
+                    else:
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
+
                 # plot land
                 if self._j_grid == True:
                     if cellBox.landLocked:
@@ -600,18 +619,9 @@ class CellGrid:
                 else:
                     if cellBox.containsLand():
                         ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
-
-                # plot ice
-                if plotIce and not np.isnan(cellBox.iceArea()):
-                    if cellBox.iceArea() >= 0.04:
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=1))
-                        if cellBox.iceArea() < 0.8:
-                            ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey', alpha=(1-cellBox.iceArea())))
                 #else:
                     #ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
-                if cellBox.iceArea() > 0.8 and not np.isnan(cellBox.iceArea()):
-                    ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
 
                 # plot currents
                 if plotCurrents:
