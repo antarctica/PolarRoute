@@ -823,6 +823,33 @@ class CellGrid:
         f.write(meshDump)
         f.close()
 
+    def accessibilityGraph(self, maxIceExtent):
+        neighbourGraph = {}
+        for idx, cell in enumerate(self.cellBoxes):
+            if not isinstance(cell, CellBox):
+                continue
+            else:
+                neigh = self.neighbourGraph[idx]
+                cases = []
+                neighIndx = []
+                for case in neigh.keys():
+                    indxs = neigh[case]
+                    if len(indxs) == 0:
+                        continue
+                    for indx in indxs:
+                        if (self.cellBoxes[indx].iceArea() >= maxIceExtent) or (
+                        self.cellBoxes[indx].isLandM()):
+                            continue
+                        cases.append(case)
+                        neighIndx.append(indx)
+                neighDict = {}
+                neighDict['cX'] = cell.cx
+                neighDict['cY'] = cell.cy
+                neighDict['case'] = cases
+                neighDict['neighbourIndex'] = neighIndx
+                neighbourGraph[idx] = neighDict
+        return  pd.DataFrame().from_dict(neighbourGraph, orient='index')
+
     def dumpGraph(self, fileLocation):
         graphDump = ""
 
@@ -877,8 +904,6 @@ class CellGrid:
                             graphDump += "," + self.cellBoxes[neighbour].nodeString() + ":3"
 
                     graphDump += "\n"
-
-
 
         f = open(fileLocation, "w")
         f.write(graphDump)
