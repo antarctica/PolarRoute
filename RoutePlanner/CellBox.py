@@ -392,9 +392,9 @@ class CellBox:
         if self._icePoints.shape[0] < dataLimit:
             return False
 
-        splittingPercentage = 0.12
+        splittingPercentage = 0.25
         splitMinProp = 0.05
-        splitMaxProp = 0.85
+        splitMaxProp = 0.95
 
         propOver = self._icePoints.loc[self._icePoints['iceArea'] > splittingPercentage]
 

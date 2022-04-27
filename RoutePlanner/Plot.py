@@ -16,7 +16,36 @@ from folium.plugins import TimestampedGeoJson
 # Example Maps http://leaflet-extras.github.io/leaflet-providers/preview/
 #icons can be found at https://fontawesome.com/icons
 
+def MapJavaPaths(file,TT,map,color='blue',PathPoints=True):
+    import json
+    import numpy as np
+    import folium
+    import copy    
 
+    with open(file, 'r') as f:
+        JavaGeo = json.load(f)['allpaths']['January']
+
+    PathPts = []
+    for path in JavaGeo:
+        if any(path['from'] in s for s in TT.source_waypoints) and any(path['to'] in s for s in TT.end_waypoints):
+            pts=[]
+            for jj in path['path']:
+                try:
+                    pts.append([jj['lon'],-jj['lat']])
+                except:
+                    continue
+            pts = np.array(pts)
+            PathPts.append(pts)
+
+
+    pathMap        = folium.FeatureGroup(name='Java Paths')
+    for path in copy.deepcopy(PathPts):
+        points = path
+        points = points[:,::-1]
+        folium.PolyLine(points,color=color, weight=2.0, opacity=1).add_to(pathMap)
+    pathMap.add_to(map)
+
+    return map
 
 def MapWaypoints(DF,map):
     wpts = folium.FeatureGroup(name='WayPoints')
@@ -60,8 +89,7 @@ def MapPaths(Paths,map,PathPoints=True):
         points = path['Path']['Points']
         points[:,0] = points[:,0]
         points = points[:,::-1]
-        folium.PolyLine(points,color="black", weight=2.0, opacity=1,
-                        popup='{}->{}\n Travel-Time = {:.2f}days'.format(path['from'],path['to'],path['Time'])).add_to(Pths)
+        folium.PolyLine(points,color="black", weight=2.0, opacity=1).add_to(Pths)
         for idx in range(len(points)):
             loc = [points[idx,0],points[idx,1]]
             folium.Marker(
