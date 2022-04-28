@@ -2,7 +2,6 @@ import numpy as np
 import copy
 import pandas as pd
 import numpy as np
-from shapely.geometry import Polygon
 
 class _Euclidean_distance():
     """
@@ -31,8 +30,8 @@ class _Euclidean_distance():
         lon1,lat1 = origin
         if forward:
             lon2,lat2 = dest_dist
-            lon2 = lon2#+360
-            lon1 = lon1#+360
+            lon2 = lon2+360
+            lon1 = lon1+360
             val = np.sqrt(((lat2-lat1)*self.m_per_latitude)**2 + ((lon2-lon1)*self.m_per_longitude)**2)
         else:
             dist_x,dist_y = dest_dist        
@@ -41,7 +40,7 @@ class _Euclidean_distance():
 
 
 class NewtonianDistance:
-    def __init__(self,Mesh,Sc=None,Nc=None,Sc_Speed=None,Nc_Speed=None,Case=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-7):
+    def __init__(self,Mesh,Sc=None,Nc=None,Sc_Speed=None,Nc_Speed=None,Case=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
         '''
            BUG - Zero Currents not working ! 
         '''
@@ -50,6 +49,8 @@ class NewtonianDistance:
         self.Cell_n         = Nc
 
         self.Mesh           = Mesh
+
+        self.R              = 6371.*1000
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
@@ -98,20 +99,23 @@ class NewtonianDistance:
         return val
 
 
-    def NewtonOptimisation(self,f,df,x,a,Y,u1,v1,u2,v2,s1,s2):
+    def NewtonOptimisation(self,f,x,a,Y,u1,v1,u2,v2,s1,s2):
             y0 = (Y*x)/(x+a)
             if self.debugging:
                     print('---Initial y={:.2f}'.format(y0))
-            if self.maxiter > 0:
-                for iter in range(self.maxiter):
-                    F  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
-                    dF = df(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
-                    if self.debugging:
-                        print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'.format(iter,y0,F,dF))
-                    y0  = y0 - (F/dF)
-                    if F < self.optimizer_tol:
-                        break
-            return y0
+            improving = True
+            iter = 0
+            while improving:
+                F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
+                if self.debugging:
+                    print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'.format(iter,y0,F,dF))
+                y0  = y0 - (F/dF)
+                improving = abs((F/dF)/(X1*X2)) > self.optimizer_tol
+                iter+=1
+                if (iter>1000):
+                    raise Exception('Newton not able to converge')
+            
+            return y0,self._unit_time(np.array([t1,t2]))
 
     def _unit_speed(self,Val):
         if type(Val) != type(None):
@@ -151,53 +155,61 @@ class NewtonianDistance:
         C2 = s2**2 - u2**2 - v2**2
         D1 = x*u1 + y*v1
         D2 = a*u2 + (Y-y)*v2
-        X1 = np.sqrt(D1**2 + C1*(x**2 + y**2))
-        X2 = np.sqrt(D2**2 + C2*(a**2 + (Y-y)**2))
-        F  = X2*(y-((v1*(X1-D1))/C1)) + X1*(y-Y+((v2*(X2-D2))/C2)) 
-        return F
+        X1ns = D1**2 + C1*(x**2 + y**2)
+        if X1ns < 0:
+            X1 = -1
+        else:
+            X1 = np.sqrt(X1ns)
+        X2ns = D2**2 + C2*(a**2 + (Y-y)**2)
+        if X2ns < 0:
+            X2 = -1
+        else:
+            X2 = np.sqrt(X2ns)
 
-    def _dF(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
-        C1  = s1**2 - u1**2 - v1**2
-        C2  = s2**2 - u2**2 - v2**2
-        D1  = x*u1 + y*v1
-        D2  = a*u2 + (Y-y)*v2
-        X1  = np.sqrt(D1**2 + C1*(x**2 + y**2))
-        X2  = np.sqrt(D2**2 + C2*(a**2 + (Y-y)**2))
+        F  = X2*(y-((v1*(X1-D1))/C1)) + X1*(y-Y+((v2*(X2-D2))/C2)) 
+
         dD1 = v1
         dD2 = -v2
-        dX1 = (D1*v1 + C1*y)/X1
-        dX2 = (-D2*v2 - C2*(Y-y))/X2
+        if X1 == 0:
+            dX1 = 0
+        else:
+            dX1 = (D1*v1 + C1*y)/X1
+        if X2 ==0:
+            dX2 = 0
+        else:
+            dX2 = (-D2*v2 - C2*(Y-y))/X2
         dF  = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1)) + (v2/C2)*(dX1*(X2-D2)+X1*(dX2-dD2)) - Y*dX1
-        return dF
-
-    def _T(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
-        '''
-            Determines the traveltime for each leg between two cells given a crossing point 'y'
-        '''
-
-        C1 = s1**2 - u1**2 - v1**2
-        C2 = s2**2 - u2**2 - v2**2
-        D1 = x*u1 + y*v1
-        D2 = a*u2 + (Y-y)*v2
-        X1 = np.sqrt(D1**2 + C1*(x**2 + y**2))
-        X2 = np.sqrt(D2**2 + C2*(a**2 + (Y-y)**2))
+    
         t1 = (X1-D1)/C1
         t2 = (X2-D2)/C2
-        return np.array([t1,t2])
 
-    def _TCell(self,P1x,P1y,P2x,P2y,U,V,S):
+        return F,dF,X1,X2,t1,t2
+
+
+    def _TCell(self,xdist,ydist,U,V,S):
         '''
             Determines the travel-time within cell between two points
         '''
-        xdist = np.sign(P2x-P1x)*(self.fdist.value((P1x,P1y),(P2x,P1y)))
-        ydist = np.sign(P2y-P1y)*(self.fdist.value((P1x,P1y),(P1x,P2y)))
         dist  = np.sqrt(xdist**2 + ydist**2)
         cval  = np.sqrt(U**2 + V**2)
 
         dotprod  = xdist*U + ydist*V 
         diffsqrs = S**2 - cval**2
 
+        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
+        if (diffsqrs == 0.0):
+            if (dotprod == 0.0):
+                raise Exception(' ')
+            else:
+                if ((dist**2)/(2*dotprod))  <0:
+                    raise Exception(' ')
+                else:
+                    traveltime = dist * dist / (2 * dotprod)
+                    return traveltime
+
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
+        if (traveltime<0):
+            raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
         return traveltime
 
     def _longitude(self):
@@ -210,10 +222,6 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        # Converting the longitude-latitude positions of the points to 
-        Sx  = self.Cell_s.cx; Sy  = self.Cell_s.cy; Sdx = self.Cell_s.dcx; Sdy = self.Cell_s.dcy; 
-        Nx = self.Cell_n.cx; Ny = self.Cell_n.cy; Ndx = self.Cell_n.dcx; Ndy = self.Cell_n.dcy
-
         Su = ptvl*self.Cell_s.getuC()*self.zx
         Sv = ptvl*self.Cell_s.getvC()*self.zx
         Nu = ptvl*self.Cell_n.getuC()*self.zx
@@ -222,20 +230,14 @@ class NewtonianDistance:
         Ssp = self.s1
         Nsp = self.s2
 
-        # Representing the distance parameters identical to the formulation in publication
-        x           = self._dist((Sx,Sy), (Sx+Sdx,Sy),self.Cell_s)#self.fdist.value((Sx,Sy), (Sx+Sdx,Sy))
-        a           = self._dist((Nx,Ny), (Nx-Ndx,Ny),self.Cell_n)#self.fdist.value((Nx,Ny), (Nx-Ndx,Ny))
-        Y           = np.sign(Ny-Sy)*self._dist((Sx+Sdx+Ndx,Sy),(Sx+Sdx+Sdx,Ny),self.Cell_s)#np.sign(Ny-Sy)*self.fdist.value((Sx+Sdx+Ndx,Sy),(Sx+Sdx+Sdx,Ny))
+        x = self.Cell_s.dcx*self.mLon*np.cos(self.Cell_s.cy*(np.pi/180))
+        a = self.Cell_n.dcx*self.mLon*np.cos(self.Cell_n.cy*(np.pi/180))
+        Y = ptvl*(self.Cell_n.cy-self.Cell_s.cy)*self.mLat
 
         # Optimising to determine the y-value of the crossing point
-        y = self.NewtonOptimisation(self._F,self._dF,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
-
-        # Returning the traveltime and distance functions in the standard unit form
-        TravelTime  = self._unit_time(self._T(y,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp))
-        CrossPoints = self._dist((Sx+ptvl*Sdx,Sy),(0.0,y),self.Cell_s,forward=False) #self.fdist.value((Sx+ptvl*Sdx,Sy),(0.0,y),forward=False)
-        CellPoints  = [Nx,Ny]
-
-        CrossPoints[1] = np.clip(CrossPoints[1],np.max([self.Cell_s.cy-self.Cell_s.dcy,self.Cell_n.cy-self.Cell_n.dcy])-self.smallDist,np.min([self.Cell_s.cy+self.Cell_s.dcy,self.Cell_n.cy+self.Cell_n.dcy])+self.smallDist)
+        y,TravelTime = self.NewtonOptimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
+        CrossPoints = (self.Cell_s.cx+ptvl*self.Cell_s.dcx,self.Cell_s.cy+ptvl*y/self.mLat)        
+        CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
 
         return TravelTime,CrossPoints,CellPoints
 
@@ -246,32 +248,27 @@ class NewtonianDistance:
         '''
 
         if self.case==4:
-            ptvl = -1.0
-        else:
             ptvl = 1.0
+        else:
+            ptvl = -1.0
 
-        Sx  = self.Cell_s.cx; Sy  = self.Cell_s.cy; Sdx = self.Cell_s.dcx; Sdy = self.Cell_s.dcy; 
-        Nx = self.Cell_n.cx; Ny = self.Cell_n.cy; Ndx = self.Cell_n.dcx; Ndy = self.Cell_n.dcy
-
-        Su = ptvl*self.Cell_s.getvC()*self.zx
-        Sv = self.Cell_s.getuC()*self.zx
-        Nu = ptvl*self.Cell_n.getvC()*self.zx
-        Nv = self.Cell_n.getuC()*self.zx
+        Su = -1*ptvl*self.Cell_s.getvC()*self.zx
+        Sv = ptvl*self.Cell_s.getuC()*self.zx
+        Nu = -1*ptvl*self.Cell_n.getvC()*self.zx
+        Nv = ptvl*self.Cell_n.getuC()*self.zx
 
         Ssp=self.s1
         Nsp=self.s2
 
-        self._dist((Sx,Sy),(Sx,Sy+Sdy),self.Cell_s)
+        x = self.Cell_s.dcy*self.mLat
+        a = self.Cell_n.dcy*self.mLat
+        Y = ptvl*(self.Cell_n.cx-self.Cell_s.cx)*self.mLon*np.cos((self.Cell_n.cy+self.Cell_s.cy)*(np.pi/180)/2.0)
 
-        x           = self._dist((Sx,Sy),(Sx,Sy+Sdy),self.Cell_s)#self.fdist.value((Sx,Sy),(Sx,Sy+Sdy))
-        a           = self._dist((Nx,Ny),(Nx,Ny-Ndy),self.Cell_n)#self.fdist.value((Nx,Ny),(Nx,Ny-Ndy))
-        Y           = np.sign(Nx-Sx)*self._dist((Sx,Sy+Sdy+Ndy),(Nx, Sy+Sdy+Ndy),self.Cell_s)#np.sign(Nx-Sx)*self.fdist.value((Sx,Sy+Sdy+Ndy),(Nx, Sy+Sdy+Ndy))
-        y           = self.NewtonOptimisation(self._F,self._dF,x,a,Y,Sv,Su,Nv,Nu,Ssp,Nsp)
-        TravelTime  = self._unit_time(self._T(y,x,a,Y,Sv,Su,Nv,Nu,Ssp,Nsp))
-        CrossPoints = self._dist((Sx,Sy+ptvl*Sdy),(y,0.0),self.Cell_s,forward=False)#self.fdist.value((Sx,Sy+ptvl*Sdy),(y,0.0),forward=False)
-        CellPoints  = [Nx,Ny]
-
-        CrossPoints[0] = np.clip(CrossPoints[0],np.max([self.Cell_s.cx-self.Cell_s.dcx,self.Cell_n.cx-self.Cell_n.dcx])-self.smallDist,np.min([self.Cell_s.cx+self.Cell_s.dcx,self.Cell_n.cx+self.Cell_n.dcx])+self.smallDist)
+        y,TravelTime   = self.NewtonOptimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
+        clon = self.Cell_s.cx  + ptvl*y/(self.mLon*np.cos((self.Cell_n.cy+self.Cell_s.cy)*(np.pi/180)/2.0))
+        clat = self.Cell_s.cy + -1*ptvl*self.Cell_s.dcy    
+        CrossPoints = (clon,clat)
+        CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
 
         return TravelTime,CrossPoints,CellPoints
 
@@ -295,24 +292,27 @@ class NewtonianDistance:
             ptvX = -1.0
             ptvY = 1.0
 
-        # Cell Information
-        Sx  = self.Cell_s.cx; Sy = self.Cell_s.cy; Sdx = self.Cell_s.dcx; Sdy = self.Cell_s.dcy; 
-        Nx  = self.Cell_n.cx; Ny = self.Cell_n.cy; Ndx = self.Cell_n.dcx; Ndy = self.Cell_n.dcy
+
+
+        dx1 = self.Cell_s.dcx*self.mLon*np.cos(self.Cell_s.cy*(np.pi/180))
+        dx2 = self.Cell_n.dcx*self.mLon*np.cos(self.Cell_n.cy*(np.pi/180))
+        dy1 = self.Cell_s.dcy*self.mLat
+        dy2 = self.Cell_n.dcy*self.mLat    
 
         # Currents in Cells
-        Su = self.Cell_s.getuC()*self.zx; Sv = self.Cell_s.getvC()*self.zx
-        Nu = self.Cell_n.getuC()*self.zx; Nv = self.Cell_n.getvC()*self.zx
+        Su = ptvX*self.Cell_s.getuC()*self.zx; Sv = ptvY*self.Cell_s.getvC()*self.zx
+        Nu = ptvX*self.Cell_n.getuC()*self.zx; Nv = ptvY*self.Cell_n.getvC()*self.zx
 
         # Vehicles Speeds in Cells
         Ssp = self.s1; Nsp = self.s2
 
         # Determining the crossing point as the corner of the case        
-        CrossPoints = [Sx+ptvX*Sdx,Sy+ptvY*Sdy]
-        CellPoints  = [Nx,Ny]
+        CrossPoints = [self.Cell_s.cx+ptvX*self.Cell_s.dcx,self.Cell_s.cy+ptvY*self.Cell_s.dcy]
+        CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
 
         # Determining traveltime
-        t1 = self._TCell(Sx,Sy,CrossPoints[0],CrossPoints[1],Su,Sv,Ssp)
-        t2 = self._TCell(CrossPoints[0],CrossPoints[1],Nx,Ny,Nu,Nv,Nsp)
+        t1 = self._TCell(dx1,dy1,Su,Sv,Ssp)
+        t2 = self._TCell(dx2,dy2,Nu,Nv,Nsp)
         TravelTime  = self._unit_time(np.array([t1,t2]))
 
         return TravelTime,CrossPoints,CellPoints

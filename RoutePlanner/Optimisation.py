@@ -253,8 +253,8 @@ class TravelTime:
         self.DijkstraInfo[wpt_name].loc[SourceIndex,'pathIndex'].append(SourceIndex)
         
         # Updating Dijkstra as long as all the waypoints are not visited.
-        #while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
-        while (self.DijkstraInfo[wpt_name]['positionLocked'] == False).any():    
+        while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
+        #while (self.DijkstraInfo[wpt_name]['positionLocked'] == False).any():    
 
             # Determining the index of the minimum traveltime that has not been visited
             minimumTravelTimeIndex = self.DijkstraInfo[wpt_name][self.DijkstraInfo[wpt_name]['positionLocked']==False]['traveltime'].idxmin()
