@@ -363,13 +363,15 @@ class TravelTime:
 
                 nc._mergePoint()
 
+
+                self.nc = nc
                 iter+=1
 
                 # Stop optimisation if the points are within some minimum difference
                 if iter>150:
                     if len(nc.previousDF) == len(nc.CrossingDF):
                         Dist = np.max(np.sqrt((nc.previousDF['cX'] - nc.CrossingDF['cX'])**2 + (nc.previousDF['cY'] - nc.CrossingDF['cY'])**2))
-                        if Dist < 1e-3:
+                        if Dist < 1e-5:
                             break
 
             SmoothedPath ={}
@@ -378,6 +380,8 @@ class TravelTime:
             SmoothedPath['Path'] = {}
             SmoothedPath['Path']['Points'] = nc.CrossingDF[['cX','cY']].to_numpy()    
             SmoothedPaths.append(SmoothedPath)
+
+        
 
         self.smoothedPaths = SmoothedPaths
         if return_paths:

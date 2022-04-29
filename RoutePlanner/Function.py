@@ -337,7 +337,7 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,Mesh,DijkstraInfo,OptInfo,unit_shipspeed='km/hr',unit_time='days',debugging=0,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
+    def __init__(self,Mesh,DijkstraInfo,OptInfo,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
         '''
         
         
@@ -363,18 +363,25 @@ class NewtonianCurve:
         
         # Information for distance metrics
         self.R              = 6371.*1000
-        self.fdist          = _Euclidean_distance()
 
         # Optimisation Information
         self.maxiter       = maxiter
         self.pathIter      = pathIter
         self.optimizer_tol = optimizer_tol
         self.minimumDiff   = minimumDiff
-        self._epsilon      = 1e-6
+        self._epsilon      = 1e-3
 
+
+        # Optimisation Information
+        self.mLon  = 111.321*1000
+        self.mLat  = 111.386*1000.
 
         # For Debugging purposes 
         self.debugging     = debugging
+
+        if self.debugging:
+            self.debugFile1 = open("debugFil.txt", "w")  # append mode
+            self.debugFile1.write("Today \n")
 
         self.id = 0
 
@@ -402,23 +409,45 @@ class NewtonianCurve:
             Val = Val
         return Val
 
+
+    def calXDist(self,start_long,end_long):#,centralLat):
+        return (end_long - start_long)*self.mLon#*np.cos(centralLat)
+    def calYDist(self,start_lat,end_lat):
+        return (end_lat-start_lat)*self.mLat
+
     def _long_case(self):
             def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
                     tryNum=1
                     iter=0
-                    if self.maxiter > 0:
-                        while iter < self.maxiter:  
-                            F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r)
-                            
-                            if (F==0) or (dF==0):
-                                dY = 0
+                    improving=True
+                    while improving:  
+                        F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r)
+                        if (F==0) or (dF==0):
+                            dY = 0
+                        else:
+                            dY = (F/dF)
+                        improving =  (abs(dY)>self._epsilon) or (abs(dY) > self._epsilon*(X1*X2) and (abs(dY)/iter) > self._epsilon)
+                        y0  -= dY
+                        iter+=1
+
+                        if (iter>100 and tryNum == 1):
+                            y0 = Y*x/(x+a)
+                            tryNum+=1
+                        if (iter > 200) and tryNum>= 2 and tryNum < 10:
+                            tryNum+=1
+                            iter-=100
+                            if(Y < 0):
+                                if v2>v1:
+                                    y0 = (tryNum-2)*Y
+                                else:
+                                    y0 = (tryNum-3)*-Y
                             else:
-                                dY = (F/dF)
-                            imprving =  (abs(dY)>self._epsilon)
-                            if not imprving:
-                                break
-                            y0  -= dY
-                            iter+=1
+                                if (v2<v1):
+                                    y0 = (tryNum-2)*Y
+                                else:
+                                    y0 = (tryNum-3)*-Y
+                        if iter > 1000:
+                            raise Exception('Newton Curve Issue')
                     return y0
 
             def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
@@ -457,59 +486,87 @@ class NewtonianCurve:
 
                 return F,dF,X1,X2
 
-            Cp = tuple(self.triplet[['cX','cY']].iloc[1])
+            Sp   = tuple(self.triplet[['cX','cY']].iloc[0])
+            Cp   = tuple(self.triplet[['cX','cY']].iloc[1])
+            Np   = tuple(self.triplet[['cX','cY']].iloc[2])
+            Box1 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
+            Box2 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+
             if self.triplet.iloc[1].case == 2:   
-                Sp   = tuple(self.triplet.iloc[0][['cX','cY']])
-                Np   = tuple(self.triplet.iloc[2][['cX','cY']])
-                Box1 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
-                Box2 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
                 sgn  = 1
             else:
-                Sp   = tuple(self.triplet.iloc[2][['cX','cY']])
-                Np   = tuple(self.triplet.iloc[0][['cX','cY']])
-                Box1 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
-                Box2 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
                 sgn  = -1
 
             λ_s  = Sp[1]
             φ_r  = Np[1]
 
-            x           = self.fdist.value(Sp,(Cp[0],Sp[1]))
-            a           = self.fdist.value(Np,(Cp[0],Np[1]))
-
-            Y           = np.sign(Np[1]-Sp[1])*self.fdist.value((Sp[0],Sp[1]),(Sp[0],Np[1]))
+            x           = sgn*self.calXDist(Sp[0],Cp[0])
+            a           = sgn*self.calXDist(Cp[0],Np[0])
+            Y           = (Np[1]-Sp[1])*self.mLat
             y0          = Y/2
-            y0          = np.sign(Cp[1]-Sp[1])*self.fdist.value((Cp[0],Sp[1]),(Cp[0],Cp[1]))
-
             u1          = sgn*self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
             u2          = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
             y           = NewtonOptimisationLong(_F,y0,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
 
             # Updating the crossing points
-            CrossP = self.fdist.value((Cp[0],Sp[1]),(0.0,y),forward=False)
-            self.triplet['cX'].iloc[1] = CrossP[0]
-            self.triplet['cY'].iloc[1] = CrossP[1]
+            self.triplet['cX'].iloc[1] = Cp[0]
+            self.triplet['cY'].iloc[1] = Sp[1] + y/self.mLat
+
 
     def _lat_case(self):
         def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
                 tryNum=1
                 iter=0
-                while iter < 1000:
-                    # --- Updating ---
+                improving=True
+                while improving:  
                     F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ)
-                    
                     if (F==0) or (dF==0):
                         dY = 0
                     else:
                         dY = (F/dF)
-                    imprving = (abs(dY)>self._epsilon)
-                    if imprving:
-                        y0 -= dY
-                        iter +=1
-                    else:
-                        break
+                    improving =abs(dY) > 1 or (abs(dY) > self._epsilon*(X1*X2) and (abs(dY)/iter) > self._epsilon)
+                    y0  -= dY
+                    iter+=1
 
+                    if (iter>100 and tryNum == 1):
+                        y0 = Y*x/(x+a)
+                        tryNum+=1
+                    if (iter > 200) and tryNum== 2:
+                        tryNum+=1
+                        if(Y < 0):
+                            if v2>v1:
+                                y0 = Y
+                            else:
+                                y0 = 0
+                        else:
+                            if (v2<v1):
+                                y0 = Y
+                            else:
+                                y0 = 0
+                    if iter > 1000:
+                        raise Exception('Newton Curve Issue')
                 return y0
+
+
+
+                # tryNum=1
+                # iter=0
+                # while iter < 1000:
+                #     # --- Updating ---
+                #     F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ)
+                    
+                #     if (F==0) or (dF==0):
+                #         dY = 0
+                #     else:
+                #         dY = (F/dF)
+                #     imprving = (abs(dY)>self._epsilon)
+                #     if imprving:
+                #         y0 -= dY
+                #         iter +=1
+                #     else:
+                #         break
+
+                # return y0
 
         def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
             λ   = λ*(np.pi/180)
@@ -540,39 +597,32 @@ class NewtonianCurve:
             return F,dF,X1,X2
 
 
-        Cx,Cy = tuple(self.triplet.iloc[1][['cX','cY']])
-        if self.triplet.iloc[1].case == -4:   
-            Sx,Sy = tuple(self.triplet.iloc[0][['cX','cY']])
-            Nx,Ny = tuple(self.triplet.iloc[2][['cX','cY']])
-            Cl1   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
-            Cl2   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+        Sp = tuple(self.triplet.iloc[0][['cX','cY']])
+        Cp = tuple(self.triplet.iloc[1][['cX','cY']])
+        Np = tuple(self.triplet.iloc[2][['cX','cY']])
+        Box1   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
+        Box2   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+
+        if self.triplet.iloc[1].case == 4:   
             sgn   = 1
         else:
-            Sx,Sy = tuple(self.triplet.iloc[0][['cX','cY']])
-            Nx,Ny = tuple(self.triplet.iloc[2][['cX','cY']])
-            Cl1   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
-            Cl2   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name] 
             sgn   = -1
 
-        λ=Sy
-        θ=Cy   
-        ψ=Ny  
+        λ=Sp[1]
+        θ=Cp[1]   
+        ψ=Np[1]  
 
-        x     = self.fdist.value((Sx,Sy),(Sx,Cy))
-        a     = self.fdist.value((Nx,Ny),(Nx,Cy))
-        Y     = np.sign(Nx-Sx)*self.fdist.value((Sx,Sy),(Nx,Sy))
-        Su    = sgn*self.zc*Cl1.getvC(); Sv = self.zc*Cl1.getuC()
-        Nu    = sgn*self.zc*Cl2.getvC(); Nv = self.zc*Cl2.getuC()
-        
+        x     = self.calYDist(Sp[1],Cp[1])
+        a     = self.calYDist(Cp[1],Np[1])
+        Y     = (Np[0]-Sp[0])*self.mLon*np.cos(Cp[1]*(np.pi/180))
+        Su    = -sgn*self.zc*Box1.getvC(); Sv = sgn*self.zc*Box1.getuC()
+        Nu    = -sgn*self.zc*Box2.getvC(); Nv = sgn*self.zc*Box2.getuC()
         y0    = Y/2
-        y0    = np.sign(Cx-Sx)*self.fdist.value((Sx,Cy),(Cx,Cy))
 
         y     = NewtonOptimisationLat(_F,y0,x,a,Y,Su,Sv,Nu,Nv,self.s,self.R,λ,θ,ψ)
 
-        CrossP = self.fdist.value((Sx,Cy),(y,0.0),forward=False)
-        self.triplet['cX'].iloc[1] = CrossP[0]
-        self.triplet['cY'].iloc[1] = CrossP[1]
-
+        self.triplet['cX'].iloc[1] = Sp[0] + sgn*y/(self.mLon*np.cos(Cp[1]*(np.pi/180)))
+        self.triplet['cY'].iloc[1] = Cp[1]
 
 
     def _corner_case(self):
@@ -635,33 +685,27 @@ class NewtonianCurve:
         '''
             Function to merge point if on the corner 
         '''
-        #1. Find indices of points that are identical
         Dist = np.sqrt((self.CrossingDF['cX'][1:].to_numpy() - self.CrossingDF['cX'][:-1].to_numpy())**2 + (self.CrossingDF['cY'][1:].to_numpy() - self.CrossingDF['cY'][:-1].to_numpy())**2)
-        idx = np.where(Dist<=1e-4)[0]
+        idx = np.where(Dist<=1e-2)[0]
 
-        
         if len(idx) != 0:
-
-            #2. Remove the row and update thr case information and crossing point
             for id in idx:
-                # if (id==0) or (id==len(Dist)-2):
-                #     return
+                neighbourIndex=np.where(np.array(self.CrossingDF.iloc[id]['cellStart']['neighbourIndex'])==self.CrossingDF.iloc[id+1]['cellEnd'].name)[0][0]
+                
+                case = self.CrossingDF['cellStart'].iloc[id]['case'][neighbourIndex]
+                crossingPoint = self.CrossingDF['cellStart'].iloc[id]['neighbourCrossingPoints'][neighbourIndex]
 
-                try:
-                    neighbourIndex=np.where(np.array(self.CrossingDF.iloc[id]['cellStart']['neighbourIndex'])==self.CrossingDF.iloc[id+1]['cellEnd'].name)[0][0]
-                    
-                    case = self.CrossingDF['cellStart'].iloc[id]['case'][neighbourIndex]
-                    crossingPoint = self.CrossingDF['cellStart'].iloc[id]['neighbourCrossingPoints'][neighbourIndex]
+                print('MERGE POINT - Case={}'.format(case))
 
-                    #if abs(case)==1 or abs(case)==3:
-                    self.CrossingDF['cX'].iloc[id]      = crossingPoint[0]
-                    self.CrossingDF['cY'].iloc[id]      = crossingPoint[1]
-                    self.CrossingDF['cellEnd'].iloc[id] = copy.deepcopy(self.CrossingDF.iloc[id+1]['cellEnd'])
-                    self.CrossingDF['case'].iloc[id] = copy.deepcopy(case)
-                    self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id+1].name).sort_index().reset_index(drop=True)
-                    self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
-                except:
-                    continue
+
+
+                self.CrossingDF['cX'].iloc[id]      = crossingPoint[0]
+                self.CrossingDF['cY'].iloc[id]      = crossingPoint[1]
+                self.CrossingDF['cellEnd'].iloc[id] = copy.deepcopy(self.CrossingDF.iloc[id+1]['cellEnd'])
+                self.CrossingDF['case'].iloc[id] = copy.deepcopy(case)
+                self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id+1].name).sort_index().reset_index(drop=True)
+                self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
+
 
 
     def _horseshoe(self):
@@ -685,14 +729,14 @@ class NewtonianCurve:
         elif abs(case) == 2:
 
             # Defining the global min and max
-            gmin = np.min([cellStart.cy-cellStart.dcy,cellEnd.cy-cellEnd.dcy])
-            gmax = np.max([cellStart.cy+cellStart.dcy,cellEnd.cy+cellEnd.dcy])
             vmin = np.max([cellStart.cy-cellStart.dcy,cellEnd.cy-cellEnd.dcy])
             vmax = np.min([cellStart.cy+cellStart.dcy,cellEnd.cy+cellEnd.dcy])
 
             # Point crossingpoint on boundary between the two origional cells
             if (Cp[1] > vmin) and (Cp[1] < vmax):
                 return
+
+            print('HORSESHO - CASE 2 ,l ')
 
             # Defining the min and max of the start and end cells
             smin = cellStart.cy-cellStart.dcy   
@@ -774,9 +818,9 @@ class NewtonianCurve:
 
         if (len(startGraphNeighbours)==0) or (len(endGraphNeighbours)==0):
             if abs(case) == 2:
-                self.triplet['cY'].iloc[1] = np.clip(self.triplet.iloc[1]['cY'],vmin+1e-4,vmax-1e-4)
+                self.triplet['cY'].iloc[1] = np.clip(self.triplet.iloc[1]['cY'],vmin,vmax)
             if abs(case) == 4:
-                self.triplet['cX'].iloc[1] = np.clip(self.triplet.iloc[1]['cX'],vmin+1e-4,vmax-1e-4)        
+                self.triplet['cX'].iloc[1] = np.clip(self.triplet.iloc[1]['cX'],vmin,vmax)        
             return
         
         if abs(hrshCaseStart) == abs(hrshCaseEnd):
@@ -813,10 +857,15 @@ class NewtonianCurve:
                         Pcrp3['cellEnd']   = copy.deepcopy(cellEndGraph)
                         Pcrp3['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
                         
+
+                        print(self.triplet.iloc[1])
+                        print(Pcrp2)
+                        print(Pcrp3)
+
                         self.CrossingDF = self.CrossingDF.append([Pcrp2,Pcrp3],sort=True).sort_index().reset_index(drop=True)
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        # self.id=+1
+                        self.id=-1
         else:
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
@@ -842,7 +891,7 @@ class NewtonianCurve:
                         self.CrossingDF = self.CrossingDF.append([Pcrp2],sort=True).sort_index().reset_index(drop=True)
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        # self.id=+1
+                        self.id=+1
 
     def _reverseCase(self):
 
@@ -880,7 +929,7 @@ class NewtonianCurve:
 
 
         # ------ Case Deginitions & Dealing
-        if self.debugging>0:
+        if self.debugging:
             print('===========================================================')
         if abs(self.triplet.iloc[1].case)==2:
             self._long_case()
@@ -899,8 +948,10 @@ class NewtonianCurve:
         self._horseshoe()
 
         # # -- Removing reseverse cases
-        self._reverseCase()
+        #self._reverseCase()
 
 
+        if self.debugging:
+            self.debugFile1.close()
 
 
