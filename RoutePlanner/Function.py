@@ -612,9 +612,9 @@ class NewtonianCurve:
         θ=Cp[1]   
         ψ=Np[1]  
 
-        x     = self.calYDist(Sp[1],Cp[1])
-        a     = self.calYDist(Cp[1],Np[1])
-        Y     = (Np[0]-Sp[0])*self.mLon*np.cos(Cp[1]*(np.pi/180))
+        x     = sgn*self.calYDist(Sp[1],Cp[1])
+        a     = sgn*self.calYDist(Cp[1],Np[1])
+        Y     = sgn*(Np[0]-Sp[0])*self.mLon*np.cos(Cp[1]*(np.pi/180))
         Su    = -sgn*self.zc*Box1.getvC(); Sv = sgn*self.zc*Box1.getuC()
         Nu    = -sgn*self.zc*Box2.getvC(); Nv = sgn*self.zc*Box2.getuC()
         y0    = Y/2
@@ -858,14 +858,14 @@ class NewtonianCurve:
                         Pcrp3['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
                         
 
-                        print(self.triplet.iloc[1])
-                        print(Pcrp2)
-                        print(Pcrp3)
+                        print('CP1x = {}, CP1y = {}, case = {}'.format(self.triplet['cX'].iloc[1],self.triplet['cY'].iloc[1],self.triplet['case'].iloc[1]))
+                        print('CP2x = {}, CP2y = {}, case = {}'.format(Pcrp2['cX'],Pcrp2['cY'],Pcrp2['case']))
+                        print('CP3x = {}, CP3y = {}, case = {}'.format(Pcrp3['cX'],Pcrp3['cY'],Pcrp3['case']))
 
                         self.CrossingDF = self.CrossingDF.append([Pcrp2,Pcrp3],sort=True).sort_index().reset_index(drop=True)
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        self.id=-1
+                        self.id=+2
         else:
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:

@@ -368,11 +368,10 @@ class TravelTime:
                 iter+=1
 
                 # Stop optimisation if the points are within some minimum difference
-                if iter>150:
-                    if len(nc.previousDF) == len(nc.CrossingDF):
-                        Dist = np.max(np.sqrt((nc.previousDF['cX'] - nc.CrossingDF['cX'])**2 + (nc.previousDF['cY'] - nc.CrossingDF['cY'])**2))
-                        if Dist < 1e-5:
-                            break
+                if len(nc.previousDF) == len(nc.CrossingDF):
+                    Dist = np.max(np.sqrt((nc.previousDF['cX'] - nc.CrossingDF['cX'])**2 + (nc.previousDF['cY'] - nc.CrossingDF['cY'])**2))
+                    if Dist < 1e-3:
+                        break
 
             SmoothedPath ={}
             SmoothedPath['from'] = Path['from']
