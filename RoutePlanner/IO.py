@@ -5,6 +5,11 @@ from glob import glob
 import json
 import numpy as np
 
+import warnings
+from pandas.core.common import SettingWithCopyWarning
+warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+
+
 def LoadIcePoints(NetCDF,startDate,endDate):
     bsos = Dataset(NetCDF)
 

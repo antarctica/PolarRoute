@@ -312,7 +312,7 @@ class TravelTime:
 
          
 
-    def PathSmoothing(self,maxiter=1000,minimumDiff=1e-4,debugging=0,return_paths=True,verbose=False):
+    def PathSmoothing(self,maxiter=10000,minimumDiff=1e-4,debugging=0,return_paths=True,verbose=False):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
         '''
@@ -349,7 +349,7 @@ class TravelTime:
 
             nc.orgDF = copy.deepcopy(nc.CrossingDF)
             iter=0
-            # try:
+            #try:
             while iter < nc.pathIter:
 
                 nc.previousDF = copy.deepcopy(nc.CrossingDF)
@@ -359,11 +359,17 @@ class TravelTime:
 
 
                     nc._updateCrossingPoint()
+                    self.nc = nc
+
+                    # -- Horseshoe Case Detection -- 
+                    nc._horseshoe()
+                    # -- Removing reseverse cases
+                    nc._reverseCase()
+
                     id+=1+nc.id
 
+                self.nc = nc
                 nc._mergePoint()
-
-
                 self.nc = nc
                 iter+=1
 
@@ -372,6 +378,9 @@ class TravelTime:
                     Dist = np.max(np.sqrt((nc.previousDF['cX'] - nc.CrossingDF['cX'])**2 + (nc.previousDF['cY'] - nc.CrossingDF['cY'])**2))
                     if Dist < 1e-3:
                         break
+            print('{} iterations'.format(iter))
+            # except:
+            #     print('Failed {}->{}'.format(Path['from'],Path['to']))
 
             SmoothedPath ={}
             SmoothedPath['from'] = Path['from']

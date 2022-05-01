@@ -98,7 +98,7 @@ def MapPaths(Paths,map,PathPoints=True):
                                             border_color='transparent',
                                             background_color='transparent',
                                             border_width=1,
-                                            text_color='orange',
+                                            text_color='black',
                                             inner_icon_style='margin:0px;font-size:0.8em')
             ).add_to(Pths_points)
     Pths.add_to(map)
