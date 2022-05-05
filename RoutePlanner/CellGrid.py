@@ -640,8 +640,13 @@ class CellGrid:
                 """
 
         # plot highlighted cells
-        for cellBox in highlightCellBoxes:
-            ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
+        for colour in highlightCellBoxes:
+            for cellBox in highlightCellBoxes[colour]:
+                ax.add_patch(MatplotPolygon(cellBox.getBounds(),
+                                            closed=True,
+                                            fill=False,
+                                            edgecolor=colour,
+                                            linewidth = 0.5 + len(list(highlightCellBoxes.keys())) - list(highlightCellBoxes.keys()).index(colour)))
 
         # plot paths if supplied
         if type(paths) != type(None):
