@@ -15,7 +15,15 @@ The RoutePlanner software can be installed by using
   conda install geopandas
   python setup.py install
 ```
-Runable examples can be found in the ./Examples folder
+
+### Mac/Linux Installation
+The RoutePlanner software can be installed by using
+```
+  conda create -n RoutePlanner python=3.9
+  pip install numpy
+  python setup.py install
+```
+
 
 ---
 ## BAS Developers
