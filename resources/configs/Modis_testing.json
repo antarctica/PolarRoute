@@ -75,5 +75,19 @@
         }
       ]
     }
-  ]
+  ],
+  "Vehicle_Info": {
+    "Speed": "26.5",
+    "Unit": "km/hr",
+    "Beam": "24.0",
+    "HullType":"slender",
+    "ForceLimit":"96634.5",
+    "MaxIceExtent":"0.8"
+  },
+  "Route_Info": {
+    "WayPoints": "../../resources/WayPoints_org.csv",
+    "ZeroCurrents": true,
+    "VariableSpeed": false,
+    "TimeUnit":"days"
+  }
 }

@@ -45,7 +45,7 @@ class CellBox:
 
     splitDepth = 0
 
-    def __init__(self, lat, long, width, height, j_grid=False):
+    def __init__(self, lat, long, width, height, splittingConditions = [],j_grid=False):
         # Box information relative to bottom left
         self.lat = lat
         self.long = long
@@ -64,12 +64,14 @@ class CellBox:
         self.dcy = self.height/2
 
         # Minimum Depth to be used in the land mask
-        self.minDepth = 10
+        self.minDepth = -10
 
         # For initial implementation of land based from Java codebase.
         self.landLocked = False
 
         self._dataPoints = pd.DataFrame()
+
+        self._splittingConditions = splittingConditions
 
     def getcx(self):
         return self.long + self.width/2
@@ -121,7 +123,7 @@ class CellBox:
         '''
             updates the ice points contained within this cellBox to a pandas dataframe provided by parameter icePoints.
         '''
-        self._icePoints = icePoints.dropna()
+        self._icePoints = icePoints.dropna() # depricated, to be removed
 
         self._dataPoints = pd.concat([self._dataPoints, icePoints], axis=0)
 
@@ -144,8 +146,22 @@ class CellBox:
     def _setDataPoints(self, dataPoints):
         self._dataPoints = dataPoints
 
-    def getDataPoints(self):
-        return self._dataPoints
+    def getDataPoints(self, values = []):
+
+        if len(values) == 0:
+            return self._dataPoints
+        else:
+            dataPoints = pd.DataFrame()
+            for value in values:
+                dataPoints = pd.concat([dataPoints, self.getDataPoints().dropna(subset = [value])], axis = 0)
+
+            columns =  ['lat', 'long', 'time'] + values
+            return dataPoints[columns]
+
+    def getValue(self, value):
+        dataFrame = self.getDataPoints(values = [value])
+        return dataFrame[value].mean()
+
 
     def getIcePointLength(self):
         '''
@@ -178,37 +194,6 @@ class CellBox:
         '''
         return "Lat Range: " + self._getLatRange() + ", Long Range: " + self._getLongRange()
 
-    def getPolygon(self,fill=True):
-        '''
-            Returns a polygon object representing if a cellBox is considered land as well as the ice area within the cellBox
-
-            DEPRECIATED
-        '''
-
-        # TODO remove as functionality deprecated by getBounds().
-        bounds = [[self.long, self.lat],
-                    [self.long, self.lat + self.height],
-                    [self.long + self.width, self.lat + self.height],
-                    [self.long + self.width, self.lat],
-                    [self.long, self.lat]]
-        if self.isLand() == False:
-            return Polygon(bounds, closed = True, fill = True, color = 'White', alpha = self.iceArea())
-        return Polygon(bounds, closed = True, fill = True, color = 'mediumseagreen', alpha=1)
-
-    def getBorder(self):
-        '''
-            Returns a polygon object representing a grey border around this cellBox, to be used when plotting.
-
-            DEPRECIATED
-        '''
-        # TODO remove as functionality depricated by getBounds().
-        bounds = [[self.long, self.lat],
-                    [self.long, self.lat + self.height],
-                    [self.long + self.width, self.lat + self.height],
-                    [self.long + self.width, self.lat],
-                    [self.long, self.lat]]
-        return Polygon(bounds, closed = True, fill = False, color = 'Grey', alpha = 1)
-
     def getBounds(self):
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
@@ -216,21 +201,6 @@ class CellBox:
                     [self.long + self.width, self.lat],
                     [self.long, self.lat]]
         return bounds
-
-    def getHighlight(self):
-        '''
-            Returns polygon object representing a red border around this cellBox, to be used when plotting.
-
-            DEPRECIATED
-        '''
-        # TODO remove as functionality deprecated by getBounds().
-        bounds = [[self.long, self.lat],
-                    [self.long, self.lat + self.height],
-                    [self.long + self.width, self.lat + self.height],
-                    [self.long + self.width, self.lat],
-                    [self.long, self.lat]]
-
-        return Polygon(bounds, closed=True, fill=False, color='Red', alpha=1)
 
     def getWidth(self):
         '''
@@ -339,7 +309,7 @@ class CellBox:
 
         depthList = self._dataPoints.dropna(subset=['depth'])['depth']
 
-        if (depthList < self.minDepth).any():
+        if (depthList > self.minDepth).any():
             return True
         return False
 
@@ -351,7 +321,7 @@ class CellBox:
             return self.isLandM()
 
         depthList = self._dataPoints.dropna(subset=['depth'])['depth']
-        if (depthList < self.minDepth).all():
+        if (depthList > self.minDepth).all():
             return True
         return False
 
@@ -376,6 +346,31 @@ class CellBox:
     def isLandM(self):
         return self.landLocked
 
+    def addSplittingCondition(self, splittingCondition):
+        self._splittingConditions = self._splittingConditions + [splittingCondition]
+
+    def valueShouldBeSplit(self, value, threshold, lowerBound, upperBound):
+        dataLimit = 4
+
+        dataPoints = self.getDataPoints(values = [value])
+
+        if dataPoints.shape[0] < dataLimit:
+            return False
+
+        propOver = dataPoints.loc[dataPoints[value] > threshold]
+
+        proportionOverXpercent = propOver.shape[0] / dataPoints.shape[0]
+        return (proportionOverXpercent > lowerBound and proportionOverXpercent < upperBound)
+    
+    def shouldBeSplit(self):
+        split = False
+        for splittingCondition in self._splittingConditions:
+            value = list(splittingCondition.keys())[0]
+            threshold = float(splittingCondition[value]['threshold'])
+            upperBound = float(splittingCondition[value]['upperBound'])
+            lowerBound = float(splittingCondition[value]['lowerBound'])
+            split = split or self.valueShouldBeSplit(value, threshold, lowerBound, upperBound)
+        return split
 
     def isHomogenous(self,  splittingPercentage, splitMinProp, splitMaxProp):
         '''
@@ -417,7 +412,8 @@ class CellBox:
     def shouldWeSplit(self, splittingPercentage, splitMinProp, splitMaxProp):
 
         if self._j_grid == False:
-            return not self.isHomogenous(splittingPercentage, splitMinProp, splitMaxProp)
+            return self.shouldBeSplit()
+            #return not self.isHomogenous(splittingPercentage, splitMinProp, splitMaxProp)
 
         dataLimit = 1
 
@@ -443,10 +439,14 @@ class CellBox:
         halfHeight = self.height / 2
 
         # create 4 new cellBoxes
-        northWest = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight, self._j_grid)
-        northEast = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight, self._j_grid)
-        southWest = CellBox(self.lat, self.long, halfWidth, halfHeight, self._j_grid)
-        southEast = CellBox(self.lat, self.long + halfWidth, halfWidth, halfHeight, self._j_grid)
+        northWest = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight,
+                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
+        northEast = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight,
+                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
+        southWest = CellBox(self.lat, self.long, halfWidth, halfHeight, 
+                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
+        southEast = CellBox(self.lat, self.long + halfWidth, halfWidth, halfHeight, 
+                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
 
         """
         splitBoxes[0] = southWest
@@ -494,15 +494,16 @@ class CellBox:
             if self.landLocked:
                 splitBox.landLocked = True
 
-            splitBox.griduC = self.griduC
-            splitBox.gridvC = self.gridvC
+            if self._j_grid == True:
+                splitBox.griduC = self.griduC
+                splitBox.gridvC = self.gridvC
 
-            # set gridCoord of split boxes equal to parent.
-            splitBox.setGridCoord(self.xCoord, self.yCoord)
+                # set gridCoord of split boxes equal to parent.
+                splitBox.setGridCoord(self.xCoord, self.yCoord)
 
-            # create focus for split boxes.
-            splitBox.setFocus(self.getFocus().copy())
-            splitBox.addToFocus(splitBoxes.index(splitBox))
+                # create focus for split boxes.
+                splitBox.setFocus(self.getFocus().copy())
+                splitBox.addToFocus(splitBoxes.index(splitBox))
 
 
         return splitBoxes
