@@ -82,14 +82,29 @@ def MapResearchSites(DF,map):
     wpts.add_to(map)    
     return map
 
-def MapPaths(Paths,map,PathPoints=True):
+def MapPaths(Paths,map,PathPoints=True,colorLine=True):
     Pths        = folium.FeatureGroup(name='Paths')
     Pths_points = folium.FeatureGroup(name='Path Points')
+
+    # Determining max travel-times of all paths
+    maxTT = 0
+    for path in copy.deepcopy(Paths):
+        if path['Time'] > maxTT:
+            maxTT = path['Time']
+
     for path in copy.deepcopy(Paths):
         points = path['Path']['Points']
+        Times  = path['Path']['Time']
         points[:,0] = points[:,0]
         points = points[:,::-1]
-        folium.PolyLine(points,color="black", weight=2.0, opacity=1).add_to(Pths)
+
+        if colorLine:
+            colormap = linear.viridis.scale(0,maxTT).to_step(100)
+            colormap.caption = 'Transit Time (Days)'
+            colormap.background = 'white'
+            folium.ColorLine(points,Times,colormap=colormap,nb_steps=50, weight=3.0, opacity=1).add_to(Pths)
+        else:
+            folium.PolyLine(points,color="black", weight=2.0, opacity=1).add_to(Pths)
         for idx in range(len(points)):
             loc = [points[idx,0],points[idx,1]]
             folium.Marker(
@@ -104,6 +119,10 @@ def MapPaths(Paths,map,PathPoints=True):
     Pths.add_to(map)
     if PathPoints:
         Pths_points.add_to(map)
+
+
+    map.add_child(colormap)
+
     return map
 
 
@@ -329,18 +348,20 @@ def MapMesh(cellGrid,map,threshold=0.8):
     landInfo.add_to(map)
 
     # ===== Plotting Mesh Info =====
-    bathInfo = folium.FeatureGroup(name='Bathymetry Mesh',show=False)
-    colormap = linear.Reds_09.scale(min(ThinIceDF['Depth']),max(ThinIceDF['Depth']))
-    folium.GeoJson(
-        IceDF,
-        style_function=lambda x: {
-                'fillColor': colormap(x['properties']['Depth']),
-                'color': 'gray',
-                'weight': 0.5,
-                'fillOpacity': 0.3
-            }
-    ).add_to(bathInfo)
-    bathInfo.add_to(map)
+    # try:
+    #     bathInfo = folium.FeatureGroup(name='Bathymetry Mesh',show=False)
+    #     colormap = linear.Reds_09.scale(min(ThinIceDF['Depth']),max(ThinIceDF['Depth']))
+    #     folium.GeoJson(
+    #         IceDF,
+    #         style_function=lambda x: {
+    #                 'fillColor': colormap(x['properties']['Depth']),
+    #                 'color': 'gray',
+    #                 'weight': 0.5,
+    #                 'fillOpacity': 0.3
+    #             }
+    #     ).add_to(bathInfo)
+    #     bathInfo.add_to(map)
+
     # ===== Plotting Mesh Info =====
     meshInfo = folium.FeatureGroup(name='Mesh Information',show=False)
     folium.GeoJson(
@@ -362,14 +383,23 @@ def MapMesh(cellGrid,map,threshold=0.8):
     return map
 
 
-def BaseMap(location=[-58,-63.7],logo=True,logoPos=[5,88]):
-    map = folium.Map(location=location,zoom_start=2.6,tiles=None)
+
+def BaseMap(TitleText,MapCentre=[-58,-63.7],MapZoom=2.6):
+    title_html = '''
+                <h1 style="color:#003b5c;font-size:16px">
+                &ensp;<img src='https://i.ibb.co/JH2zknX/Small-Logo.png' alt="BAS-colour-eps" border="0" style="width:40px;height:40px;"> 
+                <img src="https://i.ibb.co/XtZdzDt/BAS-colour-eps.png" alt="BAS-colour-eps" border="0" style="width:179px;height:40px;"> 
+                &ensp;|&ensp; RoutePlanner &ensp;|&ensp; {}
+                </h1>
+                </body>
+                '''.format(TitleText)   
+    map = folium.Map(location=MapCentre,zoom_start=MapZoom,tiles=None)
     bsmap = folium.FeatureGroup(name='BaseMap')
     folium.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}.png',attr="toner-bcg", name='Basemap').add_to(bsmap)
     bsmap.add_to(map)
-    if logo:
-        folium.plugins.FloatImage('https://i.ibb.co/JH2zknX/Small-Logo.png',bottom=logoPos[1],left=logoPos[0]).add_to(map)
+    map.get_root().html.add_child(folium.Element(title_html))
     return map
+
 
 def LayerControl(map,collapsed=True):
     folium.LayerControl(collapsed=collapsed).add_to(map)

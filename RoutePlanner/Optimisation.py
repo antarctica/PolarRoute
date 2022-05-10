@@ -38,8 +38,14 @@ class TravelTime:
                         if len(indxs) == 0:
                             continue
                         for indx in indxs:
-                            if (self.Mesh.cellBoxes[indx].iceArea() >= self.OptInfo['MaxIceExtent']) or (self.Mesh.cellBoxes[indx].isLandM()):
+                            if (self.Mesh.cellBoxes[indx].iceArea() >= self.OptInfo['MaxIceExtent']):
                                 continue
+                            if self.Mesh._j_grid:
+                                if self.Mesh.cellBoxes[indx].isLandM():
+                                    continue
+                            else:
+                                if self.Mesh.cellBoxes[indx].containsLand():
+                                    continue
                             cases.append(case)
                             neighIndx.append(indx)
                     neighDict = {}
@@ -145,12 +151,13 @@ class TravelTime:
 
     def speedFunction(self, Cell):
         if self.variableSpeed:
-            if Cell.iceArea() == 0.0:
-                s = self.OptInfo['VehicleInfo']['Speed']
-            elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
-                s = self.OptInfo['VehicleInfo']['Speed']
-            else:
-                s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
+            s = (1-np.sqrt(Cell.iceArea()))*self.OptInfo['VehicleInfo']['Speed']
+            # if Cell.iceArea() == 0.0:
+            #     s = self.OptInfo['VehicleInfo']['Speed']
+            # elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
+            #     s = self.OptInfo['VehicleInfo']['Speed']
+            # else:
+            #     s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
         else:
             s = self.OptInfo['VehicleInfo']['Speed']
         return s
@@ -167,25 +174,28 @@ class TravelTime:
             for idy,wpt_b in wpts_e.iterrows():
                 wpt_b_name  = wpt_b['Name']; wpt_b_index = int(wpt_b['index']); wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
                 if not wpt_a_name == wpt_b_name:
-                    # ==== Correcting Path for waypoints off cell
-                    Path = {}
-                    Path['from']               = wpt_a_name
-                    Path['to']                 = wpt_b_name
+                    try:
+                        # ==== Correcting Path for waypoints off cell
+                        Path = {}
+                        Path['from']               = wpt_a_name
+                        Path['to']                 = wpt_b_name
 
 
-                    Graph = self.DijkstraInfo[wpt_a_name]
-                    Path['Time']               = float(Graph['traveltime'].loc[wpt_b_index])
-                    if Path['Time'] == np.inf:
-                        continue
-                    PathTT     = Graph['pathCost'].loc[wpt_b_index]
+                        Graph = self.DijkstraInfo[wpt_a_name]
+                        Path['Time']               = float(Graph['traveltime'].loc[wpt_b_index])
+                        if Path['Time'] == np.inf:
+                            continue
+                        PathTT     = Graph['pathCost'].loc[wpt_b_index]
 
-                    # ===== Appending Path ===== 
-                    Path['Path']                = {}
-                    Path['Path']['Points']      = np.array(wpt_a_loc+list(np.array(Graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)
-                    Path['Path']['CellIndices'] = np.array(Graph['pathIndex'].loc[wpt_b_index])
-                    Path['Path']['CaseTypes']   = np.array([wpt_a_index] + Graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index])
-                    Path['Path']['Time']        = PathTT
-                    Paths.append(Path)
+                        # ===== Appending Path ===== 
+                        Path['Path']                = {}
+                        Path['Path']['Points']      = np.array(wpt_a_loc+list(np.array(Graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)
+                        Path['Path']['CellIndices'] = np.array(Graph['pathIndex'].loc[wpt_b_index])
+                        Path['Path']['CaseTypes']   = np.array([wpt_a_index] + Graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index])
+                        Path['Path']['Time']        = PathTT
+                        Paths.append(Path)
+                    except:
+                        print('Failure')
         return Paths    
 
     def NeighbourCost(self,wpt_name,minimumTravelTimeIndex):
@@ -207,15 +217,33 @@ class TravelTime:
         # Looping over idx
         for idx in range(len(SourceGraph['case'])):
             indx = SourceGraph['neighbourIndex'][idx]
+            
+            # Don't inspect neighbour if position is already locked
+            if self.DijkstraInfo[wpt_name].loc[indx,'positionLocked']:
+                continue
+            
             Nc   = self.Mesh.cellBoxes[indx]
             Case = SourceGraph['case'][idx]
             
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']) or (Nc.isLandM()):
+            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']):
                 SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
                 SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
                 continue
+
+            if self.Mesh._j_grid:
+                if Nc.isLandM():
+                    SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
+                    SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
+                    continue
+            else:
+                if Nc.containsLand():
+                    SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
+                    SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
+                    continue
+
+
 
             Sc_speed = self.speedFunction(Sc)
             Nc_speed = self.speedFunction(Nc)
