@@ -1,7 +1,7 @@
 import matplotlib.pylab as plt
 from matplotlib.patches import Polygon
 import numpy as np
-from simplekml import Kml, Color, Style
+#from simplekml import Kml, Color, Style
 from RoutePlanner.IO import SDAPosition, MeshDF
 from RoutePlanner.CellBox import CellBox
 import folium
