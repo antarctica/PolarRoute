@@ -104,6 +104,52 @@ class CellBox:
         focusString += "]"
         return nodeString + " " + focusString
 
+    def iceThickness(self, date):
+        """
+            Returns mean ice thickness within this cellBox. Data taken from Table 3 in: doi:10.1029/2007JC004254
+        """
+        # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, these require further thought
+        thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
+                    'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
+                    'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
+                    'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
+                    'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
+                    'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79}
+                    }
+        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+                12: 'su'}
+        month = int(date[5:7])
+        season = seasons[month]
+
+        if -130 <= self.long < -60:
+            sea = 'Bellinghausen'
+        elif -60 <= self.long < -45:
+            sea = 'Weddell W'
+        elif -45 <= self.long < 20:
+            sea = 'Weddell E'
+        elif 20 <= self.long < 90:
+            sea = 'Indian'
+        elif 90 <= self.long < 160:
+            sea = 'West Pacific'
+        elif (160 <= self.long < 180) or (-180 <= self.long < -130):
+            sea = 'Ross'
+
+        return thicknesses[sea][season]
+
+    def iceDensity(self, date):
+        """
+            Returns mean ice density within this cellBox
+        """
+        seasons = {1:'su',2:'su',3:'a',4:'a',5:'a',6:'w',7:'w',8:'w',9:'sp',10:'sp',11:'sp',12:'su'}
+        densities = {'su':875.0,'sp':900.0,'a':900.0,'w':920.0}
+
+        month = int(date[5:7])
+        season = seasons[month]
+        d = densities[season]
+
+        # Seasonal values from: https://doi.org/10.1029/2007JC004254
+        return d
+
     def meshDump(self):
         meshDump = ""
         meshDump += self.nodeString() + "; "  # add node string

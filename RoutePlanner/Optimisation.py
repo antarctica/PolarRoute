@@ -116,9 +116,10 @@ class TravelTime:
 
         V = self.config['Vehicle_Info']['Speed']*(5./18.)  # assume km/h and convert to m/s
 
-        Fr = V/np.sqrt(g*Cell.iceArea()*Cell.iceThickness())
+        Fr = V/np.sqrt(g*Cell.iceArea()*Cell.iceThickness(self.config['Region']['startTime']))
 
-        r = 0.5*k*(Fr**b)*Cell.iceDensity()*beam*Cell.iceThickness()*(V**2)*(Cell.iceArea()**n)
+        r = 0.5*k*(Fr**b)*Cell.iceDensity(self.config['Region']['startTime'])*beam*Cell.iceThickness(self.config['Region']['startTime'])\
+            *(V**2)*(Cell.iceArea()**n)
 
         return r
 
@@ -142,22 +143,23 @@ class TravelTime:
 
         exp = 2.0 + b
 
-        vexp = 2*Fl/(k*Cell.iceDensity()*beam*Cell.iceThickness()*(Cell.iceArea()**n)*(g*Cell.iceThickness()*Cell.iceArea())**-(b/2))
+        vexp = 2*Fl/(k*Cell.iceDensity(self.config['Region']['startTime'])*beam*Cell.iceThickness(self.config['Region']['startTime'])*
+                    (Cell.iceArea()**n)*(g*Cell.iceThickness(self.config['Region']['startTime'])*Cell.iceArea())**-(b/2))
 
         vms = vexp**(1/exp)
         v = vms*(18./5.)  # convert from m/s to km/h
 
-        return v
+        return v        
 
     def speedFunction(self, Cell):
         if self.variableSpeed:
-            s = (1-np.sqrt(Cell.iceArea()))*self.config['Vehicle_Info']['Speed']
-            # if Cell.iceArea() == 0.0:
-            #     s = self.OptInfo['VehicleInfo']['Speed']
-            # elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
-            #     s = self.OptInfo['VehicleInfo']['Speed']
-            # else:
-            #     s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
+            #s = (1-np.sqrt(Cell.iceArea()))*self.config['Vehicle_Info']['Speed']
+            if Cell.iceArea() == 0.0:
+                s = self.config['Vehicle_Info']['Speed']
+            elif self.iceResistance(Cell) < self.config['Vehicle_Info']['ForceLimit']:
+                s = self.config['Vehicle_Info']['Speed']
+            else:
+                s = self.inverseResistance(self.config['Vehicle_Info']['ForceLimit'], Cell)
         else:
             s = self.config['Vehicle_Info']['Speed']
         return s

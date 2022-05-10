@@ -70,7 +70,7 @@
   },
   "Route_Info": {
     "WayPoints": "../../resources/WayPoints_org.csv",
-    "Zero_Currents": true,
+    "Zero_Currents": false,
     "Variable_Speed": true,
     "Time_Unit":"days"
   }
