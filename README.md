@@ -8,7 +8,7 @@ A long-distance route planner for marine navigation around Antartica. This work 
 For installation of the package we suggest that the use sets up their Python enviroments using Conda/MiniCoda distributions. Depending on the use case the additional information is supplied for the installation on the different operating systems
 
 ### Windows Installation
-The RoutePlanner software can be installed by using
+The RoutePlanner software can be installed by using the following. Be careful and make sure that the following lines are done in AnacondaComandPrompt
 ```
   conda create -n RoutePlanner python=3.9
   pip install numpy
