@@ -1,0 +1,10 @@
+name: routePlanner
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - rasterio
+  - shapely
+  - ipykernel
+  - geopandas
+prefix: C:\Users\samhall\Miniconda3\envs\routePlanner
