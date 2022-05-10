@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MatplotPolygon
 import math
+import xarray as xr
 #import geopandas as gpd
 
 def bearing(st,en): # Should be moved out of the CellBox.py file.
@@ -74,23 +75,29 @@ def Intersection_BoxLine(Cell_s,Pt,type): # Should be moved out of the CellBox.p
 
 class CellGrid:
 
-    def __init__(self, longMin, longMax, latMin, latMax, cellWidth, cellHeight, j_grid=False):
-        self._longMin = longMin
-        self._longMax = longMax
-        self._latMin = latMin
-        self._latMax = latMax
+    def __init__(self, config, j_grid=False):
+        self._longMin = config['Region']['longMin']
+        self._longMax = config['Region']['longMax']
+        self._latMin = config['Region']['latMin']
+        self._latMax = config['Region']['latMax']
+
+        self._cellWidth = config['Region']['cellWidth']
+        self._cellHeight = config['Region']['cellHeight']
+
+        self._startTime = config['Region']['startTime']
+        self._endTime = config['Region']['endTime']
+
+        self._dataSources = config['Data_sources']
 
         self._j_grid = j_grid
-
-        self._cellWidth = cellWidth
-        self._cellHeight = cellHeight
 
         self.cellBoxes = []
 
         # Initialise cellBoxes.
-        for lat in np.arange(latMin, latMax, cellHeight):
-            for long in np.arange(longMin, longMax, cellWidth):
-                cellBox = CellBox(lat, long, cellWidth, cellHeight, j_grid)
+        for lat in np.arange(self._latMin, self._latMax, self._cellHeight):
+            for long in np.arange(self._longMin, self._longMax, self._cellWidth):
+                cellBox = CellBox(lat, long, self._cellWidth, self._cellHeight, 
+                                    splittingConditions = [], j_grid = self._j_grid)
                 self.cellBoxes.append(cellBox)
 
         gridWidth = (self._longMax - self._longMin) / self._cellWidth
@@ -139,6 +146,12 @@ class CellGrid:
 
             # set focus of cellBox
             cellBox.setFocus([])
+        self.splittingConditions = []
+        for dataSource in config['Data_sources']:
+                self.addDataSource(dataSource)
+
+        self.iterativeSplit(config['Region']["splitDepth"], 0,0,0)
+        
 
     def neighbourTest(self, cellBox):
         """
@@ -193,6 +206,54 @@ class CellGrid:
 
             cellBox.addIcePoints(ipSlice)
             """
+    def addDataSource(self, dataSource):
+
+        for value in dataSource['values']:
+            if "splittingCondition" in value:
+                    splittingCondition = {value['destinationName'] : value['splittingCondition']}
+                    self.splittingConditions = self.splittingConditions + [splittingCondition]
+    
+        for cellBox in self.cellBoxes:
+            latMin = cellBox.lat
+            longMin = cellBox.long
+
+            longMax = longMin + cellBox.width
+            latMax = latMin + cellBox.height
+            
+            path = dataSource['path']
+
+            dataSet = xr.open_dataset(path)
+
+            if "timeName" in dataSource:
+                dataSet = dataSet.rename({dataSource['latName']:'lat',
+                                        dataSource['longName']:'long',
+                                        dataSource['timeName']:'time'})
+            
+                dataSlice = dataSet.sel(time = slice(self._startTime, self._endTime),
+                                        lat = slice(latMin, latMax),
+                                        long = slice(longMin, longMax))
+            else:
+                dataSet = dataSet.rename({dataSource['latName']:'lat',
+                                        dataSource['longName']:'long'})
+            
+                dataSlice = dataSet.sel(lat = slice(latMin, latMax),
+                                        long = slice(longMin, longMax))
+
+            df = dataSlice.to_dataframe()
+            df = df.reset_index()
+
+            selected = []
+            for value in dataSource['values']:
+                df = df.rename(columns = {value['sourceName']:value['destinationName']})
+                selected = selected + [value['destinationName']]
+
+                if "splittingCondition" in value:
+                    splittingCondition = {value['destinationName'] : value['splittingCondition']}
+                    cellBox.addSplittingCondition(splittingCondition)
+
+            df = df.dropna(subset = selected)
+
+            cellBox.addDataPoints(df)
 
     def addCurrentPoints(self, currentPoints):
         """
