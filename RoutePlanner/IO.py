@@ -5,6 +5,11 @@ from glob import glob
 import json
 import numpy as np
 
+import warnings
+from pandas.core.common import SettingWithCopyWarning
+warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+
+
 def LoadIcePoints(NetCDF,startDate,endDate):
     bsos = Dataset(NetCDF)
 
@@ -161,7 +166,10 @@ def MeshDF(cellGrid):
             bounds = np.array(c.getBounds())
             Shape.append(Polygon(bounds))
             IceArea.append(c.iceArea()*100)
-            IsLand.append(c.containsLand())
+            if cellGrid._j_grid:
+                IsLand.append(c.isLandM())
+            else:
+                IsLand.append(c.containsLand())
             dpth.append(c.depth())
             vec.append([c.getuC(),c.getvC()])
             CentroidCx.append(c.cx)
@@ -178,4 +186,6 @@ def MeshDF(cellGrid):
     Polygons['Index']    = Index
     Polygons = gpd.GeoDataFrame(Polygons,crs={'init': 'epsg:4326'}, geometry='geometry')
     Polygons['Land'][np.isnan(Polygons['Ice Area'])] = True
+
+    Polygons['Land'][Polygons['Cy'] < -78.0] = True
     return Polygons

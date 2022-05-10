@@ -14,7 +14,7 @@ from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
 from RoutePlanner.CellBox import CellBox
 
 class TravelTime:
-    def __init__(self,CellGrid,OptInfo,CostFunc=NewtonianDistance):
+    def __init__(self,CellGrid,OptInfo,neighbourGraph=None,CostFunc=NewtonianDistance):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
         self.OptInfo = copy.copy(OptInfo['Route'])
@@ -23,29 +23,40 @@ class TravelTime:
         self.paths         = None
         self.smoothedPaths = None
 
-        # Constructing Neighbour Graph
-        neighbourGraph = {}
-        for idx,cell in enumerate(self.Mesh.cellBoxes):
-            if not isinstance(cell, CellBox):
-                continue
-            else:
-                neigh     = self.Mesh.neighbourGraph[idx]
-                cases     = []
-                neighIndx = []
-                for case in neigh.keys():
-                    indxs = neigh[case]
-                    if len(indxs) == 0:
-                        continue
-                    for indx in indxs:
-                        cases.append(case)
-                        neighIndx.append(indx)
-                neighDict = {}
-                neighDict['cX']    = cell.cx
-                neighDict['cY']    = cell.cy
-                neighDict['case']  = cases
-                neighDict['neighbourIndex'] = neighIndx 
-                neighbourGraph[idx] = neighDict
-        self.neighbourGraph = pd.DataFrame().from_dict(neighbourGraph,orient='index')
+        # # Constructing Neighbour Graph
+        if type(neighbourGraph) == type(None):
+            neighbourGraph = {}
+            for idx,cell in enumerate(self.Mesh.cellBoxes):
+                if not isinstance(cell, CellBox):
+                    continue
+                else:
+                    neigh     = self.Mesh.neighbourGraph[idx]
+                    cases     = []
+                    neighIndx = []
+                    for case in neigh.keys():
+                        indxs = neigh[case]
+                        if len(indxs) == 0:
+                            continue
+                        for indx in indxs:
+                            if (self.Mesh.cellBoxes[indx].iceArea() >= self.OptInfo['MaxIceExtent']):
+                                continue
+                            if self.Mesh._j_grid:
+                                if self.Mesh.cellBoxes[indx].isLandM():
+                                    continue
+                            else:
+                                if self.Mesh.cellBoxes[indx].containsLand():
+                                    continue
+                            cases.append(case)
+                            neighIndx.append(indx)
+                    neighDict = {}
+                    neighDict['cX']    = cell.cx
+                    neighDict['cY']    = cell.cy
+                    neighDict['case']  = cases
+                    neighDict['neighbourIndex'] = neighIndx 
+                    neighbourGraph[idx] = neighDict
+            self.neighbourGraph = pd.DataFrame().from_dict(neighbourGraph,orient='index')
+        else:
+            self.neighbourGraph = neighbourGraph
         self.neighbourGraph['positionLocked'] = False
         self.neighbourGraph['traveltime']     = np.inf
         self.neighbourGraph['neighbourTravelLegs'] = [list() for x in range(len(self.neighbourGraph.index))]
@@ -60,6 +71,8 @@ class TravelTime:
         self.unit_time      = self.OptInfo['Time Unit']
         self.zero_currents  = self.OptInfo['Zero Currents']
         self.variableSpeed  =self. OptInfo['VariableSpeed']
+
+        print('Zero Currets {}'.format(self.zero_currents))
 
 
         if type(self.OptInfo['WayPoints']) != pd.core.frame.DataFrame:
@@ -138,12 +151,13 @@ class TravelTime:
 
     def speedFunction(self, Cell):
         if self.variableSpeed:
-            if Cell.iceArea() == 0.0:
-                s = self.OptInfo['VehicleInfo']['Speed']
-            elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
-                s = self.OptInfo['VehicleInfo']['Speed']
-            else:
-                s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
+            s = (1-np.sqrt(Cell.iceArea()))*self.OptInfo['VehicleInfo']['Speed']
+            # if Cell.iceArea() == 0.0:
+            #     s = self.OptInfo['VehicleInfo']['Speed']
+            # elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
+            #     s = self.OptInfo['VehicleInfo']['Speed']
+            # else:
+            #     s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
         else:
             s = self.OptInfo['VehicleInfo']['Speed']
         return s
@@ -160,25 +174,28 @@ class TravelTime:
             for idy,wpt_b in wpts_e.iterrows():
                 wpt_b_name  = wpt_b['Name']; wpt_b_index = int(wpt_b['index']); wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
                 if not wpt_a_name == wpt_b_name:
-                    # ==== Correcting Path for waypoints off cell
-                    Path = {}
-                    Path['from']               = wpt_a_name
-                    Path['to']                 = wpt_b_name
+                    try:
+                        # ==== Correcting Path for waypoints off cell
+                        Path = {}
+                        Path['from']               = wpt_a_name
+                        Path['to']                 = wpt_b_name
 
 
-                    Graph = self.DijkstraInfo[wpt_a_name]
-                    Path['Time']               = float(Graph['traveltime'].loc[wpt_b_index])
-                    if Path['Time'] == np.inf:
-                        continue
-                    PathTT     = Graph['pathCost'].loc[wpt_b_index]
+                        Graph = self.DijkstraInfo[wpt_a_name]
+                        Path['Time']               = float(Graph['traveltime'].loc[wpt_b_index])
+                        if Path['Time'] == np.inf:
+                            continue
+                        PathTT     = Graph['pathCost'].loc[wpt_b_index]
 
-                    # ===== Appending Path ===== 
-                    Path['Path']                = {}
-                    Path['Path']['Points']      = np.array(wpt_a_loc+list(np.array(Graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)
-                    Path['Path']['CellIndices'] = np.array(Graph['pathIndex'].loc[wpt_b_index])
-                    Path['Path']['CaseTypes']   = np.array([wpt_a_index] + Graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index])
-                    Path['Path']['Time']        = PathTT
-                    Paths.append(Path)
+                        # ===== Appending Path ===== 
+                        Path['Path']                = {}
+                        Path['Path']['Points']      = np.array(wpt_a_loc+list(np.array(Graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)
+                        Path['Path']['CellIndices'] = np.array(Graph['pathIndex'].loc[wpt_b_index])
+                        Path['Path']['CaseTypes']   = np.array([wpt_a_index] + Graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index])
+                        Path['Path']['Time']        = PathTT
+                        Paths.append(Path)
+                    except:
+                        print('Failure')
         return Paths    
 
     def NeighbourCost(self,wpt_name,minimumTravelTimeIndex):
@@ -200,15 +217,33 @@ class TravelTime:
         # Looping over idx
         for idx in range(len(SourceGraph['case'])):
             indx = SourceGraph['neighbourIndex'][idx]
+            
+            # Don't inspect neighbour if position is already locked
+            if self.DijkstraInfo[wpt_name].loc[indx,'positionLocked']:
+                continue
+            
             Nc   = self.Mesh.cellBoxes[indx]
             Case = SourceGraph['case'][idx]
             
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']) or (Nc.containsLand()):
+            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']):
                 SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
                 SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
                 continue
+
+            if self.Mesh._j_grid:
+                if Nc.isLandM():
+                    SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
+                    SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
+                    continue
+            else:
+                if Nc.containsLand():
+                    SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
+                    SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
+                    continue
+
+
 
             Sc_speed = self.speedFunction(Sc)
             Nc_speed = self.speedFunction(Nc)
@@ -247,6 +282,7 @@ class TravelTime:
         
         # Updating Dijkstra as long as all the waypoints are not visited.
         while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
+        #while (self.DijkstraInfo[wpt_name]['positionLocked'] == False).any():    
 
             # Determining the index of the minimum traveltime that has not been visited
             minimumTravelTimeIndex = self.DijkstraInfo[wpt_name][self.DijkstraInfo[wpt_name]['positionLocked']==False]['traveltime'].idxmin()
@@ -264,6 +300,9 @@ class TravelTime:
         '''
         Determining the shortest path between all waypoints
         '''
+
+        self.source_waypoints = source_waypoints
+        self.end_waypoints    = end_waypoints
 
         # Subsetting the waypoints
         if type(source_waypoints) == type(None):
@@ -301,7 +340,7 @@ class TravelTime:
 
          
 
-    def PathSmoothing(self,maxiter=1000,minimumDiff=1e-4,debugging=0,return_paths=True,verbose=False):
+    def PathSmoothing(self,maxiter=10000,minimumDiff=1e-4,debugging=0,return_paths=True,verbose=False):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
         '''
@@ -312,28 +351,106 @@ class TravelTime:
         if type(self.paths) == type(None):
             raise Exception('Paths not constructed, please re-run path construction')
         Pths = copy.deepcopy(self.paths)
-        # Looping over all the optimised paths
-        for indx_Path in range(len(Pths)):
-            Path = Pths[indx_Path]
-            if Path['Time'] == np.inf:
-                continue
 
-            startPoint = Path['Path']['Points'][0,:][None,:]
-            endPoint   = Path['Path']['Points'][-1,:][None,:]
+        for ii in range(len(Pths)):
+            Path = Pths[ii]
+            print('===Smoothing {} to {} ======'.format(Path['from'],Path['to']))
 
-            if verbose:
-                print('==================================================')
-                print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
+            nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.OptInfo,maxiter=1,zerocurrents=True)
+            nc.pathIter = maxiter
 
-            Points      = np.concatenate([startPoint,Path['Path']['Points'][1:-1:2],endPoint])
-            cellIndices = np.concatenate((Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]))
+            # -- Generating a dataframe of the case information -- 
+            Points      = np.concatenate([Path['Path']['Points'][0,:][None,:],Path['Path']['Points'][1:-1:2],Path['Path']['Points'][-1,:][None,:]])
+            cellIndices = np.concatenate([Path['Path']['CellIndices'][0][None],Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]])
+            cellDijk    = [nc.DijkstraInfo.loc[ii] for ii in cellIndices]
+            nc.CrossingDF  = pd.DataFrame({'cX':Points[:,0],'cY':Points[:,1],'cellStart':cellDijk[:-1],'cellEnd':cellDijk[1:]})
 
-            nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.OptInfo,zerocurrents=self.zero_currents,debugging=debugging)
-            nc.PathSmoothing(Points,cellIndices)
+            # -- Determining the cases from the cell information. If within cell then case 0 -- 
+            Cases = []
+            for idx,row in nc.CrossingDF.iterrows():
+                try:
+                    Cases.append(row.cellStart['case'][np.where(np.array(row.cellStart['neighbourIndex'])==row.cellEnd.name)[0][0]])
+                except:
+                    Cases.append(0)
+            nc.CrossingDF['case'] = Cases
+            nc.CrossingDF.index = np.arange(int(nc.CrossingDF.index.min()),int(nc.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-            Path['Path']['Points']       = nc.path
-            SmoothedPaths.append(Path)
+            nc.orgDF = copy.deepcopy(nc.CrossingDF)
+            iter=0
+            #try:
+            while iter < nc.pathIter:
+
+                nc.previousDF = copy.deepcopy(nc.CrossingDF)
+                id = 0
+                while id <= (len(nc.CrossingDF) - 3):
+                    nc.triplet = nc.CrossingDF.iloc[id:id+3]
+
+
+                    nc._updateCrossingPoint()
+                    self.nc = nc
+
+                    # -- Horseshoe Case Detection -- 
+                    nc._horseshoe()
+                    # -- Removing reseverse cases
+                    nc._reverseCase()
+
+                    id+=1+nc.id
+
+                self.nc = nc
+                nc._mergePoint()
+                self.nc = nc
+                iter+=1
+
+                # Stop optimisation if the points are within some minimum difference
+                if len(nc.previousDF) == len(nc.CrossingDF):
+                    Dist = np.max(np.sqrt((nc.previousDF['cX'] - nc.CrossingDF['cX'])**2 + (nc.previousDF['cY'] - nc.CrossingDF['cY'])**2))
+                    if Dist < 1e-3:
+                        break
+            print('{} iterations'.format(iter))
+            # except:
+            #     print('Failed {}->{}'.format(Path['from'],Path['to']))
+
+            SmoothedPath ={}
+            SmoothedPath['from'] = Path['from']
+            SmoothedPath['to']   = Path['to']
+            SmoothedPath['Path'] = {}
+            SmoothedPath['Path']['Points'] = nc.CrossingDF[['cX','cY']].to_numpy()    
+            SmoothedPaths.append(SmoothedPath)
+
+        
 
         self.smoothedPaths = SmoothedPaths
         if return_paths:
             return self.smoothedPaths
+
+
+        # SmoothedPaths = []
+
+        # if type(self.paths) == type(None):
+        #     raise Exception('Paths not constructed, please re-run path construction')
+        # Pths = copy.deepcopy(self.paths)
+        # # Looping over all the optimised paths
+        # for indx_Path in range(len(Pths)):
+        #     Path = Pths[indx_Path]
+        #     if Path['Time'] == np.inf:
+        #         continue
+
+        #     startPoint = Path['Path']['Points'][0,:][None,:]
+        #     endPoint   = Path['Path']['Points'][-1,:][None,:]
+
+        #     if verbose:
+        #         print('==================================================')
+        #         print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
+
+        #     Points      = np.concatenate([startPoint,Path['Path']['Points'][1:-1:2],endPoint])
+        #     cellIndices = np.concatenate((Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]))
+
+        #     nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.OptInfo,zerocurrents=self.zero_currents,debugging=debugging)
+        #     nc.PathSmoothing(Points,cellIndices)
+
+        #     Path['Path']['Points']       = nc.path
+        #     SmoothedPaths.append(Path)
+
+        # self.smoothedPaths = SmoothedPaths
+        # if return_paths:
+        #     return self.smoothedPaths
