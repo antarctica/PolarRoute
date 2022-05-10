@@ -5,9 +5,14 @@ A long-distance route planner for marine navigation around Antartica. This work 
 
 ---
 ## Installation
+For installation of the package we suggest that the use sets up their Python enviroments using Conda/MiniCoda distributions. Depending on the use case the additional information is supplied for the installation on the different operating systems
 
+### Windows Installation
 The RoutePlanner software can be installed by using
 ```
+  conda create -n RoutePlanner python=3.9
+  pip install numpy
+  conda install geopandas
   python setup.py install
 ```
 Runable examples can be found in the ./Examples folder

@@ -35,7 +35,11 @@ CLASSIFIERS = [
 INSTALL_REQUIRES = [
     'shapely',
     'ipykernel',
-    'geopandas']
+    'geopandas',
+    'xarray',
+    'netCDF4',
+    'matplotlib',
+    'folium']
 
 
 def read(*parts):
