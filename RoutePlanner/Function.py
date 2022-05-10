@@ -3,42 +3,6 @@ import copy
 import pandas as pd
 import numpy as np
 
-class _Euclidean_distance():
-    """
-    Replicating original route planner Euclidean distance 
-    Inputs:
-      origin      - tuple of floats e.g. (Long_orig,Lat_orig)
-      destination - tuple of floats e.g. (Long_dest,Lat_dest)
-      Optional: forward - Boolean True or False
-    Output:
-      Value - If 'forward' is True then returns Distance between 
-              two points in 'km'. If 'False' then return the 
-              Lat/Long position of a point.
-
-    """
-
-    def __init__(self,scaleLongitude=None):
-
-        self.m_per_latitude  = 111.386*1000.
-
-        if type(scaleLongitude) != type(None):
-            self.m_per_longitude = 111.321*1000*np.cos(scaleLongitude*(np.pi/180))
-        else:
-            self.m_per_longitude = (111.321*1000.)
-
-    def value(self,origin,dest_dist,forward=True):
-        lon1,lat1 = origin
-        if forward:
-            lon2,lat2 = dest_dist
-            lon2 = lon2+360
-            lon1 = lon1+360
-            val = np.sqrt(((lat2-lat1)*self.m_per_latitude)**2 + ((lon2-lon1)*self.m_per_longitude)**2)
-        else:
-            dist_x,dist_y = dest_dist        
-            val = [lon1+(dist_x/self.m_per_longitude),lat1+(dist_y/self.m_per_latitude)]
-        return val
-
-
 class NewtonianDistance:
     def __init__(self,Mesh,Sc=None,Nc=None,Sc_Speed=None,Nc_Speed=None,Case=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
         '''
@@ -55,14 +19,10 @@ class NewtonianDistance:
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
-
         self.s1             = self._unit_speed(Sc_Speed)
         self.s2             = self._unit_speed(Nc_Speed)
-        self.fdist          = _Euclidean_distance(scaleLongitude=(self.Cell_s.cy))
-
         self.case           = Case
-
-        self.splitLevels   = 0
+        self.splitLevels    = 0
 
         if zerocurrents:
             self.zx = 0.0
