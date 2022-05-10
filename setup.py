@@ -33,14 +33,13 @@ CLASSIFIERS = [
 ]
 
 INSTALL_REQUIRES = [
-    'matplotlib',
-    'numpy',
-    'scipy',
-    'pandas',
-    'netCDF4',
+    'shapely',
+    'ipykernel',
+    'geopandas',
     'xarray',
-    'folium',
-    'shapely']
+    'netCDF4',
+    'matplotlib',
+    'folium']
 
 
 def read(*parts):
@@ -101,12 +100,12 @@ def setup_package():
         include_dirs=INCLUDE_DIRS,
         package_data={"RoutePlanner": ["lib/*.so"]})
 
-
-    os.system('make ./.docs/html')
-    os.system('sphinx-build -b rinoh ./.docs/source ./.docs/_build/rinoh')
-    os.system('cp ./.docs/_build/rinoh/pyRoutePlanner.pdf .')
-    os.system('rm -rf ./.docs/_build')
-    os.system('rm -rf ./.docs/build')
+    # # Unix installation 
+    # os.system('make ./.docs/html')
+    # os.system('sphinx-build -b rinoh ./.docs/source ./.docs/_build/rinoh')
+    # os.system('cp ./.docs/_build/rinoh/pyRoutePlanner.pdf .')
+    # os.system('rm -rf ./.docs/_build')
+    # os.system('rm -rf ./.docs/build')
 
 if __name__ == "__main__":
     # clean --all does not remove extensions automatically
