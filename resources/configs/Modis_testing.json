@@ -12,7 +12,7 @@
   },
   "Data_sources": [
     {
-      "path": "data/modis_NetCDF.nc",
+      "path": "../Data/modis_NetCDF.nc",
       "latName": "lat",
       "longName": "long",
       "timeName": "time",
@@ -29,7 +29,7 @@
       ]
     },
     {
-      "path": "data/2017.nc",
+      "path": "../Data/2017.nc",
       "latName": "latitude",
       "longName": "longitude",
       "timeName": "time",
@@ -45,7 +45,7 @@
       ]
     },
     {
-      "path": "data/depth_map.nc",
+      "path": "../Data/depth_map.nc",
       "latName": "lat",
       "longName": "long",
       "values": [
@@ -61,7 +61,7 @@
       ]
     },
     {
-      "path": "data/sose_currents.nc",
+      "path": "../Data/sose_currents.nc",
       "latName": "lat",
       "longName": "long",
       "values": [

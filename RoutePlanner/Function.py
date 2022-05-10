@@ -337,10 +337,9 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,Mesh,DijkstraInfo,OptInfo,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
+    def __init__(self,Mesh,DijkstraInfo,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
         '''
-        
-        
+    
             BUG:
                 - Currently the speed is fixed. Move the construction of the cellBox speed to a function of the cellBox
         
@@ -353,11 +352,11 @@ class NewtonianCurve:
         self.DijkstraInfo = copy.copy(DijkstraInfo)
 
         # Passing the optional Information
-        self.OptInfo = OptInfo
+        self.config = config
 
         
         # Inside the code the base units are m/s. Changing the units of the inputs to match
-        self.unit_shipspeed = 'km/hr'#unit_shipspeed
+        self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
         self.s              = self._unit_speed(26.5)
         

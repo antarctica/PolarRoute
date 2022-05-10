@@ -14,10 +14,10 @@ from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
 from RoutePlanner.CellBox import CellBox
 
 class TravelTime:
-    def __init__(self,CellGrid,OptInfo,neighbourGraph=None,CostFunc=NewtonianDistance):
+    def __init__(self,CellGrid,config,neighbourGraph=None,CostFunc=NewtonianDistance):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
-        self.OptInfo = copy.copy(OptInfo['Route'])
+        self.config  = config
 
         # Creating a blank path construct
         self.paths         = None
@@ -38,7 +38,7 @@ class TravelTime:
                         if len(indxs) == 0:
                             continue
                         for indx in indxs:
-                            if (self.Mesh.cellBoxes[indx].iceArea() >= self.OptInfo['MaxIceExtent']):
+                            if (self.Mesh.cellBoxes[indx].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']):
                                 continue
                             if self.Mesh._j_grid:
                                 if self.Mesh.cellBoxes[indx].isLandM():
@@ -67,35 +67,35 @@ class TravelTime:
 
         self.CostFunc       = CostFunc
 
-        self.unit_shipspeed = self.OptInfo['VehicleInfo']['Unit']
-        self.unit_time      = self.OptInfo['Time Unit']
-        self.zero_currents  = self.OptInfo['Zero Currents']
-        self.variableSpeed  =self. OptInfo['VariableSpeed']
+        self.unit_shipspeed = self.config['Vehicle_Info']['Unit']
+        self.unit_time      = self.config['Route_Info']['Time_Unit']
+        self.zero_currents  = self.config['Route_Info']['Zero_Currents']
+        self.variableSpeed  =self. config['Route_Info']['Variable_Speed']
 
         print('Zero Currets {}'.format(self.zero_currents))
 
 
-        if type(self.OptInfo['WayPoints']) != pd.core.frame.DataFrame:
-            self.OptInfo['WayPoints'] = pd.read_csv(self.OptInfo['WayPoints'])
+        if type(self.config['Route_Info']['WayPoints']) != pd.core.frame.DataFrame:
+            self.config['Route_Info']['WayPoints'] = pd.read_csv(self.config['Route_Info']['WayPoints'])
         
 
         # ====== Waypoints ======        
         # Dropping waypoints outside domain
-        self.OptInfo['WayPoints'] = self.OptInfo['WayPoints'][(self.OptInfo['WayPoints']['Long'] >= self.Mesh._longMin) &\
-                                                              (self.OptInfo['WayPoints']['Long'] <= self.Mesh._longMax) &\
-                                                              (self.OptInfo['WayPoints']['Lat'] <= self.Mesh._latMax) &\
-                                                              (self.OptInfo['WayPoints']['Lat'] >= self.Mesh._latMin)] 
+        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][(self.config['Route_Info']['WayPoints']['Long'] >= self.Mesh._longMin) &\
+                                                              (self.config['Route_Info']['WayPoints']['Long'] <= self.Mesh._longMax) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] <= self.Mesh._latMax) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] >= self.Mesh._latMin)] 
 
         # Initialising Waypoints positions and cell index
-        self.OptInfo['WayPoints']['index'] = np.nan
-        for idx,wpt in self.OptInfo['WayPoints'].iterrows():
+        self.config['Route_Info']['WayPoints']['index'] = np.nan
+        for idx,wpt in self.config['Route_Info']['WayPoints'].iterrows():
             long = wpt['Long']
             lat  = wpt['Lat']
             for index, cell in enumerate(self.Mesh.cellBoxes):
                 if isinstance(cell, CellBox):
                     if cell.containsPoint(lat,long):
                         break
-            self.OptInfo['WayPoints']['index'].loc[idx] = index
+            self.config['Route_Info']['WayPoints']['index'].loc[idx] = index
 
     def iceResistance(self, Cell):
         """
@@ -109,12 +109,12 @@ class TravelTime:
         """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
-        hull = self.OptInfo['VehicleInfo']['HullType']
-        beam = self.OptInfo['VehicleInfo']['Beam']
+        hull = self.config['Vehicle_Info']['HullType']
+        beam = self.config['Vehicle_Info']['Beam']
         k, b, n = hull_params[hull]
         g = 9.81  # m/s-2
 
-        V = self.OptInfo['VehicleInfo']['Speed']*(5./18.)  # assume km/h and convert to m/s
+        V = self.config['Vehicle_Info']['Speed']*(5./18.)  # assume km/h and convert to m/s
 
         Fr = V/np.sqrt(g*Cell.iceArea()*Cell.iceThickness())
 
@@ -135,8 +135,8 @@ class TravelTime:
         """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
-        hull = self.OptInfo['VehicleInfo']['HullType']
-        beam = self.OptInfo['VehicleInfo']['Beam']
+        hull = self.config['Vehicle_Info']['HullType']
+        beam = self.config['Vehicle_Info']['Beam']
         k, b, n = hull_params[hull]
         g = 9.81  # m/s-2
 
@@ -151,7 +151,7 @@ class TravelTime:
 
     def speedFunction(self, Cell):
         if self.variableSpeed:
-            s = (1-np.sqrt(Cell.iceArea()))*self.OptInfo['VehicleInfo']['Speed']
+            s = (1-np.sqrt(Cell.iceArea()))*self.config['Vehicle_Info']['Speed']
             # if Cell.iceArea() == 0.0:
             #     s = self.OptInfo['VehicleInfo']['Speed']
             # elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
@@ -159,15 +159,15 @@ class TravelTime:
             # else:
             #     s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
         else:
-            s = self.OptInfo['VehicleInfo']['Speed']
+            s = self.config['Vehicle_Info']['Speed']
         return s
 
 
     def Dijkstra2Path(self,StartWaypoints,EndWaypoints):
         Paths = []
 
-        wpts_s = self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'].isin(StartWaypoints)]
-        wpts_e = self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'].isin(EndWaypoints)]
+        wpts_s = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(StartWaypoints)]
+        wpts_e = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(EndWaypoints)]
 
         for idx,wpt_a in wpts_s.iterrows():
             wpt_a_name  = wpt_a['Name']; wpt_a_index = int(wpt_a['index']); wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
@@ -227,7 +227,7 @@ class TravelTime:
             
 
             # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if (Nc.iceArea() >= self.OptInfo['MaxIceExtent']):
+            if (Nc.iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']):
                 SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
                 SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
                 continue
@@ -273,10 +273,10 @@ class TravelTime:
 
     def _dijkstra(self,wpt_name):
         # Including only the End Waypoints defined by the user
-        Wpts = self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'].isin(self.end_waypoints)]
+        Wpts = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(self.end_waypoints)]
         
         # Initalising zero traveltime at the source location
-        SourceIndex = int(self.OptInfo['WayPoints'][self.OptInfo['WayPoints']['Name'] == wpt_name]['index'])
+        SourceIndex = int(self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'] == wpt_name]['index'])
         self.DijkstraInfo[wpt_name].loc[SourceIndex,'traveltime'] = 0.0
         self.DijkstraInfo[wpt_name].loc[SourceIndex,'pathIndex'].append(SourceIndex)
         
@@ -306,9 +306,9 @@ class TravelTime:
 
         # Subsetting the waypoints
         if type(source_waypoints) == type(None):
-            source_waypoints = list(self.OptInfo['WayPoints']['Name'])
+            source_waypoints = list(self.config['Route_Info']['WayPoints']['Name'])
         if type(end_waypoints) == type(None):
-            self.end_waypoints = list(self.OptInfo['WayPoints']['Name'])
+            self.end_waypoints = list(self.config['Route_Info']['WayPoints']['Name'])
         else:
             self.end_waypoints = end_waypoints
 
@@ -356,7 +356,7 @@ class TravelTime:
             Path = Pths[ii]
             print('===Smoothing {} to {} ======'.format(Path['from'],Path['to']))
 
-            nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.OptInfo,maxiter=1,zerocurrents=True)
+            nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.config,maxiter=1,zerocurrents=True)
             nc.pathIter = maxiter
 
             # -- Generating a dataframe of the case information -- 

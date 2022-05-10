@@ -382,6 +382,50 @@ def MapMesh(cellGrid,map,threshold=0.8):
     meshInfo.add_to(map)
     return map
 
+def MapGeotiff(map,file,subregion=None,name='Modis',resamplingFactor=1):
+    import folium
+    import rasterio as rs
+    from matplotlib import cm
+    from IceMDP.IO import windowFunc
+    import numpy as np
+    '''
+        Issue - Resampling only working on WGS84 projections
+    '''
+    dataset = rs.open(file)
+
+    if type(subregion)!=type(None):
+        window,bounds = windowFunc(subregion[0], subregion[1], dataset)
+        bnds = [[bounds[1], bounds[0]], [bounds[3], bounds[2]]]
+    else:
+        window=None
+        bnds = [[dataset.bounds[1], dataset.bounds[0]], [dataset.bounds[3], dataset.bounds[2]]]
+
+    trying =True
+    indx = 1
+    while trying:
+        try:
+
+            if indx==1:
+                opc = 0.8
+                shw = True
+            else:
+                opc = 0.7
+                shw = False
+
+            img = folium.raster_layers.ImageOverlay(
+                name="{} - Band {}".format(name,indx),
+                image=dataset.read(indx,window=window)[::resamplingFactor,::resamplingFactor],
+                bounds=bnds,
+                opacity=opc,
+                mercator_project=True,
+                pixelated=False,
+                show = shw
+            )
+            img.add_to(map)
+        except:
+            trying=False
+        indx+=1
+    return map
 
 
 def BaseMap(TitleText,MapCentre=[-58,-63.7],MapZoom=2.6):
@@ -399,6 +443,53 @@ def BaseMap(TitleText,MapCentre=[-58,-63.7],MapZoom=2.6):
     bsmap.add_to(map)
     map.get_root().html.add_child(folium.Element(title_html))
     return map
+
+# def MapTravelTime(TT,map,source='Halley'):
+#     from branca.colormap import linear
+#     def DijkstraInfoDF(TT,source='Halley'):
+#         from shapely.geometry import Polygon
+#         import geopandas as gpd
+#         import numpy as np
+#         DijkstraInfo = TT.DijkstraInfo[source]
+#         Shape   = []; CentroidCx=[];CentroidCy=[];TravelTime=[]
+#         for idx in DijkstraInfo.index:
+#             c = TT.Mesh.cellBoxes[idx]
+#             if isinstance(c, CellBox):
+#                 if DijkstraInfo['traveltime'].loc[idx] == np.inf  and DijkstraInfo['positionLocked'].loc[idx] == False:
+#                     continue
+#                 bounds = np.array(c.getBounds())
+#                 Shape.append(Polygon(bounds))
+#                 CentroidCx.append(c.cx)
+#                 CentroidCy.append(c.cy)
+#                 if DijkstraInfo['traveltime'].loc[idx] == np.inf:
+#                     TravelTime.append(0.0)
+#                 else:
+#                     TravelTime.append(float(DijkstraInfo['traveltime'].loc[idx]))
+#         Polygons = pd.DataFrame()
+#         Polygons['geometry'] = Shape
+#         Polygons['Cx']       = CentroidCx
+#         Polygons['Cy']       = CentroidCy
+#         Polygons['TravelTime']    = TravelTime
+#         Polygons = gpd.GeoDataFrame(Polygons,crs={'init': 'epsg:4326'}, geometry='geometry')
+#         return Polygons
+
+#     DF = DijkstraInfoDF(TT,source=source)
+
+
+#     bathInfo = folium.FeatureGroup(name='TravelTime Mesh',show=True)
+#     colormap = linear.viridis.scale(min(DF['TravelTime']),max(DF['TravelTime']))
+#     folium.GeoJson(
+#         DF,
+#         style_function=lambda x: {
+#                 'fillColor': colormap(x['properties']['TravelTime']),
+#                 'color': 'gray',
+#                 'weight': 0.1,
+#                 'fillOpacity': 1.0
+#             }
+#     ).add_to(bathInfo)
+#     bathInfo.add_to(map)
+#     return map
+
 
 
 def LayerControl(map,collapsed=True):
