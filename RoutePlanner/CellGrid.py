@@ -2,7 +2,7 @@ from tracemalloc import start
 import numpy as np
 from RoutePlanner.CellBox import CellBox
 import pandas as pd
-from shapely.geometry import Polygon
+#from shapely.geometry import Polygon
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MatplotPolygon
 import math
@@ -168,7 +168,7 @@ class CellGrid:
             Takes a dataframe containing ice points and assigns them to cellBoxes within the cellGrid
         """
         for cellBox in self.cellBoxes:
-            """
+
             longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] <= (cellBox.long + cellBox.width))]
             latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
 
@@ -192,7 +192,7 @@ class CellGrid:
             ipSlice['long'] = ipSlice['long'].apply(lambda x: x if x <= 180 else x - 360)
 
             cellBox.addIcePoints(ipSlice)
-
+            """
 
     def addCurrentPoints(self, currentPoints):
         """
@@ -204,6 +204,13 @@ class CellGrid:
 
             cellBox.addCurrentPoints(latLongLoc)
             cellBox.setLand()
+
+    def addDataPoints(self, dataPoints):
+        for cellBox in self.cellBoxes:
+            longLoc = dataPoints.loc[(dataPoints['long'] > cellBox.long) & (dataPoints['long'] <= (cellBox.long + cellBox.width))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
+
+            cellBox.addDataPoints(latLongLoc)
 
     def addWindPoints(self, windPoints):
         """
@@ -453,22 +460,22 @@ class CellGrid:
         self.cellBoxes[cellBoxIndx] = splitContainer
         self.neighbourGraph.pop(cellBoxIndx)
 
-    def iterativeSplit(self, splitAmount):
+    def iterativeSplit(self, splitAmount,splittingPercentage, splitMinProp, splitMaxProp):
         """
             Iterates over all cellBoxes in the cellGrid a number of times defined by parameter 'splitAmount',
             splitting and replacing each one if it is not homogenous.
         """
         for i in range(0, splitAmount):
-            self.splitGraph()
+            self.splitGraph(splittingPercentage, splitMinProp, splitMaxProp)
 
-    def splitGraph(self):
+    def splitGraph(self, splittingPercentage, splitMinProp, splitMaxProp):
         """
             Iterates once over all cellBoxes in the cellGrid, splitting and replacing each one if it is not homogenous.
         """
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
             if isinstance(cellBox, CellBox):
-                if cellBox.shouldWeSplit():
+                if cellBox.shouldWeSplit(splittingPercentage, splitMinProp, splitMaxProp):
                     self.splitAndReplace(cellBox)
 
     def recursiveSplitAndReplace(self, cellBox, maxSplits):
@@ -593,6 +600,18 @@ class CellGrid:
 
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
+                # plot ice
+                if plotIce and not np.isnan(cellBox.iceArea()):
+                    if self._j_grid == True:
+                        if cellBox.iceArea() >= 0.04:
+                            ax.add_patch(
+                                MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=1))
+                            if cellBox.iceArea() < 0.8:
+                                ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey',
+                                                            alpha=(1 - cellBox.iceArea())))
+                    else:
+                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
+
                 # plot land
                 if self._j_grid == True:
                     if cellBox.landLocked:
@@ -600,15 +619,9 @@ class CellGrid:
                 else:
                     if cellBox.containsLand():
                         ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
-
-                # plot ice
-                if plotIce and not np.isnan(cellBox.iceArea()):
-                    if cellBox.iceArea() >= 0.04:
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=1))
-                        if cellBox.iceArea() < 0.8:
-                            ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey', alpha=(1-cellBox.iceArea())))
                 #else:
                     #ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+
 
                 # plot currents
                 if plotCurrents:
@@ -619,16 +632,21 @@ class CellGrid:
                 if plotBorders:
                     ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='black'))
 
-
+                """
                 if self._j_grid == True:
                     # plot %iceArea text
                     if not np.isnan(cellBox.iceArea()):
                         ax.text(cellBox.long, cellBox.lat, str(math.floor(cellBox.iceArea() * 100)) + "%", fontsize=8)
-
+                """
 
         # plot highlighted cells
-        for cellBox in highlightCellBoxes:
-            ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='red'))
+        for colour in highlightCellBoxes:
+            for cellBox in highlightCellBoxes[colour]:
+                ax.add_patch(MatplotPolygon(cellBox.getBounds(),
+                                            closed=True,
+                                            fill=False,
+                                            edgecolor=colour,
+                                            linewidth = 0.5 + len(list(highlightCellBoxes.keys())) - list(highlightCellBoxes.keys()).index(colour)))
 
         # plot paths if supplied
         if type(paths) != type(None):
@@ -637,14 +655,14 @@ class CellGrid:
                     continue
                 Points = np.array(Path['Path']['Points'])
                 if routepoints:
-                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
-                    ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='k')
+                    ax.plot(Points[:,0],Points[:,1],linewidth=3.0,color='b')
+                    ax.scatter(Points[:,0],Points[:,1],30,zorder=99,color='b')
                 else:
-                    ax.plot(Points[:,0],Points[:,1],linewidth=1.0,color='k')
+                    ax.plot(Points[:,0],Points[:,1],linewidth=3.0,color='b')
 
 
         if type(waypoints) != type(None):
-            ax.scatter(waypoints['Long'],waypoints['Lat'],50,marker='^',color='k')
+            ax.scatter(waypoints['Long'],waypoints['Lat'],150,marker='^',color='r')
 
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
