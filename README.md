@@ -24,10 +24,9 @@ The RoutePlanner software can be installed by using
   python setup.py install
 ```
 
-
 ---
 ## BAS Developers
-Maria Fox, James Byrne, Samuel Hall, Geoarge Coombs, Michael Thorne & Jonathan Smith
+Maria Fox, Jonathan Smith, Samuel Hall, James Byrne, Geoarge Coombs &  Michael Thorne
 
 
 Documentation for the Code

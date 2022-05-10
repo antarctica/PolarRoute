@@ -100,7 +100,7 @@ def setup_package():
         include_dirs=INCLUDE_DIRS,
         package_data={"RoutePlanner": ["lib/*.so"]})
 
-
+    # # Unix installation 
     # os.system('make ./.docs/html')
     # os.system('sphinx-build -b rinoh ./.docs/source ./.docs/_build/rinoh')
     # os.system('cp ./.docs/_build/rinoh/pyRoutePlanner.pdf .')
