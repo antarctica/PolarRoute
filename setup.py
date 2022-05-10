@@ -33,7 +33,6 @@ CLASSIFIERS = [
 ]
 
 INSTALL_REQUIRES = [
-    'rasterio',
     'shapely',
     'ipykernel',
     'geopandas']
