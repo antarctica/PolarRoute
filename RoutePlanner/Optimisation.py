@@ -1,3 +1,8 @@
+'''
+    FILL IN
+'''
+
+# == Packages ==
 from RoutePlanner.CrossingPoint import NewtonianCrossingPoint, NewtonianCrossingPointSmooth
 from RoutePlanner.CellBox import CellBox
 
@@ -6,93 +11,94 @@ import copy
 import pandas as pd
 import time
 
-
-
 class TravelTime:
-    def __init__(self,CellGrid,config,neighbourGraph=None,CostFunc=NewtonianCrossingPoint,SmoothCostFunc=NewtonianCrossingPointSmooth):
+    '''
+    FILL IN
+    '''
+    def __init__(self, mesh, config,neighbour_graph=None,
+                 cost_func=NewtonianCrossingPoint, smooth_cost_func=NewtonianCrossingPointSmooth):
         start_time = time.time()
         # Load in the current cell structure & Optimisation Info
-        self.Mesh    = copy.copy(CellGrid)
+        self.mesh    = copy.copy(mesh)
         self.config  = config
 
-        self.CostFunc       = CostFunc
-        self.SmoothCostFunc = SmoothCostFunc
+        self.cost_func        = cost_func
+        self.smooth_cost_func = smooth_cost_func
 
-        self.unit_shipspeed = self.config['Vehicle_Info']['Unit']
-        self.unit_time      = self.config['Route_Info']['Time_Unit']
-        self.zero_currents  = self.config['Route_Info']['Zero_Currents']
-        self.variableSpeed  =self. config['Route_Info']['Variable_Speed']
+        self.unit_shipspeed  = self.config['Vehicle_Info']['Unit']
+        self.unit_time       = self.config['Route_Info']['Time_Unit']
+        self.zero_currents   = self.config['Route_Info']['Zero_Currents']
+        self.variable_speed  = self.config['Route_Info']['Variable_Speed']
 
         # Creating a blank path construct
         self.paths         = None
-        self.smoothedPaths = None
+        self.smoothed_paths = None
 
         self.test = 0
 
         # # Constructing Neighbour Graph
-        if type(neighbourGraph) == type(None):
-            neighbourGraph = {}
-            for idx,cell in enumerate(self.Mesh.cellBoxes):
+        if isinstance(neighbour_graph, type(None)):
+            neighbour_graph = {}
+            for idx,cell in enumerate(self.mesh.cellBoxes):
                 if not isinstance(cell, CellBox):
                     continue
                 else:
-                    neigh     = self.Mesh.neighbourGraph[idx]
+                    neigh     = self.mesh.neighbour_graph[idx]
                     cases     = []
-                    neighIndx = []
+                    neigh_indx = []
                     for case in neigh.keys():
                         indxs = neigh[case]
                         if len(indxs) == 0:
                             continue
                         for indx in indxs:
-                            if (self.Mesh.cellBoxes[indx].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']):
+                            if (self.mesh.cellBoxes[indx].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']):
                                 continue
-                            if self.Mesh._j_grid:
-                                if self.Mesh.cellBoxes[indx].isLandM():
+                            if self.mesh._j_grid:
+                                if self.mesh.cellBoxes[indx].isLandM():
                                     continue
                             else:
-                                if self.Mesh.cellBoxes[indx].containsLand():
+                                if self.mesh.cellBoxes[indx].containsLand():
                                     continue
                             cases.append(case)
-                            neighIndx.append(indx)
-                    neighDict = {}
-                    neighDict['cX']    = cell.cx
-                    neighDict['cY']    = cell.cy
-                    neighDict['case']  = cases
-                    neighDict['neighbourIndex'] = neighIndx 
-                    neighbourGraph[idx] = neighDict
-            self.neighbourGraph = pd.DataFrame().from_dict(neighbourGraph,orient='index')
+                            neigh_indx.append(indx)
+                    neigh_dict = {}
+                    neigh_dict['cX']    = cell.cx
+                    neigh_dict['cY']    = cell.cy
+                    neigh_dict['case']  = cases
+                    neigh_dict['neighbourIndex'] = neigh_indx 
+                    neighbour_graph[idx] = neigh_dict
+            self.neighbour_graph = pd.DataFrame().from_dict(neighbour_graph,orient='index')
         else:
-            self.neighbourGraph = neighbourGraph
-        self.neighbourGraph['positionLocked'] = False
-        self.neighbourGraph['traveltime']     = np.inf
-        self.neighbourGraph['neighbourTravelLegs'] = [list() for x in range(len(self.neighbourGraph.index))]
-        self.neighbourGraph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbourGraph.index))]
-        self.neighbourGraph['pathIndex']  = [list() for x in range(len(self.neighbourGraph.index))]
-        self.neighbourGraph['pathCost']   = [list() for x in range(len(self.neighbourGraph.index))]
-        self.neighbourGraph['pathPoints']   = [list() for x in range(len(self.neighbourGraph.index))]
+            self.neighbour_graph = neighbour_graph
+        self.neighbour_graph['positionLocked'] = False
+        self.neighbour_graph['traveltime']     = np.inf
+        self.neighbour_graph['neighbourTravelLegs'] = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathIndex'] = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathCost'] = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
 
    
 
         print('Zero Currets {}'.format(self.zero_currents))
 
 
-        if type(self.config['Route_Info']['WayPoints']) != pd.core.frame.DataFrame:
-            self.config['Route_Info']['WayPoints'] = pd.read_csv(self.config['Route_Info']['WayPoints'])
-        
+        if not isinstance(self.config['Route_Info']['WayPoints'],pd.core.frame.DataFrame):
+            self.config['Route_Info']['WayPoints'] = pd.read_csv(self.config['Route_Info']['WayPoints'])     
 
         # ====== Waypoints ======        
         # Dropping waypoints outside domain
-        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][(self.config['Route_Info']['WayPoints']['Long'] >= self.Mesh._longMin) &\
-                                                              (self.config['Route_Info']['WayPoints']['Long'] <= self.Mesh._longMax) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] <= self.Mesh._latMax) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] >= self.Mesh._latMin)] 
+        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][(self.config['Route_Info']['WayPoints']['Long'] >= self.mesh._longMin) &\
+                                                              (self.config['Route_Info']['WayPoints']['Long'] <= self.mesh._longMax) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] <= self.mesh._latMax) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] >= self.mesh._latMin)] 
 
         # Initialising Waypoints positions and cell index
         self.config['Route_Info']['WayPoints']['index'] = np.nan
         for idx,wpt in self.config['Route_Info']['WayPoints'].iterrows():
             long = wpt['Long']
             lat  = wpt['Lat']
-            for index, cell in enumerate(self.Mesh.cellBoxes):
+            for index, cell in enumerate(self.mesh.cellBoxes):
                 if isinstance(cell, CellBox):
                     if cell.containsPoint(lat,long):
                         break
@@ -101,7 +107,7 @@ class TravelTime:
         print("--- Initial Setup - %s seconds ---" % (time.time() - start_time))
 
 
-    def iceResistance(self, Cell):
+    def ice_resistance(self, Cell):
         """
                 Function to find the ice resistance force at a given speed in a given cell.
 
@@ -127,7 +133,7 @@ class TravelTime:
 
         return r
 
-    def inverseResistance(self, Fl, Cell):
+    def inverse_resistance(self, force_limit, cell):
         """
         Function to find the fastest speed that keeps the ice resistance force below a given threshold.
 
@@ -147,23 +153,23 @@ class TravelTime:
 
         exp = 2.0 + b
 
-        vexp = 2*Fl/(k*Cell.iceDensity(self.config['Region']['startTime'])*beam*Cell.iceThickness(self.config['Region']['startTime'])*
-                    (Cell.iceArea()**n)*(g*Cell.iceThickness(self.config['Region']['startTime'])*Cell.iceArea())**-(b/2))
+        vexp = 2*force_limit/(k*cell.iceDensity(self.config['Region']['startTime'])*beam*cell.iceThickness(self.config['Region']['startTime'])*
+                    (cell.iceArea()**n)*(g*cell.iceThickness(self.config['Region']['startTime'])*cell.iceArea())**-(b/2))
 
         vms = vexp**(1/exp)
         v = vms*(18./5.)  # convert from m/s to km/h
 
-        return v        
+        return v       
 
     def speedFunction(self, Cell):
-        if self.variableSpeed:
+        if self.variable_speed:
             #s = (1-np.sqrt(Cell.iceArea()))*self.config['Vehicle_Info']['Speed']
             if Cell.iceArea() == 0.0:
                 s = self.config['Vehicle_Info']['Speed']
-            elif self.iceResistance(Cell) < self.config['Vehicle_Info']['ForceLimit']:
+            elif self.ice_resistance(Cell) < self.config['Vehicle_Info']['ForceLimit']:
                 s = self.config['Vehicle_Info']['Speed']
             else:
-                s = self.inverseResistance(self.config['Vehicle_Info']['ForceLimit'], Cell)
+                s = self.inverse_resistance(self.config['Vehicle_Info']['ForceLimit'], Cell)
         else:
             s = self.config['Vehicle_Info']['Speed']
         return s
@@ -176,9 +182,13 @@ class TravelTime:
         wpts_e = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(EndWaypoints)]
 
         for idx,wpt_a in wpts_s.iterrows():
-            wpt_a_name  = wpt_a['Name']; wpt_a_index = int(wpt_a['index']); wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
+            wpt_a_name  = wpt_a['Name']
+            wpt_a_index = int(wpt_a['index'])
+            wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
             for idy,wpt_b in wpts_e.iterrows():
-                wpt_b_name  = wpt_b['Name']; wpt_b_index = int(wpt_b['index']); wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
+                wpt_b_name  = wpt_b['Name']
+                wpt_b_index = int(wpt_b['index'])
+                wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
                 if not wpt_a_name == wpt_b_name:
                     try:
                         # ==== Correcting Path for waypoints off cell
@@ -186,14 +196,13 @@ class TravelTime:
                         Path['from']               = wpt_a_name
                         Path['to']                 = wpt_b_name
 
-
                         Graph = self.DijkstraInfo[wpt_a_name]
                         Path['Time']               = float(Graph['traveltime'].loc[wpt_b_index])
                         if Path['Time'] == np.inf:
                             continue
                         PathTT     = Graph['pathCost'].loc[wpt_b_index]
 
-                        # ===== Appending Path ===== 
+                        # ===== Appending Path =====
                         Path['Path']                = {}
                         Path['Path']['Points']      = np.array(wpt_a_loc+list(np.array(Graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)
                         Path['Path']['CellIndices'] = np.array(Graph['pathIndex'].loc[wpt_b_index])
@@ -202,7 +211,7 @@ class TravelTime:
                         Paths.append(Path)
                     except:
                         print('Failure')
-        return Paths    
+        return Paths
 
     def NeighbourCost(self,wpt_name,minimumTravelTimeIndex):
         '''
@@ -217,7 +226,7 @@ class TravelTime:
             - If corner of cell is land in adjacent cell then also return 'inf'
         '''
         # Determining the nearest neighbour index for the cell
-        Sc          = self.Mesh.cellBoxes[minimumTravelTimeIndex]
+        Sc          = self.mesh.cellBoxes[minimumTravelTimeIndex]
         SourceGraph = self.DijkstraInfo[wpt_name].loc[minimumTravelTimeIndex]
 
         # Looping over idx
@@ -228,7 +237,7 @@ class TravelTime:
             if self.DijkstraInfo[wpt_name].loc[indx,'positionLocked']:
                 continue
             
-            Nc   = self.Mesh.cellBoxes[indx]
+            Nc   = self.mesh.cellBoxes[indx]
             Case = SourceGraph['case'][idx]
             
 
@@ -238,7 +247,7 @@ class TravelTime:
                 SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
                 continue
 
-            if self.Mesh._j_grid:
+            if self.mesh._j_grid:
                 if Nc.isLandM():
                     SourceGraph['neighbourTravelLegs'].append([np.inf,np.inf])
                     SourceGraph['neighbourCrossingPoints'].append([np.nan,np.nan])
@@ -257,11 +266,11 @@ class TravelTime:
             # Applying Newton curve to determine crossing point
             if self.test ==0:
                 start_time = time.time()
-            CostF    = self.CostFunc(self.Mesh,Sc=Sc,Nc=Nc,Sc_Speed=Sc_speed,Nc_Speed=Nc_speed,Case=Case,unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
+            CostF    = self.cost_func(self.mesh,Sc=Sc,Nc=Nc,Sc_Speed=Sc_speed,Nc_Speed=Nc_speed,Case=Case,unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
             # Updating the Dijkstra graph with the new information
             TravelTime,CrossPoints,CellPoints = CostF.value()
             if self.test ==0:
-                print("--- NeighbourCost - CostFunc - %s seconds ---" % (time.time() - start_time))
+                print("--- NeighbourCost - cost_func - %s seconds ---" % (time.time() - start_time))
 
             if self.test ==0:
                 start_time = time.time()
@@ -271,29 +280,29 @@ class TravelTime:
 
             # Updating the neighbour traveltime if its less the current global optimum
             Neighbour_cost  = [SourceGraph['traveltime'] + TravelTime[0],SourceGraph['traveltime'] + np.sum(TravelTime)]
-            NeighbourGraph  = self.DijkstraInfo[wpt_name].loc[indx]
+            neighbour_graph  = self.DijkstraInfo[wpt_name].loc[indx]
 
             if self.test ==0:
                 print("--- NeighbourCost - Updating Graph -indx=%s - Part1 - %s seconds ---" % (indx,time.time() - start_time))
 
             if self.test ==0:
                 start_time = time.time()
-            if Neighbour_cost[1] < NeighbourGraph['traveltime']:
-                # NeighbourGraph['traveltime'] = Neighbour_cost[1]
-                # NeighbourGraph['pathIndex']  = SourceGraph['pathIndex']  + [indx]
-                # NeighbourGraph['pathCost']   = SourceGraph['pathCost']   + Neighbour_cost
-                # NeighbourGraph['pathPoints'] = SourceGraph['pathPoints'] + [list(CrossPoints)] + [list(CellPoints)]
+            if Neighbour_cost[1] < neighbour_graph['traveltime']:
+                # neighbour_graph['traveltime'] = Neighbour_cost[1]
+                # neighbour_graph['pathIndex']  = SourceGraph['pathIndex']  + [indx]
+                # neighbour_graph['pathCost']   = SourceGraph['pathCost']   + Neighbour_cost
+                # neighbour_graph['pathPoints'] = SourceGraph['pathPoints'] + [list(CrossPoints)] + [list(CellPoints)]
 
-                NeighbourGraph = pd.Series(
+                neighbour_graph = pd.Series(
                                 {
-                                'cX':NeighbourGraph['cX'],
-                                'cY':NeighbourGraph['cY'],  
-                                'case':NeighbourGraph['case'],
-                                'neighbourIndex':NeighbourGraph['neighbourIndex'],
-                                'positionLocked':NeighbourGraph['positionLocked'],
+                                'cX':neighbour_graph['cX'],
+                                'cY':neighbour_graph['cY'],  
+                                'case':neighbour_graph['case'],
+                                'neighbourIndex':neighbour_graph['neighbourIndex'],
+                                'positionLocked':neighbour_graph['positionLocked'],
                                 'traveltime': Neighbour_cost[1],
-                                'neighbourTravelLegs':NeighbourGraph['neighbourTravelLegs'],
-                                'neighbourCrossingPoints':NeighbourGraph['neighbourCrossingPoints'],
+                                'neighbourTravelLegs':neighbour_graph['neighbourTravelLegs'],
+                                'neighbourCrossingPoints':neighbour_graph['neighbourCrossingPoints'],
                                 'pathIndex': SourceGraph['pathIndex']  + [indx],
                                 'pathCost':SourceGraph['pathCost']   + Neighbour_cost,
                                 'pathPoints':SourceGraph['pathPoints'] + [list(CrossPoints)] + [list(CellPoints)]}
@@ -302,7 +311,7 @@ class TravelTime:
 
 
 
-            self.DijkstraInfo[wpt_name].loc[indx] = NeighbourGraph
+            self.DijkstraInfo[wpt_name].loc[indx] = neighbour_graph
             if self.test ==0:
                 print("--- NeighbourCost - Updating Graph - Part2 - %s seconds ---" % (time.time() - start_time))
 
@@ -371,7 +380,7 @@ class TravelTime:
         # Initialising the Dijkstra Info Dictionary
         self.DijkstraInfo = {}
         for wpt in source_waypoints:
-            self.DijkstraInfo[wpt] = copy.copy(self.neighbourGraph)
+            self.DijkstraInfo[wpt] = copy.copy(self.neighbour_graph)
 
 
         if multiprocessing:
@@ -414,7 +423,7 @@ class TravelTime:
             Path = Pths[ii]
             print('===Smoothing {} to {} ======'.format(Path['from'],Path['to']))
 
-            nc = self.SmoothCostFunc(self.Mesh,self.DijkstraInfo[Path['from']],self.config,maxiter=1,zerocurrents=True)
+            nc = self.smooth_cost_func(self.mesh,self.DijkstraInfo[Path['from']],self.config,maxiter=1,zerocurrents=True)
             nc.pathIter = maxiter
 
             # -- Generating a dataframe of the case information -- 
@@ -477,6 +486,6 @@ class TravelTime:
 
         
 
-        self.smoothedPaths = SmoothedPaths
+        self.smoothed_paths = SmoothedPaths
         if return_paths:
-            return self.smoothedPaths
+            return self.smoothed_paths
