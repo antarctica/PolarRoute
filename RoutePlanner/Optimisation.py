@@ -482,7 +482,7 @@ class TravelTime:
                     # -- Removing reseverse cases
                     smoothing_costing._reverseCase()
 
-                    ids+=1+nc.id
+                    ids+=1+smoothing_costing.id
 
                 self.smoothing_costing = smoothing_costing
                 nc._mergePoint()
@@ -502,8 +502,8 @@ class TravelTime:
             #     print('Failed {}->{}'.format(Path['from'],Path['to']))
 
             smoothed_path ={}
-            smoothed_path['from'] = Path['from']
-            smoothed_path['to']   = Path['to']
+            smoothed_path['from'] = pth['from']
+            smoothed_path['to']   = pth['to']
             smoothed_path['Path'] = {}
             smoothed_path['Path']['Points'] = nc.CrossingDF[['cX','cY']].to_numpy()    
             smoothed_paths.append(smoothed_path)
