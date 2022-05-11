@@ -1,12 +1,28 @@
+"""
+Outlined in this section we will discuss the usage of the Newton ...
+
+Attributes:
+    Some of the key attributes that the CellBox comprises are ...
+
+Todo:
+    * Adding the addition of ...
+
+
+"""
+
+# Package Requirements
 import numpy as np
 import copy
 import pandas as pd
-import numpy as np
 
-class NewtonianDistance:
+
+class NewtonianCrossingPoint:
     def __init__(self,Mesh,Sc=None,Nc=None,Sc_Speed=None,Nc_Speed=None,Case=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
         '''
-           BUG - Zero Currents not working ! 
+
+
+            BUGS:
+                - Include travel-time off grid-cell centre
         '''
         # Cell information
         self.Cell_s         = Sc
@@ -37,7 +53,6 @@ class NewtonianDistance:
         self.mLon  = 111.321*1000
         self.mLat  = 111.386*1000.
         
-
         # Defining a small distance 
         self.smallDist = 1e-4
 
@@ -45,21 +60,22 @@ class NewtonianDistance:
         self.debugging     = debugging
 
 
-    def _dist(self,origin,dest_dist,cell,forward=True):
-        mLonScaled=self.mLon*np.cos(cell.cy*(np.pi/180))
-        lon1,lat1 = origin
-        if forward:
-            lon2,lat2 = dest_dist
-            # lon2 = lon2+360
-            # lon1 = lon1+360
-            val = np.sqrt(((lat2-lat1)*self.mLat)**2 + ((lon2-lon1)*mLonScaled)**2)
-        else:
-            dist_x,dist_y = dest_dist        
-            val = [lon1+(dist_x/self.mLat),lat1+(dist_y/mLonScaled)]
-        return val
+    # def _dist(self,origin,dest_dist,cell,forward=True):
+    #     mLonScaled=self.mLon*np.cos(cell.cy*(np.pi/180))
+    #     lon1,lat1 = origin
+    #     if forward:
+    #         lon2,lat2 = dest_dist
+    #         val = np.sqrt(((lat2-lat1)*self.mLat)**2 + ((lon2-lon1)*mLonScaled)**2)
+    #     else:
+    #         dist_x,dist_y = dest_dist        
+    #         val = [lon1+(dist_x/self.mLat),lat1+(dist_y/mLonScaled)]
+    #     return val
 
 
     def NewtonOptimisation(self,f,x,a,Y,u1,v1,u2,v2,s1,s2):
+            """ NewtonOptimisation to determine optimal crossing points given a user defined functions are varibles.
+                ...
+            """
             y0 = (Y*x)/(x+a)
             if self.debugging:
                     print('---Initial y={:.2f}'.format(y0))
@@ -74,7 +90,6 @@ class NewtonianDistance:
                 iter+=1
                 if (iter>1000):
                     raise Exception('Newton not able to converge')
-            
             return y0,self._unit_time(np.array([t1,t2]))
 
     def _unit_speed(self,Val):
@@ -237,8 +252,6 @@ class NewtonianDistance:
         '''
             Corner Cases ....
         '''
-
-        # Given the determine the postive and negative position relative to centre
         if self.case==1:
             ptvX = 1.0
             ptvY = 1.0 
@@ -251,8 +264,6 @@ class NewtonianDistance:
         elif self.case==-3:
             ptvX = -1.0
             ptvY = 1.0
-
-
 
         dx1 = self.Cell_s.dcx*self.mLon*np.cos(self.Cell_s.cy*(np.pi/180))
         dx2 = self.Cell_n.dcx*self.mLon*np.cos(self.Cell_n.cy*(np.pi/180))
@@ -295,8 +306,8 @@ class NewtonianDistance:
 
         return TravelTime, CrossPoints, CellPoints
 
-
-class NewtonianCurve:
+# ---------
+class NewtonianCrossingPointSmooth:
     def __init__(self,Mesh,DijkstraInfo,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
         '''
     

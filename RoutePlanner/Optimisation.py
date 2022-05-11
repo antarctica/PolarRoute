@@ -1,23 +1,24 @@
-import numpy as np
-import copy
-import pandas as pd
-
-from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
+from RoutePlanner.CrossingPoint import NewtonianCrossingPoint, NewtonianCrossingPointSmooth
 from RoutePlanner.CellBox import CellBox
 
 import numpy as np
 import copy
 import pandas as pd
 
-
-from RoutePlanner.Function import NewtonianDistance, NewtonianCurve
-from RoutePlanner.CellBox import CellBox
 
 class TravelTime:
-    def __init__(self,CellGrid,config,neighbourGraph=None,CostFunc=NewtonianDistance):
+    def __init__(self,CellGrid,config,neighbourGraph=None,CostFunc=NewtonianCrossingPoint,SmoothCostFunc=NewtonianCrossingPointSmooth):
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
         self.config  = config
+
+        self.CostFunc       = CostFunc
+        self.SmoothCostFunc = SmoothCostFunc
+
+        self.unit_shipspeed = self.config['Vehicle_Info']['Unit']
+        self.unit_time      = self.config['Route_Info']['Time_Unit']
+        self.zero_currents  = self.config['Route_Info']['Zero_Currents']
+        self.variableSpeed  =self. config['Route_Info']['Variable_Speed']
 
         # Creating a blank path construct
         self.paths         = None
@@ -65,12 +66,7 @@ class TravelTime:
         self.neighbourGraph['pathCost']   = [list() for x in range(len(self.neighbourGraph.index))]
         self.neighbourGraph['pathPoints']   = [list() for x in range(len(self.neighbourGraph.index))]
 
-        self.CostFunc       = CostFunc
-
-        self.unit_shipspeed = self.config['Vehicle_Info']['Unit']
-        self.unit_time      = self.config['Route_Info']['Time_Unit']
-        self.zero_currents  = self.config['Route_Info']['Zero_Currents']
-        self.variableSpeed  =self. config['Route_Info']['Variable_Speed']
+   
 
         print('Zero Currets {}'.format(self.zero_currents))
 
@@ -358,7 +354,7 @@ class TravelTime:
             Path = Pths[ii]
             print('===Smoothing {} to {} ======'.format(Path['from'],Path['to']))
 
-            nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.config,maxiter=1,zerocurrents=True)
+            nc = self.SmoothCostFunc(self.Mesh,self.DijkstraInfo[Path['from']],self.config,maxiter=1,zerocurrents=True)
             nc.pathIter = maxiter
 
             # -- Generating a dataframe of the case information -- 
@@ -424,35 +420,3 @@ class TravelTime:
         self.smoothedPaths = SmoothedPaths
         if return_paths:
             return self.smoothedPaths
-
-
-        # SmoothedPaths = []
-
-        # if type(self.paths) == type(None):
-        #     raise Exception('Paths not constructed, please re-run path construction')
-        # Pths = copy.deepcopy(self.paths)
-        # # Looping over all the optimised paths
-        # for indx_Path in range(len(Pths)):
-        #     Path = Pths[indx_Path]
-        #     if Path['Time'] == np.inf:
-        #         continue
-
-        #     startPoint = Path['Path']['Points'][0,:][None,:]
-        #     endPoint   = Path['Path']['Points'][-1,:][None,:]
-
-        #     if verbose:
-        #         print('==================================================')
-        #         print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
-
-        #     Points      = np.concatenate([startPoint,Path['Path']['Points'][1:-1:2],endPoint])
-        #     cellIndices = np.concatenate((Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]))
-
-        #     nc = NewtonianCurve(self.Mesh,self.DijkstraInfo[Path['from']],self.OptInfo,zerocurrents=self.zero_currents,debugging=debugging)
-        #     nc.PathSmoothing(Points,cellIndices)
-
-        #     Path['Path']['Points']       = nc.path
-        #     SmoothedPaths.append(Path)
-
-        # self.smoothedPaths = SmoothedPaths
-        # if return_paths:
-        #     return self.smoothedPaths
