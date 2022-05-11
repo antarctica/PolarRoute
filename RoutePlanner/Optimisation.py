@@ -4,10 +4,13 @@ from RoutePlanner.CellBox import CellBox
 import numpy as np
 import copy
 import pandas as pd
+import time
+
 
 
 class TravelTime:
     def __init__(self,CellGrid,config,neighbourGraph=None,CostFunc=NewtonianCrossingPoint,SmoothCostFunc=NewtonianCrossingPointSmooth):
+        start_time = time.time()
         # Load in the current cell structure & Optimisation Info
         self.Mesh    = copy.copy(CellGrid)
         self.config  = config
@@ -23,6 +26,8 @@ class TravelTime:
         # Creating a blank path construct
         self.paths         = None
         self.smoothedPaths = None
+
+        self.test = 0
 
         # # Constructing Neighbour Graph
         if type(neighbourGraph) == type(None):
@@ -92,6 +97,9 @@ class TravelTime:
                     if cell.containsPoint(lat,long):
                         break
             self.config['Route_Info']['WayPoints']['index'].loc[idx] = index
+
+        print("--- Initial Setup - %s seconds ---" % (time.time() - start_time))
+
 
     def iceResistance(self, Cell):
         """
@@ -247,9 +255,16 @@ class TravelTime:
             Nc_speed = self.speedFunction(Nc)
 
             # Applying Newton curve to determine crossing point
+            if self.test ==0:
+                start_time = time.time()
             CostF    = self.CostFunc(self.Mesh,Sc=Sc,Nc=Nc,Sc_Speed=Sc_speed,Nc_Speed=Nc_speed,Case=Case,unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
             # Updating the Dijkstra graph with the new information
             TravelTime,CrossPoints,CellPoints = CostF.value()
+            if self.test ==0:
+                print("--- NeighbourCost - CostFunc - %s seconds ---" % (time.time() - start_time))
+
+            if self.test ==0:
+                start_time = time.time()
 
             SourceGraph['neighbourTravelLegs'].append(TravelTime)
             SourceGraph['neighbourCrossingPoints'].append(CrossPoints)
@@ -258,18 +273,46 @@ class TravelTime:
             Neighbour_cost  = [SourceGraph['traveltime'] + TravelTime[0],SourceGraph['traveltime'] + np.sum(TravelTime)]
             NeighbourGraph  = self.DijkstraInfo[wpt_name].loc[indx]
 
+            if self.test ==0:
+                print("--- NeighbourCost - Updating Graph -indx=%s - Part1 - %s seconds ---" % (indx,time.time() - start_time))
+
+            if self.test ==0:
+                start_time = time.time()
             if Neighbour_cost[1] < NeighbourGraph['traveltime']:
-                NeighbourGraph['traveltime'] = Neighbour_cost[1]
-                NeighbourGraph['pathIndex']  = SourceGraph['pathIndex']  + [indx]
-                NeighbourGraph['pathCost']   = SourceGraph['pathCost']   + Neighbour_cost
-                NeighbourGraph['pathPoints'] = SourceGraph['pathPoints'] + [list(CrossPoints)] + [list(CellPoints)]
+                # NeighbourGraph['traveltime'] = Neighbour_cost[1]
+                # NeighbourGraph['pathIndex']  = SourceGraph['pathIndex']  + [indx]
+                # NeighbourGraph['pathCost']   = SourceGraph['pathCost']   + Neighbour_cost
+                # NeighbourGraph['pathPoints'] = SourceGraph['pathPoints'] + [list(CrossPoints)] + [list(CellPoints)]
+
+                NeighbourGraph = pd.Series(
+                                {
+                                'cX':NeighbourGraph['cX'],
+                                'cY':NeighbourGraph['cY'],  
+                                'case':NeighbourGraph['case'],
+                                'neighbourIndex':NeighbourGraph['neighbourIndex'],
+                                'positionLocked':NeighbourGraph['positionLocked'],
+                                'traveltime': Neighbour_cost[1],
+                                'neighbourTravelLegs':NeighbourGraph['neighbourTravelLegs'],
+                                'neighbourCrossingPoints':NeighbourGraph['neighbourCrossingPoints'],
+                                'pathIndex': SourceGraph['pathIndex']  + [indx],
+                                'pathCost':SourceGraph['pathCost']   + Neighbour_cost,
+                                'pathPoints':SourceGraph['pathPoints'] + [list(CrossPoints)] + [list(CellPoints)]}
+                                )
+
+
+
 
             self.DijkstraInfo[wpt_name].loc[indx] = NeighbourGraph
+            if self.test ==0:
+                print("--- NeighbourCost - Updating Graph - Part2 - %s seconds ---" % (time.time() - start_time))
+
+
 
         self.DijkstraInfo[wpt_name].loc[minimumTravelTimeIndex] = SourceGraph
 
 
     def _dijkstra(self,wpt_name):
+        start_time =time.time()
         # Including only the End Waypoints defined by the user
         Wpts = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(self.end_waypoints)]
         
@@ -278,21 +321,36 @@ class TravelTime:
         self.DijkstraInfo[wpt_name].loc[SourceIndex,'traveltime'] = 0.0
         self.DijkstraInfo[wpt_name].loc[SourceIndex,'pathIndex'].append(SourceIndex)
         
-        # Updating Dijkstra as long as all the waypoints are not visited.
-        while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
-        #while (self.DijkstraInfo[wpt_name]['positionLocked'] == False).any():    
+        print("--- Dijkstr Run Preface - %s seconds ---" % (time.time() - start_time))
 
+        while (self.DijkstraInfo[wpt_name].loc[Wpts['index'],'positionLocked'] == False).any():
+        #while (self.DijkstraInfo[wpt_name]['positionLocked'] == False).any():   
+
+            #
+            if self.test == 0:
+                start_time = time.time() 
             # Determining the index of the minimum traveltime that has not been visited
             minimumTravelTimeIndex = self.DijkstraInfo[wpt_name][self.DijkstraInfo[wpt_name]['positionLocked']==False]['traveltime'].idxmin()
+            if self.test == 0:
+                print("--- Dijkstr Index of Minimum traveltime - %s seconds ---" % (time.time() - start_time))
 
+
+            if self.test == 0:
+                start_time = time.time() 
             # Finding the cost of the nearest neighbours from the source cell (Sc)
             self.NeighbourCost(wpt_name,minimumTravelTimeIndex)
+            if self.test == 0:
+                print("--- Dijkstr Index of NeighbourCost - %s seconds ---" % (time.time() - start_time))
+                self.test+=1
+
 
             # Updating Position to be locked
             self.DijkstraInfo[wpt_name].loc[minimumTravelTimeIndex,'positionLocked'] = True
 
         # Correct travel-time off grid for start and end indices
         # ----> TO-DO 
+
+        
 
     def Paths(self,source_waypoints=None,end_waypoints=None,verbose=False,multiprocessing=False,return_paths=True):
         '''
@@ -332,7 +390,9 @@ class TravelTime:
                 self._dijkstra(wpt)
 
 
+        start_time = time.time()
         self.paths = self.Dijkstra2Path(source_waypoints,self.end_waypoints)
+        print("--- Dijkstra2PathJSON - %s seconds ---" % (time.time() - start_time))
         if return_paths:
             return self.paths
 
