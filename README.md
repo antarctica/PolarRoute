@@ -26,7 +26,7 @@ The RoutePlanner software can be installed by using
 
 ---
 ## BAS Developers
-Maria Fox, Jonathan Smith, Samuel Hall, James Byrne, Geoarge Coombs &  Michael Thorne
+Maria Fox, Jonathan Smith, Samuel Hall, James Byrne, George Coombs &  Michael Thorne
 
 
 Documentation for the Code
