@@ -47,8 +47,9 @@ def MapJavaPaths(file,TT,map,color='blue',PathPoints=True):
 
     return map
 
-def MapWaypoints(DF,map):
+def MapWaypoints(DF,map,color='k'):
     wpts = folium.FeatureGroup(name='WayPoints')
+    wpts_name = folium.FeatureGroup(name='WayPoint Names',show=False)
     for id,wpt in DF.iterrows():
         loc = [wpt['Lat'], wpt['Long']]
         folium.Marker(
@@ -57,12 +58,25 @@ def MapWaypoints(DF,map):
                                             border_color='transparent',
                                             background_color='transparent',
                                             border_width=1,
-                                            text_color='red',
+                                            text_color=color,
                                             inner_icon_style='margin:0px;font-size:0.8em'),
-            popup="<b>{} [{},{}]</b>".format(wpt['Name'],loc[0],loc[1])
+            popup="<b>{} [{},{}]</b>".format(wpt['Name'],loc[0],loc[1]),
         ).add_to(wpts)    
+
+        folium.Marker(
+                    location=loc,
+                        icon=folium.features.DivIcon(
+                            icon_size=(250,36),
+                            icon_anchor=(0,0),
+                            html='<div style="font-size: 10pt">{}</div>'.format(wpt['Name']),
+                            ),
+         ).add_to(wpts_name)
+
+
     wpts.add_to(map)
+    wpts_name.add_to(map)
     return map
+
 
 def MapResearchSites(DF,map):
     wpts = folium.FeatureGroup(name='Research Stations')
@@ -82,9 +96,9 @@ def MapResearchSites(DF,map):
     wpts.add_to(map)    
     return map
 
-def MapPaths(Paths,map,PathPoints=True,colorLine=True):
-    Pths        = folium.FeatureGroup(name='Paths')
-    Pths_points = folium.FeatureGroup(name='Path Points')
+def MapPaths(Paths,map,PathPoints=True,PathName='Transit Time', colorLine=True):
+    Pths        = folium.FeatureGroup(name='{}'.format(PathName))
+    Pths_points = folium.FeatureGroup(name='{} - Path Points'.format(PathName))
 
     # Determining max travel-times of all paths
     maxTT = 0
@@ -98,13 +112,12 @@ def MapPaths(Paths,map,PathPoints=True,colorLine=True):
         points[:,0] = points[:,0]
         points = points[:,::-1]
 
+        folium.PolyLine(points,color="black", weight=5.0, opacity=1).add_to(Pths)
         if colorLine:
-            colormap = linear.viridis.scale(0,maxTT).to_step(100)
+            colormap = linear.Paired_06.scale(0,maxTT).to_step(100)
             colormap.caption = 'Transit Time (Days)'
             colormap.background = 'white'
-            folium.ColorLine(points,Times,colormap=colormap,nb_steps=50, weight=3.0, opacity=1).add_to(Pths)
-        else:
-            folium.PolyLine(points,color="black", weight=2.0, opacity=1).add_to(Pths)
+            folium.ColorLine(points,Times,colormap=colormap,nb_steps=50, weight=3.5, opacity=1).add_to(Pths)
         for idx in range(len(points)):
             loc = [points[idx,0],points[idx,1]]
             folium.Marker(
@@ -124,7 +137,6 @@ def MapPaths(Paths,map,PathPoints=True,colorLine=True):
     map.add_child(colormap)
 
     return map
-
 
 def TimeMapPaths(Paths,map,starttime='2014-01-01T00:00:00'):
     lines=[]
