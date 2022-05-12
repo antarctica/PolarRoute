@@ -16,6 +16,7 @@ build
 
 
 # Jonny's GitIgnores. Remove Later
-Examples/Path/cellGrid
+Examples
+resources
 *.p
 Modis_1km.csv

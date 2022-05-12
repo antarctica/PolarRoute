@@ -273,9 +273,7 @@ class TravelTime:
                     'neighbourCrossingPoints':NeighbourGraph['neighbourCrossingPoints'],
                     'pathIndex': SourceGraph['pathIndex']  + [indx],
                     'pathCost':SourceGraph['pathCost']   + SourceGraph,
-                    'pathPoints':source_graph['pathPoints'] +\
-                                [list(CrossPoints)] +\
-                                [list(CellPoints)]}
+                    'pathPoints':SourceGraph['pathPoints'] +[list(CrossPoints)] +[list(CellPoints)]}
                     )
 
 
