@@ -1,6 +1,3 @@
-resources/icepoints*.json
-resources/currentPoints.json
-Plots
 *.pyc
 **/__pycache__
 *.ipynb_checkpoints
@@ -14,9 +11,6 @@ dist
 *.egg-info
 build
 
-
 # Jonny's GitIgnores. Remove Later
 Examples
 resources
-*.p
-Modis_1km.csv

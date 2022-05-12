@@ -97,70 +97,68 @@ class TravelTime:
                         break
             self.config['Route_Info']['WayPoints']['index'].loc[idx] = index
 
-    def iceResistance(self, Cell):
+    def ice_resistance(self, cell):
         """
                 Function to find the ice resistance force at a given speed in a given cell.
 
                 Inputs:
-                Cell - Cell box object
+                cell - Cell box object
 
                 Outputs:
-                r - Resistance force
+                resistance - Resistance force
         """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
         hull = self.config['Vehicle_Info']['HullType']
         beam = self.config['Vehicle_Info']['Beam']
-        k, b, n = hull_params[hull]
-        g = 9.81  # m/s-2
+        kparam, bparam, nparam = hull_params[hull]
+        gravity = 9.81  # m/s-2
+        speed = self.config['Vehicle_Info']['Speed']*(5./18.)  # assume km/h and convert to m/s
+        force_limit = speed/np.sqrt(gravity*cell.iceArea()*cell.iceThickness(self.config['Region']['startTime']))
+        resistance = 0.5*kparam*(force_limit**bparam)*cell.iceDensity(self.config['Region']['startTime'])*beam*cell.iceThickness(self.config['Region']['startTime'])*(speed**2)*(cell.iceArea()**nparam)
+        return resistance
 
-        V = self.config['Vehicle_Info']['Speed']*(5./18.)  # assume km/h and convert to m/s
-
-        Fr = V/np.sqrt(g*Cell.iceArea()*Cell.iceThickness())
-
-        r = 0.5*k*(Fr**b)*Cell.iceDensity()*beam*Cell.iceThickness()*(V**2)*(Cell.iceArea()**n)
-
-        return r
-
-    def inverseResistance(self, Fl, Cell):
+    def inverse_resistance(self, force_limit, cell):
         """
-        Function to find the fastest speed that keeps the ice resistance force below a given threshold.
+        Function to find the speed that keeps the ice resistance force below a given threshold.
 
         Inputs:
-        Fl - Force limit
-        Cell - Cell box object
+        force_limit - Force limit
+        cell        - Cell box object
 
         Outputs:
-        v - speed
+        speed - Vehicle Speed
         """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
         hull = self.config['Vehicle_Info']['HullType']
         beam = self.config['Vehicle_Info']['Beam']
-        k, b, n = hull_params[hull]
-        g = 9.81  # m/s-2
+        kparam, bparam, nparam = hull_params[hull]
+        gravity = 9.81  # m/s-2
 
-        exp = 2.0 + b
+        vexp = 2*force_limit/(kparam*cell.iceDensity(self.config['Region']['startTime'])*beam*cell.iceThickness(self.config['Region']['startTime'])*(cell.iceArea()**nparam)*(gravity*cell.iceThickness(self.config['Region']['startTime'])*cell.iceArea())**-(bparam/2))
 
-        vexp = 2*Fl/(k*Cell.iceDensity()*beam*Cell.iceThickness()*(Cell.iceArea()**n)*(g*Cell.iceThickness()*Cell.iceArea())**-(b/2))
+        vms = vexp**(1/(2.0 + bparam))
+        speed = vms*(18./5.)  # convert from m/s to km/h
 
-        vms = vexp**(1/exp)
-        v = vms*(18./5.)  # convert from m/s to km/h
+        return speed
 
-        return v
-
-    def speedFunction(self, Cell):
+    def speedFunction(self, cell):
+        '''
+            FILL
+        '''
         if self.variableSpeed:
-            s = (1-np.sqrt(Cell.iceArea()))*self.config['Vehicle_Info']['Speed']
-            # if Cell.iceArea() == 0.0:
-            #     s = self.OptInfo['VehicleInfo']['Speed']
-            # elif self.iceResistance(Cell) < self.OptInfo['VehicleInfo']['ForceLimit']:
-            #     s = self.OptInfo['VehicleInfo']['Speed']
-            # else:
-            #     s = self.inverseResistance(self.OptInfo['VehicleInfo']['ForceLimit'], Cell)
+            if cell.iceArea() == 0.0:
+                speed = self.config['Vehicle_Info']['Speed']
+            elif self.ice_resistance(cell) < self.config['Vehicle_Info']['ForceLimit']:
+                speed = self.config['Vehicle_Info']['Speed']
+            else:
+                speed = self.inverse_resistance(self.config['Vehicle_Info']['ForceLimit'], cell)
         else:
-            s = self.config['Vehicle_Info']['Speed']
-        return s
+            speed = self.config['Vehicle_Info']['Speed']
+        return speed
+
+
 
 
     def Dijkstra2Path(self,StartWaypoints,EndWaypoints):
@@ -272,12 +270,13 @@ class TravelTime:
                     'neighbourTravelLegs':NeighbourGraph['neighbourTravelLegs'],
                     'neighbourCrossingPoints':NeighbourGraph['neighbourCrossingPoints'],
                     'pathIndex': SourceGraph['pathIndex']  + [indx],
-                    'pathCost':SourceGraph['pathCost']   + SourceGraph,
+                    'pathCost':SourceGraph['pathCost']   + Neighbour_cost,
                     'pathPoints':SourceGraph['pathPoints'] +[list(CrossPoints)] +[list(CellPoints)]}
                     )
 
 
-            self.DijkstraInfo[wpt_name].loc[indx] = NeighbourGraph
+
+                self.DijkstraInfo[wpt_name].loc[indx] = NeighbourGraph
 
         self.DijkstraInfo[wpt_name].loc[minimumTravelTimeIndex] = SourceGraph
 
