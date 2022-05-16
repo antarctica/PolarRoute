@@ -4,6 +4,8 @@
 import numpy as np
 import copy
 import pandas as pd
+
+import time
 import multiprocessing as mp
 
 from RoutePlanner.crossing import NewtonianDistance, NewtonianCurve
@@ -45,6 +47,7 @@ class TravelTime:
             param3 (:obj:`list` of :obj:`str`): Description of `param3`.
 
         """
+
         # Load in the current cell structure & Optimisation Info̦
         self.mesh    = copy.copy(mesh)
         self.config  = config
@@ -126,7 +129,19 @@ class TravelTime:
                 if isinstance(cell, CellBox):
                     if cell.containsPoint(lat,long):
                         break
+
+
+            if self.mesh.cellBoxes[index].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']:
+                continue
+            if self.mesh._j_grid:
+                if self.mesh.cellBoxes[index].isLandM():
+                    continue
+            else:
+                if self.mesh.cellBoxes[index].containsLand():
+                    continue
             self.config['Route_Info']['WayPoints']['index'].loc[idx] = index
+
+        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][~ self.config['Route_Info']['WayPoints']['index'].isnull()]
 
 
         # ==== Printing Configuration and Information
@@ -230,9 +245,9 @@ class TravelTime:
 
                         # ===== Appending Path =====
                         path['Path']                = {}
-                        path['Path']['Points']      = np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)
-                        path['Path']['CellIndices'] = np.array(graph['pathIndex'].loc[wpt_b_index])
-                        path['Path']['CaseTypes']   = np.array([wpt_a_index] + graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index])
+                        path['Path']['Points']      = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)).tolist()
+                        path['Path']['CellIndices'] = (np.array(graph['pathIndex'].loc[wpt_b_index])).tolist()
+                        #path['Path']['CaseTypes']   = np.array([wpt_a_index] + graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index],dtype=object)
                         path['Path']['Time']        = path_traveltime
                         paths.append(path)
                     except IOError:
@@ -267,23 +282,6 @@ class TravelTime:
             case = source_graph['case'][idx]
 
 
-            # Set travel-time to infinite if neighbour is land or ice-thickness is too large.
-            if neighbour_cellbox.iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']:
-                source_graph['neighbourTravelLegs'].append([np.inf,np.inf])
-                source_graph['neighbourCrossingPoints'].append([np.nan,np.nan])
-                continue
-
-            if self.mesh._j_grid:
-                if neighbour_cellbox.isLandM():
-                    source_graph['neighbourTravelLegs'].append([np.inf,np.inf])
-                    source_graph['neighbourCrossingPoints'].append([np.nan,np.nan])
-                    continue
-            else:
-                if neighbour_cellbox.containsLand():
-                    source_graph['neighbourTravelLegs'].append([np.inf,np.inf])
-                    source_graph['neighbourCrossingPoints'].append([np.nan,np.nan])
-                    continue
-
             source_speed    = self.speed(source_cellbox)
             neighbour_speed = self.speed(neighbour_cellbox)
 
@@ -294,10 +292,13 @@ class TravelTime:
             # Updating the Dijkstra graph with the new information
             traveltime,crossing_points,cell_points = cost_func.value()
 
+            
             source_graph['neighbourTravelLegs'].append(traveltime)
             source_graph['neighbourCrossingPoints'].append(crossing_points)
 
+
             # Updating the neighbour traveltime if its less the current global optimum
+            
             neighbour_cost   = [source_graph['traveltime'] + traveltime[0],source_graph['traveltime'] + np.sum(traveltime)]
             neighbour_graph  = self.dijkstra_info[wpt_name].loc[indx]
 
@@ -322,7 +323,11 @@ class TravelTime:
         self.dijkstra_info[wpt_name].loc[minimum_traveltime_index] = source_graph
 
 
+
+
     def _dijkstra(self,wpt_name):
+
+
         # Including only the End Waypoints defined by the user
         wpts = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(self.end_waypoints)]
         
@@ -331,19 +336,25 @@ class TravelTime:
         self.dijkstra_info[wpt_name].loc[source_index,'traveltime'] = 0.0
         self.dijkstra_info[wpt_name].loc[source_index,'pathIndex'].append(source_index)
         
-        # Updating Dijkstra as long as all the waypoints are not visited.
-        while (self.dijkstra_info[wpt_name].loc[wpts['index'],'positionLocked'] == False).any():
- 
-        #while (self.dijkstra_info[wpt_name]['positionLocked'] == False).any():    
+        # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
+        if self.config['Route_Info']['Early_Stopping_Criterion']:
+            stopping_criterion_indices = wpts['index']
+        else:
+            stopping_criterion_indices = self.dijkstra_info[wpt_name].index
+
+
+        while (self.dijkstra_info[wpt_name].loc[stopping_criterion_indices,'positionLocked'] == False).any():
 
             # Determining the index of the minimum traveltime that has not been visited
             minimum_traveltime_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked']==False]['traveltime'].idxmin()
-
+  
             # Finding the cost of the nearest neighbours from the source cell (Sc)
             self.neighbour_cost(wpt_name,minimum_traveltime_index)
 
             # Updating Position to be locked
             self.dijkstra_info[wpt_name].loc[minimum_traveltime_index,'positionLocked'] = True
+    
+          
 
         # Correct travel-time off grid for start and end indices
         # ----> TO-DO
@@ -359,30 +370,33 @@ class TravelTime:
         if len(self.end_waypoints) == 0:
             self.end_waypoints = list(self.config['Route_Info']['WayPoints']['Name'])
 
+        # Removing end and source
+
 
         # Initialising the Dijkstra Info Dictionary
-        
         for wpt in self.source_waypoints:
             self.dijkstra_info[wpt] = copy.copy(self.neighbour_graph)
+
 
         # if multiprocessing:
 
         #     pool = mp.Pool(mp.cpu_count())
         #     [pool.apply(self._dijkstra, args=source) for source in source_waypoints]
         #     pool.close()
-
-
         #     pool_obj = multiprocessing.Pool()
         #     answer = pool_obj.map(self._dijkstra,source_waypoints)
-        # else:
+
         for wpt in self.source_waypoints:
             if self.verbose:
                 print('=== Processing Waypoint = {} ==='.format(wpt))
             self._dijkstra(wpt)
 
-
+        # Using Dijkstra Graph compute path and meta information to all end_waypoints
         self.paths = self.dijkstra_paths(self.source_waypoints,self.end_waypoints)
-         
+
+        # if self.config['Route_Info']['Save_Dijkstra_Graphs']:
+        #     print('Currently not operational - Come back soon :) ')
+        #     #JDS - Add in saving option for the full dijkstra graphs.
 
     def compute_smoothed_routes(self,maxiter=10000,minimumDiff=1e-4,debugging=0,return_paths=True,verbose=False):
         '''
