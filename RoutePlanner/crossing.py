@@ -1,108 +1,142 @@
-import numpy as np
+'''
+    FILL
+'''
+
 import copy
 import pandas as pd
 import numpy as np
 
 class NewtonianDistance:
-    def __init__(self,Mesh,Sc=None,Nc=None,Sc_Speed=None,Nc_Speed=None,Case=None,unit_shipspeed='km/hr',unit_time='days',zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
-        '''
-           BUG - Zero Currents not working ! 
-        '''
+    """The summary line for a class docstring should fit on one line.
+
+    If the class has public attributes, they may be documented here
+    in an ``Attributes`` section and follow the same formatting as a
+    function's ``Args`` section. Alternatively, attributes may be documented
+    inline with the attribute's declaration (see __init__ method below).
+
+    Properties created with the ``@property`` decorator should be documented
+    in the property's getter method.
+
+    Attributes:
+        attr1 (str): Description of `attr1`.
+        attr2 (:obj:`int`, optional): Description of `attr2`.
+
+    """
+    def __init__(self,mesh,source_cell=None,neighbour_cell=None,
+                 source_speed=None,neighbour_speed=None,
+                 case=None,unit_shipspeed='km/hr',unit_time='days',
+                 zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
+        """Example of docstring on the __init__ method.
+
+        The __init__ method may be documented in either the class level
+        docstring, or as a docstring on the __init__ method itself.
+
+        Either form is acceptable, but the two should not be mixed. Choose one
+        convention to document the __init__ method and be consistent with it.
+
+        Note:
+            Do not include the `self` parameter in the ``Args`` section.
+
+        Args:
+            param1 (str): Description of `param1`.
+            param2 (:obj:`int`, optional): Description of `param2`. Multiple
+                lines are supported.
+            param3 (:obj:`list` of :obj:`str`): Description of `param3`.
+
+        """
         # Cell information
-        self.Cell_s         = Sc
-        self.Cell_n         = Nc
-
-        self.Mesh           = Mesh
-
-        self.R              = 6371.*1000
+        self.source_cell     = source_cell
+        self.neighbour_cell  = neighbour_cell
+        self.mesh            = mesh
+        #self.R               = 6371.*1000
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
-        self.unit_shipspeed = unit_shipspeed
-        self.unit_time      = unit_time
-        self.s1             = self._unit_speed(Sc_Speed)
-        self.s2             = self._unit_speed(Nc_Speed)
-        self.case           = Case
-        self.splitLevels    = 0
+        self.unit_shipspeed  = unit_shipspeed
+        self.unit_time       = unit_time
+        self.source_speed    = self._unit_speed(source_speed)
+        self.neighbour_speed = self._unit_speed(neighbour_speed)
+        self.case            = case
 
         if zerocurrents:
-            self.zx = 0.0
+            self.zero_current_factor = 0.0
         else:
-            self.zx = 1.0
+            self.zero_current_factor = 1.0
 
         # Optimisation Information
         self.maxiter       = maxiter
         self.optimizer_tol = optimizer_tol
 
         # Optimisation Information
-        self.mLon  = 111.321*1000
-        self.mLat  = 111.386*1000.
-        
+        self.m_long  = 111.321*1000
+        self.m_lat   = 111.386*1000
 
-        # Defining a small distance 
-        self.smallDist = 1e-4
+        # Defining a small distance
+        self.small_distance = 1e-4
 
-        # For Debugging purposes 
+        # For Debugging purposes
         self.debugging     = debugging
 
 
-    def _dist(self,origin,dest_dist,cell,forward=True):
-        mLonScaled=self.mLon*np.cos(cell.cy*(np.pi/180))
-        lon1,lat1 = origin
-        if forward:
-            lon2,lat2 = dest_dist
-            # lon2 = lon2+360
-            # lon1 = lon1+360
-            val = np.sqrt(((lat2-lat1)*self.mLat)**2 + ((lon2-lon1)*mLonScaled)**2)
-        else:
-            dist_x,dist_y = dest_dist        
-            val = [lon1+(dist_x/self.mLat),lat1+(dist_y/mLonScaled)]
-        return val
+    # def _dist(self,origin,dest_dist,cell,forward=True):
+    #     mLonScaled=self.m_long*np.cos(cell.cy*(np.pi/180))
+    #     lon1,lat1 = origin
+    #     if forward:
+    #         lon2,lat2 = dest_dist
+    #         # lon2 = lon2+360
+    #         # lon1 = lon1+360
+    #         val = np.sqrt(((lat2-lat1)*self.m_lat)**2 + ((lon2-lon1)*mLonScaled)**2)
+    #     else:
+    #         dist_x,dist_y = dest_dist
+    #         val = [lon1+(dist_x/self.m_lat),lat1+(dist_y/mLonScaled)]
+    #     return val
 
 
-    def NewtonOptimisation(self,f,x,a,Y,u1,v1,u2,v2,s1,s2):
-            y0 = (Y*x)/(x+a)
+    def _newton_optimisation(self,f,x,a,Y,u1,v1,u2,v2,s1,s2):
+        '''
+            FILL
+        '''
+        y0 = (Y*x)/(x+a)
+        if self.debugging:
+            print('---Initial y={:.2f}'.format(y0))
+        improving = True
+        iterartion_num = 0
+        while improving:
+            F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
             if self.debugging:
-                    print('---Initial y={:.2f}'.format(y0))
-            improving = True
-            iter = 0
-            while improving:
-                F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
-                if self.debugging:
-                    print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'.format(iter,y0,F,dF))
-                y0  = y0 - (F/dF)
-                improving = abs((F/dF)/(X1*X2)) > self.optimizer_tol
-                iter+=1
-                if (iter>1000):
-                    raise Exception('Newton not able to converge')
-            
-            return y0,self._unit_time(np.array([t1,t2]))
+                print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'\
+                      .format(iterartion_num,y0,F,dF))
+            y0  = y0 - (F/dF)
+            improving = abs((F/dF)/(X1*X2)) > self.optimizer_tol
+            iterartion_num+=1
+            if iterartion_num>1000:
+                raise Exception('Newton not able to converge')
+        return y0,self._unit_time(np.array([t1,t2]))
 
-    def _unit_speed(self,Val):
-        if type(Val) != type(None):
+    def _unit_speed(self,val):
+        if not isinstance(val,type(None)):
             if self.unit_shipspeed == 'km/hr':
-                Val = Val*(1000/(60*60))
+                val = val*(1000/(60*60))
             if self.unit_shipspeed == 'knots':
-                Val = (Val*0.51)
-            return Val
+                val = (val*0.51)
+            return val
         else:
             return None
 
-    def _unit_time(self,Val):
+    def _unit_time(self,val):
         if self.unit_time == 'days':
-            Val = Val/(60*60*24.)
+            val = val/(60*60*24.)
         elif self.unit_time == 'hr':
-            Val = Val/(60*60.)
+            val = val/(60*60.)
         elif self.unit_time == 'min':
-            Val = Val/(60.)
+            val = val/(60.)
         elif self.unit_time == 's':
-            Val = Val
+            val = val
+        return val
 
-        return Val
-        
-    def WaypointCorrection(self,Wp,Cp,s):
+    def waypoint_correction(self,Wp,Cp,s):
         '''
         '''
-        uS  = (self.Cell_s.getuC(),self.Cell_s.getvC())
+        uS  = (self.source_cell.getuC(),self.source_cell.getvC())
         x   = np.sign(Cp[0]-Wp[0])*self.fdist.value(Wp,(Wp[0]+(Cp[0]-Wp[0]),Wp[1]))
         y   = np.sign(Cp[1]-Wp[1])*self.fdist.value(Wp,(Wp[0],Wp[1]+(Cp[0]-Wp[0])))
         C1  = s**2 - uS[0]**2 - uS[1]**2
@@ -126,7 +160,7 @@ class NewtonianDistance:
         else:
             X2 = np.sqrt(X2ns)
 
-        F  = X2*(y-((v1*(X1-D1))/C1)) + X1*(y-Y+((v2*(X2-D2))/C2)) 
+        F  = X2*(y-((v1*(X1-D1))/C1)) + X1*(y-Y+((v2*(X2-D2))/C2))
 
         dD1 = v1
         dD2 = -v2
@@ -138,27 +172,28 @@ class NewtonianDistance:
             dX2 = 0
         else:
             dX2 = (-D2*v2 - C2*(Y-y))/X2
-        dF  = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1)) + (v2/C2)*(dX1*(X2-D2)+X1*(dX2-dD2)) - Y*dX1
-    
+        dF  = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1))\
+            + (v2/C2)*(dX1*(X2-D2)+X1*(dX2-dD2)) - Y*dX1
+
         t1 = (X1-D1)/C1
         t2 = (X2-D2)/C2
 
         return F,dF,X1,X2,t1,t2
 
 
-    def _TCell(self,xdist,ydist,U,V,S):
+    def _traveltime_in_cell(self,xdist,ydist,U,V,S):
         '''
             Determines the travel-time within cell between two points
         '''
         dist  = np.sqrt(xdist**2 + ydist**2)
         cval  = np.sqrt(U**2 + V**2)
 
-        dotprod  = xdist*U + ydist*V 
+        dotprod  = xdist*U + ydist*V
         diffsqrs = S**2 - cval**2
 
         # if (dotprod**2 + diffsqrs*(dist**2) < 0)
-        if (diffsqrs == 0.0):
-            if (dotprod == 0.0):
+        if diffsqrs == 0.0:
+            if dotprod == 0.0:
                 raise Exception(' ')
             else:
                 if ((dist**2)/(2*dotprod))  <0:
@@ -168,13 +203,13 @@ class NewtonianDistance:
                     return traveltime
 
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
-        if (traveltime<0):
+        if traveltime < 0:
             raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
         return traveltime
 
     def _longitude(self):
         '''
-            Longitude cases ...
+            FILL
         '''
 
         if self.case==2:
@@ -182,29 +217,29 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        Su = ptvl*self.Cell_s.getuC()*self.zx
-        Sv = ptvl*self.Cell_s.getvC()*self.zx
-        Nu = ptvl*self.Cell_n.getuC()*self.zx
-        Nv = ptvl*self.Cell_n.getvC()*self.zx
+        Su = ptvl*self.source_cell.getuC()*self.zero_current_factor
+        Sv = ptvl*self.source_cell.getvC()*self.zero_current_factor
+        Nu = ptvl*self.neighbour_cell.getuC()*self.zero_current_factor
+        Nv = ptvl*self.neighbour_cell.getvC()*self.zero_current_factor
 
-        Ssp = self.s1
-        Nsp = self.s2
+        Ssp = self.source_speed
+        Nsp = self.neighbour_speed
 
-        x = self.Cell_s.dcx*self.mLon*np.cos(self.Cell_s.cy*(np.pi/180))
-        a = self.Cell_n.dcx*self.mLon*np.cos(self.Cell_n.cy*(np.pi/180))
-        Y = ptvl*(self.Cell_n.cy-self.Cell_s.cy)*self.mLat
+        x = self.source_cell.dcx*self.m_long*np.cos(self.source_cell.cy*(np.pi/180))
+        a = self.neighbour_cell.dcx*self.m_long*np.cos(self.neighbour_cell.cy*(np.pi/180))
+        Y = ptvl*(self.neighbour_cell.cy-self.source_cell.cy)*self.m_lat
 
         # Optimising to determine the y-value of the crossing point
-        y,TravelTime = self.NewtonOptimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
-        CrossPoints = (self.Cell_s.cx+ptvl*self.Cell_s.dcx,self.Cell_s.cy+ptvl*y/self.mLat)        
-        CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+        y,TravelTime = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
+        CrossPoints = (self.source_cell.cx+ptvl*self.source_cell.dcx,\
+                       self.source_cell.cy+ptvl*y/self.m_lat)
+        CellPoints  = [self.neighbour_cell.cx,self.neighbour_cell.cy]
 
         return TravelTime,CrossPoints,CellPoints
 
     def _latitude(self):
         '''
-            Latitude cases ....
-
+            FILL
         '''
 
         if self.case==4:
@@ -212,39 +247,42 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        Su = -1*ptvl*self.Cell_s.getvC()*self.zx
-        Sv = ptvl*self.Cell_s.getuC()*self.zx
-        Nu = -1*ptvl*self.Cell_n.getvC()*self.zx
-        Nv = ptvl*self.Cell_n.getuC()*self.zx
+        Su = -1*ptvl*self.source_cell.getvC()*self.zero_current_factor
+        Sv = ptvl*self.source_cell.getuC()*self.zero_current_factor
+        Nu = -1*ptvl*self.neighbour_cell.getvC()*self.zero_current_factor
+        Nv = ptvl*self.neighbour_cell.getuC()*self.zero_current_factor
 
-        Ssp=self.s1
-        Nsp=self.s2
+        Ssp=self.source_speed
+        Nsp=self.neighbour_speed
 
-        x = self.Cell_s.dcy*self.mLat
-        a = self.Cell_n.dcy*self.mLat
-        Y = ptvl*(self.Cell_n.cx-self.Cell_s.cx)*self.mLon*np.cos((self.Cell_n.cy+self.Cell_s.cy)*(np.pi/180)/2.0)
+        x = self.source_cell.dcy*self.m_lat
+        a = self.neighbour_cell.dcy*self.m_lat
+        Y = ptvl*(self.neighbour_cell.cx-self.source_cell.cx)*self.m_long\
+                *np.cos((self.neighbour_cell.cy+self.source_cell.cy)*(np.pi/180)/2.0)
 
-        y,TravelTime   = self.NewtonOptimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
-        clon = self.Cell_s.cx  + ptvl*y/(self.mLon*np.cos((self.Cell_n.cy+self.Cell_s.cy)*(np.pi/180)/2.0))
-        clat = self.Cell_s.cy + -1*ptvl*self.Cell_s.dcy    
+        y,TravelTime   = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
+        clon = self.source_cell.cx  + ptvl*y/(self.m_long*np.cos((self.neighbour_cell.cy+\
+               self.source_cell.cy)*(np.pi/180)/2.0))
+        clat = self.source_cell.cy + -1*ptvl*self.source_cell.dcy
+
         CrossPoints = (clon,clat)
-        CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+        CellPoints  = [self.neighbour_cell.cx,self.neighbour_cell.cy]
 
         return TravelTime,CrossPoints,CellPoints
 
 
     def _corner(self):
         '''
-            Corner Cases ....
+            FILL
         '''
 
         # Given the determine the postive and negative position relative to centre
         if self.case==1:
             ptvX = 1.0
-            ptvY = 1.0 
+            ptvY = 1.0
         elif self.case==-1:
             ptvX = -1.0
-            ptvY = -1.0 
+            ptvY = -1.0
         elif self.case==3:
             ptvX = 1.0
             ptvY = -1.0
@@ -252,33 +290,35 @@ class NewtonianDistance:
             ptvX = -1.0
             ptvY = 1.0
 
-
-
-        dx1 = self.Cell_s.dcx*self.mLon*np.cos(self.Cell_s.cy*(np.pi/180))
-        dx2 = self.Cell_n.dcx*self.mLon*np.cos(self.Cell_n.cy*(np.pi/180))
-        dy1 = self.Cell_s.dcy*self.mLat
-        dy2 = self.Cell_n.dcy*self.mLat    
+        dx1 = self.source_cell.dcx*self.m_long*np.cos(self.source_cell.cy*(np.pi/180))
+        dx2 = self.neighbour_cell.dcx*self.m_long*np.cos(self.neighbour_cell.cy*(np.pi/180))
+        dy1 = self.source_cell.dcy*self.m_lat
+        dy2 = self.neighbour_cell.dcy*self.m_lat
 
         # Currents in Cells
-        Su = ptvX*self.Cell_s.getuC()*self.zx; Sv = ptvY*self.Cell_s.getvC()*self.zx
-        Nu = ptvX*self.Cell_n.getuC()*self.zx; Nv = ptvY*self.Cell_n.getvC()*self.zx
+        Su = ptvX*self.source_cell.getuC()*self.zero_current_factor; Sv = ptvY*self.source_cell.getvC()*self.zero_current_factor
+        Nu = ptvX*self.neighbour_cell.getuC()*self.zero_current_factor; Nv = ptvY*self.neighbour_cell.getvC()*self.zero_current_factor
 
         # Vehicles Speeds in Cells
-        Ssp = self.s1; Nsp = self.s2
+        Ssp = self.source_speed; Nsp = self.neighbour_speed
 
-        # Determining the crossing point as the corner of the case        
-        CrossPoints = [self.Cell_s.cx+ptvX*self.Cell_s.dcx,self.Cell_s.cy+ptvY*self.Cell_s.dcy]
-        CellPoints  = [self.Cell_n.cx,self.Cell_n.cy]
+        # Determining the crossing point as the corner of the case
+        CrossPoints = [self.source_cell.cx+ptvX*self.source_cell.dcx,\
+                       self.source_cell.cy+ptvY*self.source_cell.dcy]
+        CellPoints  = [self.neighbour_cell.cx,self.neighbour_cell.cy]
 
         # Determining traveltime
-        t1 = self._TCell(dx1,dy1,Su,Sv,Ssp)
-        t2 = self._TCell(dx2,dy2,Nu,Nv,Nsp)
+        t1 = self._traveltime_in_cell(dx1,dy1,Su,Sv,Ssp)
+        t2 = self._traveltime_in_cell(dx2,dy2,Nu,Nv,Nsp)
         TravelTime  = self._unit_time(np.array([t1,t2]))
 
         return TravelTime,CrossPoints,CellPoints
 
 
     def value(self):
+        '''
+            FILLE
+        '''
         if self.debugging:
             print('============================================')
         if abs(self.case)==2:
@@ -286,9 +326,10 @@ class NewtonianDistance:
         elif abs(self.case)==4:
             TravelTime,CrossPoints,CellPoints = self._latitude()
         elif abs(self.case)==1 or abs(self.case)==3:
-            TravelTime,CrossPoints,CellPoints = self._corner()    
+            TravelTime,CrossPoints,CellPoints = self._corner()
         else:
-            print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.format(self.Cell_s.cx,self.Cell_s.cy))            
+            print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.\
+                format(self.source_cell.cx,self.source_cell.cy))
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
@@ -306,7 +347,7 @@ class NewtonianCurve:
         '''
 
         # Passing the Mesh information
-        self.Mesh = Mesh
+        self.mesh = Mesh
 
         # Passing the Dijkstra Graph
         self.DijkstraInfo = copy.copy(DijkstraInfo)
@@ -332,8 +373,8 @@ class NewtonianCurve:
 
 
         # Optimisation Information
-        self.mLon  = 111.321*1000
-        self.mLat  = 111.386*1000.
+        self.m_long  = 111.321*1000
+        self.m_lat  = 111.386*1000.
 
         # For Debugging purposes 
         self.debugging     = debugging
@@ -370,9 +411,9 @@ class NewtonianCurve:
 
 
     def calXDist(self,start_long,end_long):#,centralLat):
-        return (end_long - start_long)*self.mLon#*np.cos(centralLat)
+        return (end_long - start_long)*self.m_long#*np.cos(centralLat)
     def calYDist(self,start_lat,end_lat):
-        return (end_lat-start_lat)*self.mLat
+        return (end_lat-start_lat)*self.m_lat
 
     def _long_case(self):
             def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
@@ -448,8 +489,8 @@ class NewtonianCurve:
             Sp   = tuple(self.triplet[['cX','cY']].iloc[0])
             Cp   = tuple(self.triplet[['cX','cY']].iloc[1])
             Np   = tuple(self.triplet[['cX','cY']].iloc[2])
-            Box1 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
-            Box2 = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+            Box1 = self.mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
+            Box2 = self.mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
 
             if self.triplet.iloc[1].case == 2:   
                 sgn  = 1
@@ -461,7 +502,7 @@ class NewtonianCurve:
 
             x           = sgn*self.calXDist(Sp[0],Cp[0])
             a           = sgn*self.calXDist(Cp[0],Np[0])
-            Y           = (Np[1]-Sp[1])*self.mLat
+            Y           = (Np[1]-Sp[1])*self.m_lat
             y0          = Y/2
             u1          = sgn*self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
             u2          = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
@@ -469,7 +510,7 @@ class NewtonianCurve:
 
             # Updating the crossing points
             self.triplet['cX'].iloc[1] = Cp[0]
-            self.triplet['cY'].iloc[1] = Sp[1] + y/self.mLat
+            self.triplet['cY'].iloc[1] = Sp[1] + y/self.m_lat
 
 
     def _lat_case(self):
@@ -538,8 +579,8 @@ class NewtonianCurve:
         Sp = tuple(self.triplet.iloc[0][['cX','cY']])
         Cp = tuple(self.triplet.iloc[1][['cX','cY']])
         Np = tuple(self.triplet.iloc[2][['cX','cY']])
-        Box1   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
-        Box2   = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+        Box1   = self.mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
+        Box2   = self.mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
 
         if self.triplet.iloc[1].case == 4:   
             sgn   = 1
@@ -552,14 +593,14 @@ class NewtonianCurve:
 
         x     = sgn*self.calYDist(Sp[1],Cp[1])
         a     = sgn*self.calYDist(Cp[1],Np[1])
-        Y     = sgn*(Np[0]-Sp[0])*self.mLon*np.cos(Cp[1]*(np.pi/180))
+        Y     = sgn*(Np[0]-Sp[0])*self.m_long*np.cos(Cp[1]*(np.pi/180))
         Su    = -sgn*self.zc*Box1.getvC(); Sv = sgn*self.zc*Box1.getuC()
         Nu    = -sgn*self.zc*Box2.getvC(); Nv = sgn*self.zc*Box2.getuC()
         y0    = Y/2
 
         y     = NewtonOptimisationLat(_F,y0,x,a,Y,Su,Sv,Nu,Nv,self.s,self.R,λ,θ,ψ)
 
-        self.triplet['cX'].iloc[1] = Sp[0] + sgn*y/(self.mLon*np.cos(Cp[1]*(np.pi/180)))
+        self.triplet['cX'].iloc[1] = Sp[0] + sgn*y/(self.m_long*np.cos(Cp[1]*(np.pi/180)))
         self.triplet['cY'].iloc[1] = Cp[1]
 
 
@@ -665,9 +706,9 @@ class NewtonianCurve:
         Cp             = tuple(self.triplet[['cX','cY']].iloc[1])
         Sp             = tuple(self.triplet.iloc[0][['cX','cY']])
         Np             = tuple(self.triplet.iloc[2][['cX','cY']])
-        cellStart      = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
+        cellStart      = self.mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
         cellStartGraph = self.triplet.iloc[1]['cellStart']
-        cellEnd        = self.Mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+        cellEnd        = self.mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
         cellEndGraph   = self.triplet.iloc[1]['cellEnd']
         case           = self.triplet['case'].iloc[1]
 
