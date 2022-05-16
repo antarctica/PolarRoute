@@ -114,7 +114,7 @@ def MapPaths(Paths,map,PathPoints=True,PathName='Transit Time', colorLine=True):
 
         folium.PolyLine(points,color="black", weight=5.0, opacity=1).add_to(Pths)
         if colorLine:
-            colormap = linear.Paired_06.scale(0,maxTT).to_step(100)
+            colormap = linear.viridis.scale(0,maxTT).to_step(100)
             colormap.caption = 'Transit Time (Days)'
             colormap.background = 'white'
             folium.ColorLine(points,Times,colormap=colormap,nb_steps=50, weight=3.5, opacity=1).add_to(Pths)
@@ -133,8 +133,8 @@ def MapPaths(Paths,map,PathPoints=True,PathName='Transit Time', colorLine=True):
     if PathPoints:
         Pths_points.add_to(map)
 
-
-    map.add_child(colormap)
+    if colorLine:
+        map.add_child(colormap)
 
     return map
 
@@ -351,7 +351,7 @@ def MapMesh(cellGrid,map,threshold=0.8):
     folium.GeoJson(
         LandDF,
         style_function= lambda x: {
-                'fillColor': 'green',
+                'fillColor': 'black',
                 'color': 'gray',
                 'weight': 0.5,
                 'fillOpacity': 0.3
