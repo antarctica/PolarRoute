@@ -22,8 +22,7 @@ class NewtonianDistance:
         attr2 (:obj:`int`, optional): Description of `attr2`.
 
     """
-    def __init__(self,mesh,source_cell=None,neighbour_cell=None,
-                 source_speed=None,neighbour_speed=None,
+    def __init__(self,source_graph=None,neighbour_graph=None,
                  case=None,unit_shipspeed='km/hr',unit_time='days',
                  zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
         """Example of docstring on the __init__ method.
@@ -45,16 +44,16 @@ class NewtonianDistance:
 
         """
         # Cell information
-        self.source_cell     = source_cell
-        self.neighbour_cell  = neighbour_cell
-        self.mesh            = mesh
+        self.source_graph     = source_graph
+        self.neighbour_graph  = neighbour_graph
+        # self.mesh            = mesh
         #self.R               = 6371.*1000
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed  = unit_shipspeed
         self.unit_time       = unit_time
-        self.source_speed    = self._unit_speed(source_speed)
-        self.neighbour_speed = self._unit_speed(neighbour_speed)
+        self.source_speed    = self._unit_speed(self.source_graph['Speed'])
+        self.neighbour_speed = self._unit_speed(self.neighbour_graph['Speed'])
         self.case            = case
 
         if zerocurrents:
@@ -136,7 +135,7 @@ class NewtonianDistance:
     def waypoint_correction(self,Wp,Cp,s):
         '''
         '''
-        uS  = (self.source_cell.getuC(),self.source_cell.getvC())
+        uS  = (self.source_graph['Vector'][0],self.source_graph['Vector'][0])
         x   = np.sign(Cp[0]-Wp[0])*self.fdist.value(Wp,(Wp[0]+(Cp[0]-Wp[0]),Wp[1]))
         y   = np.sign(Cp[1]-Wp[1])*self.fdist.value(Wp,(Wp[0],Wp[1]+(Cp[0]-Wp[0])))
         C1  = s**2 - uS[0]**2 - uS[1]**2
@@ -217,23 +216,34 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        Su = ptvl*self.source_cell.getuC()*self.zero_current_factor
-        Sv = ptvl*self.source_cell.getvC()*self.zero_current_factor
-        Nu = ptvl*self.neighbour_cell.getuC()*self.zero_current_factor
-        Nv = ptvl*self.neighbour_cell.getvC()*self.zero_current_factor
+        s_cx  = self.source_graph['cell_info'][0]
+        s_cy  = self.source_graph['cell_info'][1]
+        s_dcx = self.source_graph['cell_info'][2]
+        s_dcy = self.source_graph['cell_info'][3]
+        n_cx  = self.neighbour_graph['cell_info'][0]
+        n_cy  = self.neighbour_graph['cell_info'][1]
+        n_dcx = self.neighbour_graph['cell_info'][2]
+        n_dcy = self.neighbour_graph['cell_info'][3]
+
+
+        Su = ptvl*self.source_graph['Vector'][0]*self.zero_current_factor
+        Sv = ptvl*self.source_graph['Vector'][1]*self.zero_current_factor
+        Nu = ptvl*self.neighbour_graph['Vector'][0]*self.zero_current_factor
+        Nv = ptvl*self.neighbour_graph['Vector'][1]*self.zero_current_factor
 
         Ssp = self.source_speed
         Nsp = self.neighbour_speed
 
-        x = self.source_cell.dcx*self.m_long*np.cos(self.source_cell.cy*(np.pi/180))
-        a = self.neighbour_cell.dcx*self.m_long*np.cos(self.neighbour_cell.cy*(np.pi/180))
-        Y = ptvl*(self.neighbour_cell.cy-self.source_cell.cy)*self.m_lat
+
+        x = s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
+        a = n_dcx*self.m_long*np.cos(n_cy*(np.pi/180))
+        Y = ptvl*(n_cy-s_cy)*self.m_lat
 
         # Optimising to determine the y-value of the crossing point
         y,TravelTime = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
-        CrossPoints = (self.source_cell.cx+ptvl*self.source_cell.dcx,\
-                       self.source_cell.cy+ptvl*y/self.m_lat)
-        CellPoints  = [self.neighbour_cell.cx,self.neighbour_cell.cy]
+        CrossPoints = (s_cx+ptvl*s_dcx,\
+                       s_cy+ptvl*y/self.m_lat)
+        CellPoints  = [n_cx,n_cy]
 
         return TravelTime,CrossPoints,CellPoints
 
@@ -247,26 +257,35 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        Su = -1*ptvl*self.source_cell.getvC()*self.zero_current_factor
-        Sv = ptvl*self.source_cell.getuC()*self.zero_current_factor
-        Nu = -1*ptvl*self.neighbour_cell.getvC()*self.zero_current_factor
-        Nv = ptvl*self.neighbour_cell.getuC()*self.zero_current_factor
+        s_cx  = self.source_graph['cell_info'][0]
+        s_cy  = self.source_graph['cell_info'][1]
+        s_dcx = self.source_graph['cell_info'][2]
+        s_dcy = self.source_graph['cell_info'][3]
+        n_cx  = self.neighbour_graph['cell_info'][0]
+        n_cy  = self.neighbour_graph['cell_info'][1]
+        n_dcx = self.neighbour_graph['cell_info'][2]
+        n_dcy = self.neighbour_graph['cell_info'][3]
+
+
+        Su = -1*ptvl*self.source_graph['Vector'][1]*self.zero_current_factor
+        Sv = ptvl*self.source_graph['Vector'][0]*self.zero_current_factor
+        Nu = -1*ptvl*self.neighbour_graph['Vector'][1]*self.zero_current_factor
+        Nv = ptvl*self.neighbour_graph['Vector'][0]*self.zero_current_factor
 
         Ssp=self.source_speed
         Nsp=self.neighbour_speed
 
-        x = self.source_cell.dcy*self.m_lat
-        a = self.neighbour_cell.dcy*self.m_lat
-        Y = ptvl*(self.neighbour_cell.cx-self.source_cell.cx)*self.m_long\
-                *np.cos((self.neighbour_cell.cy+self.source_cell.cy)*(np.pi/180)/2.0)
+        x = s_dcy*self.m_lat
+        a = n_dcy*self.m_lat
+        Y = ptvl*(n_cx-s_cx)*self.m_long*np.cos((n_cy+s_cy)*(np.pi/180)/2.0)
 
         y,TravelTime   = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
-        clon = self.source_cell.cx  + ptvl*y/(self.m_long*np.cos((self.neighbour_cell.cy+\
-               self.source_cell.cy)*(np.pi/180)/2.0))
-        clat = self.source_cell.cy + -1*ptvl*self.source_cell.dcy
+        clon = s_cx  + ptvl*y/(self.m_long*np.cos((n_cy+\
+               s_cy)*(np.pi/180)/2.0))
+        clat = s_cy + -1*ptvl*s_dcy
 
         CrossPoints = (clon,clat)
-        CellPoints  = [self.neighbour_cell.cx,self.neighbour_cell.cy]
+        CellPoints  = [n_cx,n_cy]
 
         return TravelTime,CrossPoints,CellPoints
 
@@ -275,6 +294,18 @@ class NewtonianDistance:
         '''
             FILL
         '''
+
+
+        s_cx  = self.source_graph['cell_info'][0]
+        s_cy  = self.source_graph['cell_info'][1]
+        s_dcx = self.source_graph['cell_info'][2]
+        s_dcy = self.source_graph['cell_info'][3]
+        n_cx  = self.neighbour_graph['cell_info'][0]
+        n_cy  = self.neighbour_graph['cell_info'][1]
+        n_dcx = self.neighbour_graph['cell_info'][2]
+        n_dcy = self.neighbour_graph['cell_info'][3]
+
+
 
         # Given the determine the postive and negative position relative to centre
         if self.case==1:
@@ -290,22 +321,24 @@ class NewtonianDistance:
             ptvX = -1.0
             ptvY = 1.0
 
-        dx1 = self.source_cell.dcx*self.m_long*np.cos(self.source_cell.cy*(np.pi/180))
-        dx2 = self.neighbour_cell.dcx*self.m_long*np.cos(self.neighbour_cell.cy*(np.pi/180))
-        dy1 = self.source_cell.dcy*self.m_lat
-        dy2 = self.neighbour_cell.dcy*self.m_lat
+        dx1 = s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
+        dx2 = n_dcx*self.m_long*np.cos(n_cy*(np.pi/180))
+        dy1 = s_dcy*self.m_lat
+        dy2 = n_dcy*self.m_lat
 
         # Currents in Cells
-        Su = ptvX*self.source_cell.getuC()*self.zero_current_factor; Sv = ptvY*self.source_cell.getvC()*self.zero_current_factor
-        Nu = ptvX*self.neighbour_cell.getuC()*self.zero_current_factor; Nv = ptvY*self.neighbour_cell.getvC()*self.zero_current_factor
+        Su = ptvX*self.source_graph['Vector'][0]*self.zero_current_factor
+        Sv = ptvY*self.source_graph['Vector'][1]*self.zero_current_factor
+        Nu = ptvX*self.neighbour_graph['Vector'][0]*self.zero_current_factor
+        Nv = ptvY*self.neighbour_graph['Vector'][1]*self.zero_current_factor
 
         # Vehicles Speeds in Cells
         Ssp = self.source_speed; Nsp = self.neighbour_speed
 
         # Determining the crossing point as the corner of the case
-        CrossPoints = [self.source_cell.cx+ptvX*self.source_cell.dcx,\
-                       self.source_cell.cy+ptvY*self.source_cell.dcy]
-        CellPoints  = [self.neighbour_cell.cx,self.neighbour_cell.cy]
+        CrossPoints = [s_cx+ptvX*s_dcx,\
+                       s_cy+ptvY*s_dcy]
+        CellPoints  = [n_cx,n_cy]
 
         # Determining traveltime
         t1 = self._traveltime_in_cell(dx1,dy1,Su,Sv,Ssp)
@@ -329,7 +362,7 @@ class NewtonianDistance:
             TravelTime,CrossPoints,CellPoints = self._corner()
         else:
             print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.\
-                format(self.source_cell.cx,self.source_cell.cy))
+                format(self.source_graph['cell_info'][0],self.source_graph['cell_info'][1]))
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]

@@ -11,6 +11,15 @@ import multiprocessing as mp
 from RoutePlanner.crossing import NewtonianDistance, NewtonianCurve
 from RoutePlanner.CellBox import CellBox
 
+from shapely.geometry import Polygon, Point
+from shapely import wkt
+import geopandas as gpd
+import ast
+import json
+
+
+
+
 
 class TravelTime:
     """The summary line for a class docstring should fit on one line.
@@ -28,7 +37,7 @@ class TravelTime:
         attr2 (:obj:`int`, optional): Description of `attr2`.
 
     """
-    def __init__(self,mesh,config,neighbour_graph=None,cost_func=NewtonianDistance,verbose=False):
+    def __init__(self,config,cost_func=NewtonianDistance,verbose=False):
         """Example of docstring on the __init__ method.
 
         The __init__ method may be documented in either the class level
@@ -49,7 +58,7 @@ class TravelTime:
         """
 
         # Load in the current cell structure & Optimisation Info̦
-        self.mesh    = copy.copy(mesh)
+        #self.mesh    = copy.copy(mesh)
         self.config  = config
 
 
@@ -60,47 +69,31 @@ class TravelTime:
         self.paths          = None
         self.smoothed_paths = None
         self.dijkstra_info = {}
-        # # Constructing Neighbour Graph
-        if isinstance(neighbour_graph,type(None)):
-            neighbour_graph = {}
-            for idx,cell in enumerate(self.mesh.cellBoxes):
-                if not isinstance(cell, CellBox):
-                    continue
-                else:
-                    neigh      = self.mesh.neighbourGraph[idx]
-                    cases      = []
-                    neigh_indx = []
-                    for case in neigh.keys():
-                        indxs = neigh[case]
-                        if len(indxs) == 0:
-                            continue
-                        for indx in indxs:
-                            if (self.mesh.cellBoxes[indx].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']):
-                                continue
-                            if self.mesh._j_grid:
-                                if self.mesh.cellBoxes[indx].isLandM():
-                                    continue
-                            else:
-                                if self.mesh.cellBoxes[indx].containsLand():
-                                    continue
-                            cases.append(case)
-                            neigh_indx.append(indx)
-                    neigh_dict = {}
-                    neigh_dict['cX']    = cell.cx
-                    neigh_dict['cY']    = cell.cy
-                    neigh_dict['case']  = cases
-                    neigh_dict['neighbourIndex'] = neigh_indx 
-                    neighbour_graph[idx] = neigh_dict
-            self.neighbour_graph = pd.DataFrame().from_dict(neighbour_graph,orient='index')
-        else:
-            self.neighbour_graph = neighbour_graph
-        self.neighbour_graph['positionLocked'] = False
-        self.neighbour_graph['traveltime']     = np.inf
-        self.neighbour_graph['neighbourTravelLegs'] = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph = pd.read_csv(self.config['Route_Info']['Mesh_Filename']).set_index('Index')
+        self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
+        self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph,crs={'init': 'epsg:4326'}, geometry='geometry')
+
+
+        # Removing land or thick-ice cells
+        #self.neighbour_graph = self.neighbour_graph[(self.neighbour_graph['Land']==False) & (self.neighbour_graph['Ice Area'] <= self.config['Vehicle_Info']['MaxIceExtent'])]
+
+        # Reformating the columns into corret type
+        self.neighbour_graph['case'] = self.neighbour_graph['case'].apply(lambda x: ast.literal_eval(x))
+        self.neighbour_graph['cell_info'] = self.neighbour_graph['cell_info'].apply(lambda x: ast.literal_eval(x))
+        self.neighbour_graph['neighbourIndex'] = self.neighbour_graph['neighbourIndex'].apply(lambda x: ast.literal_eval(x))
+        self.neighbour_graph['Vector'] = self.neighbour_graph['Vector'].apply(lambda x: ast.literal_eval(x))
+
+        # Checking if Speed defined in file
+        if 'Speed' not in self.neighbour_graph:
+            self.neighbour_graph['Speed'] = self.config["Vehicle_Info"]["Speed"]
+
+        self.neighbour_graph['positionLocked']          = False
+        self.neighbour_graph['traveltime']              = np.inf
+        self.neighbour_graph['neighbourTravelLegs']     = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathIndex']  = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathCost']   = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathPoints']   = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathIndex']               = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathCost']                = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathPoints']              = [list() for x in range(len(self.neighbour_graph.index))]
 
         self.cost_func       = cost_func
 
@@ -115,33 +108,27 @@ class TravelTime:
             self.config['Route_Info']['WayPoints'] = pd.read_csv(self.config['Route_Info']['WayPoints'])
 
         # Dropping waypoints outside domain
-        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][(self.config['Route_Info']['WayPoints']['Long'] >= self.mesh._longMin) &\
-                                                              (self.config['Route_Info']['WayPoints']['Long'] <= self.mesh._longMax) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] <= self.mesh._latMax) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] >= self.mesh._latMin)] 
+        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][\
+                                                              (self.config['Route_Info']['WayPoints']['Long'] >= self.config['Region']['longMin']) &\
+                                                              (self.config['Route_Info']['WayPoints']['Long'] <=  self.config['Region']['longMax']) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] <=  self.config['Region']['latMax']) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] >=  self.config['Region']['latMin'])] 
 
-        # Initialising Waypoints positions and cell index
-        self.config['Route_Info']['WayPoints']['index'] = np.nan
-        for idx,wpt in self.config['Route_Info']['WayPoints'].iterrows():
-            long = wpt['Long']
-            lat  = wpt['Lat']
-            for index, cell in enumerate(self.mesh.cellBoxes):
-                if isinstance(cell, CellBox):
-                    if cell.containsPoint(lat,long):
-                        break
-
-
-            if self.mesh.cellBoxes[index].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']:
+        # # Initialising Waypoints positions and cell index
+        wpts = self.config['Route_Info']['WayPoints']
+        wpts['index'] = np.nan
+        for idx,wpt in wpts.iterrows():
+            indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long','Lat']]))].index
+            if len(indices) > 1:
+                raise Exception('Wapoint lies in multiple cell boxes. Please check mesh ! ')
+            elif len(indices) == 0:
                 continue
-            if self.mesh._j_grid:
-                if self.mesh.cellBoxes[index].isLandM():
-                    continue
             else:
-                if self.mesh.cellBoxes[index].containsLand():
+                if (self.neighbour_graph['Land'].loc[indices[0]] == True) or (self.neighbour_graph['Ice Area'].loc[indices[0]] > self.config['Vehicle_Info']['MaxIceExtent']):
                     continue
-            self.config['Route_Info']['WayPoints']['index'].loc[idx] = index
-
-        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][~ self.config['Route_Info']['WayPoints']['index'].isnull()]
+                wpts['index'].loc[idx] = int(indices[0])
+        self.config['Route_Info']['WayPoints'] = wpts[~wpts['index'].isnull()]
+        self.config['Route_Info']['WayPoints']['index'] = self.config['Route_Info']['WayPoints']['index'].astype(int)
 
 
         # ==== Printing Configuration and Information
@@ -149,68 +136,6 @@ class TravelTime:
         if self.verbose:
             # JDS - Add in configuration print, read and write functions
             print(self.config)
-
-
-    def ice_resistance(self, cell):
-        """
-                Function to find the ice resistance force at a given speed in a given cell.
-
-                Inputs:
-                cell - Cell box object
-
-                Outputs:
-                resistance - Resistance force
-        """
-        hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
-
-        hull = self.config['Vehicle_Info']['HullType']
-        beam = self.config['Vehicle_Info']['Beam']
-        kparam, bparam, nparam = hull_params[hull]
-        gravity = 9.81  # m/s-2
-        speed = self.config['Vehicle_Info']['Speed']*(5./18.)  # assume km/h and convert to m/s
-        force_limit = speed/np.sqrt(gravity*cell.iceArea()*cell.iceThickness(self.config['Region']['startTime']))
-        resistance = 0.5*kparam*(force_limit**bparam)*cell.iceDensity(self.config['Region']['startTime'])*beam*cell.iceThickness(self.config['Region']['startTime'])*(speed**2)*(cell.iceArea()**nparam)
-        return resistance
-
-    def inverse_resistance(self, force_limit, cell):
-        """
-        Function to find the speed that keeps the ice resistance force below a given threshold.
-
-        Inputs:
-        force_limit - Force limit
-        cell        - Cell box object
-
-        Outputs:
-        speed - Vehicle Speed
-        """
-        hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
-
-        hull = self.config['Vehicle_Info']['HullType']
-        beam = self.config['Vehicle_Info']['Beam']
-        kparam, bparam, nparam = hull_params[hull]
-        gravity = 9.81  # m/s-2
-
-        vexp = 2*force_limit/(kparam*cell.iceDensity(self.config['Region']['startTime'])*beam*cell.iceThickness(self.config['Region']['startTime'])*(cell.iceArea()**nparam)*(gravity*cell.iceThickness(self.config['Region']['startTime'])*cell.iceArea())**-(bparam/2))
-
-        vms = vexp**(1/(2.0 + bparam))
-        speed = vms*(18./5.)  # convert from m/s to km/h
-
-        return speed
-
-    def speed(self, cell):
-        '''
-            FILL
-        '''
-        if self.variable_speed:
-            if cell.iceArea() == 0.0:
-                speed = self.config['Vehicle_Info']['Speed']
-            elif self.ice_resistance(cell) < self.config['Vehicle_Info']['ForceLimit']:
-                speed = self.config['Vehicle_Info']['Speed']
-            else:
-                speed = self.inverse_resistance(self.config['Vehicle_Info']['ForceLimit'], cell)
-        else:
-            speed = self.config['Vehicle_Info']['Speed']
-        return speed
 
 
     def dijkstra_paths(self,start_waypoints,end_waypoints):
@@ -254,6 +179,13 @@ class TravelTime:
                         print('Failure to construct path from Dijkstra information')
         return paths
 
+    def save_paths(self):
+        '''
+        '''
+        with open(self.config['Route_Info']['Paths_Filename'], 'w') as fp:
+            json.dump(self.paths, fp)
+
+
     def neighbour_cost(self,wpt_name,minimum_traveltime_index):
         '''
         Function for computing the shortest travel-time from a cell to its neighbours by applying the Newtonian method for optimisation
@@ -267,7 +199,6 @@ class TravelTime:
             - If corner of cell is land in adjacent cell then also return 'inf'
         '''
         # Determining the nearest neighbour index for the cell
-        source_cellbox = self.mesh.cellBoxes[minimum_traveltime_index]
         source_graph   = self.dijkstra_info[wpt_name].loc[minimum_traveltime_index]
 
         # Looping over idx
@@ -278,45 +209,43 @@ class TravelTime:
             if self.dijkstra_info[wpt_name].loc[indx,'positionLocked']:
                 continue
 
-            neighbour_cellbox = self.mesh.cellBoxes[indx]
+            neighbour_graph = self.dijkstra_info[wpt_name].loc[indx]
             case = source_graph['case'][idx]
 
-
-            source_speed    = self.speed(source_cellbox)
-            neighbour_speed = self.speed(neighbour_cellbox)
-
             # Applying Newton curve to determine crossing point
-            cost_func    = self.cost_func(self.mesh,source_cell=source_cellbox,neighbour_cell=neighbour_cellbox,
-                                      source_speed=source_speed,neighbour_speed=neighbour_speed,case=case,
+            cost_func    = self.cost_func(source_graph=source_graph,neighbour_graph=neighbour_graph,case=case,
                                       unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
             # Updating the Dijkstra graph with the new information
             traveltime,crossing_points,cell_points = cost_func.value()
 
-            
+
             source_graph['neighbourTravelLegs'].append(traveltime)
             source_graph['neighbourCrossingPoints'].append(crossing_points)
 
 
             # Updating the neighbour traveltime if its less the current global optimum
-            
             neighbour_cost   = [source_graph['traveltime'] + traveltime[0],source_graph['traveltime'] + np.sum(traveltime)]
-            neighbour_graph  = self.dijkstra_info[wpt_name].loc[indx]
 
             if neighbour_cost[1] < neighbour_graph['traveltime']:
-                neighbour_graph = pd.Series(
-                    {
-                    'cX':neighbour_graph['cX'],
-                    'cY':neighbour_graph['cY'],
-                    'case':neighbour_graph['case'],
-                    'neighbourIndex':neighbour_graph['neighbourIndex'],
-                    'positionLocked':neighbour_graph['positionLocked'],
-                    'traveltime': neighbour_cost[1],
-                    'neighbourTravelLegs':neighbour_graph['neighbourTravelLegs'],
-                    'neighbourCrossingPoints':neighbour_graph['neighbourCrossingPoints'],
-                    'pathIndex': source_graph['pathIndex']  + [indx],
-                    'pathCost':source_graph['pathCost']   + neighbour_cost,
-                    'pathPoints':source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]}
-                    )
+                neighbour_graph['traveltime'] = neighbour_cost[1]
+                neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
+                neighbour_graph['pathCost']   = source_graph['pathCost']   + neighbour_cost
+                neighbour_graph['pathPoints'] = source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]
+
+                # neighbour_graph = pd.Series(
+                #     {
+                #     'cX':neighbour_graph['cX'],
+                #     'cY':neighbour_graph['cY'],
+                #     'case':neighbour_graph['case'],
+                #     'neighbourIndex':neighbour_graph['neighbourIndex'],
+                #     'positionLocked':neighbour_graph['positionLocked'],
+                #     'traveltime': neighbour_cost[1],
+                #     'neighbourTravelLegs':neighbour_graph['neighbourTravelLegs'],
+                #     'neighbourCrossingPoints':neighbour_graph['neighbourCrossingPoints'],
+                #     'pathIndex': source_graph['pathIndex']  + [indx],
+                #     'pathCost':source_graph['pathCost']   + neighbour_cost,
+                #     'pathPoints':source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]}
+                #     )
 
                 self.dijkstra_info[wpt_name].loc[indx] = neighbour_graph
 
@@ -397,6 +326,10 @@ class TravelTime:
         # if self.config['Route_Info']['Save_Dijkstra_Graphs']:
         #     print('Currently not operational - Come back soon :) ')
         #     #JDS - Add in saving option for the full dijkstra graphs.
+
+        self.save_paths()
+        # save paths
+        
 
     def compute_smoothed_routes(self,maxiter=10000,minimumDiff=1e-4,debugging=0,return_paths=True,verbose=False):
         '''

@@ -2,12 +2,13 @@ from tracemalloc import start
 import numpy as np
 from RoutePlanner.CellBox import CellBox
 import pandas as pd
-#from shapely.geometry import Polygon
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as MatplotPolygon
 import math
 import xarray as xr
-#import geopandas as gpd
+from shapely.geometry import Polygon
+import geopandas as gpd
 
 def bearing(st,en): # Should be moved out of the CellBox.py file.
     long1,lat1 = st
@@ -154,32 +155,33 @@ class CellGrid:
 
         self.iterativeSplit(config['Region']["splitDepth"], 0,0,0)
         
+    def output_dataframe(self):
+        cellgrid_dataframe = []
+        counter=0
 
-    def neighbour_dataframe(self):
-        neighbour_graph = {}
-        for idx,cell in enumerate(self.cellBoxes):
-            if not isinstance(cell, CellBox):
-                continue
-            else:
-                neigh      = self.neighbourGraph[idx]
+        for idx,c in enumerate(self.cellBoxes):
+            if isinstance(c, CellBox):
+                # # Don't append cell if Ice or above threshold
+                # if c.iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']:
+                #     continue
+                # if self._j_grid:
+                #     if c.isLandM():
+                #         continue
+                # else:
+                #     if c.containsLand():
+                #         continue
+
+
+                # Inspecting neighbour graph and outputting in list
+                neigh = self.neighbourGraph[idx]
                 cases      = []
                 neigh_indx = []
-
-                if self.cellBoxes[idx].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']:
-                    continue
-                if self._j_grid:
-                    if self.cellBoxes[idx].isLandM():
-                        continue
-                else:
-                    if self.cellBoxes[idx].containsLand():
-                        continue
-
                 for case in neigh.keys():
                     indxs = neigh[case]
                     if len(indxs) == 0:
                         continue
                     for indx in indxs:
-                        if (self.cellBoxes[indx].iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']):
+                        if (self.cellBoxes[indx].iceArea() > self.config['Vehicle_Info']['MaxIceExtent']):
                             continue
                         if self._j_grid:
                             if self.cellBoxes[indx].isLandM():
@@ -190,53 +192,30 @@ class CellGrid:
                         cases.append(case)
                         neigh_indx.append(indx)
 
-                # if len(cases) == 0 or len(neigh_indx)==0:
-                #     continue
-
-                neigh_dict = {}
-                neigh_dict['cX']    = cell.cx
-                neigh_dict['cY']    = cell.cy
-                neigh_dict['case']  = cases
-                neigh_dict['neighbourIndex'] = neigh_indx 
-                neighbour_graph[idx] = neigh_dict
-        neighbour_graph = pd.DataFrame().from_dict(neighbour_graph,orient='index')
-        return neighbour_graph
-
-
-    def mesh_dataframe(self):
-
-        from shapely.geometry import Polygon
-        import geopandas as gpd
-        Shape   = []; IceArea = []; IsLand  = []; dpth=[];vec=[]; CentroidCx=[];CentroidCy=[];Index=[]
-        for idx,c in enumerate(self.cellBoxes):
-            if isinstance(c, CellBox):
-                bounds = np.array(c.getBounds())
-                Shape.append(Polygon(bounds))
-                IceArea.append(c.iceArea()*100)
                 if self._j_grid:
-                    IsLand.append(c.isLandM())
+                    IsLand = c.isLandM()
                 else:
-                    IsLand.append(c.containsLand())
-                dpth.append(c.depth())
-                vec.append([c.getuC(),c.getvC()])
-                CentroidCx.append(c.cx)
-                CentroidCy.append(c.cy)
-                Index.append(int(idx))
-        Polygons = pd.DataFrame()
-        Polygons['geometry'] = Shape
-        Polygons['Ice Area'] = IceArea
-        Polygons['Land']     = IsLand
-        Polygons['Cx']       = CentroidCx
-        Polygons['Cy']       = CentroidCy
-        Polygons['Vector']   = vec
-        Polygons['Depth']    = dpth
-        Polygons['Index']    = Index
-        Polygons = gpd.GeoDataFrame(Polygons,crs={'init': 'epsg:4326'}, geometry='geometry')
-        Polygons['Land'][np.isnan(Polygons['Ice Area'])] = True
+                    IsLand = c.containsLand()
 
-        Polygons['Land'][Polygons['Cy'] < -78.0] = True
-        return Polygons
+                index_df = pd.Series({'Index':int(idx),
+                        'geometry':Polygon(c.getBounds()),
+                        'cell_info':[c.cx,c.cy,c.dcx,c.dcy],
+                        'case':cases,
+                        'neighbourIndex':neigh_indx,
+                        'Land':IsLand,
+                        'Ice Area':c.iceArea()*100,
+                        'Ice Thickness':c.iceThickness(self.config['Region']['startTime']),
+                        'Depth': c.depth(),
+                        'Vector':[c.getuC(),c.getvC()]
+                        })
 
+
+
+                cellgrid_dataframe.append(index_df)
+
+        cellgrid_dataframe = pd.concat(cellgrid_dataframe,axis=1).transpose()
+        cellgrid_dataframe = gpd.GeoDataFrame(cellgrid_dataframe,crs={'init': 'epsg:4326'}, geometry='geometry')
+        return cellgrid_dataframe
 
     def neighbourTest(self, cellBox):
         """
