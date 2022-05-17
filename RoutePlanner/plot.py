@@ -149,7 +149,7 @@ class InteractiveMap:
                             icon=folium.features.DivIcon(
                                 icon_size=(250,36),
                                 icon_anchor=(0,0),
-                                html='<div style="font-size: 10pt">{}</div>'.format(wpt['Name']),
+                                html='<div style="font-size: {}pt">{}</div>'.format(info['Font_Size'],wpt['Name']),
                                 ),
             ).add_to(wpts_name)
 
