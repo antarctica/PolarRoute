@@ -205,6 +205,7 @@ class CellGrid:
                         'Land':IsLand,
                         'Ice Area':c.iceArea()*100,
                         'Ice Thickness':c.iceThickness(self.config['Region']['startTime']),
+                        'Ice Density':c.iceDensity(self.config['Region']['startTime']),
                         'Depth': c.depth(),
                         'Vector':[c.getuC(),c.getvC()]
                         })

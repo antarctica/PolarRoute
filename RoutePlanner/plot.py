@@ -22,15 +22,15 @@ class InteractiveMap:
 
         # Defining the layers to plot
         for layer in self.layers:
-            try:
+            # try:
                 if layer['Type'] == 'Paths':
                     self._paths(layer)
                 if layer['Type'] == 'Maps':
                     self._maps(layer) 
                 if layer['Type'] == 'Points':
                     self._points(layer)
-            except:
-                print('Issue Plotting Layer')
+            # except:
+            #     print('Issue Plotting Layer')
                     
         # Adding in the layer control
         self._layer_control()
@@ -198,11 +198,11 @@ class InteractiveMap:
                     ).add_to(feature_info)
 
                 else:
-                    if info['Fill_cmap_min']:
+                    if 'Fill_cmap_min' in info:
                         cmin = info['Fill_cmap_min']
                     else:
                         cmin = dataframe_geo[info['Data_Name']].min()
-                    if info['Fill_cmap_max']:
+                    if 'Fill_cmap_max' in info:
                         cmax = info['Fill_cmap_max']
                     else:
                         cmax = dataframe_geo[info['Data_Name']].max()
@@ -217,6 +217,7 @@ class InteractiveMap:
                                 'fillOpacity': info['Fill_Opacity']
                             }
                     ).add_to(feature_info)
+                    self.map.add_child(colormap)
             else:
                 folium.GeoJson(
                     dataframe_geo,

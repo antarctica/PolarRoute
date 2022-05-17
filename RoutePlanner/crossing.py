@@ -203,6 +203,7 @@ class NewtonianDistance:
 
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
         if traveltime < 0:
+            #traveltime = np.inf
             raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
         return traveltime
 
