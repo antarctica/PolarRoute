@@ -29,7 +29,7 @@ class SpeedFunctions:
 
         self.neighbour_graph = pd.read_csv(self.config['Speed_Function']['Mesh_Input_Filename'])
         self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
-        self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph,crs={'init': 'epsg:4326'}, geometry='geometry')
+        self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph,crs='EPSG:4326', geometry='geometry')
 
 
         # Removing land or thick-ice cells
@@ -102,11 +102,9 @@ class SpeedFunctions:
         '''
             FILL
         '''
-
-
         self.neighbour_graph['Speed'] = self.inverse_resistance()
-        self.neighbour_graph['Speed'][self.neighbour_graph['Ice Area'] == 0.0] = self.config["Vehicle_Info"]["Speed"]
-        self.neighbour_graph['Speed'][self.ice_resistance() < self.config['Vehicle_Info']['ForceLimit']] = self.config["Vehicle_Info"]["Speed"]
+        self.neighbour_graph.loc[self.neighbour_graph['Ice Area'] == 0.0,'Speed'] = self.config["Vehicle_Info"]["Speed"]
+        self.neighbour_graph.loc[self.ice_resistance() < self.config['Vehicle_Info']['ForceLimit'],'Speed'] = self.config["Vehicle_Info"]["Speed"]
 
     def speed_simple(self):
         self.neighbour_graph['Speed'] = (1-np.sqrt(self.neighbour_graph['Ice Area']/100))*self.config['Vehicle_Info']['Speed']

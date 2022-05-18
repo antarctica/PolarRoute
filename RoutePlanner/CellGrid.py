@@ -215,6 +215,10 @@ class CellGrid:
                 cellgrid_dataframe.append(index_df)
 
         cellgrid_dataframe = pd.concat(cellgrid_dataframe,axis=1).transpose()
+
+        ## Cell Further South than -78.0 set to land.
+        cellgrid_dataframe['Land'][np.array([x[1] for x in cellgrid_dataframe['cell_info']]) < -78.0] = True 
+
         cellgrid_dataframe = gpd.GeoDataFrame(cellgrid_dataframe,crs={'init': 'epsg:4326'}, geometry='geometry')
         return cellgrid_dataframe
 

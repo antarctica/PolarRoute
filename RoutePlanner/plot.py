@@ -165,7 +165,7 @@ class InteractiveMap:
 
         dataframe_pandas = pd.read_csv(info['filename'])
         dataframe_pandas['geometry'] = dataframe_pandas['geometry'].apply(wkt.loads)
-        dataframe_geo = gpd.GeoDataFrame(dataframe_pandas,crs={'init': 'epsg:4326'}, geometry='geometry')
+        dataframe_geo = gpd.GeoDataFrame(dataframe_pandas,crs='EPSG:4326', geometry='geometry')
 
 
         feature_info = folium.FeatureGroup(name='{}'.format(info['Name']),show=info['Show'])

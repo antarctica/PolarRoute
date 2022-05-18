@@ -5,6 +5,10 @@ import numpy as np
 import copy
 import pandas as pd
 
+import warnings
+from pandas.core.common import SettingWithCopyWarning
+warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+
 import time
 import multiprocessing as mp
 
