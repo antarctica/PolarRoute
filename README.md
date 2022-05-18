@@ -11,6 +11,7 @@ For installation of the package we suggest that the use sets up their Python env
 The RoutePlanner software can be installed by using the following. Be careful and make sure that the following lines are done in AnacondaComandPrompt
 ```
   conda create -n RoutePlanner python=3.9
+  conda activate RoutePlanner
   pip install numpy
   conda install geopandas
   python setup.py install
@@ -20,6 +21,7 @@ The RoutePlanner software can be installed by using the following. Be careful an
 The RoutePlanner software can be installed by using
 ```
   conda create -n RoutePlanner python=3.9
+  conda activate RoutePlanner
   pip install numpy
   python setup.py install
 ```
