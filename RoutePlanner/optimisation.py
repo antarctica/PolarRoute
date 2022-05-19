@@ -92,14 +92,17 @@ class TravelTime:
             if (self.config['Route_Info']['Objective_Function'] not in self.neighbour_graph):
                     raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['Route_Info']['Objective_Function']))
 
+    
         # ===== Setting Up Dijkstra Graph =====
         self.neighbour_graph['positionLocked']          = False
-        self.neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])]    = np.inf
+        for vrbl in self.config['Route_Info']['Path_Variables']:
+            self.neighbour_graph['shortest_{}'.format(vrbl)]    = np.inf
         self.neighbour_graph['neighbourTravelLegs']     = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['pathIndex']               = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathCost']                = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathPoints']              = [list() for x in range(len(self.neighbour_graph.index))]
+        for vrbl in self.config['Route_Info']['Path_Variables']:
+            self.neighbour_graph['path_{}'.format(vrbl)] = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathPoints']               = [list() for x in range(len(self.neighbour_graph.index))]
 
         # ====== Defining the cost function ======
         self.cost_func       = cost_func
@@ -172,17 +175,20 @@ class TravelTime:
                         path['to']                 = wpt_b_name
 
                         graph = self.dijkstra_info[wpt_a_name]
-                        path['Time']               = float(graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])].loc[wpt_b_index])
-                        if path['Time'] == np.inf:
+
+                        for vrbl in self.config['Route_Info']['Path_Variables']:
+                            path['{}'.format(vrbl)]               = float(graph['shortest_{}'.format(vrbl)].loc[wpt_b_index])
+                        if path['traveltime'] == np.inf:
                             continue
-                        path_traveltime = graph['pathCost'].loc[wpt_b_index]
+                        
 
                         # ===== Appending Path =====
                         path['Path']                = {}
                         path['Path']['Points']      = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)).tolist()
                         path['Path']['CellIndices'] = (np.array(graph['pathIndex'].loc[wpt_b_index])).tolist()
                         #path['Path']['CaseTypes']   = np.array([wpt_a_index] + graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index],dtype=object)
-                        path['Path']['Time']        = path_traveltime
+                        for vrbl in self.config['Route_Info']['Path_Variables']:
+                            path['Path']['{}'.format(vrbl)]        = graph['path_{}'.format(vrbl)].loc[wpt_b_index]
                         paths.append(path)
                     except IOError:
                         print('Failure to construct path from Dijkstra information')
@@ -195,15 +201,15 @@ class TravelTime:
             json.dump(self.paths, fp)
 
 
-    def objective_value(self,source_graph,neighbour_graph,traveltime):
-        if self.config['Route_Info']['Objective_Function'] == 'traveltime':
+    def objective_value(self,variable,source_graph,neighbour_graph,traveltime):
+        if variable == 'traveltime':
             return [source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)]
         else:
-            return [source_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] +\
-                    traveltime[0]*source_graph['{}'.format(self.config['Route_Info']['Objective_Function'])],
-                    source_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] +\
-                    traveltime[0]*source_graph['{}'.format(self.config['Route_Info']['Objective_Function'])] +\
-                    traveltime[1]*neighbour_graph['{}'.format(self.config['Route_Info']['Objective_Function'])]]
+            return [source_graph['shortest_{}'.format(variable)] +\
+                    traveltime[0]*source_graph['{}'.format(variable)],
+                    source_graph['shortest_{}'.format(variable)] +\
+                    traveltime[0]*source_graph['{}'.format(variable)] +\
+                    traveltime[1]*neighbour_graph['{}'.format(variable)]]
 
 
 
@@ -247,12 +253,13 @@ class TravelTime:
             source_graph['neighbourCrossingPoints'].append(crossing_points)
 
             # Using neighbourhood cost determine objective function value
-            value = self.objective_value(source_graph,neighbour_graph,traveltime)
-
+            value = self.objective_value(self.config['Route_Info']['Objective_Function'],source_graph,neighbour_graph,traveltime)
             if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])]:
-                neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] = value[1]
+                for vrbl in self.config['Route_Info']['Path_Variables']:
+                    value = self.objective_value(vrbl,source_graph,neighbour_graph,traveltime)
+                    neighbour_graph['shortest_{}'.format(vrbl)] = value[1]
+                    neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + value
                 neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
-                neighbour_graph['pathCost']   = source_graph['pathCost']   + value
                 neighbour_graph['pathPoints'] = source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]
 
                 # neighbour_graph = pd.Series(
@@ -266,7 +273,7 @@ class TravelTime:
                 #     'neighbourTravelLegs':neighbour_graph['neighbourTravelLegs'],
                 #     'neighbourCrossingPoints':neighbour_graph['neighbourCrossingPoints'],
                 #     'pathIndex': source_graph['pathIndex']  + [indx],
-                #     'pathCost':source_graph['pathCost']   + neighbour_cost,
+                #     'path_traveltime':source_graph['path_traveltime']   + neighbour_cost,
                 #     'pathPoints':source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]}
                 #     )
 
@@ -286,7 +293,9 @@ class TravelTime:
         # Initalising zero traveltime at the source location
         source_index = int(self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'] == wpt_name]['index'])
         
-        self.dijkstra_info[wpt_name].loc[source_index,'shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] = 0.0
+
+        for vrbl in self.config['Route_Info']['Path_Variables']:
+            self.dijkstra_info[wpt_name].loc[source_index,'shortest_{}'.format(vrbl)] = 0.0
         self.dijkstra_info[wpt_name].loc[source_index,'pathIndex'].append(source_index)
         
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph

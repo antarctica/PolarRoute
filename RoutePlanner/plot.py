@@ -2,11 +2,49 @@ import copy
 import json
 import pandas as pd
 import numpy as np
+import sys
 from branca.colormap import linear
 import folium
 from shapely import wkt
 import geopandas as gpd
 from folium import plugins
+
+sys.path.insert(0, 'folium')
+sys.path.insert(0, 'branca')
+
+import branca
+import folium
+
+# Adapted from: https://nbviewer.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
+from branca.element import MacroElement
+from jinja2 import Template
+
+class BindColormap(MacroElement):
+    """Binds a colormap to a given layer.
+
+    Parameters
+    ----------
+    colormap : branca.colormap.ColorMap
+        The colormap to bind.
+    """
+    def __init__(self, layer, colormap):
+        super(BindColormap, self).__init__()
+        self.layer = layer
+        self.colormap = colormap
+        self._template = Template(u"""
+        {% macro script(this, kwargs) %}
+            {{this.colormap.get_name()}}.svg[0][0].style.display = 'block';
+            {{this._parent.get_name()}}.on('layeradd', function (eventLayer) {
+                if (eventLayer.layer == {{this.layer.get_name()}}) {
+                    {{this.colormap.get_name()}}.svg[0][0].style.display = 'block';
+                }});
+            {{this._parent.get_name()}}.on('layerremove', function (eventLayer) {
+                if (eventLayer.layer == {{this.layer.get_name()}}) {
+                    {{this.colormap.get_name()}}.svg[0][0].style.display = 'none';
+                }});
+        {% endmacro %}
+        """)  # noqa
+
 
 class InteractiveMap:
     def __init__(self,config):
@@ -53,9 +91,17 @@ class InteractiveMap:
             </body>
             '''.format(self.basemap['Title'])   
         self.map = folium.Map(location=self.basemap['Map_Centre'],zoom_start=self.basemap['Map_Zoom'],tiles=None)
+        
+        # 
         bsmap = folium.FeatureGroup(name='BaseMap')
         folium.TileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}.png',attr="toner-bcg", name='Basemap').add_to(bsmap)
         bsmap.add_to(self.map)
+        bsmap = folium.FeatureGroup(name='Dark BaseMap',show=False)
+        folium.TileLayer(tiles="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png",attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',name='darkmatter').add_to(bsmap)
+        bsmap.add_to(self.map)
+
+
+
         self.map.get_root().html.add_child(folium.Element(title_html))
         
     def _paths(self,info):
@@ -97,9 +143,12 @@ class InteractiveMap:
 
             if info['Colorline']:
                 folium.PolyLine(points,color="black", weight=info['Line_Width'], opacity=1).add_to(pths)
-                colormap = linear.viridis.scale(0,max_val).to_step(100)
+                colormap = linear._colormaps[info['Cmap']].scale(0,max_val)
                 colormap.caption = '{} ({})'.format(info['Data_Name'],info['Data_Units'])
                 folium.ColorLine(points,data_val,colormap=colormap,nb_steps=50, weight=3.5, opacity=1).add_to(pths)
+
+
+
             else:
                 folium.PolyLine(points,color=info['Color'], weight=info['Line_Width'], opacity=1).add_to(pths)
 
@@ -116,11 +165,15 @@ class InteractiveMap:
                                                     text_color=info['Color'],
                                                     inner_icon_style='margin:0px;font-size:0.8em')
                     ).add_to(pths_points)
-        pths.add_to(self.map)
+        
         if info['Path_Points']:
             pths_points.add_to(self.map)
         if info['Colorline']:
+            self.map.add_child(pths)
             self.map.add_child(colormap)
+            self.map.add_child(BindColormap(pths,colormap))
+        else:
+            pths.add_to(self.map)
 
 
     def _points(self,info):
@@ -180,12 +233,23 @@ class InteractiveMap:
                     }
             ).add_to(feature_info)
 
+            feature_info.add_to(self.map)
 
         if dataframe_geo[info['Data_Name']].dtype == float:
+
+            if ('Fill_trim_min' not in info):
+                info['Fill_trim_min'] = dataframe_geo[info['Data_Name']].min()
+            if ('Fill_trim_max' not in info):
+                info['Fill_trim_max'] = dataframe_geo[info['Data_Name']].max()            
+
             dataframe_geo = dataframe_geo[(dataframe_geo[info['Data_Name']] >= info['Fill_trim_min']) &
                                         (dataframe_geo[info['Data_Name']] <= info['Fill_trim_max'])]
 
             if info['Fill_cmap_use']:
+
+                if 'Fill_cmap_opacity' not in info:
+                    info['Fill_cmap_opacity'] = False
+
                 if info['Fill_cmap_opacity']:
                     folium.GeoJson(
                         dataframe_geo,
@@ -196,6 +260,7 @@ class InteractiveMap:
                                 'fillOpacity': x['properties'][info['Data_Name']]/info['Fill_cmap_opacity_scalar']
                             }
                     ).add_to(feature_info)
+                    self.map.add_child(feature_info)
 
                 else:
                     if 'Fill_cmap_min' in info:
@@ -207,7 +272,8 @@ class InteractiveMap:
                     else:
                         cmax = dataframe_geo[info['Data_Name']].max()
 
-                    colormap = linear.Reds_09.scale(cmin,cmax)
+                    colormap = linear._colormaps[info['Cmap']].scale(cmin,cmax)
+                    colormap.caption = '{} ({})'.format(info['Data_Name'],info['Data_Units'])
                     folium.GeoJson(
                         dataframe_geo,
                         style_function=lambda x: {
@@ -217,7 +283,9 @@ class InteractiveMap:
                                 'fillOpacity': info['Fill_Opacity']
                             }
                     ).add_to(feature_info)
+                    self.map.add_child(feature_info)
                     self.map.add_child(colormap)
+                    self.map.add_child(BindColormap(feature_info,colormap))
             else:
                 folium.GeoJson(
                     dataframe_geo,
@@ -229,9 +297,7 @@ class InteractiveMap:
                         }
                 ).add_to(feature_info)
 
-
-
-        feature_info.add_to(self.map)
+                self.map.add_child(feature_info)
 
 
 
@@ -767,9 +833,9 @@ class InteractiveMap:
 
 
 
-def LayerControl(map,collapsed=True):
-    folium.LayerControl(collapsed=collapsed).add_to(map)
-    return map
+# def LayerControl(map,collapsed=True):
+#     folium.LayerControl(collapsed=collapsed).add_to(map)
+#     return map
 
 #≠================================
 ####DEPRICATED

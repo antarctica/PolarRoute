@@ -181,7 +181,7 @@ class CellGrid:
                     if len(indxs) == 0:
                         continue
                     for indx in indxs:
-                        if (self.cellBoxes[indx].iceArea() > self.config['Vehicle_Info']['MaxIceExtent']):
+                        if (self.cellBoxes[indx].iceArea()*100 > self.config['Vehicle_Info']['MaxIceExtent']):
                             continue
                         if self._j_grid:
                             if self.cellBoxes[indx].isLandM():
