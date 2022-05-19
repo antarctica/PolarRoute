@@ -193,18 +193,20 @@ class NewtonianDistance:
         # if (dotprod**2 + diffsqrs*(dist**2) < 0)
         if diffsqrs == 0.0:
             if dotprod == 0.0:
-                raise Exception(' ')
+                return np.inf
+                #raise Exception(' ')
             else:
                 if ((dist**2)/(2*dotprod))  <0:
-                    raise Exception(' ')
+                    return np.inf
+                    #raise Exception(' ')
                 else:
                     traveltime = dist * dist / (2 * dotprod)
                     return traveltime
 
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
         if traveltime < 0:
-            #traveltime = np.inf
-            raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
+            traveltime = np.inf
+            #raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
         return traveltime
 
     def _longitude(self):

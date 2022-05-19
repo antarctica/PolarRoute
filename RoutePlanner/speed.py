@@ -116,11 +116,10 @@ class SpeedFunctions:
                 self.neighbour_graph.loc[idx, 'Speed'] = 0.0
                 self.neighbour_graph.loc[idx, 'Ice Resistance'] = np.inf
             else:
-                rp = self.ice_resistance(row['Ice Area'], row['Ice Density'], row['Ice Thickness'],
-                                         self.config['Vehicle_Info']['Speed'])
+                rp = self.ice_resistance(self.config['Vehicle_Info']['Speed'],row['Ice Area'],row['Ice Thickness'],row['Ice Density'])
                 if rp > self.config['Vehicle_Info']['ForceLimit']:
-                    speed = self.inverse_resistance(row['Ice Area'], row['Ice Density'], row['Ice Thickness'])
-                    rp = self.ice_resistance(row['Ice Area'], row['Ice Density'], row['Ice Thickness'], speed)
+                    speed = self.inverse_resistance(row['Ice Area'], row['Ice Thickness'],row['Ice Density'])
+                    rp = self.ice_resistance(speed, row['Ice Area'],row['Ice Thickness'],row['Ice Density'])
                     self.neighbour_graph.loc[idx, 'Speed'] = speed
                     self.neighbour_graph.loc[idx, 'Ice Resistance'] = rp
                 else:
