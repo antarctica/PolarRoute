@@ -71,7 +71,8 @@ class SpeedFunctions:
         speed = velocity * (5. / 18.)  # assume km/h and convert to m/s
 
         froude = speed / np.sqrt(gravity * area / 100 * thickness)
-        resistance = 0.5 * kparam * (froude ** bparam) * density * beam * thickness * (speed ** 2) * ((area / 100) ** nparam)
+        resistance = 0.5 * kparam * (froude ** bparam) * density * beam * thickness * (speed ** 2) * (
+                    (area / 100) ** nparam)
         return resistance
 
     def inverse_resistance(self, area, thickness, density):
@@ -93,7 +94,8 @@ class SpeedFunctions:
         kparam, bparam, nparam = hull_params[hull]
         gravity = 9.81  # m/s-2
 
-        vexp = 2 * force_limit / (kparam * density * beam * thickness * ((area / 100) ** nparam) * (gravity * thickness * area / 100) ** -(bparam / 2))
+        vexp = 2 * force_limit / (kparam * density * beam * thickness * ((area / 100) ** nparam) * (
+                    gravity * thickness * area / 100) ** -(bparam / 2))
 
         vms = vexp ** (1 / (2.0 + bparam))
         speed = vms * (18. / 5.)  # convert from m/s to km/h
@@ -114,7 +116,8 @@ class SpeedFunctions:
                 self.neighbour_graph.loc[idx, 'Speed'] = 0.0
                 self.neighbour_graph.loc[idx, 'Ice Resistance'] = np.inf
             else:
-                rp = self.ice_resistance(row['Ice Area'], row['Ice Density'], row['Ice Thickness'], self.config['Vehicle_Info']['Speed'])
+                rp = self.ice_resistance(row['Ice Area'], row['Ice Density'], row['Ice Thickness'],
+                                         self.config['Vehicle_Info']['Speed'])
                 if rp > self.config['Vehicle_Info']['ForceLimit']:
                     speed = self.inverse_resistance(row['Ice Area'], row['Ice Density'], row['Ice Thickness'])
                     rp = self.ice_resistance(row['Ice Area'], row['Ice Density'], row['Ice Thickness'], speed)
@@ -130,10 +133,10 @@ class SpeedFunctions:
 
     def fuel(self):
         """
-        Fuel usage in tons per hour based on speed in km/h and ice resistance.
+        Fuel usage in tons per day based on speed in km/h and ice resistance.
         """
 
-        self.neighbour_graph['Fuel'] = 0.00137247 * self.neighbour_graph['Speed'] ** 2 - 0.0029601 * \
-                                       self.neighbour_graph['Speed'] + 0.25290433 \
-                                       + 7.75218178e-11 * self.neighbour_graph['Ice Resistance'] ** 2 \
-                                       + 6.48113363e-06 * self.neighbour_graph['Ice Resistance']
+        self.neighbour_graph['Fuel'] = (0.00137247 * self.neighbour_graph['Speed'] ** 2 - 0.0029601 *
+                                        self.neighbour_graph['Speed'] + 0.25290433
+                                        + 7.75218178e-11 * self.neighbour_graph['Ice Resistance'] ** 2
+                                        + 6.48113363e-06 * self.neighbour_graph['Ice Resistance']) * 24.0
