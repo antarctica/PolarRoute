@@ -48,6 +48,8 @@ class SpeedFunctions:
 
         self.speed()
 
+        self.neighbour_graph['Fuel'] = 1/(self.neighbour_graph['Speed'])
+
         self.neighbour_graph.to_csv(self.config['Speed_Function']['Mesh_Output_Filename'],index=False)
 
 

@@ -22,9 +22,6 @@ import ast
 import json
 
 
-
-
-
 class TravelTime:
     """The summary line for a class docstring should fit on one line.
 
@@ -75,11 +72,7 @@ class TravelTime:
         self.dijkstra_info = {}
         self.neighbour_graph = pd.read_csv(self.config['Route_Info']['Mesh_Filename']).set_index('Index')
         self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
-        self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph,crs={'init': 'epsg:4326'}, geometry='geometry')
-
-
-        # Removing land or thick-ice cells
-        #self.neighbour_graph = self.neighbour_graph[(self.neighbour_graph['Land']==False) & (self.neighbour_graph['Ice Area'] <= self.config['Vehicle_Info']['MaxIceExtent'])]
+        self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph,crs='EPSG:4326', geometry='geometry')
 
         # Reformating the columns into corret type
         self.neighbour_graph['case'] = self.neighbour_graph['case'].apply(lambda x: ast.literal_eval(x))
@@ -87,24 +80,36 @@ class TravelTime:
         self.neighbour_graph['neighbourIndex'] = self.neighbour_graph['neighbourIndex'].apply(lambda x: ast.literal_eval(x))
         self.neighbour_graph['Vector'] = self.neighbour_graph['Vector'].apply(lambda x: ast.literal_eval(x))
 
+        # ====== Speed Function Checking
         # Checking if Speed defined in file
         if 'Speed' not in self.neighbour_graph:
             self.neighbour_graph['Speed'] = self.config["Vehicle_Info"]["Speed"]
 
+        # ===== Objective Function Information =====
+        #  Checking if objective function is in the cellgrid
+        print(self.config['Route_Info']['Objective_Function'])
+        if (self.config['Route_Info']['Objective_Function'] != 'traveltime'):
+            if (self.config['Route_Info']['Objective_Function'] not in self.neighbour_graph):
+                    raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['Route_Info']['Objective_Function']))
+
+        # ===== Setting Up Dijkstra Graph =====
         self.neighbour_graph['positionLocked']          = False
-        self.neighbour_graph['traveltime']              = np.inf
+        self.neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])]    = np.inf
         self.neighbour_graph['neighbourTravelLegs']     = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['pathIndex']               = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['pathCost']                = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['pathPoints']              = [list() for x in range(len(self.neighbour_graph.index))]
 
+        # ====== Defining the cost function ======
         self.cost_func       = cost_func
 
+        # ====== Outlining some constant values ======
         self.unit_shipspeed = self.config['Vehicle_Info']['Unit']
         self.unit_time      = self.config['Route_Info']['Time_Unit']
         self.zero_currents  = self.config['Route_Info']['Zero_Currents']
         self.variable_speed  =self. config['Route_Info']['Variable_Speed']
+
 
         # ====== Waypoints ======
         # Reading in Waypoints and casting into pandas if not already
@@ -167,7 +172,7 @@ class TravelTime:
                         path['to']                 = wpt_b_name
 
                         graph = self.dijkstra_info[wpt_a_name]
-                        path['Time']               = float(graph['traveltime'].loc[wpt_b_index])
+                        path['Time']               = float(graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])].loc[wpt_b_index])
                         if path['Time'] == np.inf:
                             continue
                         path_traveltime = graph['pathCost'].loc[wpt_b_index]
@@ -190,7 +195,22 @@ class TravelTime:
             json.dump(self.paths, fp)
 
 
-    def neighbour_cost(self,wpt_name,minimum_traveltime_index):
+    def objective_value(self,source_graph,neighbour_graph,traveltime):
+        if self.config['Route_Info']['Objective_Function'] == 'traveltime':
+            return [source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)]
+        else:
+            return [source_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] +\
+                    traveltime[0]*source_graph['{}'.format(self.config['Route_Info']['Objective_Function'])],
+                    source_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] +\
+                    traveltime[0]*source_graph['{}'.format(self.config['Route_Info']['Objective_Function'])] +\
+                    traveltime[1]*neighbour_graph['{}'.format(self.config['Route_Info']['Objective_Function'])]]
+
+
+
+
+
+
+    def neighbour_cost(self,wpt_name,minimum_objective_index):
         '''
         Function for computing the shortest travel-time from a cell to its neighbours by applying the Newtonian method for optimisation
         
@@ -203,7 +223,7 @@ class TravelTime:
             - If corner of cell is land in adjacent cell then also return 'inf'
         '''
         # Determining the nearest neighbour index for the cell
-        source_graph   = self.dijkstra_info[wpt_name].loc[minimum_traveltime_index]
+        source_graph   = self.dijkstra_info[wpt_name].loc[minimum_objective_index]
 
         # Looping over idx
         for idx in range(len(source_graph['case'])):
@@ -226,14 +246,13 @@ class TravelTime:
             source_graph['neighbourTravelLegs'].append(traveltime)
             source_graph['neighbourCrossingPoints'].append(crossing_points)
 
+            # Using neighbourhood cost determine objective function value
+            value = self.objective_value(source_graph,neighbour_graph,traveltime)
 
-            # Updating the neighbour traveltime if its less the current global optimum
-            neighbour_cost   = [source_graph['traveltime'] + traveltime[0],source_graph['traveltime'] + np.sum(traveltime)]
-
-            if neighbour_cost[1] < neighbour_graph['traveltime']:
-                neighbour_graph['traveltime'] = neighbour_cost[1]
+            if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])]:
+                neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] = value[1]
                 neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
-                neighbour_graph['pathCost']   = source_graph['pathCost']   + neighbour_cost
+                neighbour_graph['pathCost']   = source_graph['pathCost']   + value
                 neighbour_graph['pathPoints'] = source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]
 
                 # neighbour_graph = pd.Series(
@@ -253,7 +272,7 @@ class TravelTime:
 
                 self.dijkstra_info[wpt_name].loc[indx] = neighbour_graph
 
-        self.dijkstra_info[wpt_name].loc[minimum_traveltime_index] = source_graph
+        self.dijkstra_info[wpt_name].loc[minimum_objective_index] = source_graph
 
 
 
@@ -266,7 +285,8 @@ class TravelTime:
         
         # Initalising zero traveltime at the source location
         source_index = int(self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'] == wpt_name]['index'])
-        self.dijkstra_info[wpt_name].loc[source_index,'traveltime'] = 0.0
+        
+        self.dijkstra_info[wpt_name].loc[source_index,'shortest_{}'.format(self.config['Route_Info']['Objective_Function'])] = 0.0
         self.dijkstra_info[wpt_name].loc[source_index,'pathIndex'].append(source_index)
         
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
@@ -275,17 +295,16 @@ class TravelTime:
         else:
             stopping_criterion_indices = self.dijkstra_info[wpt_name].index
 
-
         while (self.dijkstra_info[wpt_name].loc[stopping_criterion_indices,'positionLocked'] == False).any():
 
-            # Determining the index of the minimum traveltime that has not been visited
-            minimum_traveltime_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked']==False]['traveltime'].idxmin()
+            # Determining the index of the minimum objective function that has not been visited
+            minimum_objective_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked']==False]['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])].idxmin()
   
             # Finding the cost of the nearest neighbours from the source cell (Sc)
-            self.neighbour_cost(wpt_name,minimum_traveltime_index)
+            self.neighbour_cost(wpt_name,minimum_objective_index)
 
             # Updating Position to be locked
-            self.dijkstra_info[wpt_name].loc[minimum_traveltime_index,'positionLocked'] = True
+            self.dijkstra_info[wpt_name].loc[minimum_objective_index,'positionLocked'] = True
     
           
 
