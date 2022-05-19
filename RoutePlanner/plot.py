@@ -67,6 +67,9 @@ class InteractiveMap:
                     self._maps(layer) 
                 if layer['Type'] == 'Points':
                     self._points(layer)
+                if layer['Type'] == 'MeshInfo':
+                    self._meshInfo(layer)
+
             # except:
             #     print('Issue Plotting Layer')
                     
@@ -222,6 +225,7 @@ class InteractiveMap:
 
 
         feature_info = folium.FeatureGroup(name='{}'.format(info['Name']),show=info['Show'])
+
         if dataframe_geo[info['Data_Name']].dtype == 'bool':
             folium.GeoJson(
                 dataframe_geo[dataframe_geo[info['Data_Name']]==True],
@@ -299,7 +303,42 @@ class InteractiveMap:
 
                 self.map.add_child(feature_info)
 
+    #   {
+    #     "Type": "MeshInfo",
+    #     "Show":false,
+    #     "Name": "Mesh Info",
+    #     "filename": "./cellgrid_dataframe.csv",
+    #     "Line_Width": 0.3,
+    #     "Line_Color": "gray",
+    #     "Fill_Color": "white",
+    #     "Fill_Opacity": 0.0,
+    #     "Data_Names":["cell_info"]
+    #   },
 
+    def _meshInfo(self,info):
+        dataframe_pandas = pd.read_csv(info['filename'])
+        dataframe_pandas['geometry'] = dataframe_pandas['geometry'].apply(wkt.loads)
+        dataframe_geo = gpd.GeoDataFrame(dataframe_pandas,crs='EPSG:4326', geometry='geometry')
+
+
+        feature_info = folium.FeatureGroup(name='{}'.format(info['Name']),show=info['Show'])
+
+        folium.GeoJson(dataframe_geo,
+
+            style_function= lambda x: {
+                    'fillColor': 'black',
+                    'color': 'gray',
+                    'weight': 0.5,
+                    'fillOpacity': 0.
+                },
+
+            tooltip=folium.GeoJsonTooltip(
+                fields=[dataframe_geo.columns.intersection(info['Data_Names'])],
+                aliases=[dataframe_geo.columns.intersection(info['Data_Names'])],
+                localize=True
+            )
+        ).add_to(feature_info) 
+        self.map.add_child(feature_info)
 
     def _layer_control(self):
         folium.LayerControl(collapsed=True).add_to(self.map)
