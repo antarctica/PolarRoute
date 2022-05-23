@@ -224,15 +224,35 @@ class TravelTime:
 
                         path['geometry'] = {}
                         path['geometry']['type'] = "LineString"
-                        path['geometry']['coordinates'] = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)).tolist()
+                        path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc))
+                        path['geometry']['coordinates'] = path_points.tolist()
 
                         path['properties'] = {}
                         path['properties']['name'] = 'Route Path - {} to {}'.format(wpt_a_name,wpt_b_name)
+                        cellIndices  = np.array(graph['pathIndex'].loc[wpt_b_index])
+                        path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1],2)) + [cellIndices[-1]])
+                        path['properties']['CellIndices'] = path_indices.tolist()
+
+                        # Applying in-cell correction for travel-time
+                        cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
+                                                    neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
+                                                    unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
+                        tt_start = cost_func.waypoint_correction(path_points[0,:],path_points[1,:])
+                        cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[-1]],
+                                                    neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
+                                                    unit_shipspeed='km/hr',unit_time=self.unit_time,zerocurrents=self.zero_currents)
+                        tt_end = cost_func.waypoint_correction(path_points[-1,:],path_points[-2,:])
+                        path['properties']['traveltime'] = np.array(graph['path_traveltime'].loc[wpt_b_index])
+                        path['properties']['traveltime'] = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
+                        path['properties']['traveltime'][-1] = (path['properties']['traveltime'][-2] + tt_end)
+
                         for vrbl in self.config['Route_Info']['Path_Variables']:
-                            path['properties']['{}'.format(vrbl)] = float(graph['shortest_{}'.format(vrbl)].loc[wpt_b_index])
-                        path['properties']['CellIndices'] = (np.array(graph['pathIndex'].loc[wpt_b_index])).tolist()
-                        for vrbl in self.config['Route_Info']['Path_Variables']:
-                            path['properties']['{}'.format(vrbl)] = graph['path_{}'.format(vrbl)].loc[wpt_b_index]
+                            if vrbl == 'traveltime':
+                                continue
+                            path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]*self.dijkstra_info[wpt_a_name].loc[path_indices,'{}'.format(vrbl)].to_numpy()).tolist()
+                        path['properties']['traveltime'] = path['properties']['traveltime'].tolist()
+
+
 
                         paths.append(path)
 
@@ -262,10 +282,6 @@ class TravelTime:
                     source_graph['shortest_{}'.format(variable)] +\
                     traveltime[0]*source_graph['{}'.format(variable)] +\
                     traveltime[1]*neighbour_graph['{}'.format(variable)]]
-
-
-
-
 
 
     def neighbour_cost(self,wpt_name,minimum_objective_index):
@@ -334,8 +350,6 @@ class TravelTime:
         self.dijkstra_info[wpt_name].loc[minimum_objective_index] = source_graph
 
 
-
-
     def _dijkstra(self,wpt_name):
 
 
@@ -366,8 +380,7 @@ class TravelTime:
 
             # Updating Position to be locked
             self.dijkstra_info[wpt_name].loc[minimum_objective_index,'positionLocked'] = True
-    
-          
+
 
         # Correct travel-time off grid for start and end indices
         # ----> TO-DO

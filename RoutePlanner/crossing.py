@@ -132,16 +132,13 @@ class NewtonianDistance:
             val = val
         return val
 
-    def waypoint_correction(self,Wp,Cp,s):
+    def waypoint_correction(self,Wp,Cp):
         '''
         '''
-        uS  = (self.source_graph['Vector'][0],self.source_graph['Vector'][0])
-        x   = np.sign(Cp[0]-Wp[0])*self.fdist.value(Wp,(Wp[0]+(Cp[0]-Wp[0]),Wp[1]))
-        y   = np.sign(Cp[1]-Wp[1])*self.fdist.value(Wp,(Wp[0],Wp[1]+(Cp[0]-Wp[0])))
-        C1  = s**2 - uS[0]**2 - uS[1]**2
-        D1  = x*uS[0] + y*uS[1]
-        X1  = np.sqrt(D1**2 + C1*(x**2 + y**2))
-        return self._unit_time((X1-D1)/C1)
+        x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
+        y = (Cp[1]-Wp[1])*self.m_lat
+        traveltime = self._traveltime_in_cell(x,y,self.source_graph['Vector'][0],self.source_graph['Vector'][1],self.source_graph['Speed'])
+        return self._unit_time(traveltime)
 
     def _F(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
         C1 = s1**2 - u1**2 - v1**2
@@ -178,7 +175,6 @@ class NewtonianDistance:
         t2 = (X2-D2)/C2
 
         return F,dF,X1,X2,t1,t2
-
 
     def _traveltime_in_cell(self,xdist,ydist,U,V,S):
         '''
