@@ -118,26 +118,24 @@ class InteractiveMap:
         pths        = folium.FeatureGroup(name='{}'.format(info['Name']),show=info['Show'])
         if info['Path_Points']:
             pths_points = folium.FeatureGroup(name='{} - Path Points'.format(info['Name']),show=info['Show'])
-
+            
         # Loading the path information
-        with open(info['filename'], 'r') as f:
-            paths = json.load(f)
-
+        with open('paths_traveltime.json', 'r') as f:
+            geojson = json.load(f)
+            paths = geojson['features']
 
         # Determining max values of all paths
         if info['Colorline']:
             max_val = 0
             for path in copy.deepcopy(paths):
-                if path[info['Data_Name']] > max_val:
-                    max_val = path[info['Data_Name']]
-
+                if np.array(path['properties'][info['Data_Name']]).max() > max_val:
+                    max_val = np.array(path['properties'][info['Data_Name']]).max()
 
         # Determining max travel-times of all paths
         for path in paths:
-            points   = np.array(path['Path']['Points'])
-            
+            points   = np.array(path['geometry']['coordinates'])
             if 'Data_Name' in info:
-                data_val = np.array(path['Path'][info['Data_Name']])
+                data_val = np.array(path['properties'][info['Data_Name']])
             else:
                 data_val = np.array(len(points))
 

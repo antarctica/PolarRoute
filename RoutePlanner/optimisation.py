@@ -150,15 +150,62 @@ class TravelTime:
             print(self.config)
 
 
+    # def dijkstra_paths(self,start_waypoints,end_waypoints):
+    #     '''
+    #         FILL
+    #     '''
+    #     paths = []
+
+    #     wpts_s = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(start_waypoints)]
+    #     wpts_e = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(end_waypoints)]
+
+    #     for _,wpt_a in wpts_s.iterrows():
+    #         wpt_a_name  = wpt_a['Name']
+    #         wpt_a_index = int(wpt_a['index'])
+    #         wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
+    #         for _,wpt_b in wpts_e.iterrows():
+    #             wpt_b_name  = wpt_b['Name']
+    #             wpt_b_index = int(wpt_b['index'])
+    #             wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
+    #             if not wpt_a_name == wpt_b_name:
+    #                 try:
+    #                     # ==== Correcting Path for waypoints off cell
+    #                     path = {}
+    #                     path['from']               = wpt_a_name
+    #                     path['to']                 = wpt_b_name
+
+    #                     graph = self.dijkstra_info[wpt_a_name]
+
+    #                     for vrbl in self.config['Route_Info']['Path_Variables']:
+    #                         path['{}'.format(vrbl)]               = float(graph['shortest_{}'.format(vrbl)].loc[wpt_b_index])
+    #                     if path['traveltime'] == np.inf:
+    #                         continue
+                        
+
+    #                     # ===== Appending Path =====
+    #                     path['Path']                = {}
+    #                     path['Path']['Points']      = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)).tolist()
+    #                     path['Path']['CellIndices'] = (np.array(graph['pathIndex'].loc[wpt_b_index])).tolist()
+    #                     #path['Path']['CaseTypes']   = np.array([wpt_a_index] + graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index],dtype=object)
+    #                     for vrbl in self.config['Route_Info']['Path_Variables']:
+    #                         path['Path']['{}'.format(vrbl)]        = graph['path_{}'.format(vrbl)].loc[wpt_b_index]
+    #                     paths.append(path)
+    #                 except IOError:
+    #                     print('Failure to construct path from Dijkstra information')
+    #     return paths
+
+
     def dijkstra_paths(self,start_waypoints,end_waypoints):
         '''
             FILL
         '''
-        paths = []
 
+        geojson = {}
+        geojson['type'] = "FeatureCollection"
+
+        paths = []
         wpts_s = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(start_waypoints)]
         wpts_e = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(end_waypoints)]
-
         for _,wpt_a in wpts_s.iterrows():
             wpt_a_name  = wpt_a['Name']
             wpt_a_index = int(wpt_a['index'])
@@ -169,30 +216,35 @@ class TravelTime:
                 wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
                 if not wpt_a_name == wpt_b_name:
                     try:
-                        # ==== Correcting Path for waypoints off cell
-                        path = {}
-                        path['from']               = wpt_a_name
-                        path['to']                 = wpt_b_name
 
                         graph = self.dijkstra_info[wpt_a_name]
 
-                        for vrbl in self.config['Route_Info']['Path_Variables']:
-                            path['{}'.format(vrbl)]               = float(graph['shortest_{}'.format(vrbl)].loc[wpt_b_index])
-                        if path['traveltime'] == np.inf:
-                            continue
-                        
+                        path = {}
+                        path['type'] = "Feature"
 
-                        # ===== Appending Path =====
-                        path['Path']                = {}
-                        path['Path']['Points']      = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)).tolist()
-                        path['Path']['CellIndices'] = (np.array(graph['pathIndex'].loc[wpt_b_index])).tolist()
-                        #path['Path']['CaseTypes']   = np.array([wpt_a_index] + graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index],dtype=object)
+                        path['geometry'] = {}
+                        path['geometry']['type'] = "LineString"
+                        path['geometry']['coordinates'] = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)).tolist()
+
+                        path['properties'] = {}
+                        path['properties']['name'] = 'Route Path - {} to {}'.format(wpt_a_name,wpt_b_name)
                         for vrbl in self.config['Route_Info']['Path_Variables']:
-                            path['Path']['{}'.format(vrbl)]        = graph['path_{}'.format(vrbl)].loc[wpt_b_index]
+                            path['properties']['{}'.format(vrbl)] = float(graph['shortest_{}'.format(vrbl)].loc[wpt_b_index])
+                        path['properties']['CellIndices'] = (np.array(graph['pathIndex'].loc[wpt_b_index])).tolist()
+                        for vrbl in self.config['Route_Info']['Path_Variables']:
+                            path['properties']['{}'.format(vrbl)] = graph['path_{}'.format(vrbl)].loc[wpt_b_index]
+
                         paths.append(path)
+
+
+
                     except IOError:
                         print('Failure to construct path from Dijkstra information')
-        return paths
+
+
+        geojson['features'] = paths
+        return geojson
+
 
     def save_paths(self):
         '''
