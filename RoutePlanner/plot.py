@@ -19,6 +19,9 @@ import folium
 from branca.element import MacroElement
 from jinja2 import Template
 
+
+
+
 class BindColormap(MacroElement):
     """Binds a colormap to a given layer.
 
@@ -67,8 +70,8 @@ class InteractiveMap:
                     self._maps(layer) 
                 if layer['Type'] == 'Points':
                     self._points(layer)
-                if layer['Type'] == 'MeshInfo':
-                    self._meshInfo(layer)
+                if layer['Type'] == 'Geotiff':
+                    self._geotiff(layer)
 
             # except:
             #     print('Issue Plotting Layer')
@@ -343,6 +346,52 @@ class InteractiveMap:
 
     def show(self):
         return self.map
+
+
+    def _geotiff(self,info):
+        from rasterio.windows import Window
+        import rasterio as rs
+        from pyproj import Proj
+        from math import floor, ceil
+        from rasterio.transform import guard_transform
+        import numpy as np
+
+        def windowFunc(lon, lat, dataset):
+            p = Proj(dataset.crs)
+            t = dataset.transform
+            xmin, ymin = p(lon[0], lat[0])
+            xmax, ymax = p(lon[1], lat[1])
+            col_min, row_min = ~t * (xmin, ymin)
+            col_max, row_max = ~t * (xmax, ymax)
+
+
+            window = Window.from_slices(rows=(floor(row_max), ceil(row_min)),cols=(floor(col_min), ceil(col_max)))
+            transform = guard_transform(dataset.transform)
+            return window,rs.windows.bounds(window, transform)
+
+        dataset = rs.open(info['filename'])
+        resamplingFactor = info['Resampling_Factor']
+        window=None
+        bnds = [[dataset.bounds[1], dataset.bounds[0]], [dataset.bounds[3], dataset.bounds[2]]]
+        trying =True
+        indx = 1
+        while trying:
+            try:
+                img = folium.raster_layers.ImageOverlay(
+                    name="{} - Band {}".format(info['Name'],indx),
+                    image=dataset.read(indx,window=window)[::resamplingFactor,::resamplingFactor],
+                    bounds=bnds,
+                    opacity=info['Opacity'],
+                    mercator_project=True,
+                    pixelated=False,
+                    show = info['Show']
+                )
+                img.add_to(self.map)
+            except:
+                trying=False
+            indx+=1
+
+    
 
 
 # def MapTimeMesh(map,Polygons):
