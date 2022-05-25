@@ -120,7 +120,7 @@ class CellGrid:
                     if len(indxs) == 0:
                         continue
                     for indx in indxs:
-                        if (self.cellBoxes[indx].iceArea()*100 > self.config['Vehicle_Info']['MaxIceExtent']):
+                        if (self.cellBoxes[indx].getValue('iceArea')*100 > self.config['Vehicle_Info']['MaxIceExtent']):
                             continue
                         if self._j_grid:
                             if self.cellBoxes[indx].isLandM():
@@ -138,15 +138,15 @@ class CellGrid:
 
                 index_df = pd.Series({'Index':int(idx),
                         'geometry':Polygon(c.getBounds()),
-                        'cell_info':[c.cx,c.cy,c.dcx,c.dcy],
+                        'cell_info':[c.getcx(),c.getcy(),c.getdcx(),c.getdcy()],
                         'case':cases,
                         'neighbourIndex':neigh_indx,
                         'Land':IsLand,
-                        'Ice Area':c.iceArea()*100,
+                        'Ice Area':c.getValue('iceArea')*100,
                         'Ice Thickness':c.iceThickness(self.config['Region']['startTime']),
                         'Ice Density':c.iceDensity(self.config['Region']['startTime']),
-                        'Depth': c.depth(),
-                        'Vector':[c.getuC(),c.getvC()]
+                        'Depth': c.getValue('depth'),
+                        'Vector':[c.getValue('uC'),c.getValue('vC')]
                         })
 
                 cellgrid_dataframe.append(index_df)
@@ -248,21 +248,6 @@ class CellGrid:
                 if cellBox.containsPoint(lat, long):
                     selectedCell.append(cellBox)
         return selectedCell
-
-    def recursiveSplit(self, maxSplits):
-        """
-            Resursively step though all cellBoxes in this cellGrid, splitting them based on a cells 'isHomogenous' function
-            and a cellBoxes split depth.
-
-            DEPRECIATED
-            This function does not update the neighbours graph and should not be used.
-            use function 'iternativeSplit() instead.
-        """
-        splitCellBoxes = []
-        for cellBox in self.cellBoxes:
-            splitCellBoxes += cellBox.recursiveSplit(maxSplits,self.threshold,self.lowerBound,self.upperBound)
-
-        self.cellBoxes = splitCellBoxes
 
     def splitAndReplace(self, cellBox):
         """
@@ -469,19 +454,8 @@ class CellGrid:
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
             if isinstance(cellBox, CellBox):
-                if cellBox.shouldWeSplit(splittingPercentage, splitMinProp, splitMaxProp):
+                if cellBox.shouldBeSplit():
                     self.splitAndReplace(cellBox)
-
-    def recursiveSplitAndReplace(self, cellBox, maxSplits):
-        """
-            Replaces a cellBox given by parameter 'cellBox' in this grid with 4 smaller cellBoxes representing the four
-            corners of the given cellBox. Recursively repeats this process with each of the 4 smaller cellBoxs until
-            either the cellBoxes 'isHomogenous' function is met, or the maximum split depth given by parameter 'maxSplits'
-            is reached.
-        """
-        splitCellBoxes = cellBox.recursiveSplit(maxSplits)
-        self.cellBoxes.remove(cellBox)
-        self.cellBoxes += splitCellBoxes
 
     def cellBoxByNodeString(self, nodeString):
         for cellBox in self.cellBoxes:
