@@ -18,6 +18,8 @@ import folium
 # Adapted from: https://nbviewer.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 from branca.element import MacroElement
 from jinja2 import Template
+from matplotlib.collections import LineCollection   
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 
@@ -48,6 +50,164 @@ class BindColormap(MacroElement):
         {% endmacro %}
         """)  # noqa
 
+
+
+from shapely.geometry.polygon import Polygon
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+from shapely import wkt
+import cartopy.feature as cfeature
+import pandas as pd
+import cartopy.io.img_tiles as cimgt
+import json
+
+class StaticMap:
+    def __init__(self,config):
+        self.config = config
+        self.basemap = config["Static_Map"]['Basemap_Info']
+        self.layers  = config['Static_Map']['Layers']
+
+        #Initialising the basemap
+        if 'CRS' in self.basemap:
+            if self.basemap['CRS'] == 'Mercartor':
+                self.ccrs = ccrs.Mercator()
+            if self.basemap['CRS'] == 'Orthographic':
+                self.ccrs = ccrs.Orthographic(central_longitude=-41,central_latitude=-71)
+        else:
+            self.ccrs = ccrs.Orthographic(central_longitude=-41,central_latitude=-71)
+        self._basemap()
+
+
+        # Overlaying the layers
+        for layer in self.layers:
+            if layer['Type'] == 'Maps':
+                self._maps(layer) 
+            if layer['Type'] == 'Paths':
+                self._paths(layer)
+            if layer['Type'] == 'Points':
+                self._points(layer)
+
+        if 'Output_Filename' in self.config['Static_Map']:
+            plt.savefig(self.config['Static_Map']['Output_Filename'])
+
+
+    def _basemap(self):
+        self.fig = plt.figure(figsize=(15,10))
+        self.ax = plt.axes(projection=self.ccrs)
+        self.ax.set_extent([-121,-9,-49,-81], crs=ccrs.PlateCarree())
+        self.ax.add_image(cimgt.GoogleTiles(), 3)
+        self.ax.coastlines(resolution='50m')
+        self.ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False,linewidth=0.5,linestyle='--')
+        self.ax.add_feature(cfeature.BORDERS)
+        plt.title(r'Route Planner | {}'.format(self.basemap['Title']),fontsize=14,loc='left',color='blue')
+
+    def _points(self,info):
+        dataframe_points = pd.read_csv(info['filename'])
+        self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],15,marker='o',transform=ccrs.PlateCarree(),color='black',zorder=100)
+
+    def _paths(self,info):
+        '''
+            Plotting a paths type object
+        '''
+
+        # Loading the path information
+        with open('paths_traveltime.json', 'r') as f:
+            geojson = json.load(f)
+            paths = geojson['features']
+
+        # Determining max values of all paths
+        if info['Colorline']:
+            max_val = 0
+            min_val = 0
+            for path in copy.deepcopy(paths):
+                if np.array(path['properties'][info['Data_Name']]).max() > max_val:
+                    max_val = np.array(path['properties'][info['Data_Name']]).max()
+                if np.array(path['properties'][info['Data_Name']]).min() < min_val:
+                    min_val = np.array(path['properties'][info['Data_Name']]).min()
+
+        # Determining max travel-times of all paths
+        for path in paths:
+            points   = np.array(path['geometry']['coordinates'])
+            if 'Data_Name' in info:
+                data_val = np.array(path['properties'][info['Data_Name']])
+            else:
+                data_val = np.array(len(points))
+
+
+            if info['Colorline']:
+                # Add ColorLines
+                x = self.ccrs.transform_points(x=points[:,0], y=points[:,1],
+                                                src_crs=ccrs.PlateCarree())
+                xcs = np.array([x[:,0],x[:,1]]).T.reshape(-1,1,2) 
+                segments = np.concatenate([xcs[:-1], xcs[1:]], axis=1)   
+                lc = LineCollection(segments, cmap=info['Cmap'], linewidth=3,norm=plt.Normalize(vmin=min_val, vmax=max_val)) 
+                lc.set_array(path['properties']['traveltime'])                                           
+                self.ax.add_collection(lc) 
+                
+            
+            else:
+                self.ax.plot(points[:,0],points[:,1],transform=self.ccrs,linewidth=info['Line_Width'],color=info['Color'],alpha=1.0)
+
+            if info['Path_Points']:
+                self.ax.scatter(points[:,0],points[:,1],color=info['Color'],)
+        
+        if info['Colorline']:
+            cbaxes = inset_axes(self.ax, '25%', '3%', loc =1)
+            cbaxes.set_facecolor([1,1,1,0.7])
+            cb=self.fig.colorbar(lc,cax=cbaxes,orientation='horizontal',label='Traveltime') #make colorbar
+
+
+
+    def _maps(self,info):
+            '''
+                Plotting a map type object
+            '''
+
+            dataframe_pandas = pd.read_csv(info['filename'])
+            dataframe_pandas['geometry'] = dataframe_pandas['geometry'].apply(wkt.loads)
+            dataframe_geo = gpd.GeoDataFrame(dataframe_pandas,crs='EPSG:4326', geometry='geometry')
+
+            if dataframe_geo[info['Data_Name']].dtype == 'bool':
+                for _,poly in dataframe_geo.iterrows():
+                    if poly[info['Data_Name']]:
+                        self.ax.add_geometries([poly['geometry']], crs=ccrs.PlateCarree(), edgecolor=info['Line_Color'], facecolor=info['Fill_Color'],alpha=info['Fill_Opacity'],lw=info['Line_Width'])
+
+
+            if dataframe_geo[info['Data_Name']].dtype == float:
+                if ('Fill_trim_min' not in info):
+                    info['Fill_trim_min'] = dataframe_geo[info['Data_Name']].min()
+                if ('Fill_trim_max' not in info):
+                    info['Fill_trim_max'] = dataframe_geo[info['Data_Name']].max()            
+
+                dataframe_geo = dataframe_geo[(dataframe_geo[info['Data_Name']] >= info['Fill_trim_min']) &
+                                            (dataframe_geo[info['Data_Name']] <= info['Fill_trim_max'])]
+
+                if info['Fill_cmap_use']:
+                    if 'Fill_cmap_opacity' not in info:
+                        info['Fill_cmap_opacity'] = False
+                    if info['Fill_cmap_opacity']:
+                        for _,poly in dataframe_geo.iterrows():
+                            self.ax.add_geometries([poly['geometry']], crs=ccrs.PlateCarree(), edgecolor=info['Line_Color'], facecolor=info['Fill_Color'],alpha=poly[info['Data_Name']]/info['Fill_cmap_opacity_scalar'],lw=info['Line_Width'])
+                    else:
+                        if 'Fill_cmap_min' in info:
+                            cmin = info['Fill_cmap_min']
+                        else:
+                            cmin = dataframe_geo[info['Data_Name']].min()
+                        if 'Fill_cmap_max' in info:
+                            cmax = info['Fill_cmap_max']
+                        else:
+                            cmax = dataframe_geo[info['Data_Name']].max()
+
+                        # Define a colormap version
+                        print('Map - Colormaps - Currently a work in progress')
+                else:
+                    if (info['Fill_Opacity'] == 0.0):
+                        for _,poly in dataframe_geo.iterrows():
+                            x,y = poly['geometry'].exterior.coords.xy
+                            self.ax.plot(np.array(x),np.array(y),color=info['Line_Color'],linewidth=info['Line_Width'],transform=ccrs.PlateCarree())
+
+    def show(self):
+        plt.show()
 
 class InteractiveMap:
     def __init__(self,config):
