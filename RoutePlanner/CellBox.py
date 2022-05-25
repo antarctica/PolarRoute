@@ -107,6 +107,8 @@ class CellBox:
     def iceThickness(self, date):
         """
             Returns mean ice thickness within this cellBox. Data taken from Table 3 in: doi:10.1029/2007JC004254
+
+            TODO - Data is hard coded - should be stored in an external file
         """
         # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, these require further thought
         thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
@@ -139,6 +141,8 @@ class CellBox:
     def iceDensity(self, date):
         """
             Returns mean ice density within this cellBox
+
+            TODO - Data is hard coded - should be stored in an external file.
         """
         seasons = {1:'su',2:'su',3:'a',4:'a',5:'a',6:'w',7:'w',8:'w',9:'sp',10:'sp',11:'sp',12:'su'}
         densities = {'su':875.0,'sp':900.0,'a':900.0,'w':920.0}
@@ -167,13 +171,19 @@ class CellBox:
 
     def addIcePoints(self, icePoints):
         '''
-            updates the ice points contained within this cellBox to a pandas dataframe provided by parameter icePoints.
+            updates the ice points contained within this cellBox to a 
+            pandas dataframe provided by parameter icePoints.
+
+            DEPRICATED - REMOVE
         '''
         self._icePoints = icePoints.dropna() # depricated, to be removed
 
         self._dataPoints = pd.concat([self._dataPoints, icePoints], axis=0)
 
     def addDepthPoints(self, depthPoints):
+        """
+            DEPRICATED - REMOVE
+        """
         self._dataPoints = pd.concat([self._dataPoints, depthPoints], axis=0)
 
     def addDataPoints(self, newDataPoints):
@@ -181,7 +191,10 @@ class CellBox:
 
     def addCurrentPoints(self, currentPoints):
         '''
-            updates the current points contained within this cellBox to a pandas dataframe provided by parameter currentPoints.
+            updates the current points contained within this cellBox to a pandas 
+            dataframe provided by parameter currentPoints.
+
+            Required for j_grid creation
         '''
         self._currentPoints = currentPoints.dropna()
         self.griduC = self._currentPoints['uC'].mean()
@@ -193,7 +206,10 @@ class CellBox:
         self._dataPoints = dataPoints
 
     def getDataPoints(self, values = []):
-
+        """
+            Returns a dataframe of containing values specifed in parameter 'values'. 
+            If values is empty, return full dataframe.
+        """
         if len(values) == 0:
             return self._dataPoints
         else:
@@ -207,19 +223,6 @@ class CellBox:
     def getValue(self, value):
         dataFrame = self.getDataPoints(values = [value])
         return dataFrame[value].mean()
-
-
-    def getIcePointLength(self):
-        '''
-            Returns the number of ice points contained within this cellBox.
-        '''
-        return self._icePoints.shape[0]
-
-    def getCurrentPointLength(self):
-        '''
-            Returns the number of current points contained within this cellBox.
-        '''
-        return len(self._currentPoints)
 
     def _getLatRange(self):
         '''
@@ -257,6 +260,8 @@ class CellBox:
     def iceArea(self):
         """
             Returns mean ice area of all icepoints contained within this cellBox
+
+            DEPRICARED - REMOVE
         """
         iceArea = self._dataPoints['iceArea'].mean()
         if np.isnan(iceArea):
@@ -266,12 +271,16 @@ class CellBox:
     def depth(self):
         '''
             Returns mean depth of all icepoints contained within this cellBox
+
+            DEPRICATED - REMOVE
         '''
         return self._dataPoints['depth'].mean()
 
     def getuC(self):
         '''
             INCLUDE
+
+            DEPRICATED - REMOVE
         '''
         if self._j_grid == True:
             return self.griduC
@@ -283,7 +292,9 @@ class CellBox:
 
     def getvC(self):
         '''
-            INCLU
+            INCLUDE
+
+            DEPRICATED - REMOVE
         '''
         if self._j_grid == True:
             return self.griduC
@@ -294,15 +305,18 @@ class CellBox:
         return vC
 
     def getIcePoints(self):
-
         '''
             Returns a pandas dataframe of all icepoints contained within this cellBox
+
+            DEPRICATED - REMOVE
         '''
         return self._icePoints
 
     def getCurrentPoints(self):
         """
             Return a pandas dataframe of all currentpoints contained within this cellBox
+
+            DEPRICATED - REMOVE
         """
         return self._currentPoints
 
@@ -421,6 +435,8 @@ class CellBox:
     def isHomogenous(self,  splittingPercentage, splitMinProp, splitMaxProp):
         '''
             returns true if a cell is deemed homogenous, used to define a base case for recursive splitting.
+
+            DEPRICATED - REMOVE
         '''
 
         icePoints = self._dataPoints.dropna(subset=['iceArea'])

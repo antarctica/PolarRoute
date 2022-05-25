@@ -10,70 +10,6 @@ import xarray as xr
 from shapely.geometry import Polygon
 import geopandas as gpd
 
-def bearing(st,en): # Should be moved out of the CellBox.py file.
-    long1,lat1 = st
-    long2,lat2 = en
-    dlong = long2-long1
-    dlat  = lat2-lat1
-    vector_1 = [0, 1]
-    vector_2 = [dlong, dlat]
-
-    if np.linalg.norm(vector_2) == 0:
-        return np.nan
-    unit_vector_1 = vector_1 / np.linalg.norm(vector_1)
-    unit_vector_2 = vector_2 / np.linalg.norm(vector_2)
-    dot_product = np.dot(unit_vector_1, unit_vector_2)
-    angle = np.arccos(dot_product)/(np.pi/180)*np.sign(vector_2[0])
-
-    if (angle==0) & (np.sign(dlat)==-1):
-        angle=180
-
-
-    if angle < 0:
-        angle = angle +360
-    angle
-    return angle
-
-def Intersection_BoxLine(Cell_s,Pt,type): # Should be moved out of the CellBox.py file
-    X1,Y1 = Cell_s.long+Cell_s.width/2,Cell_s.lat+Cell_s.height/2
-    X2,Y2 = Pt
-    if type==np.nan:
-        Px = np.nan
-        Py = np.nan
-        return Px,Py
-    if type == 2:
-        X3,Y3 = Cell_s.long+Cell_s.width,Cell_s.lat
-        X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat+Cell_s.height
-    if type == -4:
-        X3,Y3 = Cell_s.long,Cell_s.lat+Cell_s.height
-        X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat+Cell_s.height
-    if type == -2:
-        X3,Y3 = Cell_s.long,Cell_s.lat
-        X4,Y4 = Cell_s.long,Cell_s.lat+Cell_s.height
-    if type == 4:
-        X3,Y3 = Cell_s.long,Cell_s.lat
-        X4,Y4 = Cell_s.long+Cell_s.width,Cell_s.lat
-    if type == 1:
-        Px = Cell_s.long + Cell_s.width/2 + Cell_s.width/2
-        Py = Cell_s.lat  + Cell_s.height/2 + Cell_s.height/2
-        return Px,Py
-    if type == -1:
-        Px = Cell_s.long + Cell_s.width/2  - Cell_s.width/2
-        Py = Cell_s.lat  + Cell_s.height/2 - Cell_s.height/2
-        return Px,Py
-    if type == 3:
-        Px = Cell_s.long + Cell_s.width/2 + Cell_s.width/2
-        Py = Cell_s.lat  + Cell_s.height/2 - Cell_s.height/2
-        return Px,Py
-    if type == -3:
-        Px = Cell_s.long + Cell_s.width/2 - Cell_s.width/2
-        Py = Cell_s.lat  + Cell_s.height/2 + Cell_s.height/2
-        return Px,Py
-    D  = (X1-X2)*(Y3-Y4) - (Y1-Y2)*(X3-X4)
-    Px = ((X1*Y2 - Y1*X2)*(X3-X4) - (X1-X2)*(X3*Y4-Y3*X4))/D
-    Py = ((X1*Y2-Y1*X2)*(Y3-Y4)-(Y1-Y2)*(X3*Y4-Y3*X4))/D
-    return Px,Py
-
 class CellGrid:
 
     def __init__(self, config, j_grid=False):
@@ -156,6 +92,9 @@ class CellGrid:
         self.iterativeSplit(config['Region']["splitDepth"], 0,0,0)
         
     def output_dataframe(self):
+        """
+            requires rework as to not used hard-coded data types.
+        """
         cellgrid_dataframe = []
         counter=0
 
@@ -210,8 +149,6 @@ class CellGrid:
                         'Vector':[c.getuC(),c.getvC()]
                         })
 
-
-
                 cellgrid_dataframe.append(index_df)
 
         cellgrid_dataframe = pd.concat(cellgrid_dataframe,axis=1).transpose()
@@ -222,59 +159,6 @@ class CellGrid:
         cellgrid_dataframe = gpd.GeoDataFrame(cellgrid_dataframe,crs={'init': 'epsg:4326'}, geometry='geometry')
         return cellgrid_dataframe
 
-    def neighbourTest(self, cellBox):
-        """
-            Returns a flattened list of all neighbours of a given cellBox.
-        """
-        cellBoxIndx = self.cellBoxes.index(cellBox)
-        neighboursIndx = []
-
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][1])  # north-east
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][2])  # east
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][3])  # south-east
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][4])  # south
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-1])  # south-west
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-2])  # west
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-3])  # north-west
-        neighboursIndx.append(self.neighbourGraph[cellBoxIndx][-4])  # north
-
-        neighbours = []
-        for sublist in neighboursIndx:
-            for indx in sublist:
-                neighbours.append(self.cellBoxes[indx])
-
-        return neighbours
-
-    def addIcePoints(self, icePoints):
-        """
-            Takes a dataframe containing ice points and assigns them to cellBoxes within the cellGrid
-        """
-        for cellBox in self.cellBoxes:
-
-            longLoc    = icePoints.loc[(icePoints['long'] > cellBox.long) & (icePoints['long'] <= (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
-
-            cellBox.addIcePoints(latLongLoc)
-            """
-            latMin = cellBox.lat
-            longMin = cellBox.long
-
-            if longMin < 0:
-                longMin += 360
-
-            longMax = longMin + cellBox.width
-            latMax = latMin + cellBox.height
-
-            icePointCut = icePoints.sel(YC=slice(latMin, latMax), XC=slice(longMin, longMax))
-            # icePointCut = icePointCut.sel()
-            ipSlice = icePointCut.to_dataframe()
-
-            ipSlice = ipSlice.reset_index()
-            ipSlice = ipSlice.rename(columns={'XC': 'long', 'YC': 'lat', 'Depth': 'depth', 'SIarea': 'iceArea'})
-            ipSlice['long'] = ipSlice['long'].apply(lambda x: x if x <= 180 else x - 360)
-
-            cellBox.addIcePoints(ipSlice)
-            """
     def addDataSource(self, dataSource):
 
         for value in dataSource['values']:
@@ -341,26 +225,6 @@ class CellGrid:
             latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
 
             cellBox.addDataPoints(latLongLoc)
-
-    def addWindPoints(self, windPoints):
-        """
-            Takes a dataframe containing current points and assigns then to cellBoxes within the cellGrid
-        """
-        for cellBox in self.cellBoxes:
-            longLoc = windPoints.loc[(windPoints['long'] > cellBox.long) & (windPoints['long'] < (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(windPoints['lat'] > cellBox.lat) & (windPoints['lat'] < (cellBox.lat + cellBox.height))]
-
-            cellBox.addWindPoints(latLongLoc)
-            cellBox.setLand()
-
-    def cellCount(self):
-        """
-            Returns the number of cellBoxes contained within this cellGrid
-
-            DEPRECIATED
-            The list of cellBoxes now contains some empty indexes, so this is no longer accurate.
-        """
-        return len(self.cellBoxes)
 
     def toJSON(self):
         """
@@ -619,108 +483,17 @@ class CellGrid:
         self.cellBoxes.remove(cellBox)
         self.cellBoxes += splitCellBoxes
 
-    def getIndex(self, selectedCellBox):
-        """
-            Returns the index of the selected cell.
-
-            DEPRECIATED
-            Not needed as functionality is identical to self.cellBoxes.index(selectedCellBox) but slower.
-        """
-        cell_index = []
-        for idx,cellBox in enumerate(self.cellBoxes):
-            if selectedCellBox==cellBox:
-                    cell_index.append(idx)
-        return cell_index
-
     def cellBoxByNodeString(self, nodeString):
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
                 if cellBox.nodeString() == nodeString:
                     return cellBox
 
-    def _getLeftNeightbours(self, selectedCellBox):
-        """
-            Returns a list of all cellBoxes touching the left-hand-side of a cellBox given by parameter 'selectedCellBox'.
-            Also returns a list of indexes for the discovered cellBoxes
-
-            DEPRECIATED
-            Functionality replaced by self.neighbourGraph
-        """
-        leftNeightbours = []
-        leftNeightbours_indx = []
-        for idx,cellBox in enumerate(self.cellBoxes):
-            if (cellBox.long + cellBox.width == selectedCellBox.long) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
-                    leftNeightbours_indx.append(idx)
-                    leftNeightbours.append(cellBox)
-        return leftNeightbours,leftNeightbours_indx
-
-    def _getRightNeightbours(self, selectedCellBox):
-        """
-            Returns a list of all cellBoxes touching the right-hand-side of a cellBox given by parameter 'selectedCellBox'.
-            Also returns a list of indexes for the discovered cellBoxes
-
-            DEPRECIATED
-            Functionality replaced by self.neighbourGraph
-        """
-        rightNeightbours = []
-        rightNeightbours_indx = []
-        for idx,cellBox in enumerate(self.cellBoxes):
-            if (cellBox.long == selectedCellBox.long + selectedCellBox.width) and (cellBox.lat <= (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.lat + cellBox.height) >= selectedCellBox.lat):
-                rightNeightbours_indx.append(idx)
-                rightNeightbours.append(cellBox)
-        return rightNeightbours,rightNeightbours_indx
-
-    def _getTopNeightbours(self, selectedCellBox):
-        """
-            Returns a list of all cellBoxes touching the top-side of a cellBox given by parameter 'selectedCellBox'.
-            Also returns a list of indexes for the discovered cellBoxes
-
-            DEPRECIATED
-            Functionality replaced by self.neighbourGraph
-        """
-        topNeightbours      = []
-        topNeightbours_indx = []
-        for idx,cellBox in enumerate(self.cellBoxes):
-            if (cellBox.lat == (selectedCellBox.lat + selectedCellBox.height)) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
-                topNeightbours.append(cellBox)
-                topNeightbours_indx.append(idx)
-        return topNeightbours,topNeightbours_indx
-
-    def _getBottomNeightbours(self, selectedCellBox):
-        """
-            Returns a list of all cellBoxes touching the bottom-side of a cellBox given by parameter 'selectedCellBox'.
-            Also returns a list of indexes for the discovered cellBoxes
-
-            DEPRECIATED
-            Functionality replaced by self.neighbourGraph
-        """
-        bottomNeightbours      = []
-        bottomNeightbours_indx = []
-        for idx,cellBox in enumerate(self.cellBoxes):
-            if ((cellBox.lat + cellBox.height) == selectedCellBox.lat) and ((cellBox.long + cellBox.width) >= selectedCellBox.long) and (cellBox.long <= (selectedCellBox.long + selectedCellBox.width)):
-                bottomNeightbours_indx.append(idx)
-                bottomNeightbours.append(cellBox)
-        return bottomNeightbours,bottomNeightbours_indx
-
-    def getNeightbours(self, selectedCellBox):
-        """
-            Returns a list of call cellBoxes touching a cellBox given by parameter 'selectedCellBox'.
-            Also returns a list of indexes for the discovered cellBoxes
-
-            DEPRECIATED
-            Functionality replaced by self.neighbourGraph
-        """
-        leftNeightbours,leftNeightbours_indx     = self._getLeftNeightbours(selectedCellBox)
-        rightNeightbours,rightNeightbours_indx   = self._getRightNeightbours(selectedCellBox)
-        topNeightbours,topNeightbours_indx       = self._getTopNeightbours(selectedCellBox)
-        bottomNeightbours,bottomNeightbours_indx = self._getBottomNeightbours(selectedCellBox)
-        neightbours       = leftNeightbours + rightNeightbours + topNeightbours + bottomNeightbours
-        neightbours_index = leftNeightbours_indx + rightNeightbours_indx + topNeightbours_indx + bottomNeightbours_indx
-        return neightbours,neightbours_index,
-
     def plot(self, highlightCellBoxes = {}, plotIce = True, plotCurrents = False, plotBorders = True, paths=None, routepoints=False,waypoints=None):
         """
             creates and displays a plot for this cellGrid
+
+            To be used for debugging purposes only.
         """
         # Create plot figure
         fig, ax = plt.subplots(1, 1, figsize=(25, 11))
@@ -797,128 +570,6 @@ class CellGrid:
         ax.set_xlim(self._longMin, self._longMax)
         ax.set_ylim(self._latMin, self._latMax)
 
-    def getCase(self,cell,ncell):
-        """
-
-        """
-        SPoly = Polygon(selectedCellBox.getBounds())
-        neightbours      = []
-        neightbours_index = []
-        for idx,cellBox in enumerate(self.cellBoxes):
-            if cellBox != selectedCellBox:
-                NPoly = Polygon(cellBox.getBounds())
-                if SPoly.intersects(NPoly):
-                    neightbours_index.append(idx)
-                    neightbours.append(cellBox)
-        cases = []
-        crossing_points = []
-        for ncell in neightbours:
-            case  = self.getCase(selectedCellBox,(ncell.cx,ncell.cy))
-            cp    = self.getCrossingPoint(selectedCellBox,(ncell.cx,ncell.cy))
-            cases.append(case)
-            crossing_points.append(cp)
-        neigh = pd.DataFrame({'Cell':neightbours,'idx':neightbours_index,'Case':cases,'Cp':crossing_points})
-        return neigh
-
-    def getCrossingPoint(self,cell,Pt):
-        case = self.getCase(cell,Pt)
-        crp = Intersection_BoxLine(cell,Pt,case)
-        return crp
-
-    def getCase(self,cellBox,Pt):
-        corners = []
-        for crn in cellBox.getBounds()[:-1]:
-            corners.append(bearing((cellBox.cx,cellBox.cy),(crn[0],crn[1])))
-        corners = np.sort(corners)
-        dbear = bearing((cellBox.cx,cellBox.cy),(Pt[0],Pt[1]))
-        if  dbear == corners[0]:
-            case = 1
-        elif corners[0] < dbear < corners[1]:
-            case=2
-        elif dbear == corners[1]:
-            case = 3
-        elif corners[1] < dbear < corners[2]:
-            case = 4
-        elif dbear == corners[2]:
-            case = -1
-        elif corners[2] < dbear < corners[3]:
-            case = -2
-        elif dbear == corners[3]:
-            case = -3
-        elif (corners[3] > dbear) or (corners[0] < dbear):
-            case = -4
-        else:
-            case = np.nan
-        return case
-
-    def toDataFrame(self):
-        DF = pd.DataFrame({'idx':np.arange(len(self.cellBoxes))})
-        shape   = []
-        iceArea = []
-        isLand  = []
-        currentuC = []
-        currentvC = []
-        windv10 = []
-        windu10 = []
-
-        for cellBox in self.cellBoxes:
-            shape.append(Polygon(cellBox.getBounds()))
-            iceArea.append(cellBox.iceArea())
-            isLand.append(cellBox.containsLand())
-            currentuC.append(cellBox.getuC())
-            currentvC.append(cellBox.getvC())
-            windu10.append(cellBox.getWindu10())
-            windv10.append(cellBox.getWindv10())
-
-        DF['Geometry'] = shape
-        DF['Ice Area'] = iceArea
-        DF['Land']     = isLand
-        DF['Current uC'] = currentuC
-        DF['Current vC'] = currentvC
-        DF['Wind v10'] = windv10
-        DF['Wind u10'] = windu10
-
-        DF = gpd.GeoDataFrame(DF, crs={'init': 'epsg:4326'}, geometry='Geometry')
-        DF['Land'][np.isnan(DF['Ice Area'])] = True
-        return DF
-
-    def getNeightbours(self, selectedCellBox):
-        """
-            Getting the neighbours and returning idx, case, cp and cell information
-
-            BUG - Currently this is very slow as the Polygon intersection is slower than before.
-            Optimising the running of the code should improve this section as its a overarching requirement
-            for all routeplanes etc
-
-            DEPRECIATED
-            Functionality replaced by self.neighbourGraph
-        """
-        SPoly = Polygon(selectedCellBox.getBounds())
-        neightbours      = []
-        neightbours_index = []
-        for idx,cellBox in enumerate(self.cellBoxes):
-            if cellBox != selectedCellBox:
-                NPoly = Polygon(cellBox.getBounds())
-                if SPoly.intersects(NPoly):
-                    neightbours_index.append(idx)
-                    neightbours.append(cellBox)
-        cases = []
-        crossing_points = []
-        for ncell in neightbours:
-            case  = self.getCase(selectedCellBox,(ncell.cx,ncell.cy))
-            cp    = self.getCrossingPoint(selectedCellBox,(ncell.cx,ncell.cy))
-            cases.append(case)
-            crossing_points.append(cp)
-        neigh = pd.DataFrame({'Cell':neightbours,'idx':neightbours_index,'Case':cases,'Cp':crossing_points})
-        return neigh
-
-    def getNeighboursNew(self, selectedCellBox):
-        neighbours = {}
-        for indx, cellBox in enumerate(self.cellBoxes):
-            if self.getNeighbourCase(selectedCellBox, cellBox) != 0:
-                neighbours[indx] = cellBox
-        return neighbours
-
     def getNeighbourCase(self, cellBoxA, cellBoxB):
         """
             Given two cellBoxes (cellBoxA, cellBoxB) returns a case number representing where the two cellBoxes are touching.
@@ -970,33 +621,6 @@ class CellGrid:
         f = open(fileLocation, "w")
         f.write(meshDump)
         f.close()
-
-    def accessibilityGraph(self, maxIceExtent):
-        neighbourGraph = {}
-        for idx, cell in enumerate(self.cellBoxes):
-            if not isinstance(cell, CellBox):
-                continue
-            else:
-                neigh = self.neighbourGraph[idx]
-                cases = []
-                neighIndx = []
-                for case in neigh.keys():
-                    indxs = neigh[case]
-                    if len(indxs) == 0:
-                        continue
-                    for indx in indxs:
-                        if (self.cellBoxes[indx].iceArea() >= maxIceExtent) or (
-                        self.cellBoxes[indx].isLandM()):
-                            continue
-                        cases.append(case)
-                        neighIndx.append(indx)
-                neighDict = {}
-                neighDict['cX'] = cell.cx
-                neighDict['cY'] = cell.cy
-                neighDict['case'] = cases
-                neighDict['neighbourIndex'] = neighIndx
-                neighbourGraph[idx] = neighDict
-        return  pd.DataFrame().from_dict(neighbourGraph, orient='index')
 
     def dumpGraph(self, fileLocation):
         graphDump = ""
