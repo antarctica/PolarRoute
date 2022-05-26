@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'pyRoutePlanner'
-copyright = '2022, British Antartic Survey'
-author = 'British Antartic Survey - AI/ML Lab'
+project = 'RoutePlanner'
+copyright = '2022, BAS AI Lab'
+author = 'BAS AI Lab'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,6 +31,7 @@ release = '0.0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon','rinoh.frontend.sphinx','sphinx.ext.todo']
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

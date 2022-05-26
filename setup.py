@@ -7,6 +7,8 @@ from setuptools import setup
 import sys
 import time
 import numpy.distutils.misc_util
+import sphinx
+
 
 # Directory of the current file
 SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
@@ -35,7 +37,6 @@ CLASSIFIERS = [
 INSTALL_REQUIRES = [
     'pandas',
     'shapely',
-    'ipykernel',
     'geopandas',
     'xarray',
     'netCDF4',
@@ -84,7 +85,7 @@ def find_meta(meta):
 def setup_package():
     """Setup package"""
     setup(
-        name="RoutePlanner",
+        name=NAME,
         version=VERSION,
         description=find_meta("description"),
         long_description=read("README.md"),
@@ -101,12 +102,7 @@ def setup_package():
         include_dirs=INCLUDE_DIRS,
         package_data={"RoutePlanner": ["lib/*.so"]})
 
-    # # Unix installation 
-    # os.system('make ./.docs/html')
-    # os.system('sphinx-build -b rinoh ./.docs/source ./.docs/_build/rinoh')
-    # os.system('cp ./.docs/_build/rinoh/pyRoutePlanner.pdf .')
-    # os.system('rm -rf ./.docs/_build')
-    # os.system('rm -rf ./.docs/build')
+
 
 if __name__ == "__main__":
     # clean --all does not remove extensions automatically
