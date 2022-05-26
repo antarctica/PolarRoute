@@ -214,7 +214,7 @@ class CellBox:
                             splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
         north_east = CellBox(self.lat + half_height,self.long + half_width,half_width,half_height,
                             splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
-        south_west = CellBox(self.lat, self.long, half_width, half_height, 
+        south_west = CellBox(self.lat, self.long, half_width, half_height,
                             splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
         south_east = CellBox(self.lat, self.long + half_width, half_width, half_height,
                             splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
@@ -255,11 +255,13 @@ class CellBox:
     #Misc
     def ice_thickness(self, date):
         """
-            Returns mean ice thickness within this cellBox. Data taken from Table 3 in: doi:10.1029/2007JC004254
+            Returns mean ice thickness within this cellBox.
+            Data taken from Table 3 in: doi:10.1029/2007JC004254
 
             TODO - Data is hard coded - should be stored in an external file
         """
-        # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, these require further thought
+        # The table has missing data points for Bellinghausen Autumn and Weddell W Winter,
+        # these require further thought
         thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
                     'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
                     'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
@@ -267,8 +269,8 @@ class CellBox:
                     'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
                     'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79}
                     }
-        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
-                12: 'su'}
+        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w',
+                    7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp', 12: 'su'}
         month = int(date[5:7])
         season = seasons[month]
 
@@ -329,7 +331,7 @@ class CellBox:
 
     def contains_land(self):
         """
-            Returns True if any icepoint within the cell has a 
+            Returns True if any icepoint within the cell has a
             depth less than the specified minimum depth.
         """
 
@@ -344,7 +346,7 @@ class CellBox:
 
     def is_land(self):
         """
-            Returns True if all icepoints within the cell have a 
+            Returns True if all icepoints within the cell have a
             depth less than the specified minimum depth.
         """
         if self._j_grid:
@@ -435,7 +437,7 @@ class CellBox:
 
     def add_current_points(self, current_points):
         '''
-            updates the current points contained within this cellBox to a pandas 
+            updates the current points contained within this cellBox to a pandas
             dataframe provided by parameter currentPoints.
 
             Required for j_grid creation
