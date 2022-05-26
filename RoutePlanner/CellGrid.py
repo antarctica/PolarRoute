@@ -36,7 +36,7 @@ class CellGrid:
         for lat in np.arange(self._latMin, self._latMax, self._cellHeight):
             for long in np.arange(self._longMin, self._longMax, self._cellWidth):
                 cellBox = CellBox(lat, long, self._cellWidth, self._cellHeight, 
-                                    splittingConditions = [], j_grid = self._j_grid)
+                                    splitting_conditions = [], j_grid = self._j_grid)
                 self.cellBoxes.append(cellBox)
 
         gridWidth = (self._longMax - self._longMin) / self._cellWidth
@@ -85,86 +85,19 @@ class CellGrid:
 
             # set focus of cellBox
             cellBox.setFocus([])
-        self.splittingConditions = []
+        self.splitting_conditions = []
         for dataSource in config['Data_sources']:
                 self.addDataSource(dataSource)
 
-        self.iterativeSplit(config['Region']["splitDepth"], 0,0,0)
-        
-    def output_dataframe(self):
-        """
-            requires rework as to not used hard-coded data types.
-        """
-        cellgrid_dataframe = []
-        counter=0
+        self.iterativeSplit(config['Region']["splitDepth"])
 
-        for idx,c in enumerate(self.cellBoxes):
-            if isinstance(c, CellBox):
-                # # Don't append cell if Ice or above threshold
-                # if c.iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']:
-                #     continue
-                # if self._j_grid:
-                #     if c.isLandM():
-                #         continue
-                # else:
-                #     if c.containsLand():
-                #         continue
-
-
-                # Inspecting neighbour graph and outputting in list
-                neigh = self.neighbourGraph[idx]
-                cases      = []
-                neigh_indx = []
-                for case in neigh.keys():
-                    indxs = neigh[case]
-                    if len(indxs) == 0:
-                        continue
-                    for indx in indxs:
-                        if (self.cellBoxes[indx].getValue('iceArea')*100 > self.config['Vehicle_Info']['MaxIceExtent']):
-                            continue
-                        if self._j_grid:
-                            if self.cellBoxes[indx].isLandM():
-                                continue
-                        else:
-                            if self.cellBoxes[indx].containsLand():
-                                continue
-                        cases.append(case)
-                        neigh_indx.append(indx)
-
-                if self._j_grid:
-                    IsLand = c.isLandM()
-                else:
-                    IsLand = c.containsLand()
-
-                index_df = pd.Series({'Index':int(idx),
-                        'geometry':Polygon(c.getBounds()),
-                        'cell_info':[c.getcx(),c.getcy(),c.getdcx(),c.getdcy()],
-                        'case':cases,
-                        'neighbourIndex':neigh_indx,
-                        'Land':IsLand,
-                        'Ice Area':c.getValue('iceArea')*100,
-                        'Ice Thickness':c.iceThickness(self.config['Region']['startTime']),
-                        'Ice Density':c.iceDensity(self.config['Region']['startTime']),
-                        'Depth': c.getValue('depth'),
-                        'Vector':[c.getValue('uC'),c.getValue('vC')]
-                        })
-
-                cellgrid_dataframe.append(index_df)
-
-        cellgrid_dataframe = pd.concat(cellgrid_dataframe,axis=1).transpose()
-
-        ## Cell Further South than -78.0 set to land.
-        cellgrid_dataframe['Land'][np.array([x[1] for x in cellgrid_dataframe['cell_info']]) < -78.0] = True 
-
-        cellgrid_dataframe = gpd.GeoDataFrame(cellgrid_dataframe,crs={'init': 'epsg:4326'}, geometry='geometry')
-        return cellgrid_dataframe
-
+    # Functions for adding data to the cellgrid
     def addDataSource(self, dataSource):
 
         for value in dataSource['values']:
             if "splittingCondition" in value:
                     splittingCondition = {value['destinationName'] : value['splittingCondition']}
-                    self.splittingConditions = self.splittingConditions + [splittingCondition]
+                    self.splitting_conditions = self.splitting_conditions + [splittingCondition]
     
         for cellBox in self.cellBoxes:
             latMin = cellBox.lat
@@ -202,53 +135,89 @@ class CellGrid:
 
                 if "splittingCondition" in value:
                     splittingCondition = {value['destinationName'] : value['splittingCondition']}
-                    cellBox.addSplittingCondition(splittingCondition)
+                    cellBox.add_splitting_condition(splittingCondition)
 
             df = df.dropna(subset = selected)
 
-            cellBox.addDataPoints(df)
+            cellBox.add_data_points(df)
 
-    def addCurrentPoints(self, currentPoints):
-        """
-            Takes a dataframe containing current points and assigns then to cellBoxes within the cellGrid
-        """
-        for cellBox in self.cellBoxes:
-            longLoc = currentPoints.loc[(currentPoints['long'] > cellBox.long) & (currentPoints['long'] <= (cellBox.long + cellBox.width))]
-            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
-
-            cellBox.addCurrentPoints(latLongLoc)
-            cellBox.setLand()
-
-    def addDataPoints(self, dataPoints):
+    def add_data_points(self, dataPoints):
         for cellBox in self.cellBoxes:
             longLoc = dataPoints.loc[(dataPoints['long'] > cellBox.long) & (dataPoints['long'] <= (cellBox.long + cellBox.width))]
             latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
 
-            cellBox.addDataPoints(latLongLoc)
+            cellBox.add_data_points(latLongLoc)
 
-    def toJSON(self):
+    # Functions for outputting the cellgrid
+    def output_dataframe(self):
         """
-            Returns this cellGrid converted to JSON format.
+            requires rework as to not used hard-coded data types.
         """
-        json = "{ \"cellBoxes\":["
-        for cellBox in self.cellBoxes:
-            json += cellBox.toJSON() + ",\n"
+        cellgrid_dataframe = []
+        counter=0
 
-        json = json[:-2] # remove last comma and newline
-        json += "]}"
-        return json
+        for idx,c in enumerate(self.cellBoxes):
+            if isinstance(c, CellBox):
+                # # Don't append cell if Ice or above threshold
+                # if c.iceArea() >= self.config['Vehicle_Info']['MaxIceExtent']:
+                #     continue
+                # if self._j_grid:
+                #     if c.isLandM():
+                #         continue
+                # else:
+                #     if c.containsLand():
+                #         continue
 
-    def getCellBox(self, long, lat):
-        """
-            Returns the CellBox which contains a point, given by parameters lat, long
-        """
-        selectedCell = []
-        for cellBox in self.cellBoxes:
-            if isinstance(cellBox, CellBox):
-                if cellBox.containsPoint(lat, long):
-                    selectedCell.append(cellBox)
-        return selectedCell
 
+                # Inspecting neighbour graph and outputting in list
+                neigh = self.neighbourGraph[idx]
+                cases      = []
+                neigh_indx = []
+                for case in neigh.keys():
+                    indxs = neigh[case]
+                    if len(indxs) == 0:
+                        continue
+                    for indx in indxs:
+                        if (self.cellBoxes[indx].get_value('iceArea')*100 > self.config['Vehicle_Info']['MaxIceExtent']):
+                            continue
+                        if self._j_grid:
+                            if self.cellBoxes[indx].isLandM():
+                                continue
+                        else:
+                            if self.cellBoxes[indx].contains_land():
+                                continue
+                        cases.append(case)
+                        neigh_indx.append(indx)
+
+                if self._j_grid:
+                    IsLand = c.isLandM()
+                else:
+                    IsLand = c.contains_land()
+
+                index_df = pd.Series({'Index':int(idx),
+                        'geometry':Polygon(c.get_bounds()),
+                        'cell_info':[c.getcx(),c.getcy(),c.getdcx(),c.getdcy()],
+                        'case':cases,
+                        'neighbourIndex':neigh_indx,
+                        'Land':IsLand,
+                        'Ice Area':c.get_value('iceArea')*100,
+                        'Ice Thickness':c.ice_thickness(self.config['Region']['startTime']),
+                        'Ice Density':c.ice_density(self.config['Region']['startTime']),
+                        'Depth': c.get_value('depth'),
+                        'Vector':[c.get_value('uC'),c.get_value('vC')]
+                        })
+
+                cellgrid_dataframe.append(index_df)
+
+        cellgrid_dataframe = pd.concat(cellgrid_dataframe,axis=1).transpose()
+
+        ## Cell Further South than -78.0 set to land.
+        cellgrid_dataframe['Land'][np.array([x[1] for x in cellgrid_dataframe['cell_info']]) < -78.0] = True 
+
+        cellgrid_dataframe = gpd.GeoDataFrame(cellgrid_dataframe,crs={'init': 'epsg:4326'}, geometry='geometry')
+        return cellgrid_dataframe
+
+    # Functions for spltting cellboxes within the cellgrid
     def splitAndReplace(self, cellBox):
         """
             Replaces a cellBox given by parameter 'cellBox' in this grid with 4 smaller cellBoxes representing
@@ -439,30 +408,25 @@ class CellGrid:
         self.cellBoxes[cellBoxIndx] = splitContainer
         self.neighbourGraph.pop(cellBoxIndx)
 
-    def iterativeSplit(self, splitAmount,splittingPercentage, splitMinProp, splitMaxProp):
+    def iterativeSplit(self, splitAmount):
         """
             Iterates over all cellBoxes in the cellGrid a number of times defined by parameter 'splitAmount',
             splitting and replacing each one if it is not homogenous.
         """
         for i in range(0, splitAmount):
-            self.splitGraph(splittingPercentage, splitMinProp, splitMaxProp)
+            self.splitGraph()
 
-    def splitGraph(self, splittingPercentage, splitMinProp, splitMaxProp):
+    def splitGraph(self):
         """
             Iterates once over all cellBoxes in the cellGrid, splitting and replacing each one if it is not homogenous.
         """
         for indx in range(0, len(self.cellBoxes) - 1):
             cellBox = self.cellBoxes[indx]
             if isinstance(cellBox, CellBox):
-                if cellBox.shouldBeSplit():
+                if cellBox.should_be_split():
                     self.splitAndReplace(cellBox)
 
-    def cellBoxByNodeString(self, nodeString):
-        for cellBox in self.cellBoxes:
-            if isinstance(cellBox, CellBox):
-                if cellBox.nodeString() == nodeString:
-                    return cellBox
-
+    # Functions for debugging
     def plot(self, highlightCellBoxes = {}, plotIce = True, plotCurrents = False, plotBorders = True, paths=None, routepoints=False,waypoints=None):
         """
             creates and displays a plot for this cellGrid
@@ -482,22 +446,22 @@ class CellGrid:
                     if self._j_grid == True:
                         if cellBox.iceArea() >= 0.04:
                             ax.add_patch(
-                                MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=1))
+                                MatplotPolygon(cellBox.get_bounds(), closed=True, fill=True, color='white', alpha=1))
                             if cellBox.iceArea() < 0.8:
-                                ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='grey',
+                                ax.add_patch(MatplotPolygon(cellBox.get_bounds(), closed=True, fill=True, color='grey',
                                                             alpha=(1 - cellBox.iceArea())))
                     else:
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
+                        ax.add_patch(MatplotPolygon(cellBox.get_bounds(), closed=True, fill=True, color='white', alpha=cellBox.iceArea()))
 
                 # plot land
                 if self._j_grid == True:
                     if cellBox.landLocked:
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='lime'))
+                        ax.add_patch(MatplotPolygon(cellBox.get_bounds(), closed=True, fill=True, facecolor='lime'))
                 else:
-                    if cellBox.containsLand():
-                        ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                    if cellBox.contains_land():
+                        ax.add_patch(MatplotPolygon(cellBox.get_bounds(), closed=True, fill=True, facecolor='mediumseagreen'))
                 #else:
-                    #ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=True, facecolor='mediumseagreen'))
+                    #ax.add_patch(MatplotPolygon(cellBox.get_bounds(), closed=True, fill=True, facecolor='mediumseagreen'))
 
 
                 # plot currents
@@ -507,7 +471,7 @@ class CellGrid:
 
                 # plot borders
                 if plotBorders:
-                    ax.add_patch(MatplotPolygon(cellBox.getBounds(), closed=True, fill=False, edgecolor='black'))
+                    ax.add_patch(MatplotPolygon(cellBox.get_bounds(), closed=True, fill=False, edgecolor='black'))
 
                 """
                 if self._j_grid == True:
@@ -519,7 +483,7 @@ class CellGrid:
         # plot highlighted cells
         for colour in highlightCellBoxes:
             for cellBox in highlightCellBoxes[colour]:
-                ax.add_patch(MatplotPolygon(cellBox.getBounds(),
+                ax.add_patch(MatplotPolygon(cellBox.get_bounds(),
                                             closed=True,
                                             fill=False,
                                             edgecolor=colour,
@@ -586,6 +550,30 @@ class CellGrid:
             return -4  # North
         return 0  # Cells are not neighbours.
 
+    def getCellBox(self, long, lat):
+        """
+            Returns the CellBox which contains a point, given by parameters lat, long
+        """
+        selectedCell = []
+        for cellBox in self.cellBoxes:
+            if isinstance(cellBox, CellBox):
+                if cellBox.contains_point(lat, long):
+                    selectedCell.append(cellBox)
+        return selectedCell
+
+    def toJSON(self):
+        """
+            Returns this cellGrid converted to JSON format.
+        """
+        json = "{ \"cellBoxes\":["
+        for cellBox in self.cellBoxes:
+            json += cellBox.toJSON() + ",\n"
+
+        json = json[:-2] # remove last comma and newline
+        json += "]}"
+        return json
+
+    # Functions used for j_grid regression testing
     def dumpMesh(self, fileLocation):
         meshDump = ""
         for cellBox in self.cellBoxes:
@@ -654,4 +642,21 @@ class CellGrid:
         f = open(fileLocation, "w")
         f.write(graphDump)
         f.close()
+
+    def addCurrentPoints(self, currentPoints):
+        """
+            Takes a dataframe containing current points and assigns then to cellBoxes within the cellGrid
+        """
+        for cellBox in self.cellBoxes:
+            longLoc = currentPoints.loc[(currentPoints['long'] > cellBox.long) & (currentPoints['long'] <= (cellBox.long + cellBox.width))]
+            latLongLoc = longLoc.loc[(longLoc['lat'] > cellBox.lat) & (longLoc['lat'] <= (cellBox.lat + cellBox.height))]
+
+            cellBox.addCurrentPoints(latLongLoc)
+            cellBox.setLand()
+
+    def cellBoxByNodeString(self, nodeString):
+        for cellBox in self.cellBoxes:
+            if isinstance(cellBox, CellBox):
+                if cellBox.nodeString() == nodeString:
+                    return cellBox
 

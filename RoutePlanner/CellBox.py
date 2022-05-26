@@ -1,17 +1,19 @@
 """
 Outlined in this section we will discuss the usage of the CellBox functionallity
 of the pyRoutePlanner. In this series of class distributions we house our discrete
-representation of input data. In each CellBox we determine the mean and variance of 
+representation of input data. In each CellBox we determine the mean and variance of
 the information goverining our nemerical world, this includes and is not limited to:
 Ocean Currents, Sea Ice Concentration, Bathemetric depth, whether on land.
 
 Example:
-    An example of running this code can be executed by running the following in a ipython/Jupyter Notebook::
+    An example of running this code can be executed by running the following
+    in a ipython/Jupyter Notebook::
 
         from RoutePlanner import CellBox
         ....
 
-Additional information on constructing document strings using the Google DocString method can be found at
+Additional information on constructing document strings using the Google
+DocString method can be found at
 https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 
 Attributes:
@@ -42,9 +44,9 @@ class CellBox:
     Attributes:
         ...
     """
-    splitDepth = 0
+    split_depth = 0
 
-    def __init__(self, lat, long, width, height, splittingConditions = [],j_grid=False):
+    def __init__(self, lat, long, width, height, splitting_conditions = [], j_grid=False):
         # Box information relative to bottom left
         self.lat = lat
         self.long = long
@@ -52,54 +54,79 @@ class CellBox:
         self.height = height
 
         # Minimum Depth to be used in the land mask
-        self.minDepth = -10
+        self.min_depth = -10
 
-        self._dataPoints = pd.DataFrame()
+        self._data_points = pd.DataFrame()
 
-        self._splittingConditions = splittingConditions
+        self._splitting_conditions = splitting_conditions
 
         # For initial implementation of land based from Java codebase.
         self._j_grid = j_grid
-        self.landLocked = False
+        self.land_locked = False
+        self.grid_uc = 0
+        self.grid_vc = 0
+        self.x_coord = 0
+        self.y_coord = 0
+        self.focus = ""
 
     # Functions used for getting data from a cellBox
     def getcx(self):
+        """
+            returns x-position of the centroid of the cellbox
+        """
         return self.long + self.width/2
 
     def getcy(self):
+        """
+            returns y-position of the centroid of the cellbox
+        """
         return self.lat + self.height/2
 
     def getdcx(self):
+        """
+            returns x-distance from the edge to the centroid of the cellbox
+        """
         return self.width/2
 
     def getdcy(self):
-        return self.height/2
-    
-    def getDataPoints(self, values = []):
         """
-            Returns a dataframe of containing values specifed in parameter 'values'. 
+            returns y-distance from the edge to the centroid of the cellbox
+        """
+        return self.height/2
+
+    def get_data_points(self, values = []):
+        """
+            Returns a dataframe of containing values specifed in parameter 'values'.
             If values is empty, return full dataframe.
         """
         if len(values) == 0:
-            return self._dataPoints
+            return self._data_points
         else:
-            dataPoints = pd.DataFrame()
+            data_points = pd.DataFrame()
             for value in values:
-                dataPoints = pd.concat([dataPoints, self.getDataPoints().dropna(subset = [value])], axis = 0)
+                data_points = pd.concat(
+                    [data_points, self.get_data_points().dropna(subset = [value])], axis = 0)
 
             columns =  ['lat', 'long', 'time'] + values
-            return dataPoints[columns]
-    
-    def getValue(self, value):
-        dataFrame = self.getDataPoints(values = [value])
+            return data_points[columns]
 
-        value = dataFrame[value].mean()
+    def get_value(self, value):
+        """
+            returns the mean value of the datapoints within this cellbox
+            specifed by the parameter 'value'
+        """
+        data_frame = self.get_data_points(values = [value])
+
+        value = data_frame[value].mean()
         # temporary fix to avoid crashing - should be changed!
         if np.isnan(value):
             value = 0
         return value
 
-    def getBounds(self):
+    def get_bounds(self):
+        """
+            returns the bounds of this cellbox
+        """
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
                     [self.long + self.width, self.lat + self.height],
@@ -108,40 +135,67 @@ class CellBox:
         return bounds
 
     # Functions used for adding data to a cellbox
-    def addDataPoints(self, newDataPoints):
-        self._dataPoints = pd.concat([self._dataPoints, newDataPoints], axis=0)
+    def add_data_points(self, new_data_points):
+        """
+            adds a dataframe containing datapoints to the dataframe
+            of datapoints within this cellbox
+        """
+        self._data_points = pd.concat([self._data_points, new_data_points], axis=0)
 
-    def addSplittingCondition(self, splittingCondition):
-        self._splittingConditions = self._splittingConditions + [splittingCondition]
+    def add_splitting_condition(self, splitting_condition):
+        """
+            adds a dictionary containing a splitting condition to the
+            list of splitting conditions contained within this cellbox
+
+            splitting condition is of form:
+            {'': {
+                'threshold':,
+                'upperbound':,
+                'lowerbound':
+            }}
+        """
+        self._splitting_conditions = self._splitting_conditions + [splitting_condition]
 
     # Functions used for splitting a cellbox
-    def valueShouldBeSplit(self, value, threshold, lowerBound, upperBound):
-        dataLimit = 4
+    def value_should_be_split(self, value, threshold, lowerbound, upperbound):
+        """
+            returns true or false dependant of wether a splitting condition associated
+            with parameter 'value' should cause the cellbox to be split dependant on
+            parameters 'threshold', 'upperbound' and 'lowerbound
+        """
+        data_limit = 4
 
-        dataPoints = self.getDataPoints(values = [value])
+        data_points = self.get_data_points(values = [value])
 
-        if dataPoints.shape[0] < dataLimit:
+        if data_points.shape[0] < data_limit:
             return False
 
-        propOver = dataPoints.loc[dataPoints[value] > threshold]
+        prop_over = data_points.loc[data_points[value] > threshold]
 
-        proportionOverXpercent = propOver.shape[0] / dataPoints.shape[0]
-        return (proportionOverXpercent > lowerBound and proportionOverXpercent < upperBound)
-    
-    def shouldBeSplit(self):
-        if self._j_grid == True:
+        proportion_over_x_percent = prop_over.shape[0] / data_points.shape[0]
+        return (proportion_over_x_percent > lowerbound and proportion_over_x_percent < upperbound)
+
+    def should_be_split(self):
+        """
+            returns true or false dependant on if any of the splitting condtions
+            on values contained within this cellbox dictate that the cellbox
+            should be split
+        """
+
+        # if a j_grid has been generated, use a different function to determin splitting
+        if self._j_grid:
             splitting_percentage = 0.12
             split_min_prop = 0.05
             split_max_prop = 0.85
             return self.shouldWeSplit(splitting_percentage, split_min_prop, split_max_prop)
 
         split = False
-        for splittingCondition in self._splittingConditions:
-            value = list(splittingCondition.keys())[0]
-            threshold = float(splittingCondition[value]['threshold'])
-            upperBound = float(splittingCondition[value]['upperBound'])
-            lowerBound = float(splittingCondition[value]['lowerBound'])
-            split = split or self.valueShouldBeSplit(value, threshold, lowerBound, upperBound)
+        for splitting_condition in self._splitting_conditions:
+            value = list(splitting_condition.keys())[0]
+            threshold = float(splitting_condition[value]['threshold'])
+            upperbound = float(splitting_condition[value]['upperBound'])
+            lowerbound = float(splitting_condition[value]['lowerBound'])
+            split = split or self.value_should_be_split(value, threshold, lowerbound, upperbound)
         return split
 
     def split(self):
@@ -149,65 +203,56 @@ class CellBox:
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
         '''
 
-        splitBoxes = [0, 0, 0, 0]
+        # split_boxes = [{}, {}, {}, {}]
 
-        halfWidth = self.width / 2
-        halfHeight = self.height / 2
+        half_width = self.width / 2
+        half_height = self.height / 2
 
         # create 4 new cellBoxes
-        northWest = CellBox(self.lat + halfHeight, self.long, halfWidth, halfHeight,
-                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
-        northEast = CellBox(self.lat + halfHeight, self.long + halfWidth, halfWidth, halfHeight,
-                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
-        southWest = CellBox(self.lat, self.long, halfWidth, halfHeight, 
-                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
-        southEast = CellBox(self.lat, self.long + halfWidth, halfWidth, halfHeight, 
-                            splittingConditions = self._splittingConditions, j_grid = self._j_grid)
+        north_west = CellBox(self.lat + half_height, self.long, half_width, half_height,
+                            splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
+        north_east = CellBox(self.lat + half_height,self.long + half_width,half_width,half_height,
+                            splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
+        south_west = CellBox(self.lat, self.long, half_width, half_height, 
+                            splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
+        south_east = CellBox(self.lat, self.long + half_width, half_width, half_height,
+                            splitting_conditions = self._splitting_conditions, j_grid=self._j_grid)
 
-        """
-        splitBoxes[0] = southWest
-        splitBoxes[1] = southEast
-        splitBoxes[2] = northWest
-        splitBoxes[3] = northEast
-        """
 
-        splitBoxes[0] = northWest
-        splitBoxes[1] = northEast
-        splitBoxes[2] = southWest
-        splitBoxes[3] = southEast
+        split_boxes = [north_west, north_east, south_west, south_east]
 
-        for splitBox in splitBoxes:
-            #TODO requires rework for optimization
-            splitBox.splitDepth = self.splitDepth + 1
+
+        for split_box in split_boxes:
+            split_box.split_depth = self.split_depth + 1
 
             #Split dataPoints per box
-            longLoc = self._dataPoints.loc[(self._dataPoints['long'] > splitBox.long) &
-                                              (self._dataPoints['long'] <= (splitBox.long + splitBox.width))]
-            latLongLoc = longLoc.loc[(longLoc['lat'] > splitBox.lat) &
-                                     (longLoc['lat'] <= (splitBox.lat + splitBox.height))]
+            long_loc = self._data_points.loc[(self._data_points['long'] > split_box.long) &
+                            (self._data_points['long'] <= (split_box.long + split_box.width))]
+            lat_long_loc = long_loc.loc[(long_loc['lat'] > split_box.lat) &
+                            (long_loc['lat'] <= (split_box.lat + split_box.height))]
 
-            splitBox.addDataPoints(latLongLoc)
+            split_box.add_data_points(lat_long_loc)
 
             # if parent box is land, all child boxes are considered land
-            if self.landLocked:
-                splitBox.landLocked = True
+            if self.land_locked:
+                split_box.land_locked = True
 
-            if self._j_grid == True:
-                splitBox.griduC = self.griduC
-                splitBox.gridvC = self.gridvC
+            if self._j_grid:
+                split_box.grid_uc = self.grid_uc
+                split_box.grid_vc = self.grid_vc
 
                 # set gridCoord of split boxes equal to parent.
-                splitBox.setGridCoord(self.xCoord, self.yCoord)
+                split_box.set_grid_coord(self.x_coord, self.y_coord)
 
                 # create focus for split boxes.
-                splitBox.setFocus(self.getFocus().copy())
-                splitBox.addToFocus(splitBoxes.index(splitBox))
+                split_box.set_focus(self.getFocus().copy())
+                split_box.add_to_focus(split_boxes.index(split_box))
 
 
-        return splitBoxes
+        return split_boxes
 
-    #Misc 
-    def iceThickness(self, date):
+    #Misc
+    def ice_thickness(self, date):
         """
             Returns mean ice thickness within this cellBox. Data taken from Table 3 in: doi:10.1029/2007JC004254
 
@@ -241,7 +286,7 @@ class CellBox:
 
         return thicknesses[sea][season]
 
-    def iceDensity(self, date):
+    def ice_density(self, date):
         """
             Returns mean ice density within this cellBox
 
@@ -252,12 +297,12 @@ class CellBox:
 
         month = int(date[5:7])
         season = seasons[month]
-        d = densities[season]
+        density = densities[season]
 
         # Seasonal values from: https://doi.org/10.1029/2007JC004254
-        return d
+        return density
 
-    def containsPoint(self,lat,long):
+    def contains_point(self,lat,long):
         """
             Returns true if a given lat/long coordinate is contained within this cellBox.
         """
@@ -270,65 +315,71 @@ class CellBox:
         '''
             Converts a cellBox to a String which may be printed to console for debugging purposes
         '''
-        s = "TODO"
-        return s
+        cellbox_str = "TODO"
+        return cellbox_str
 
-    def toJSON(self):
+    def to_json(self):
         '''
             convert cellBox to JSON
         '''
-        s = "{"
-        s += "\"lat\":" + str(self.lat) + ","
-        s += "\"long\":" + str(self.long) + ","
-        s += "\"width\":" + str(self.width) + ","
-        s += "\"height\":" + str(self.height) + ","
-        s += "\"iceArea\":" + str(self.iceArea()) + ","
-        s += "\"splitDepth\":" + str(self.splitDepth)
-        s += "}"
-        return s
+        cellbox_json = "{"
+        cellbox_json += "}"
+        return cellbox_json
 
-    def containsLand(self):
+    def contains_land(self):
         """
-            Returns True if any icepoint within the cell has a depth less than the specified minimum depth.
+            Returns True if any icepoint within the cell has a 
+            depth less than the specified minimum depth.
         """
 
-        if self._j_grid == True:
+        if self._j_grid:
             return self.isLandM()
 
-        depthList = self._dataPoints.dropna(subset=['depth'])['depth']
+        depth_list = self._data_points.dropna(subset=['depth'])['depth']
 
-        if (depthList > self.minDepth).any():
+        if (depth_list > self.min_depth).any():
             return True
         return False
 
-    def isLand(self):
+    def is_land(self):
         """
-            Returns True if all icepoints within the cell have a depth less than the specified minimum depth.
+            Returns True if all icepoints within the cell have a 
+            depth less than the specified minimum depth.
         """
-        if self._j_grid == True:
+        if self._j_grid:
             return self.isLandM()
 
-        depthList = self._dataPoints.dropna(subset=['depth'])['depth']
-        if (depthList > self.minDepth).all():
+        depth_list = self._data_points.dropna(subset=['depth'])['depth']
+        if (depth_list > self.min_depth).all():
             return True
         return False
 
     # Fuctions used for j_grid regression testing.
-    def setGridCoord(self, x, y):
-        self.xCoord = x
-        self.yCoord = y
+    def set_grid_coord(self, xpos, ypos):
+        """
+            sets up initial grid-coordinate when creating a j_grid
+        """
+        self.x_coord = xpos
+        self.y_coord = ypos
 
-    def setFocus(self, f):
-        self.focus = f
+    def set_focus(self, focus):
+        """
+            initialize the focus of this cellbox
+        """
+        self.focus = focus
 
-    def addToFocus(self, f):
-        self.focus.append(f)
+    def add_to_focus(self, focus):
+        """
+            append additonal information to the focus of this cellbox
+            to be used when splitting.
+        """
+        self.focus.append(focus)
 
     def getFocus(self):
         return self.focus
 
     def gridCoord(self):
-        return "(" + str(int(self.xCoord)) + "," + str(int(self.yCoord)) + ")"
+        return "(" + str(int(self.x_coord)) + "," + str(int(self.y_coord)) + ")"
 
     def nodeString(self):
         nodeString = self.gridCoord() + " F:" + str(len(self.getFocus()))
@@ -345,11 +396,11 @@ class CellBox:
         meshDump += "0 "
         meshDump += str(self.getcy()) + ", " + str(self.getcx()) + "; "  # add lat,lon
         meshDump += str(self.iceArea()) + "; "  # add ice area
-        if np.isnan(self.griduC):
+        if np.isnan(self.grid_uc):
             meshDump += str(0) + ", " + str(0) + ", "
         else:
-            meshDump += str(self.griduC) + ", " + str(self.gridvC) + ", "
-        meshDump += str(self._dataPoints.shape[0])
+            meshDump += str(self.grid_uc) + ", " + str(self.grid_vc) + ", "
+        meshDump += str(self._data_points.shape[0])
         meshDump += "\n"
 
         return meshDump
@@ -362,35 +413,35 @@ class CellBox:
             Required for j_grid creation
         '''
         self._currentPoints = currentPoints.dropna()
-        self.griduC = self._currentPoints['uC'].mean()
-        self.gridvC = self._currentPoints['vC'].mean()
+        self.grid_uc = self._currentPoints['uC'].mean()
+        self.grid_vc = self._currentPoints['vC'].mean()
 
-        self._dataPoints = pd.concat([self._dataPoints, currentPoints], axis=0)
+        self._data_points = pd.concat([self._data_points, currentPoints], axis=0)
 
     def setLand(self):
         """
-            sets attribute 'landLocked' of a cellBox based on the proportion of current vectors contained
+            sets attribute 'land_locked' of a cellBox based on the proportion of current vectors contained
             within it that are not empty.
 
             Only to be used on un-split cells
         """
-        if self.splitDepth == 0:  # Check if a cell has not been split
+        if self.split_depth == 0:  # Check if a cell has not been split
             totalCurrents = self._currentPoints.dropna()
             watermin = 112.5
 
             if totalCurrents.shape[0] < watermin:
-                self.landLocked = True
+                self.land_locked = True
 
     def isLandM(self):
-        return self.landLocked
+        return self.land_locked
 
     def shouldWeSplit(self, splittingPercentage, splitMinProp, splitMaxProp):
         if self._j_grid == False:
-            return self.shouldBeSplit()
-            
+            return self.should_be_split()
+    
         dataLimit = 1
 
-        icePoints = self._dataPoints.dropna(subset=['iceArea'])
+        icePoints = self._data_points.dropna(subset=['iceArea'])
 
         if icePoints.shape[0] < dataLimit:
             return False

@@ -169,7 +169,7 @@ def MeshDF(cellGrid):
             if cellGrid._j_grid:
                 IsLand.append(c.isLandM())
             else:
-                IsLand.append(c.containsLand())
+                IsLand.append(c.contains_land())
             dpth.append(c.depth())
             vec.append([c.getuC(),c.getvC()])
             CentroidCx.append(c.cx)
