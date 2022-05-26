@@ -68,6 +68,7 @@ class CellBox:
         self.x_coord = 0
         self.y_coord = 0
         self.focus = ""
+        self._current_points = pd.DataFrame
 
     # Functions used for getting data from a cellBox
     def getcx(self):
@@ -187,7 +188,7 @@ class CellBox:
             splitting_percentage = 0.12
             split_min_prop = 0.05
             split_max_prop = 0.85
-            return self.shouldWeSplit(splitting_percentage, split_min_prop, split_max_prop)
+            return self.should_we_split(splitting_percentage, split_min_prop, split_max_prop)
 
         split = False
         for splitting_condition in self._splitting_conditions:
@@ -245,7 +246,7 @@ class CellBox:
                 split_box.set_grid_coord(self.x_coord, self.y_coord)
 
                 # create focus for split boxes.
-                split_box.set_focus(self.getFocus().copy())
+                split_box.set_focus(self.get_focus().copy())
                 split_box.add_to_focus(split_boxes.index(split_box))
 
 
@@ -333,7 +334,7 @@ class CellBox:
         """
 
         if self._j_grid:
-            return self.isLandM()
+            return self.is_land_m()
 
         depth_list = self._data_points.dropna(subset=['depth'])['depth']
 
@@ -347,7 +348,7 @@ class CellBox:
             depth less than the specified minimum depth.
         """
         if self._j_grid:
-            return self.isLandM()
+            return self.is_land_m()
 
         depth_list = self._data_points.dropna(subset=['depth'])['depth']
         if (depth_list > self.min_depth).all():
@@ -358,6 +359,8 @@ class CellBox:
     def set_grid_coord(self, xpos, ypos):
         """
             sets up initial grid-coordinate when creating a j_grid
+
+            for use in j_grid regression testing
         """
         self.x_coord = xpos
         self.y_coord = ypos
@@ -365,6 +368,8 @@ class CellBox:
     def set_focus(self, focus):
         """
             initialize the focus of this cellbox
+
+            for use in j_grid regression testing
         """
         self.focus = focus
 
@@ -372,81 +377,117 @@ class CellBox:
         """
             append additonal information to the focus of this cellbox
             to be used when splitting.
+
+            for use in j_grid regression testing
         """
         self.focus.append(focus)
 
-    def getFocus(self):
+    def get_focus(self):
+        """
+            returns the focus of this cellbox
+
+            for use in j_grid regression testing
+        """
         return self.focus
 
-    def gridCoord(self):
+    def grid_coord(self):
+        """
+            returns a string representation of the grid_coord of this cellbox
+
+            for use in j_grid regression testing
+        """
         return "(" + str(int(self.x_coord)) + "," + str(int(self.y_coord)) + ")"
 
-    def nodeString(self):
-        nodeString = self.gridCoord() + " F:" + str(len(self.getFocus()))
+    def node_string(self):
+        """
+            returns a string representing the node of this cellbox
 
-        focusString = "["
-        for x in self.getFocus():
-            focusString += str(x) + " "
-        focusString += "]"
-        return nodeString + " " + focusString
+            for use in j_grid regression testing
+        """
+        node_string = self.grid_coord() + " F:" + str(len(self.get_focus()))
 
-    def meshDump(self):
-        meshDump = ""
-        meshDump += self.nodeString() + "; "  # add node string
-        meshDump += "0 "
-        meshDump += str(self.getcy()) + ", " + str(self.getcx()) + "; "  # add lat,lon
-        meshDump += str(self.iceArea()) + "; "  # add ice area
+        focus_string = "["
+        for focus in self.get_focus():
+            focus_string += str(focus) + " "
+        focus_string += "]"
+        return node_string + " " + focus_string
+
+    def mesh_dump(self):
+        """
+            returns a string representing all the information stored in the mesh
+            of this cellbox
+
+            for use in j_grid regression testing
+        """
+        mesh_dump = ""
+        mesh_dump += self.node_string() + "; "  # add node string
+        mesh_dump += "0 "
+        mesh_dump += str(self.getcy()) + ", " + str(self.getcx()) + "; "  # add lat,lon
+        mesh_dump += str(self.get_value('iceArea')) + "; "  # add ice area
         if np.isnan(self.grid_uc):
-            meshDump += str(0) + ", " + str(0) + ", "
+            mesh_dump += str(0) + ", " + str(0) + ", "
         else:
-            meshDump += str(self.grid_uc) + ", " + str(self.grid_vc) + ", "
-        meshDump += str(self._data_points.shape[0])
-        meshDump += "\n"
+            mesh_dump += str(self.grid_uc) + ", " + str(self.grid_vc) + ", "
+        mesh_dump += str(self._data_points.shape[0])
+        mesh_dump += "\n"
 
-        return meshDump
+        return mesh_dump
 
-    def addCurrentPoints(self, currentPoints):
+    def add_current_points(self, current_points):
         '''
             updates the current points contained within this cellBox to a pandas 
             dataframe provided by parameter currentPoints.
 
             Required for j_grid creation
+
+            for use in j_grid regression testing
         '''
-        self._currentPoints = currentPoints.dropna()
-        self.grid_uc = self._currentPoints['uC'].mean()
-        self.grid_vc = self._currentPoints['vC'].mean()
+        self._current_points = current_points.dropna()
+        self.grid_uc = self._current_points['uC'].mean()
+        self.grid_vc = self._current_points['vC'].mean()
 
-        self._data_points = pd.concat([self._data_points, currentPoints], axis=0)
+        self._data_points = pd.concat([self._data_points, current_points], axis=0)
 
-    def setLand(self):
+    def set_land(self):
         """
-            sets attribute 'land_locked' of a cellBox based on the proportion of current vectors contained
-            within it that are not empty.
+            sets attribute 'land_locked' of a cellBox based on the proportion
+            of current vectors contained within it that are not empty.
 
             Only to be used on un-split cells
+
+            for use in j_grid regression testing
         """
         if self.split_depth == 0:  # Check if a cell has not been split
-            totalCurrents = self._currentPoints.dropna()
+            total_currents = self._current_points.dropna()
             watermin = 112.5
 
-            if totalCurrents.shape[0] < watermin:
+            if total_currents.shape[0] < watermin:
                 self.land_locked = True
 
-    def isLandM(self):
+    def is_land_m(self):
+        """
+            returns true/false dependant on if this cellbox is considered land
+
+            used for j_grid regression testing
+        """
         return self.land_locked
 
-    def shouldWeSplit(self, splittingPercentage, splitMinProp, splitMaxProp):
-        if self._j_grid == False:
+    def should_we_split(self, splitting_percentage, split_min_prop, split_max_prop):
+        """
+            returns true/false dependant on if this cellbox should be split
+
+            used for j_grid regression testing
+        """
+        if not self._j_grid:
             return self.should_be_split()
-    
-        dataLimit = 1
+        data_limit = 3000
 
-        icePoints = self._data_points.dropna(subset=['iceArea'])
+        ice_points = self._data_points.dropna(subset=['iceArea'])
 
-        if icePoints.shape[0] < dataLimit:
+        if ice_points.shape[0] < data_limit:
             return False
 
-        propOver = icePoints.loc[icePoints['iceArea'] > splittingPercentage]
+        prop_over = ice_points.loc[ice_points['iceArea'] > splitting_percentage]
 
-        proportionOverXpercent = propOver.shape[0] / icePoints.shape[0]
-        return proportionOverXpercent > splitMinProp and proportionOverXpercent < splitMaxProp
+        proportion_over_x_percent = prop_over.shape[0] / ice_points.shape[0]
+        return proportion_over_x_percent>split_min_prop and proportion_over_x_percent<split_max_prop

@@ -81,10 +81,10 @@ class CellGrid:
             # set gridCoord of cellBox
             xCoord = cellBoxIndx % gridWidth
             yCoord = abs(math.floor(cellBoxIndx / gridWidth) - (gridHeight - 1))
-            cellBox.setGridCoord(xCoord, yCoord)
+            cellBox.set_grid_coord(xCoord, yCoord)
 
             # set focus of cellBox
-            cellBox.setFocus([])
+            cellBox.set_focus([])
         self.splitting_conditions = []
         for dataSource in config['Data_sources']:
                 self.addDataSource(dataSource)
@@ -190,7 +190,7 @@ class CellGrid:
                         neigh_indx.append(indx)
 
                 if self._j_grid:
-                    IsLand = c.isLandM()
+                    IsLand = c.is_land_m()
                 else:
                     IsLand = c.contains_land()
 
@@ -578,7 +578,7 @@ class CellGrid:
         meshDump = ""
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
-                meshDump += cellBox.meshDump()
+                meshDump += cellBox.mesh_dump()
 
         f = open(fileLocation, "w")
         f.write(meshDump)
@@ -592,7 +592,7 @@ class CellGrid:
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
                 if (not cellBox.landLocked) and cellBox.iceArea() < maxIceArea:
-                    graphDump += cellBox.nodeString()
+                    graphDump += cellBox.node_string()
 
                     cellBoxIndx = self.cellBoxes.index(cellBox)
 
@@ -657,6 +657,6 @@ class CellGrid:
     def cellBoxByNodeString(self, nodeString):
         for cellBox in self.cellBoxes:
             if isinstance(cellBox, CellBox):
-                if cellBox.nodeString() == nodeString:
+                if cellBox.node_string() == nodeString:
                     return cellBox
 
