@@ -1,14 +1,13 @@
-from tracemalloc import start
-import numpy as np
-from RoutePlanner.CellBox import CellBox
-import pandas as pd
-
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon as MatplotPolygon
 import math
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 import xarray as xr
-from shapely.geometry import Polygon
 import geopandas as gpd
+
+from shapely.geometry import Polygon
+from matplotlib.patches import Polygon as MatplotPolygon
+from RoutePlanner.CellBox import CellBox
 
 class CellGrid:
     """
