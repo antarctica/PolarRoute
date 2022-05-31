@@ -430,7 +430,7 @@ class CellBox:
             mesh_dump += str(0) + ", " + str(0) + ", "
         else:
             mesh_dump += str(self.grid_uc) + ", " + str(self.grid_vc) + ", "
-        mesh_dump += str(self._data_points.shape[0])
+        mesh_dump += str(self.get_data_points(['iceArea']).shape[0])
         mesh_dump += "\n"
 
         return mesh_dump

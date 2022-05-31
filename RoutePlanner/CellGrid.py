@@ -498,7 +498,7 @@ class CellGrid:
 
                 # plot land
                 if self._j_grid:
-                    if cellbox.landLocked:
+                    if cellbox.land_locked:
                         axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
                             closed=True, fill=True, facecolor='lime'))
                 else:
