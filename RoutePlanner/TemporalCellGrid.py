@@ -119,7 +119,7 @@ class TemporalCellGrid:
 
         # create a cellGrid using datapoints for the given day
         cellGrid = CellGrid(self._longMin, self._longMax, self._latMin, self._latMax, self._cellWidth, self._cellHeight, j_grid)
-        cellGrid.addCurrentPoints(self._currentPoints)
+        cellGrid.add_current_points(self._currentPoints)
         cellGrid.addIcePoints(icePoints)
 
         icePoints.close()
