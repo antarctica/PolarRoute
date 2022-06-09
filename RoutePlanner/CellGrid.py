@@ -199,7 +199,10 @@ class CellGrid:
 
                 index_df = pd.Series({'Index':int(idx),
                         'geometry':Polygon(c.getBounds()),
-                        'cell_info':[c.cx,c.cy,c.dcx,c.dcy],
+                        'cx':c.cx,
+                        'cy':c.cy,
+                        'dcx':c.dcx,
+                        'dcy':c.dcy,
                         'case':cases,
                         'neighbourIndex':neigh_indx,
                         'Land':IsLand,
@@ -207,7 +210,8 @@ class CellGrid:
                         'Ice Thickness':c.iceThickness(self.config['Region']['startTime']),
                         'Ice Density':c.iceDensity(self.config['Region']['startTime']),
                         'Depth': c.depth(),
-                        'Vector':[c.getuC(),c.getvC()]
+                        'Vector_x':c.getuC(),
+                        'Vector_y':c.getvC()
                         })
 
 
@@ -217,7 +221,7 @@ class CellGrid:
         cellgrid_dataframe = pd.concat(cellgrid_dataframe,axis=1).transpose()
 
         ## Cell Further South than -78.0 set to land.
-        cellgrid_dataframe['Land'][np.array([x[1] for x in cellgrid_dataframe['cell_info']]) < -78.0] = True 
+        cellgrid_dataframe['Land'][cellgrid_dataframe['cy']< -78.0] = True 
 
         cellgrid_dataframe = gpd.GeoDataFrame(cellgrid_dataframe,crs={'init': 'epsg:4326'}, geometry='geometry')
         return cellgrid_dataframe

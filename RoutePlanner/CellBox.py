@@ -461,7 +461,7 @@ class CellBox:
             return self.shouldBeSplit()
             #return not self.isHomogenous(splittingPercentage, splitMinProp, splitMaxProp)
 
-        dataLimit = 1
+        dataLimit = 3000
 
         icePoints = self._dataPoints.dropna(subset=['iceArea'])
 

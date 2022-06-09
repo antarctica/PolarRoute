@@ -76,9 +76,9 @@ class TravelTime:
 
         # Reformating the columns into corret type
         self.neighbour_graph['case'] = self.neighbour_graph['case'].apply(lambda x: ast.literal_eval(x))
-        self.neighbour_graph['cell_info'] = self.neighbour_graph['cell_info'].apply(lambda x: ast.literal_eval(x))
+        #self.neighbour_graph['cell_info'] = self.neighbour_graph['cell_info'].apply(lambda x: ast.literal_eval(x))
         self.neighbour_graph['neighbourIndex'] = self.neighbour_graph['neighbourIndex'].apply(lambda x: ast.literal_eval(x))
-        self.neighbour_graph['Vector'] = self.neighbour_graph['Vector'].apply(lambda x: ast.literal_eval(x))
+        #self.neighbour_graph['Vector'] = self.neighbour_graph['Vector'].apply(lambda x: ast.literal_eval(x))
 
         # ====== Speed Function Checking
         # Checking if Speed defined in file
@@ -149,52 +149,6 @@ class TravelTime:
             # JDS - Add in configuration print, read and write functions
             print(self.config)
 
-
-    # def dijkstra_paths(self,start_waypoints,end_waypoints):
-    #     '''
-    #         FILL
-    #     '''
-    #     paths = []
-
-    #     wpts_s = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(start_waypoints)]
-    #     wpts_e = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(end_waypoints)]
-
-    #     for _,wpt_a in wpts_s.iterrows():
-    #         wpt_a_name  = wpt_a['Name']
-    #         wpt_a_index = int(wpt_a['index'])
-    #         wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
-    #         for _,wpt_b in wpts_e.iterrows():
-    #             wpt_b_name  = wpt_b['Name']
-    #             wpt_b_index = int(wpt_b['index'])
-    #             wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
-    #             if not wpt_a_name == wpt_b_name:
-    #                 try:
-    #                     # ==== Correcting Path for waypoints off cell
-    #                     path = {}
-    #                     path['from']               = wpt_a_name
-    #                     path['to']                 = wpt_b_name
-
-    #                     graph = self.dijkstra_info[wpt_a_name]
-
-    #                     for vrbl in self.config['Route_Info']['Path_Variables']:
-    #                         path['{}'.format(vrbl)]               = float(graph['shortest_{}'.format(vrbl)].loc[wpt_b_index])
-    #                     if path['traveltime'] == np.inf:
-    #                         continue
-                        
-
-    #                     # ===== Appending Path =====
-    #                     path['Path']                = {}
-    #                     path['Path']['Points']      = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc)).tolist()
-    #                     path['Path']['CellIndices'] = (np.array(graph['pathIndex'].loc[wpt_b_index])).tolist()
-    #                     #path['Path']['CaseTypes']   = np.array([wpt_a_index] + graph['pathPoints'].loc[wpt_b_index] + [wpt_b_index],dtype=object)
-    #                     for vrbl in self.config['Route_Info']['Path_Variables']:
-    #                         path['Path']['{}'.format(vrbl)]        = graph['path_{}'.format(vrbl)].loc[wpt_b_index]
-    #                     paths.append(path)
-    #                 except IOError:
-    #                     print('Failure to construct path from Dijkstra information')
-    #     return paths
-
-
     def dijkstra_paths(self,start_waypoints,end_waypoints):
         '''
             FILL
@@ -216,12 +170,9 @@ class TravelTime:
                 wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
                 if not wpt_a_name == wpt_b_name:
                     try:
-
                         graph = self.dijkstra_info[wpt_a_name]
-
                         path = {}
                         path['type'] = "Feature"
-
                         path['geometry'] = {}
                         path['geometry']['type'] = "LineString"
                         path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1,:])+wpt_b_loc))
@@ -229,6 +180,9 @@ class TravelTime:
 
                         path['properties'] = {}
                         path['properties']['name'] = 'Route Path - {} to {}'.format(wpt_a_name,wpt_b_name)
+                        path['properties']['from'] = '{}'.format(wpt_a_name)
+                        path['properties']['to'] = '{}'.format(wpt_b_name)
+
                         cellIndices  = np.array(graph['pathIndex'].loc[wpt_b_index])
                         path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1],2)) + [cellIndices[-1]])
                         path['properties']['CellIndices'] = path_indices.tolist()
@@ -256,9 +210,7 @@ class TravelTime:
 
                         paths.append(path)
 
-
-
-                    except IOError:
+                    except:
                         print('Failure to construct path from Dijkstra information')
 
 
@@ -275,13 +227,13 @@ class TravelTime:
 
     def objective_value(self,variable,source_graph,neighbour_graph,traveltime):
         if variable == 'traveltime':
-            return [source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)]
+            return np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
         else:
-            return [source_graph['shortest_{}'.format(variable)] +\
+            return np.array([source_graph['shortest_{}'.format(variable)] +\
                     traveltime[0]*source_graph['{}'.format(variable)],
                     source_graph['shortest_{}'.format(variable)] +\
                     traveltime[0]*source_graph['{}'.format(variable)] +\
-                    traveltime[1]*neighbour_graph['{}'.format(variable)]]
+                    traveltime[1]*neighbour_graph['{}'.format(variable)]])
 
 
     def neighbour_cost(self,wpt_name,minimum_objective_index):
@@ -303,10 +255,6 @@ class TravelTime:
         for idx in range(len(source_graph['case'])):
             indx = source_graph['neighbourIndex'][idx]
 
-            # Don't inspect neighbour if position is already locked
-            if self.dijkstra_info[wpt_name].loc[indx,'positionLocked']:
-                continue
-
             neighbour_graph = self.dijkstra_info[wpt_name].loc[indx]
             case = source_graph['case'][idx]
 
@@ -318,7 +266,7 @@ class TravelTime:
 
 
             source_graph['neighbourTravelLegs'].append(traveltime)
-            source_graph['neighbourCrossingPoints'].append(crossing_points)
+            source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
 
             # Using neighbourhood cost determine objective function value
             value = self.objective_value(self.config['Route_Info']['Objective_Function'],source_graph,neighbour_graph,traveltime)
@@ -326,7 +274,7 @@ class TravelTime:
                 for vrbl in self.config['Route_Info']['Path_Variables']:
                     value = self.objective_value(vrbl,source_graph,neighbour_graph,traveltime)
                     neighbour_graph['shortest_{}'.format(vrbl)] = value[1]
-                    neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + value
+                    neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + list(value)
                 neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
                 neighbour_graph['pathPoints'] = source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]
 
@@ -428,28 +376,33 @@ class TravelTime:
         # save paths
         
 
-    def compute_smoothed_routes(self,maxiter=10000,minimumDiff=1e-4,debugging=0,return_paths=True,verbose=False):
+    def compute_smoothed_routes(self,maxiter=10000,minimumDiff=1e-4,debugging=0,return_paths=False,verbose=False):
         '''
             Given a series of pathways smooth without centroid locations using great circle smoothing
         '''
 
         SmoothedPaths = []
+        geojson = {}
+        geojson['type'] = "FeatureCollection"
 
         if type(self.paths) == type(None):
             raise Exception('Paths not constructed, please re-run path construction')
-        Pths = copy.deepcopy(self.paths)
+        Pths = copy.deepcopy(self.paths)['features']  
 
         for ii in range(len(Pths)):
             Path = Pths[ii]
-            print('===Smoothing {} to {} ======'.format(Path['from'],Path['to']))
+            print('===Smoothing {}'.format(Path['properties']['name']))
 
-            nc = NewtonianCurve(self.mesh,self.dijkstra_info[Path['from']],self.config,maxiter=1,zerocurrents=True)
+            nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']],self.config,maxiter=1,zerocurrents=True)
             nc.pathIter = maxiter
 
+            org_path_points = np.array(Path['geometry']['coordinates'])
+            org_cellindices = np.array(Path['properties']['CellIndices'])
+
             # -- Generating a dataframe of the case information -- 
-            Points      = np.concatenate([Path['Path']['Points'][0,:][None,:],Path['Path']['Points'][1:-1:2],Path['Path']['Points'][-1,:][None,:]])
-            cellIndices = np.concatenate([Path['Path']['CellIndices'][0][None],Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]])
-            cellDijk    = [nc.DijkstraInfo.loc[ii] for ii in cellIndices]
+            Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
+            cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
+            cellDijk    = [self.neighbour_graph.loc[ii] for ii in cellIndices]
             nc.CrossingDF  = pd.DataFrame({'cX':Points[:,0],'cY':Points[:,1],'cellStart':cellDijk[:-1],'cellEnd':cellDijk[1:]})
 
             # -- Determining the cases from the cell information. If within cell then case 0 -- 
@@ -474,7 +427,6 @@ class TravelTime:
 
                     nc._updateCrossingPoint()
                     self.nc = nc
-
                     # -- Horseshoe Case Detection -- 
                     nc._horseshoe()
                     # -- Removing reseverse cases
@@ -483,7 +435,13 @@ class TravelTime:
                     id+=1+nc.id
 
                 self.nc = nc
-                nc._mergePoint()
+
+                try:
+                    nc._mergePoint()
+                except:
+                    self.nc = nc
+                    iter+=1
+                    continue
                 self.nc = nc
                 iter+=1
 
@@ -496,45 +454,55 @@ class TravelTime:
             # except:
             #     print('Failed {}->{}'.format(Path['from'],Path['to']))
 
+
+            TravelTime = nc.objective_function()
+
             SmoothedPath ={}
-            SmoothedPath['from'] = Path['from']
-            SmoothedPath['to']   = Path['to']
-            SmoothedPath['Path'] = {}
-            SmoothedPath['Path']['Points'] = nc.CrossingDF[['cX','cY']].to_numpy()    
+            SmoothedPath['type'] = 'Feature'
+            SmoothedPath['geometry'] = {}
+            SmoothedPath['geometry']['type'] = "LineString"
+            SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cX','cY']].to_numpy().tolist()            
+            SmoothedPath['properties'] = {}
+            SmoothedPath['properties']['from'] = Path['properties']['from']
+            SmoothedPath['properties']['to']   = Path['properties']['to']
+            SmoothedPath['properties']['traveltime'] = TravelTime
             SmoothedPaths.append(SmoothedPath)
 
-        
-
-        self.smoothed_paths = SmoothedPaths
+        geojson['features'] = SmoothedPaths
+        self.smoothed_paths = geojson
         if return_paths:
             return self.smoothed_paths
 
 
-        SmoothedPaths = []
+        with open(self.config['Route_Info']['Smoothpaths_Filename'], 'w') as fp:
+            json.dump(self.smoothed_paths, fp)
 
-        if type(self.paths) == type(None):
-            raise Exception('Paths not constructed, please re-run path construction')
-        Pths = copy.deepcopy(self.paths)
-        # Looping over all the optimised paths
-        for indx_Path in range(len(Pths)):
-            Path = Pths[indx_Path]
-            if Path['Time'] == np.inf:
-                continue
 
-            startPoint = Path['Path']['Points'][0,:][None,:]
-            endPoint   = Path['Path']['Points'][-1,:][None,:]
+        # SmoothedPaths = []
 
-            if verbose:
-                print('==================================================')
-                print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
+        # if type(self.paths) == type(None):
+        #     raise Exception('Paths not constructed, please re-run path construction')
+        # Pths = copy.deepcopy(self.paths)
+        # # Looping over all the optimised paths
+        # for indx_Path in range(len(Pths)):
+        #     Path = Pths[indx_Path]
+        #     if Path['Time'] == np.inf:
+        #         continue
 
-            Points      = np.concatenate([startPoint,Path['Path']['Points'][1:-1:2],endPoint])
-            cellIndices = np.concatenate((Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]))
+        #     startPoint = Path['Path']['Points'][0,:][None,:]
+        #     endPoint   = Path['Path']['Points'][-1,:][None,:]
 
-            nc = NewtonianCurve(self.mesh,self.dijkstra_info[Path['from']],self.OptInfo,zerocurrents=self.zero_currents,debugging=debugging)
-            nc.PathSmoothing(Points,cellIndices)
+        #     if verbose:
+        #         print('==================================================')
+        #         print(' PATH: {} -> {} '.format(Path['from'],Path['to']))
 
-            Path['Path']['Points']       = nc.path
-            SmoothedPaths.append(Path)
+        #     Points      = np.concatenate([startPoint,Path['Path']['Points'][1:-1:2],endPoint])
+        #     cellIndices = np.concatenate((Path['Path']['CellIndices'],Path['Path']['CellIndices'][-1][None]))
 
-        self.smoothed_paths = SmoothedPaths
+        #     nc = NewtonianCurve(self.mesh,self.dijkstra_info[Path['from']],self.OptInfo,zerocurrents=self.zero_currents,debugging=debugging)
+        #     nc.PathSmoothing(Points,cellIndices)
+
+        #     Path['Path']['Points']       = nc.path
+        #     SmoothedPaths.append(Path)
+
+        # self.smoothed_paths = SmoothedPaths

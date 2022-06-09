@@ -80,12 +80,15 @@ class StaticMap:
 
         # Overlaying the layers
         for layer in self.layers:
+            #try:
             if layer['Type'] == 'Maps':
                 self._maps(layer) 
             if layer['Type'] == 'Paths':
                 self._paths(layer)
             if layer['Type'] == 'Points':
                 self._points(layer)
+            # except:
+            #     print('Cannot Plot')
 
         if 'Output_Filename' in self.config['Static_Map']:
             plt.savefig(self.config['Static_Map']['Output_Filename'])
@@ -94,7 +97,7 @@ class StaticMap:
     def _basemap(self):
         self.fig = plt.figure(figsize=(15,10))
         self.ax = plt.axes(projection=self.ccrs)
-        self.ax.set_extent([-121,-9,-49,-81], crs=ccrs.PlateCarree())
+        self.ax.set_extent([self.config['Region']['longMin'],self.config['Region']['longMax'],self.config['Region']['latMin'],self.config['Region']['latMax']], crs=ccrs.PlateCarree())
         self.ax.add_image(cimgt.GoogleTiles(), 3)
         self.ax.coastlines(resolution='50m')
         self.ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False,linewidth=0.5,linestyle='--')
@@ -111,7 +114,7 @@ class StaticMap:
         '''
 
         # Loading the path information
-        with open('paths_traveltime.json', 'r') as f:
+        with open(info['filename'], 'r') as f:
             geojson = json.load(f)
             paths = geojson['features']
 
@@ -146,7 +149,7 @@ class StaticMap:
                 
             
             else:
-                self.ax.plot(points[:,0],points[:,1],transform=self.ccrs,linewidth=info['Line_Width'],color=info['Color'],alpha=1.0)
+                self.ax.plot(points[:,0],points[:,1],transform=ccrs.PlateCarree(),linewidth=info['Line_Width'],color=info['Color'],alpha=1.0)
 
             if info['Path_Points']:
                 self.ax.scatter(points[:,0],points[:,1],color=info['Color'],)
@@ -224,14 +227,14 @@ class InteractiveMap:
         # Defining the layers to plot
         for layer in self.layers:
             # try:
-                if layer['Type'] == 'Paths':
-                    self._paths(layer)
-                if layer['Type'] == 'Maps':
-                    self._maps(layer) 
-                if layer['Type'] == 'Points':
-                    self._points(layer)
-                if layer['Type'] == 'Geotiff':
-                    self._geotiff(layer)
+            if layer['Type'] == 'Paths':
+                self._paths(layer)
+            if layer['Type'] == 'Maps':
+                self._maps(layer) 
+            if layer['Type'] == 'Points':
+                self._points(layer)
+            if layer['Type'] == 'Geotiff':
+                self._geotiff(layer)
 
             # except:
             #     print('Issue Plotting Layer')
@@ -283,7 +286,7 @@ class InteractiveMap:
             pths_points = folium.FeatureGroup(name='{} - Path Points'.format(info['Name']),show=info['Show'])
             
         # Loading the path information
-        with open('paths_traveltime.json', 'r') as f:
+        with open(info['filename'], 'r') as f:
             geojson = json.load(f)
             paths = geojson['features']
 

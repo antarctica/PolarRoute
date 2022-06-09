@@ -36,10 +36,8 @@ class SpeedFunctions:
 
         # Reformatting the columns into correct type
         self.neighbour_graph['case'] = self.neighbour_graph['case'].apply(lambda x: ast.literal_eval(x))
-        self.neighbour_graph['cell_info'] = self.neighbour_graph['cell_info'].apply(lambda x: ast.literal_eval(x))
         self.neighbour_graph['neighbourIndex'] = self.neighbour_graph['neighbourIndex'].apply(
             lambda x: ast.literal_eval(x))
-        self.neighbour_graph['Vector'] = self.neighbour_graph['Vector'].apply(lambda x: ast.literal_eval(x))
 
         # Checking if Speed defined in file
         if 'Speed' not in self.neighbour_graph:

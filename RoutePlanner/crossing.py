@@ -46,8 +46,6 @@ class NewtonianDistance:
         # Cell information
         self.source_graph     = source_graph
         self.neighbour_graph  = neighbour_graph
-        # self.mesh            = mesh
-        #self.R               = 6371.*1000
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed  = unit_shipspeed
@@ -74,21 +72,6 @@ class NewtonianDistance:
 
         # For Debugging purposes
         self.debugging     = debugging
-
-
-    # def _dist(self,origin,dest_dist,cell,forward=True):
-    #     mLonScaled=self.m_long*np.cos(cell.cy*(np.pi/180))
-    #     lon1,lat1 = origin
-    #     if forward:
-    #         lon2,lat2 = dest_dist
-    #         # lon2 = lon2+360
-    #         # lon1 = lon1+360
-    #         val = np.sqrt(((lat2-lat1)*self.m_lat)**2 + ((lon2-lon1)*mLonScaled)**2)
-    #     else:
-    #         dist_x,dist_y = dest_dist
-    #         val = [lon1+(dist_x/self.m_lat),lat1+(dist_y/mLonScaled)]
-    #     return val
-
 
     def _newton_optimisation(self,f,x,a,Y,u1,v1,u2,v2,s1,s2):
         '''
@@ -137,7 +120,7 @@ class NewtonianDistance:
         '''
         x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*self.m_lat
-        traveltime = self._traveltime_in_cell(x,y,self.source_graph['Vector'][0],self.source_graph['Vector'][1],self.source_graph['Speed'])
+        traveltime = self._traveltime_in_cell(x,y,self.source_graph['Vector_x'],self.source_graph['Vector_y'],self.source_graph['Speed'])
         return self._unit_time(traveltime)
 
     def _F(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
@@ -215,20 +198,20 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        s_cx  = self.source_graph['cell_info'][0]
-        s_cy  = self.source_graph['cell_info'][1]
-        s_dcx = self.source_graph['cell_info'][2]
-        s_dcy = self.source_graph['cell_info'][3]
-        n_cx  = self.neighbour_graph['cell_info'][0]
-        n_cy  = self.neighbour_graph['cell_info'][1]
-        n_dcx = self.neighbour_graph['cell_info'][2]
-        n_dcy = self.neighbour_graph['cell_info'][3]
+        s_cx  = self.source_graph['cx']
+        s_cy  = self.source_graph['cy']
+        s_dcx = self.source_graph['dcx']
+        s_dcy = self.source_graph['dcy']
+        n_cx  = self.neighbour_graph['cx']
+        n_cy  = self.neighbour_graph['cy']
+        n_dcx = self.neighbour_graph['dcx']
+        n_dcy = self.neighbour_graph['dcy']
 
 
-        Su = ptvl*self.source_graph['Vector'][0]*self.zero_current_factor
-        Sv = ptvl*self.source_graph['Vector'][1]*self.zero_current_factor
-        Nu = ptvl*self.neighbour_graph['Vector'][0]*self.zero_current_factor
-        Nv = ptvl*self.neighbour_graph['Vector'][1]*self.zero_current_factor
+        Su = ptvl*self.source_graph['Vector_x']*self.zero_current_factor
+        Sv = ptvl*self.source_graph['Vector_y']*self.zero_current_factor
+        Nu = ptvl*self.neighbour_graph['Vector_x']*self.zero_current_factor
+        Nv = ptvl*self.neighbour_graph['Vector_y']*self.zero_current_factor
 
         Ssp = self.source_speed
         Nsp = self.neighbour_speed
@@ -256,20 +239,20 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        s_cx  = self.source_graph['cell_info'][0]
-        s_cy  = self.source_graph['cell_info'][1]
-        s_dcx = self.source_graph['cell_info'][2]
-        s_dcy = self.source_graph['cell_info'][3]
-        n_cx  = self.neighbour_graph['cell_info'][0]
-        n_cy  = self.neighbour_graph['cell_info'][1]
-        n_dcx = self.neighbour_graph['cell_info'][2]
-        n_dcy = self.neighbour_graph['cell_info'][3]
+        s_cx  = self.source_graph['cx']
+        s_cy  = self.source_graph['cy']
+        s_dcx = self.source_graph['dcx']
+        s_dcy = self.source_graph['dcy']
+        n_cx  = self.neighbour_graph['cx']
+        n_cy  = self.neighbour_graph['cy']
+        n_dcx = self.neighbour_graph['dcx']
+        n_dcy = self.neighbour_graph['dcy']
 
 
-        Su = -1*ptvl*self.source_graph['Vector'][1]*self.zero_current_factor
-        Sv = ptvl*self.source_graph['Vector'][0]*self.zero_current_factor
-        Nu = -1*ptvl*self.neighbour_graph['Vector'][1]*self.zero_current_factor
-        Nv = ptvl*self.neighbour_graph['Vector'][0]*self.zero_current_factor
+        Su = -1*ptvl*self.source_graph['Vector_y']*self.zero_current_factor
+        Sv = ptvl*self.source_graph['Vector_x']*self.zero_current_factor
+        Nu = -1*ptvl*self.neighbour_graph['Vector_y']*self.zero_current_factor
+        Nv = ptvl*self.neighbour_graph['Vector_x']*self.zero_current_factor
 
         Ssp=self.source_speed
         Nsp=self.neighbour_speed
@@ -295,14 +278,14 @@ class NewtonianDistance:
         '''
 
 
-        s_cx  = self.source_graph['cell_info'][0]
-        s_cy  = self.source_graph['cell_info'][1]
-        s_dcx = self.source_graph['cell_info'][2]
-        s_dcy = self.source_graph['cell_info'][3]
-        n_cx  = self.neighbour_graph['cell_info'][0]
-        n_cy  = self.neighbour_graph['cell_info'][1]
-        n_dcx = self.neighbour_graph['cell_info'][2]
-        n_dcy = self.neighbour_graph['cell_info'][3]
+        s_cx  = self.source_graph['cx']
+        s_cy  = self.source_graph['cy']
+        s_dcx = self.source_graph['dcx']
+        s_dcy = self.source_graph['dcy']
+        n_cx  = self.neighbour_graph['cx']
+        n_cy  = self.neighbour_graph['cy']
+        n_dcx = self.neighbour_graph['dcx']
+        n_dcy = self.neighbour_graph['dcy']
 
 
 
@@ -326,10 +309,10 @@ class NewtonianDistance:
         dy2 = n_dcy*self.m_lat
 
         # Currents in Cells
-        Su = ptvX*self.source_graph['Vector'][0]*self.zero_current_factor
-        Sv = ptvY*self.source_graph['Vector'][1]*self.zero_current_factor
-        Nu = ptvX*self.neighbour_graph['Vector'][0]*self.zero_current_factor
-        Nv = ptvY*self.neighbour_graph['Vector'][1]*self.zero_current_factor
+        Su = ptvX*self.source_graph['Vector_x']*self.zero_current_factor
+        Sv = ptvY*self.source_graph['Vector_y']*self.zero_current_factor
+        Nu = ptvX*self.neighbour_graph['Vector_x']*self.zero_current_factor
+        Nv = ptvY*self.neighbour_graph['Vector_y']*self.zero_current_factor
 
         # Vehicles Speeds in Cells
         Ssp = self.source_speed; Nsp = self.neighbour_speed
@@ -361,7 +344,7 @@ class NewtonianDistance:
             TravelTime,CrossPoints,CellPoints = self._corner()
         else:
             print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.\
-                format(self.source_graph['cell_info'][0],self.source_graph['cell_info'][1]))
+                format(self.source_graph['cx'],self.source_graph['cy']))
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
@@ -369,20 +352,24 @@ class NewtonianDistance:
         return TravelTime, CrossPoints, CellPoints
 
 
+# ===================================================================================================
+# ===================================================================================================
+# ===================================================================================================
+# ===================================================================================================
+# ===================================================================================================
+# ===================================================================================================
+
+
 class NewtonianCurve:
-    def __init__(self,Mesh,DijkstraInfo,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
+    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
         '''
     
             BUG:
                 - Currently the speed is fixed. Move the construction of the cellBox speed to a function of the cellBox
         
         '''
-
-        # Passing the Mesh information
-        self.mesh = Mesh
-
         # Passing the Dijkstra Graph
-        self.DijkstraInfo = copy.copy(DijkstraInfo)
+        self.neighbour_graph = copy.copy(neighbour_graph)
 
         # Passing the optional Information
         self.config = config
@@ -391,7 +378,7 @@ class NewtonianCurve:
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
-        self.s              = self._unit_speed(26.5)
+
         
         # Information for distance metrics
         self.R              = 6371.*1000
@@ -406,7 +393,7 @@ class NewtonianCurve:
 
         # Optimisation Information
         self.m_long  = 111.321*1000
-        self.m_lat  = 111.386*1000.
+        self.m_lat   = 111.386*1000.
 
         # For Debugging purposes 
         self.debugging     = debugging
@@ -448,12 +435,12 @@ class NewtonianCurve:
         return (end_lat-start_lat)*self.m_lat
 
     def _long_case(self):
-            def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+            def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
                     tryNum=1
                     iter=0
                     improving=True
                     while improving:  
-                        F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r)
+                        F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r)
                         if (F==0) or (dF==0):
                             dY = 0
                         else:
@@ -482,14 +469,14 @@ class NewtonianCurve:
                             raise Exception('Newton Curve Issue')
                     return y0
 
-            def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ_s,φ_r):
+            def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
                 θ  = (y/R + λ_s*(np.pi/180))
                 zl = x*np.cos(θ)
                 ψ  = (-(Y-y)/R + φ_r*(np.pi/180))
                 zr = a*np.cos(ψ)
 
-                C1  = s**2 - u1**2 - v1**2
-                C2  = s**2 - u2**2 - v2**2
+                C1  = speed_s**2 - u1**2 - v1**2
+                C2  = speed_e**2 - u2**2 - v2**2
                 D1  = zl*u1 + y*v1
                 D2  = zr*u2 + (Y-y)*v2
                 X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
@@ -518,11 +505,14 @@ class NewtonianCurve:
 
                 return F,dF,X1,X2
 
-            Sp   = tuple(self.triplet[['cX','cY']].iloc[0])
-            Cp   = tuple(self.triplet[['cX','cY']].iloc[1])
-            Np   = tuple(self.triplet[['cX','cY']].iloc[2])
-            Box1 = self.mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
-            Box2 = self.mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+            Sp   = tuple(self.triplet[['cx','cy']].iloc[0])
+            Cp   = tuple(self.triplet[['cx','cy']].iloc[1])
+            Np   = tuple(self.triplet[['cx','cy']].iloc[2])
+
+            cell_s_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_x']
+            cell_s_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_y']
+            cell_e_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_x']
+            cell_e_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_y']
 
             if self.triplet.iloc[1].case == 2:   
                 sgn  = 1
@@ -536,22 +526,22 @@ class NewtonianCurve:
             a           = sgn*self.calXDist(Cp[0],Np[0])
             Y           = (Np[1]-Sp[1])*self.m_lat
             y0          = Y/2
-            u1          = sgn*self.zc*Box1.getuC(); v1 = self.zc*Box1.getvC()
-            u2          = sgn*self.zc*Box2.getuC(); v2 = self.zc*Box2.getvC()
-            y           = NewtonOptimisationLong(_F,y0,x,a,Y,u1,v1,u2,v2,self.s,self.R,λ_s,φ_r)
+            u1          = sgn*self.zc*cell_s_u; v1 = self.zc*cell_s_v
+            u2          = sgn*self.zc*cell_e_u; v2 = self.zc*cell_e_v
+            y           = NewtonOptimisationLong(_F,y0,x,a,Y,u1,v1,u2,v2,self.speed_s,self.speed_e,self.R,λ_s,φ_r)
 
             # Updating the crossing points
-            self.triplet['cX'].iloc[1] = Cp[0]
-            self.triplet['cY'].iloc[1] = Sp[1] + y/self.m_lat
+            self.triplet['cx'].iloc[1] = Cp[0]
+            self.triplet['cy'].iloc[1] = Sp[1] + y/self.m_lat
 
 
     def _lat_case(self):
-        def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+        def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
                 tryNum=1
                 iter=0
                 improving=True
                 while improving:  
-                    F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ)
+                    F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ)
                     if (F==0) or (dF==0):
                         dY = 0
                     else:
@@ -579,7 +569,7 @@ class NewtonianCurve:
                         raise Exception('Newton Curve Issue')
                 return y0
 
-        def _F(y,x,a,Y,u1,v1,u2,v2,s,R,λ,θ,ψ):
+        def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
             λ   = λ*(np.pi/180)
             ψ   = ψ*(np.pi/180)
             θ   = θ*(np.pi/180)
@@ -588,8 +578,8 @@ class NewtonianCurve:
 
             d1  = np.sqrt(x**2 + (r1*y)**2)
             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
-            C1  = s**2 - u1**2 - v1**2
-            C2  = s**2 - u2**2 - v2**2
+            C1  = speed_s**2 - u1**2 - v1**2
+            C2  = speed_e**2 - u2**2 - v2**2
             D1  = x*u1 + r1*v1*y
             D2  = a*u2 + r2*v2*(Y-y)
             X1  = np.sqrt(D1**2 + C1*(d1**2))
@@ -608,11 +598,14 @@ class NewtonianCurve:
             return F,dF,X1,X2
 
 
-        Sp = tuple(self.triplet.iloc[0][['cX','cY']])
-        Cp = tuple(self.triplet.iloc[1][['cX','cY']])
-        Np = tuple(self.triplet.iloc[2][['cX','cY']])
-        Box1   = self.mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
-        Box2   = self.mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
+        Sp = tuple(self.triplet.iloc[0][['cx','cy']])
+        Cp = tuple(self.triplet.iloc[1][['cx','cy']])
+        Np = tuple(self.triplet.iloc[2][['cx','cy']])
+
+        cell_s_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_x']
+        cell_s_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_y']
+        cell_e_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_x']
+        cell_e_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_y']
 
         if self.triplet.iloc[1].case == 4:   
             sgn   = 1
@@ -626,42 +619,42 @@ class NewtonianCurve:
         x     = sgn*self.calYDist(Sp[1],Cp[1])
         a     = sgn*self.calYDist(Cp[1],Np[1])
         Y     = sgn*(Np[0]-Sp[0])*self.m_long*np.cos(Cp[1]*(np.pi/180))
-        Su    = -sgn*self.zc*Box1.getvC(); Sv = sgn*self.zc*Box1.getuC()
-        Nu    = -sgn*self.zc*Box2.getvC(); Nv = sgn*self.zc*Box2.getuC()
+        Su    = -sgn*self.zc*cell_s_v; Sv = sgn*self.zc*cell_s_u
+        Nu    = -sgn*self.zc*cell_e_v; Nv = sgn*self.zc*cell_e_u
         y0    = Y/2
 
-        y     = NewtonOptimisationLat(_F,y0,x,a,Y,Su,Sv,Nu,Nv,self.s,self.R,λ,θ,ψ)
+        y     = NewtonOptimisationLat(_F,y0,x,a,Y,Su,Sv,Nu,Nv,self.speed_s,self.speed_e,self.R,λ,θ,ψ)
 
-        self.triplet['cX'].iloc[1] = Sp[0] + sgn*y/(self.m_long*np.cos(Cp[1]*(np.pi/180)))
-        self.triplet['cY'].iloc[1] = Cp[1]
+        self.triplet['cx'].iloc[1] = Sp[0] + sgn*y/(self.m_long*np.cos(Cp[1]*(np.pi/180)))
+        self.triplet['cy'].iloc[1] = Cp[1]
 
 
     def _corner_case(self):
         '''
         '''
         # Separting out the Long/Lat of each of the points
-        Xs,Ys = tuple(self.triplet.iloc[0][['cX','cY']])
-        Xc,Yc = tuple(self.triplet.iloc[1][['cX','cY']])
-        Xe,Ye = tuple(self.triplet.iloc[2][['cX','cY']])
+        Xs,Ys = tuple(self.triplet.iloc[0][['cx','cy']])
+        Xc,Yc = tuple(self.triplet.iloc[1][['cx','cy']])
+        Xe,Ye = tuple(self.triplet.iloc[2][['cx','cy']])
 
         # === 1. Assess the cells that are shared commonly in the corner case ====
         sourceNeighbourIndices = self.triplet.iloc[1]['cellStart']
         endNeighbourIndices    = self.triplet.iloc[1]['cellEnd']
     
         commonIndices = list(set(sourceNeighbourIndices['neighbourIndex']).intersection(endNeighbourIndices['neighbourIndex']))
-        CornerCells   = self.DijkstraInfo.loc[commonIndices]
+        CornerCells   = self.neighbour_graph.loc[commonIndices]
         Y_line = ((Ye-Ys)/(Xe-Xs))*(Xc-Xs) + Ys
 
-        # if np.sign(self.triplet['case'].iloc[1]) == -1:
-
         if Yc >= Y_line:
-            newCell = CornerCells.loc[CornerCells['cY'].idxmin()]
-            if newCell.cY > Yc:
+            newCell = CornerCells.loc[CornerCells['cy'].idxmin()]
+            if newCell.cy > Yc:
                 return
         elif Yc < Y_line:
-            newCell = CornerCells.loc[CornerCells['cY'].idxmax()]
-            if newCell.cY < Yc:
+            newCell = CornerCells.loc[CornerCells['cy'].idxmax()]
+            if newCell.cy < Yc:
                 return
+
+
 
         # === 3. Return the path crossing points and cell indices
         try:
@@ -673,16 +666,16 @@ class NewtonianCurve:
 
         # Adding in the new crossing Point
         newP = pd.Series(name=self.triplet.iloc[1].name+1)
-        newP['cX']        = secondCrossingPoint[0]
-        newP['cY']        = secondCrossingPoint[1]
+        newP['cx']        = secondCrossingPoint[0]
+        newP['cy']        = secondCrossingPoint[1]
         newP['cellStart'] = newCell
         newP['cellEnd']   = copy.deepcopy(self.triplet['cellEnd'].iloc[1])
         newP['case']      = newP['cellStart']['case'][np.where(np.array(newP['cellStart']['neighbourIndex'])==newP['cellEnd'].name)[0][0]]
 
 
         # Updating the origional crossing point
-        self.triplet['cX'].iloc[1]      = firstCrossingPoint[0]
-        self.triplet['cY'].iloc[1]      = firstCrossingPoint[1]
+        self.triplet['cx'].iloc[1]      = firstCrossingPoint[0]
+        self.triplet['cy'].iloc[1]      = firstCrossingPoint[1]
         self.triplet['cellEnd'].iloc[1] = newCell 
         self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==newCell.name)[0][0]]
 
@@ -698,7 +691,8 @@ class NewtonianCurve:
         '''
 
         def PtDist(Ser1,Ser2):
-            return np.sqrt((Ser1['cX'] - Ser2['cX'])**2 + (Ser1['cY'] - Ser2['cY'])**2)
+            #return np.sqrt(self.calXDist(Ser2['cx'],Ser1['cx'])**2 + self.calXDist(Ser2['cy'],Ser1['cy'])**2)
+            return np.sqrt((Ser1['cx'] - Ser2['cx'])**2 + (Ser1['cy'] - Ser2['cy'])**2)
 
         id=0
         while id < len(self.CrossingDF)-3:
@@ -707,8 +701,8 @@ class NewtonianCurve:
                 neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
                 case           = triplet['cellStart'].iloc[0]['case'][neighbourIndex]
                 crossingPoint  = triplet['cellStart'].iloc[0]['neighbourCrossingPoints'][neighbourIndex]
-                triplet['cX'].iloc[0]      = crossingPoint[0]
-                triplet['cY'].iloc[0]      = crossingPoint[1]
+                triplet['cx'].iloc[0]      = crossingPoint[0]
+                triplet['cy'].iloc[0]      = crossingPoint[1]
                 triplet['cellEnd'].iloc[0] = copy.deepcopy(triplet.iloc[1]['cellEnd'])
                 triplet['case'].iloc[0]    = copy.deepcopy(case)
                 self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
@@ -716,12 +710,12 @@ class NewtonianCurve:
                 neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
                 case           = triplet['cellStart'].iloc[1]['case'][neighbourIndex]
                 crossingPoint  = triplet['cellStart'].iloc[1]['neighbourCrossingPoints'][neighbourIndex]
-                triplet['cX'].iloc[1]      = crossingPoint[0]
-                triplet['cY'].iloc[1]      = crossingPoint[1]
+                triplet['cx'].iloc[1]      = crossingPoint[0]
+                triplet['cy'].iloc[1]      = crossingPoint[1]
                 triplet['cellEnd'].iloc[1] = copy.deepcopy(triplet.iloc[2]['cellEnd'])
                 triplet['case'].iloc[1]    = copy.deepcopy(case)
                 self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[2].name)
-            
+
             id+=1
 
         self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
@@ -735,33 +729,31 @@ class NewtonianCurve:
         '''
 
         # Defining the case information
-        Cp             = tuple(self.triplet[['cX','cY']].iloc[1])
-        Sp             = tuple(self.triplet.iloc[0][['cX','cY']])
-        Np             = tuple(self.triplet.iloc[2][['cX','cY']])
-        cellStart      = self.mesh.cellBoxes[self.triplet.iloc[1]['cellStart'].name]
+        Cp             = tuple(self.triplet[['cx','cy']].iloc[1])
+        Sp             = tuple(self.triplet.iloc[0][['cx','cy']])
+        Np             = tuple(self.triplet.iloc[2][['cx','cy']])
+        
         cellStartGraph = self.triplet.iloc[1]['cellStart']
-        cellEnd        = self.mesh.cellBoxes[self.triplet.iloc[1]['cellEnd'].name]
-        cellEndGraph   = self.triplet.iloc[1]['cellEnd']
+        cellEndGraph   = self.triplet.iloc[1]['cellEnd']        
         case           = self.triplet['case'].iloc[1]
 
         # Returning if corner horseshoe case type
         if abs(case)==1 or abs(case)==3 or abs(case)==0: 
             return
         elif abs(case) == 2:
+            # Defining the min and max of the start and end cells
+            smin = cellStartGraph['cy']-cellStartGraph['dcy'] 
+            smax = cellStartGraph['cy']+cellStartGraph['dcy']
+            emin = cellEndGraph['cy']-cellEndGraph['dcy']
+            emax = cellEndGraph['cy']+cellEndGraph['dcy']
 
             # Defining the global min and max
-            vmin = np.max([cellStart.cy-cellStart.dcy,cellEnd.cy-cellEnd.dcy])
-            vmax = np.min([cellStart.cy+cellStart.dcy,cellEnd.cy+cellEnd.dcy])
+            vmin = np.max([smin,emin])
+            vmax = np.min([smax,emax])
 
             # Point crossingpoint on boundary between the two origional cells
             if (Cp[1] >= vmin) and (Cp[1] <= vmax):
                 return
-
-            # Defining the min and max of the start and end cells
-            smin = cellStart.cy-cellStart.dcy   
-            smax = cellStart.cy+cellStart.dcy
-            emin = cellEnd.cy-cellEnd.dcy
-            emax = cellEnd.cy+cellEnd.dcy
 
             # If Start and end cells share a edge for the horesshoe 
             if (Cp[1]<=smin) and (smin==emin):
@@ -774,10 +766,10 @@ class NewtonianCurve:
             # --- Cases where StartCell is Larger than end Cell ---
             if (Cp[1]>=emax) and (smax>emax):
                 hrshCaseStart = case
-                hrshCaseEnd   = 4                
+                hrshCaseEnd   = -4                
             if (Cp[1]<=emin) and (smin<emin):
                 hrshCaseStart = case
-                hrshCaseEnd   = -4                   
+                hrshCaseEnd   = 4                   
 
             # --- Cases where StartCell is smaller than end Cell ---
             if (Cp[1]>=smax) and (smax<emax):
@@ -788,23 +780,19 @@ class NewtonianCurve:
                 hrshCaseEnd   = case                    
 
         elif abs(case) == 4:
+            # Defining the min and max of the start and end cells
+            smin = cellStartGraph['cx']-cellStartGraph['dcx']
+            smax = cellStartGraph['cx']+cellStartGraph['dcx']
+            emin = cellEndGraph['cx']-cellEndGraph['dcx']
+            emax = cellEndGraph['cx']+cellEndGraph['dcx']
 
             # Defining the global min and max
-            gmin = np.min([cellStart.cx-cellStart.dcx,cellEnd.cx-cellEnd.dcx])
-            gmax = np.max([cellStart.cx+cellStart.dcx,cellEnd.cx+cellEnd.dcx])
-            vmin = np.max([cellStart.cx-cellStart.dcx,cellEnd.cx-cellEnd.dcx])
-            vmax = np.min([cellStart.cx+cellStart.dcx,cellEnd.cx+cellEnd.dcx])
+            vmin = np.max([smin,emin])
+            vmax = np.min([smax,emax])
 
             # Point crossingpoint on boundary between the two origional cells
             if (Cp[0] >= vmin) and (Cp[0] <= vmax):
                 return
-
-            # Defining the min and max of the start and end cells
-            smin = cellStart.cx-cellStart.dcx   
-            smax = cellStart.cx+cellStart.dcx
-            emin = cellEnd.cx-cellEnd.dcx
-            emax = cellEnd.cx+cellEnd.dcx
-
 
             # If Start and end cells share a edge for the horesshoe 
             if (Cp[0]<smin) and (smin==emin):
@@ -837,41 +825,39 @@ class NewtonianCurve:
 
         if (len(startGraphNeighbours)==0) or (len(endGraphNeighbours)==0):
             if abs(case) == 2:
-                self.triplet['cY'].iloc[1] = np.clip(self.triplet.iloc[1]['cY'],vmin,vmax)
+                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
             if abs(case) == 4:
-                self.triplet['cX'].iloc[1] = np.clip(self.triplet.iloc[1]['cX'],vmin,vmax)        
+                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
             return
         
         if abs(hrshCaseStart) == abs(hrshCaseEnd):
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
-                    if (np.array(self.DijkstraInfo.loc[sGN,'neighbourIndex'])==eGN).any() and (np.array(self.DijkstraInfo.loc[eGN,'neighbourIndex'])==sGN).any():
-                        sGNGraph = self.DijkstraInfo.loc[sGN]
-                        eGNGraph = self.DijkstraInfo.loc[eGN]
+                    if (np.array(self.neighbour_graph.loc[sGN,'neighbourIndex'])==eGN).any() and (np.array(self.neighbour_graph.loc[eGN,'neighbourIndex'])==sGN).any():
+                        sGNGraph = self.neighbour_graph.loc[sGN]
+                        eGNGraph = self.neighbour_graph.loc[eGN]
 
                         Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                         Crp2 = np.array(sGNGraph['neighbourCrossingPoints'])[np.where(np.array(sGNGraph['neighbourIndex']) == eGN)[0][0],:]
                         Crp3 = np.array(eGNGraph['neighbourCrossingPoints'])[np.where(np.array(eGNGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
                         
-
-
                         # Updating the origional crossing point
-                        self.triplet['cX'].iloc[1]      = Crp1[0]
-                        self.triplet['cY'].iloc[1]      = Crp1[1]
+                        self.triplet['cx'].iloc[1]      = Crp1[0]
+                        self.triplet['cy'].iloc[1]      = Crp1[1]
                         self.triplet['cellEnd'].iloc[1] = copy.deepcopy(sGNGraph)
                         self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==sGNGraph.name)[0][0]]
 
                         # Crossing Point 2
                         Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+1)
-                        Pcrp2['cX']        = Crp2[0]
-                        Pcrp2['cY']        = Crp2[1]
+                        Pcrp2['cx']        = Crp2[0]
+                        Pcrp2['cy']        = Crp2[1]
                         Pcrp2['cellStart'] = copy.deepcopy(sGNGraph)
                         Pcrp2['cellEnd']   = copy.deepcopy(eGNGraph)
                         Pcrp2['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
 
                         Pcrp3 = pd.Series(name=self.triplet.iloc[1].name+2)
-                        Pcrp3['cX']        = Crp3[0]
-                        Pcrp3['cY']        = Crp3[1]
+                        Pcrp3['cx']        = Crp3[0]
+                        Pcrp3['cy']        = Crp3[1]
                         Pcrp3['cellStart'] = copy.deepcopy(eGNGraph)
                         Pcrp3['cellEnd']   = copy.deepcopy(cellEndGraph)
                         Pcrp3['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
@@ -880,25 +866,25 @@ class NewtonianCurve:
                         self.CrossingDF = self.CrossingDF.append([Pcrp2,Pcrp3],sort=True).sort_index().reset_index(drop=True)
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        self.id=-1
+                        # self.id=-1
         else:
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
                     if (np.array(sGN==eGN).any()):
-                        NeighGraph = self.DijkstraInfo.loc[sGN]               
+                        NeighGraph = self.neighbour_graph.loc[sGN]               
                         Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                         Crp2 = np.array(NeighGraph['neighbourCrossingPoints'])[np.where(np.array(NeighGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
 
 
                         # Updating the origional crossing point
-                        self.triplet['cX'].iloc[1]      = Crp1[0]
-                        self.triplet['cY'].iloc[1]      = Crp1[1]
+                        self.triplet['cx'].iloc[1]      = Crp1[0]
+                        self.triplet['cy'].iloc[1]      = Crp1[1]
                         self.triplet['cellEnd'].iloc[1] = copy.deepcopy(NeighGraph)
                         self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==NeighGraph.name)[0][0]]
 
                         Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+2)
-                        Pcrp2['cX']        = Crp2[0]
-                        Pcrp2['cY']        = Crp2[1]
+                        Pcrp2['cx']        = Crp2[0]
+                        Pcrp2['cy']        = Crp2[1]
                         Pcrp2['cellStart'] = copy.deepcopy(NeighGraph)
                         Pcrp2['cellEnd']   = copy.deepcopy(cellEndGraph)
                         Pcrp2['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
@@ -906,7 +892,7 @@ class NewtonianCurve:
                         self.CrossingDF = self.CrossingDF.append([Pcrp2],sort=True).sort_index().reset_index(drop=True)
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        self.id=-1
+                        # self.id=-1
 
     def _reverseCase(self):
 
@@ -942,21 +928,75 @@ class NewtonianCurve:
 
         self.org_triplet = copy.deepcopy(self.triplet) 
 
+        self.speed_s = self._unit_speed(self.triplet.iloc[1]['cellStart']['Speed'])
+        self.speed_e = self._unit_speed(self.triplet.iloc[1]['cellEnd']['Speed'])
+
 
         # ------ Case Deginitions & Dealing
         if self.debugging:
             print('===========================================================')
         if abs(self.triplet.iloc[1].case)==2:
             self._long_case()
-            self.id=0
         elif abs(self.triplet.iloc[1].case)==4:
             self._lat_case()
-            self.id=0
         elif (abs(self.triplet.iloc[1].case)==1) or (abs(self.triplet.iloc[1].case)==3):
             self._corner_case()
-            #self.id=-1
 
         if len(self.triplet) < 3:
             return
 
+
+
+
+    def _traveltime_in_cell(self,xdist,ydist,U,V,S):
+            '''
+                Determines the travel-time within cell between two points
+            '''
+            dist  = np.sqrt(xdist**2 + ydist**2)
+            cval  = np.sqrt(U**2 + V**2)
+
+            dotprod  = xdist*U + ydist*V
+            diffsqrs = S**2 - cval**2
+
+            # if (dotprod**2 + diffsqrs*(dist**2) < 0)
+            if diffsqrs == 0.0:
+                if dotprod == 0.0:
+                    return np.inf
+                    #raise Exception(' ')
+                else:
+                    if ((dist**2)/(2*dotprod))  <0:
+                        return np.inf
+                        #raise Exception(' ')
+                    else:
+                        traveltime = dist * dist / (2 * dotprod)
+                        return traveltime
+
+            traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
+            if traveltime < 0:
+                traveltime = np.inf
+                #raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
+            return traveltime
+
+
+    def _waypoint_correction(self,source_graph,Wp,Cp):
+            '''
+            '''
+            m_long  = 111.321*1000
+            m_lat   = 111.386*1000
+
+            x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
+            y = (Cp[1]-Wp[1])*m_lat
+            traveltime = self._traveltime_in_cell(x,y,source_graph['Vector_x'],source_graph['Vector_y'],self._unit_speed(source_graph['Speed']))
+            return traveltime
+
+    def objective_function(self):
+        TravelTime = np.zeros(len(self.CrossingDF))
+        for ii in range(len(self.CrossingDF)-1):
+            soruce_graph = self.CrossingDF.iloc[ii]['cellEnd']
+            Wp = self.CrossingDF.iloc[ii][['cx','cy']].to_numpy()
+            Cp = self.CrossingDF.iloc[ii+1][['cx','cy']].to_numpy()
+            traveltime =self._waypoint_correction(soruce_graph,Wp,Cp)
+            TravelTime[ii+1]= self._unit_time(traveltime)
+        TravelTime = np.cumsum(TravelTime)
+        return TravelTime
 
