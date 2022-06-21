@@ -166,12 +166,13 @@ class CellGrid:
             cellboxes within this cellgrid.
         """
         for cell_box in self.cellboxes:
-            long_loc = data_points.loc[(data_points['long'] > cell_box.long) &
-                (data_points['long'] <= (cell_box.long + cell_box.width))]
-            lat_long_loc = long_loc.loc[(long_loc['lat'] > cell_box.lat) &
-                (long_loc['lat'] <= (cell_box.lat + cell_box.height))]
+            if isinstance(cell_box, CellBox):
+                long_loc = data_points.loc[(data_points['long'] > cell_box.long) &
+                    (data_points['long'] <= (cell_box.long + cell_box.width))]
+                lat_long_loc = long_loc.loc[(long_loc['lat'] > cell_box.lat) &
+                    (long_loc['lat'] <= (cell_box.lat + cell_box.height))]
 
-            cell_box.add_data_points(lat_long_loc)
+                cell_box.add_data_points(lat_long_loc)
 
     # Functions for outputting the cellgrid
     def output_dataframe(self):
@@ -246,6 +247,46 @@ class CellGrid:
         return cellgrid_dataframe
 
     # Functions for spltting cellboxes within the cellgrid
+
+    def get_cellboxes(self, selected_values):
+        """
+            returns a list of dictories containing information about each cellbox
+            in this cellgrid. Which information is included in each dictionary
+            is specifed those specifed in the list parameter 'selected_values'
+
+            all cellboxes will include id, geometry, cell_info
+        """
+        return_cellboxes = []
+        for cellbox in self.cellboxes:
+            if isinstance(cellbox, CellBox):
+                cell_indx = self.cellboxes.index(cellbox)
+                # create cellbox identifiers
+                cell = {
+                    "id":str(self.cellboxes.index(cellbox)),
+                    "geometry":Polygon(cellbox.get_bounds()),
+                    'cx':cellbox.getcx(),
+                    'cy':cellbox.getcy(),
+                    'dcx':cellbox.getdcx(),
+                    'dcy':cellbox.getdcy()
+                }
+                # get neighbours of cellbox
+                neighbour_case = []
+                neighbour_indx = []
+
+                neighbour_graph = self.neighbour_graph[cell_indx]
+                for case in neighbour_graph.keys():
+                    for neighbour in neighbour_graph[case]:
+                        neighbour_case.append(case)
+                        neighbour_indx.append(neighbour)
+
+                cell['case'] = neighbour_case
+                cell['neighbourIndex'] = neighbour_indx
+                # assigned selected values to cellbox
+                for value in selected_values:
+                    cell[value]= cellbox.get_value(value)
+                return_cellboxes.append(cell)
+        return return_cellboxes
+
     def split_and_replace(self, cellbox):
         """
             Replaces a cellBox given by parameter 'cellBox' in this grid with
@@ -464,6 +505,16 @@ class CellGrid:
             if isinstance(cellbox, CellBox):
                 if cellbox.should_be_split():
                     self.split_and_replace(cellbox)
+    
+    def split_to_depth(self, split_depth):
+        """
+            splits all cellboxes in this grid until a maximum split depth
+            is reached, or all cellboxes are homogenous.
+        """
+        for cellbox in self.cellboxes:
+            if isinstance(cellbox, CellBox):
+                if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
+                    self.split_and_replace(cellbox)
 
     # Functions for debugging
     def plot(self, highlight_cellboxes = {}, plot_ice = True, plot_currents = False,
@@ -605,16 +656,22 @@ class CellGrid:
                     selected_cell.append(cellbox)
         return selected_cell
 
-    def to_json(self):
+    def to_json(self, selected_values):
         """
             Returns this cellGrid converted to JSON format.
         """
-        json = "{ \"cellBoxes\":["
-        for cellbox in self.cellboxes:
-            json += cellbox.toJSON() + ",\n"
 
-        json = json[:-2] # remove last comma and newline
-        json += "]}"
+        # json = {
+        #     "cellboxes": "{" + str(self.get_cellboxes(selected_values)) + "}",
+        #     "neighbour_graph:": "{" + str(self.neighbour_graph) + "}",
+        #     "config": "{" + self.config + "}"
+        # }
+
+        json = {}
+        json["cellboxes"] = self.get_cellboxes(selected_values)
+        json['neighbour_graph'] = self.neighbour_graph
+        json['config'] = self.config
+
         return json
 
     # Functions used for j_grid regression testing

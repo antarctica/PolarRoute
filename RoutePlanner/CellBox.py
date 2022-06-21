@@ -120,8 +120,8 @@ class CellBox:
 
         value = data_frame[value].mean()
         # temporary fix to avoid crashing - should be changed!
-        if np.isnan(value):
-            value = 0
+        # if np.isnan(value):
+        #     value = 0
         return value
 
     def get_bounds(self):
@@ -176,6 +176,36 @@ class CellBox:
         proportion_over_x_percent = prop_over.shape[0] / data_points.shape[0]
         return (proportion_over_x_percent > lowerbound and proportion_over_x_percent < upperbound)
 
+    def value_hom_condition(self, value, threshold, lowerbound, upperbound):
+        """
+            returns 'CLR', 'HET' or 'HOM' dependant on the distribution of
+            datapoints contained within
+
+            CLR = the proportion of datapoints within this cellbox over a given
+                threshold is lower than the lowerbound
+            HOM = the proportion of datapoints within this cellbox over a given
+                threshold is higher than the upperbound
+            MIN = the cellbox contains less than a minimum number of datapoints
+
+            HET = the proportion of datapoints within this cellbox over a given
+                threshold if between the upper and lower bound
+        """
+        data_limit = 4
+        data_points = self.get_data_points([value])
+
+        if data_points.shape[0] < data_limit:
+            return "MIN"
+
+        over_threshold = data_points.loc[data_points[value] > threshold]
+
+        prop_over = over_threshold.shape[0] / data_points.shape[0]
+        if prop_over <= lowerbound:
+            return "CLR"
+        if prop_over >= upperbound:
+            return "HOM"
+        return "HET"
+
+
     def should_be_split(self):
         """
             returns true or false dependant on if any of the splitting condtions
@@ -198,6 +228,42 @@ class CellBox:
             lowerbound = float(splitting_condition[value]['lowerBound'])
             split = split or self.value_should_be_split(value, threshold, lowerbound, upperbound)
         return split
+
+    def should_split(self):
+        """
+            determines if a cellbox should be split based on the homogeneity
+            condition of each data type contained within. The homogeneity condition
+            of values within this cellbox is calculated using the function
+            'value_hom_condition()'
+
+            if ANY data returns 'HOM':
+                do not split
+            if ANY data returns 'MIN':
+                do not split
+            if ALL data returns 'CLR':
+                do not split
+            else:
+                split
+
+        """
+        hom_conditions = []
+
+        for splitting_condition in self._splitting_conditions:
+            value = list(splitting_condition.keys())[0]
+            threshold = float(splitting_condition[value]['threshold'])
+            upperbound = float(splitting_condition[value]['upperBound'])
+            lowerbound = float(splitting_condition[value]['lowerBound'])
+
+            hom_conditions.append(self.value_hom_condition(value,threshold,lowerbound,upperbound))
+
+        if "HOM" in hom_conditions:
+            return False
+        if "MIN" in hom_conditions:
+            return False
+        if hom_conditions.count("CLR") == len(hom_conditions):
+            return False
+
+        return True
 
     def split(self):
         '''
