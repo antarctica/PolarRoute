@@ -6,6 +6,9 @@ import copy
 import pandas as pd
 import numpy as np
 
+import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
+
 class NewtonianDistance:
     """The summary line for a class docstring should fit on one line.
 
@@ -361,7 +364,7 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
+    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True,verbose=True):
         '''
     
             BUG:
@@ -586,6 +589,8 @@ class NewtonianCurve:
             X2  = np.sqrt(D2**2 + C2*(d2**2)) 
 
             dX1 = (r1*(D1*v1 + r1*C1*y))/X1
+
+            # Cassing Warning message - FIX !!
             dX2 = (-r2*(D2*v2 + r2*C2*(Y-y)))/X2
 
             F = ((r2**2)*X1+(r1**2)*X2)*y - r1*v1*(X1-D1)*X2/C1 - r2*(r2*Y-v2*(X2-D2)/C2)*X1
@@ -645,19 +650,17 @@ class NewtonianCurve:
         CornerCells   = self.neighbour_graph.loc[commonIndices]
         Y_line = ((Ye-Ys)/(Xe-Xs))*(Xc-Xs) + Ys
 
-        if Yc >= Y_line:
-            newCell = CornerCells.loc[CornerCells['cy'].idxmin()]
-            if newCell.cy > Yc:
-                return
-        elif Yc < Y_line:
-            newCell = CornerCells.loc[CornerCells['cy'].idxmax()]
-            if newCell.cy < Yc:
-                return
-
-
-
-        # === 3. Return the path crossing points and cell indices
         try:
+            if Yc >= Y_line:
+                newCell = CornerCells.loc[CornerCells['cy'].idxmin()]
+                if newCell.cy > Yc:
+                    return
+            elif Yc < Y_line:
+                newCell = CornerCells.loc[CornerCells['cy'].idxmax()]
+                if newCell.cy < Yc:
+                    return
+            # === 3. Return the path crossing points and cell indices
+
             firstCrossingPoint  = np.array(sourceNeighbourIndices['neighbourCrossingPoints'])[np.where(np.array(sourceNeighbourIndices['neighbourIndex'])==newCell.name)[0][0],:]
             secondCrossingPoint = np.array(newCell['neighbourCrossingPoints'])[np.where(np.array(newCell['neighbourIndex'])==endNeighbourIndices.name)[0][0],:]
         except:
@@ -665,7 +668,7 @@ class NewtonianCurve:
             return
 
         # Adding in the new crossing Point
-        newP = pd.Series(name=self.triplet.iloc[1].name+1)
+        newP = pd.Series(name=self.triplet.iloc[1].name+1,dtype='object')
         newP['cx']        = secondCrossingPoint[0]
         newP['cy']        = secondCrossingPoint[1]
         newP['cellStart'] = newCell
@@ -681,7 +684,9 @@ class NewtonianCurve:
 
 
         # Adding the new crossing point to the triplet
-        self.CrossingDF = self.CrossingDF.append(newP,sort=True).sort_index().reset_index(drop=True)
+        self.newP = newP
+
+        self.CrossingDF = pd.concat([self.CrossingDF,newP.to_frame().transpose()]).sort_index().reset_index(drop=True) #self.CrossingDF.append(newP,sort=True).sort_index().reset_index(drop=True)
         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
 
@@ -766,10 +771,10 @@ class NewtonianCurve:
             # --- Cases where StartCell is Larger than end Cell ---
             if (Cp[1]>=emax) and (smax>emax):
                 hrshCaseStart = case
-                hrshCaseEnd   = -4                
+                hrshCaseEnd   = (-4)                
             if (Cp[1]<=emin) and (smin<emin):
                 hrshCaseStart = case
-                hrshCaseEnd   = 4                   
+                hrshCaseEnd   = (4)                   
 
             # --- Cases where StartCell is smaller than end Cell ---
             if (Cp[1]>=smax) and (smax<emax):
@@ -805,18 +810,18 @@ class NewtonianCurve:
             # --- Cases where StartCell is Larger than end Cell ---
             if (Cp[0]>emax) and (smax>emax):
                 hrshCaseStart = case
-                hrshCaseEnd   = -2                
-            if (Cp[1]<emin) and (smin<emin):
+                hrshCaseEnd   = (-2)                
+            if (Cp[0]<emin) and (smin<emin):
                 hrshCaseStart = case
-                hrshCaseEnd   = 2                   
+                hrshCaseEnd   = (2)                   
 
             # --- Cases where StartCell is smaller than end Cell ---
             if (Cp[0]>smax) and (smax<emax):
                 hrshCaseStart = 2
-                hrshCaseEnd   = case
+                hrshCaseEnd   = -case
             if (Cp[0]<smin) and (emin<smin):
                 hrshCaseStart = -2
-                hrshCaseEnd   = case   
+                hrshCaseEnd   = -case   
 
 
         # Determining the neighbours of the start and end cells that are the horseshoe case
@@ -825,9 +830,9 @@ class NewtonianCurve:
 
         if (len(startGraphNeighbours)==0) or (len(endGraphNeighbours)==0):
             if abs(case) == 2:
-                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                self.triplet['cy'].iloc[1] = self.org_triplet['cy'].iloc[1]
             if abs(case) == 4:
-                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                self.triplet['cx'].iloc[1] = self.org_triplet['cx'].iloc[1]        
             return
         
         if abs(hrshCaseStart) == abs(hrshCaseEnd):
@@ -848,14 +853,14 @@ class NewtonianCurve:
                         self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==sGNGraph.name)[0][0]]
 
                         # Crossing Point 2
-                        Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+1)
+                        Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+1,dtype='object')
                         Pcrp2['cx']        = Crp2[0]
                         Pcrp2['cy']        = Crp2[1]
                         Pcrp2['cellStart'] = copy.deepcopy(sGNGraph)
                         Pcrp2['cellEnd']   = copy.deepcopy(eGNGraph)
                         Pcrp2['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
 
-                        Pcrp3 = pd.Series(name=self.triplet.iloc[1].name+2)
+                        Pcrp3 = pd.Series(name=self.triplet.iloc[1].name+2,dtype='object')
                         Pcrp3['cx']        = Crp3[0]
                         Pcrp3['cy']        = Crp3[1]
                         Pcrp3['cellStart'] = copy.deepcopy(eGNGraph)
@@ -863,7 +868,8 @@ class NewtonianCurve:
                         Pcrp3['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
                         
 
-                        self.CrossingDF = self.CrossingDF.append([Pcrp2,Pcrp3],sort=True).sort_index().reset_index(drop=True)
+                        self.CrossingDF = pd.concat([self.CrossingDF,Pcrp2.to_frame().transpose(),Pcrp3.to_frame().transpose()], sort=True).sort_index().reset_index(drop=True) #self.CrossingDF.append([Pcrp2,Pcrp3],sort=True).sort_index().reset_index(drop=True)
+
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
                         # self.id=-1
@@ -871,6 +877,7 @@ class NewtonianCurve:
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
                     if (np.array(sGN==eGN).any()):
+                        
                         NeighGraph = self.neighbour_graph.loc[sGN]               
                         Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                         Crp2 = np.array(NeighGraph['neighbourCrossingPoints'])[np.where(np.array(NeighGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
@@ -882,14 +889,15 @@ class NewtonianCurve:
                         self.triplet['cellEnd'].iloc[1] = copy.deepcopy(NeighGraph)
                         self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==NeighGraph.name)[0][0]]
 
-                        Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+2)
+                        Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+2,dtype='object')
                         Pcrp2['cx']        = Crp2[0]
                         Pcrp2['cy']        = Crp2[1]
                         Pcrp2['cellStart'] = copy.deepcopy(NeighGraph)
                         Pcrp2['cellEnd']   = copy.deepcopy(cellEndGraph)
                         Pcrp2['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
                         
-                        self.CrossingDF = self.CrossingDF.append([Pcrp2],sort=True).sort_index().reset_index(drop=True)
+                        self.CrossingDF = pd.concat([self.CrossingDF,Pcrp2.to_frame().transpose()], sort=True).sort_index().reset_index(drop=True)#self.CrossingDF.append([Pcrp2],sort=True).sort_index().reset_index(drop=True)
+                        
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
                         # self.id=-1
@@ -991,12 +999,19 @@ class NewtonianCurve:
 
     def objective_function(self):
         TravelTime = np.zeros(len(self.CrossingDF))
+        index      = np.zeros(len(self.CrossingDF))
         for ii in range(len(self.CrossingDF)-1):
             soruce_graph = self.CrossingDF.iloc[ii]['cellEnd']
             Wp = self.CrossingDF.iloc[ii][['cx','cy']].to_numpy()
             Cp = self.CrossingDF.iloc[ii+1][['cx','cy']].to_numpy()
             traveltime =self._waypoint_correction(soruce_graph,Wp,Cp)
             TravelTime[ii+1]= self._unit_time(traveltime)
+
+            if ii ==0:
+                index[ii] = soruce_graph.name
+                index[ii+1] = soruce_graph.name
+            else:
+                index[ii+1] = soruce_graph.name
         TravelTime = np.cumsum(TravelTime)
-        return TravelTime
+        return TravelTime,index
 

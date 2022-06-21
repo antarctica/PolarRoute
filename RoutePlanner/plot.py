@@ -61,6 +61,7 @@ import pandas as pd
 import cartopy.io.img_tiles as cimgt
 import json
 
+
 class StaticMap:
     def __init__(self,config):
         self.config = config
@@ -72,15 +73,15 @@ class StaticMap:
             if self.basemap['CRS'] == 'Mercartor':
                 self.ccrs = ccrs.Mercator()
             if self.basemap['CRS'] == 'Orthographic':
-                self.ccrs = ccrs.Orthographic(central_longitude=-41,central_latitude=-71)
+                self.ccrs = ccrs.Orthographic(central_longitude=self.basemap['central_longitude'],central_latitude=self.basemap['central_latitude'])
         else:
-            self.ccrs = ccrs.Orthographic(central_longitude=-41,central_latitude=-71)
+           self.ccrs = ccrs.Mercator()
         self._basemap()
 
 
         # Overlaying the layers
         for layer in self.layers:
-            #try:
+            # try:
             if layer['Type'] == 'Maps':
                 self._maps(layer) 
             if layer['Type'] == 'Paths':
@@ -97,7 +98,7 @@ class StaticMap:
     def _basemap(self):
         self.fig = plt.figure(figsize=(15,10))
         self.ax = plt.axes(projection=self.ccrs)
-        self.ax.set_extent([self.config['Region']['longMin'],self.config['Region']['longMax'],self.config['Region']['latMin'],self.config['Region']['latMax']], crs=ccrs.PlateCarree())
+        self.ax.set_extent([self.config['Region']['longMin']+1e-6,self.config['Region']['longMax']-1e-6,self.config['Region']['latMin'],self.config['Region']['latMax']], crs=ccrs.PlateCarree())
         self.ax.add_image(cimgt.GoogleTiles(), 3)
         self.ax.coastlines(resolution='50m')
         self.ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False,linewidth=0.5,linestyle='--')
@@ -106,7 +107,10 @@ class StaticMap:
 
     def _points(self,info):
         dataframe_points = pd.read_csv(info['filename'])
-        self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],15,marker='o',transform=ccrs.PlateCarree(),color='black',zorder=100)
+        if ('Name' in info) and info['Name']:
+            self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],info["Size"],dataframe_points[info['Name']],marker='o',transform=ccrs.PlateCarree())
+        else:
+            self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],info["Size"],marker='o',transform=ccrs.PlateCarree(),color='black')
 
     def _paths(self,info):
         '''
@@ -208,9 +212,9 @@ class StaticMap:
                         for _,poly in dataframe_geo.iterrows():
                             x,y = poly['geometry'].exterior.coords.xy
                             self.ax.plot(np.array(x),np.array(y),color=info['Line_Color'],linewidth=info['Line_Width'],transform=ccrs.PlateCarree())
-
     def show(self):
         plt.show()
+
 
 class InteractiveMap:
     def __init__(self,config):
@@ -235,6 +239,8 @@ class InteractiveMap:
                 self._points(layer)
             if layer['Type'] == 'Geotiff':
                 self._geotiff(layer)
+            if layer['Type'] == 'MeshInfo':
+                self._meshInfo(layer)
 
             # except:
             #     print('Issue Plotting Layer')
@@ -311,7 +317,7 @@ class InteractiveMap:
             if info['Colorline']:
                 folium.PolyLine(points,color="black", weight=info['Line_Width'], opacity=1).add_to(pths)
                 colormap = linear._colormaps[info['Cmap']].scale(0,max_val)
-                colormap.caption = '{} ({})'.format(info['Data_Name'],info['Data_Units'])
+                colormap.caption = '{} ({},Max Value={:.3f})'.format(info['Data_Name'],info['Data_Units'],max_val)
                 folium.ColorLine(points,data_val,colormap=colormap,nb_steps=50, weight=3.5, opacity=1).add_to(pths)
 
 
@@ -483,27 +489,23 @@ class InteractiveMap:
         dataframe_pandas = pd.read_csv(info['filename'])
         dataframe_pandas['geometry'] = dataframe_pandas['geometry'].apply(wkt.loads)
         dataframe_geo = gpd.GeoDataFrame(dataframe_pandas,crs='EPSG:4326', geometry='geometry')
-
+        dataframe_geo = dataframe_geo[['geometry']+list(info['Data_Names'])]
 
         feature_info = folium.FeatureGroup(name='{}'.format(info['Name']),show=info['Show'])
-
         folium.GeoJson(dataframe_geo,
-
             style_function= lambda x: {
-                    'fillColor': 'black',
-                    'color': 'gray',
-                    'weight': 0.5,
-                    'fillOpacity': 0.
+                    'fillColor': info['Fill_Color'],
+                    'color': info['Line_Color'],
+                    'weight': info['Line_Width'],
+                    'fillOpacity': info['Fill_Opacity']
                 },
-
             tooltip=folium.GeoJsonTooltip(
-                fields=[dataframe_geo.columns.intersection(info['Data_Names'])],
-                aliases=[dataframe_geo.columns.intersection(info['Data_Names'])],
+                fields=list(dataframe_geo.columns.intersection(info['Data_Names'])),
+                aliases=info['Label_Names'],
                 localize=True
             )
         ).add_to(feature_info) 
-        self.map.add_child(feature_info)
-
+        feature_info.add_to(self.map)
     def _layer_control(self):
         folium.LayerControl(collapsed=True).add_to(self.map)
 
