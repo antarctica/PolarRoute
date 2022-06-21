@@ -205,12 +205,13 @@ class CellBox:
             return "HOM"
         return "HET"
 
-
     def should_be_split(self):
         """
             returns true or false dependant on if any of the splitting condtions
             on values contained within this cellbox dictate that the cellbox
             should be split
+
+            DEPRICATED - use should split instead.
         """
 
         # if a j_grid has been generated, use a different function to determin splitting
@@ -242,9 +243,8 @@ class CellBox:
                 do not split
             if ALL data returns 'CLR':
                 do not split
-            else:
+            else (mixture of CLR & HET):
                 split
-
         """
         hom_conditions = []
 
@@ -324,7 +324,7 @@ class CellBox:
             Returns mean ice thickness within this cellBox.
             Data taken from Table 3 in: doi:10.1029/2007JC004254
 
-            TODO - Data is hard coded - should be stored in an external file
+            DEPRICATED - externally generated ice thickness data should be used instead
         """
         # The table has missing data points for Bellinghausen Autumn and Weddell W Winter,
         # these require further thought
@@ -359,7 +359,7 @@ class CellBox:
         """
             Returns mean ice density within this cellBox
 
-            TODO - Data is hard coded - should be stored in an external file.
+            DEPRICATED - externally generated ice density data should be used instead
         """
         seasons = {1:'su',2:'su',3:'a',4:'a',5:'a',6:'w',7:'w',8:'w',9:'sp',10:'sp',11:'sp',12:'su'}
         densities = {'su':875.0,'sp':900.0,'a':900.0,'w':920.0}
@@ -383,6 +383,7 @@ class CellBox:
     def __str__(self):
         '''
             Converts a cellBox to a String which may be printed to console for debugging purposes
+            TODO
         '''
         cellbox_str = "TODO"
         return cellbox_str
@@ -390,6 +391,7 @@ class CellBox:
     def to_json(self):
         '''
             convert cellBox to JSON
+            TODO
         '''
         cellbox_json = "{"
         cellbox_json += "}"
@@ -399,6 +401,8 @@ class CellBox:
         """
             Returns True if any icepoint within the cell has a
             depth less than the specified minimum depth.
+
+            DEPRICATED - Land mask are now calculated based on the average depth of a cell.
         """
 
         if self._j_grid:
@@ -414,6 +418,8 @@ class CellBox:
         """
             Returns True if all icepoints within the cell have a
             depth less than the specified minimum depth.
+
+            DEPRICATED - land masked are now calculated based on the average depth of a cell
         """
         if self._j_grid:
             return self.is_land_m()
