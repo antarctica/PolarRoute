@@ -81,7 +81,7 @@ class StaticMap:
         # Overlaying the layers
         for layer in self.layers:
             if layer['Type'] == 'Maps':
-                self._maps(layer) 
+                self._maps(layer)
             if layer['Type'] == 'Paths':
                 self._paths(layer)
             if layer['Type'] == 'Points':
@@ -140,9 +140,9 @@ class StaticMap:
                                                 src_crs=ccrs.PlateCarree())
                 xcs = np.array([x[:,0],x[:,1]]).T.reshape(-1,1,2) 
                 segments = np.concatenate([xcs[:-1], xcs[1:]], axis=1)   
-                lc = LineCollection(segments, cmap=info['Cmap'], linewidth=3,norm=plt.Normalize(vmin=min_val, vmax=max_val)) 
-                lc.set_array(path['properties']['traveltime'])                                           
-                self.ax.add_collection(lc) 
+                lc = LineCollection(segments, cmap=info['Cmap'], linewidth=3,norm=plt.Normalize(vmin=min_val, vmax=max_val))
+                lc.set_array(path['properties']['traveltime'])                               
+                self.ax.add_collection(lc)
                 
             
             else:

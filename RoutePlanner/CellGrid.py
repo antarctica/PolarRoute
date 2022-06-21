@@ -166,17 +166,20 @@ class CellGrid:
             cellboxes within this cellgrid.
         """
         for cell_box in self.cellboxes:
-            long_loc = data_points.loc[(data_points['long'] > cell_box.long) &
-                (data_points['long'] <= (cell_box.long + cell_box.width))]
-            lat_long_loc = long_loc.loc[(long_loc['lat'] > cell_box.lat) &
-                (long_loc['lat'] <= (cell_box.lat + cell_box.height))]
+            if isinstance(cell_box, CellBox):
+                long_loc = data_points.loc[(data_points['long'] > cell_box.long) &
+                    (data_points['long'] <= (cell_box.long + cell_box.width))]
+                lat_long_loc = long_loc.loc[(long_loc['lat'] > cell_box.lat) &
+                    (long_loc['lat'] <= (cell_box.lat + cell_box.height))]
 
-            cell_box.add_data_points(lat_long_loc)
+                cell_box.add_data_points(lat_long_loc)
 
     # Functions for outputting the cellgrid
     def output_dataframe(self):
         """
             requires rework as to not used hard-coded data types.
+
+            DEPRICATED - use get_cellboxes() instead
         """
         cellgrid_dataframe = []
 
@@ -245,7 +248,60 @@ class CellGrid:
             crs={'init': 'epsg:4326'},geometry='geometry')
         return cellgrid_dataframe
 
+    def get_cellboxes(self, selected_values):
+        """
+            returns a list of dictories containing information about each cellbox
+            in this cellgrid. Which information is included in each dictionary
+            is specifed those specifed in the list parameter 'selected_values'
+
+            all cellboxes will include id, geometry, cell_info
+        """
+        return_cellboxes = []
+        for cellbox in self.cellboxes:
+            if isinstance(cellbox, CellBox):
+                cell_indx = self.cellboxes.index(cellbox)
+
+                # create cellbox identifiers
+                cell = {
+                    "id":str(self.cellboxes.index(cellbox)),
+                    "geometry":Polygon(cellbox.get_bounds()),
+                    'cx':cellbox.getcx(),
+                    'cy':cellbox.getcy(),
+                    'dcx':cellbox.getdcx(),
+                    'dcy':cellbox.getdcy()
+                }
+
+                # get neighbours of cellbox
+                neighbour_case = []
+                neighbour_indx = []
+                neighbour_graph = self.neighbour_graph[cell_indx]
+                for case in neighbour_graph.keys():
+                    for neighbour in neighbour_graph[case]:
+                        neighbour_case.append(case)
+                        neighbour_indx.append(neighbour)
+
+                cell['case'] = neighbour_case
+                cell['neighbourIndex'] = neighbour_indx
+
+                # assigned selected values to cellbox
+                for value in selected_values:
+                    cell[value]= cellbox.get_value(value)
+                return_cellboxes.append(cell)
+        return return_cellboxes
+
+    def to_json(self, selected_values):
+        """
+            Returns this cellGrid converted to JSON format.
+        """
+        json = {}
+        json["cellboxes"] = self.get_cellboxes(selected_values)
+        json['neighbour_graph'] = self.neighbour_graph
+        json['config'] = self.config
+
+        return json
+
     # Functions for spltting cellboxes within the cellgrid
+
     def split_and_replace(self, cellbox):
         """
             Replaces a cellBox given by parameter 'cellBox' in this grid with
@@ -450,6 +506,8 @@ class CellGrid:
             Iterates over all cellboxes in the cellGrid a number of times defined by
             parameter 'splitAmount', splitting and replacing each one if it is
             not homogenous, as dictated by function Cellbox.should_be_split()
+
+            DEPRICATED - should use 'split_to_depth' instead
         """
         for iter in range(0, split_amount):
             self.split_graph()
@@ -458,11 +516,23 @@ class CellGrid:
         """
             Iterates once over all cellBoxes in the cellGrid,
             splitting and replacing each one if it is not homogenous.
+
+            DEPRICATED - should use 'split_to_depth' instead
         """
         for indx in range(0, len(self.cellboxes) - 1):
             cellbox = self.cellboxes[indx]
             if isinstance(cellbox, CellBox):
                 if cellbox.should_be_split():
+                    self.split_and_replace(cellbox)
+
+    def split_to_depth(self, split_depth):
+        """
+            splits all cellboxes in this grid until a maximum split depth
+            is reached, or all cellboxes are homogenous.
+        """
+        for cellbox in self.cellboxes:
+            if isinstance(cellbox, CellBox):
+                if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
                     self.split_and_replace(cellbox)
 
     # Functions for debugging
@@ -604,18 +674,6 @@ class CellGrid:
                 if cellbox.contains_point(lat, long):
                     selected_cell.append(cellbox)
         return selected_cell
-
-    def to_json(self):
-        """
-            Returns this cellGrid converted to JSON format.
-        """
-        json = "{ \"cellBoxes\":["
-        for cellbox in self.cellboxes:
-            json += cellbox.toJSON() + ",\n"
-
-        json = json[:-2] # remove last comma and newline
-        json += "]}"
-        return json
 
     # Functions used for j_grid regression testing
     def dump_mesh(self, file_location):
