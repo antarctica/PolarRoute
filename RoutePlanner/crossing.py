@@ -123,7 +123,10 @@ class NewtonianDistance:
         '''
         x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*self.m_lat
-        traveltime = self._traveltime_in_cell(x,y,self.source_graph['Vector_x'],self.source_graph['Vector_y'],self.source_graph['Speed'])
+        Su  = self.source_graph['Vector_x']*self.zero_current_factor
+        Sv  = self.source_graph['Vector_y']*self.zero_current_factor
+        Ssp = self.source_speed
+        traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
         return self._unit_time(traveltime)
 
     def _F(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
@@ -829,11 +832,17 @@ class NewtonianCurve:
         endGraphNeighbours   = [cellEndGraph['neighbourIndex'][ii] for ii in list(np.where(np.array(cellEndGraph['case'])==hrshCaseEnd)[0])]
 
         if (len(startGraphNeighbours)==0) or (len(endGraphNeighbours)==0):
+            # if abs(case) == 2:
+            #     self.triplet['cy'].iloc[1] = self.org_triplet['cy'].iloc[1]
+            # if abs(case) == 4:
+            #     self.triplet['cx'].iloc[1] = self.org_triplet['cx'].iloc[1]        
+            # return
             if abs(case) == 2:
-                self.triplet['cy'].iloc[1] = self.org_triplet['cy'].iloc[1]
+                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
             if abs(case) == 4:
-                self.triplet['cx'].iloc[1] = self.org_triplet['cx'].iloc[1]        
+                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
             return
+
         
         if abs(hrshCaseStart) == abs(hrshCaseEnd):
             for sGN in startGraphNeighbours:
@@ -846,6 +855,15 @@ class NewtonianCurve:
                         Crp2 = np.array(sGNGraph['neighbourCrossingPoints'])[np.where(np.array(sGNGraph['neighbourIndex']) == eGN)[0][0],:]
                         Crp3 = np.array(eGNGraph['neighbourCrossingPoints'])[np.where(np.array(eGNGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
                         
+
+                        # Trimminng back if the cell is worse off
+                        if (np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']]) < (np.max([sGNGraph['Ice Area'],eGNGraph['Ice Area']]) +  0.2*np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']]))):
+                            if abs(case) == 2:
+                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                            if abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                            return
+
                         # Updating the origional crossing point
                         self.triplet['cx'].iloc[1]      = Crp1[0]
                         self.triplet['cy'].iloc[1]      = Crp1[1]
@@ -881,6 +899,15 @@ class NewtonianCurve:
                         NeighGraph = self.neighbour_graph.loc[sGN]               
                         Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                         Crp2 = np.array(NeighGraph['neighbourCrossingPoints'])[np.where(np.array(NeighGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
+
+
+                        # Trimminng back if the cell is worse off
+                        if np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']]) < (NeighGraph['Ice Area'] +  0.2*np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']])):
+                            if abs(case) == 2:
+                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                            if abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                            return
 
 
                         # Updating the origional crossing point
@@ -985,17 +1012,21 @@ class NewtonianCurve:
                 #raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
             return traveltime
 
-
     def _waypoint_correction(self,source_graph,Wp,Cp):
-            '''
-            '''
-            m_long  = 111.321*1000
-            m_lat   = 111.386*1000
+        '''
+        '''
+        m_long  = 111.321*1000
+        m_lat   = 111.386*1000
 
-            x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
-            y = (Cp[1]-Wp[1])*m_lat
-            traveltime = self._traveltime_in_cell(x,y,source_graph['Vector_x'],source_graph['Vector_y'],self._unit_speed(source_graph['Speed']))
-            return traveltime
+        x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
+        y = (Cp[1]-Wp[1])*m_lat
+        Su  = source_graph['Vector_x']*self.zc
+        Sv  = source_graph['Vector_y']*self.zc
+        Ssp = self._unit_speed(source_graph['Speed'])
+        traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+        return traveltime
+
+
 
     def objective_function(self):
         TravelTime = np.zeros(len(self.CrossingDF))
@@ -1004,7 +1035,7 @@ class NewtonianCurve:
             soruce_graph = self.CrossingDF.iloc[ii]['cellEnd']
             Wp = self.CrossingDF.iloc[ii][['cx','cy']].to_numpy()
             Cp = self.CrossingDF.iloc[ii+1][['cx','cy']].to_numpy()
-            traveltime =self._waypoint_correction(soruce_graph,Wp,Cp)
+            traveltime = self._waypoint_correction(soruce_graph,Wp,Cp)
             TravelTime[ii+1]= self._unit_time(traveltime)
 
             if ii ==0:
@@ -1012,6 +1043,5 @@ class NewtonianCurve:
                 index[ii+1] = soruce_graph.name
             else:
                 index[ii+1] = soruce_graph.name
-        TravelTime = np.cumsum(TravelTime)
         return TravelTime,index
 

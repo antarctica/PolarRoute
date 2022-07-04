@@ -416,7 +416,7 @@ class TravelTime:
                 if verbose:
                     print('===Smoothing {}'.format(Path['properties']['name']))
 
-                nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']],self.config,maxiter=1,zerocurrents=True)
+                nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']],self.config,maxiter=1,zerocurrents=self.zero_currents)
                 nc.pathIter = maxiter
 
                 org_path_points = np.array(Path['geometry']['coordinates'])
@@ -458,6 +458,7 @@ class TravelTime:
 
 
                 self.allDist = []
+                self.allDist2 = []
                 for iter in pbar:
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0
@@ -534,13 +535,16 @@ class TravelTime:
                                print('{} iterations - dDist={}  - Terminated from Horshoe repreating'.format(iter,Dist))
                             
                             break
-                        if (Dist < minimumDiff):
+                        if (Dist < minimumDiff) and (Dist!=0.0):
                             if verbose:
                                 print('{} iterations - dDist={}'.format(iter,Dist))
                             break
-
-                        # if Dist < self.minDist:
-                        #     self.minDist = copy.deepcopy(Dist)
+                    else:
+                        if 'Dist' in locals():
+                            self.allDist2.append(Dist)
+                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>5:
+                                print('{} iterations - dDist={}  - Terminated as value stagnated for more than 5 iterations'.format(iter,Dist))
+                                break
 
 
 
@@ -549,7 +553,9 @@ class TravelTime:
 
                 # Determining the traveltime 
 
-                TravelTime = nc.objective_function()
+                TravelTimeLegs,pathIndex = nc.objective_function()
+                FuelLegs = TravelTimeLegs*self.neighbour_graph['Fuel'].loc[pathIndex]
+
 
                 SmoothedPath ={}
                 SmoothedPath['type'] = 'Feature'
@@ -559,7 +565,8 @@ class TravelTime:
                 SmoothedPath['properties'] = {}
                 SmoothedPath['properties']['from'] = Path['properties']['from']
                 SmoothedPath['properties']['to']   = Path['properties']['to']
-                SmoothedPath['properties']['traveltime'] = TravelTime[0].tolist() 
+                SmoothedPath['properties']['traveltime'] = np.cumsum(TravelTimeLegs).tolist() 
+                SmoothedPath['properties']['Fuel'] = np.cumsum(FuelLegs).tolist()
                 SmoothedPaths.append(SmoothedPath)
 
                 geojson['features'] = SmoothedPaths
