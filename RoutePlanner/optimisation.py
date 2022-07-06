@@ -1,61 +1,29 @@
 '''
     FILL
 '''
-import numpy as np
-import copy
-import pandas as pd
 
-import warnings
+import copy, json, ast, warnings
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+from shapely import wkt
+from shapely.geometry.polygon import Point
+import geopandas as gpd
+
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-import time
-import multiprocessing as mp
-
 from RoutePlanner.crossing import NewtonianDistance, NewtonianCurve
-from RoutePlanner.CellBox import CellBox
-
-from shapely.geometry import Polygon, Point
-from shapely import wkt
-import geopandas as gpd
-import ast
-import json
 
 
-class TravelTime:
-    """The summary line for a class docstring should fit on one line.
 
-    If the class has public attributes, they may be documented here
-    in an ``Attributes`` section and follow the same formatting as a
-    function's ``Args`` section. Alternatively, attributes may be documented
-    inline with the attribute's declaration (see __init__ method below).
-
-    Properties created with the ``@property`` decorator should be documented
-    in the property's getter method.
-
-    Attributes:
-        attr1 (str): Description of `attr1`.
-        attr2 (:obj:`int`, optional): Description of `attr2`.
-
+class Optimisation:
+    """The summary line for a class docstring should fit on one line.   
+        ....
     """
     def __init__(self,config,cost_func=NewtonianDistance,verbose=False):
-        """Example of docstring on the __init__ method.
-
-        The __init__ method may be documented in either the class level
-        docstring, or as a docstring on the __init__ method itself.
-
-        Either form is acceptable, but the two should not be mixed. Choose one
-        convention to document the __init__ method and be consistent with it.
-
-        Note:
-            Do not include the `self` parameter in the ``Args`` section.
-
-        Args:
-            param1 (str): Description of `param1`.
-            param2 (:obj:`int`, optional): Description of `param2`. Multiple
-                lines are supported.
-            param3 (:obj:`list` of :obj:`str`): Description of `param3`.
-
+        """
+        ...
         """
 
         # Load in the current cell structure & Optimisation Info̦
@@ -70,30 +38,34 @@ class TravelTime:
         self.paths          = None
         self.smoothed_paths = None
         self.dijkstra_info = {}
+
+        self.verbose = verbose
+
+
+        # ====== Loading Mesh & Neighbour Graph ======
+        # Formating the Mesh and Neigbour Graph to the right form
         self.neighbour_graph = pd.read_csv(self.config['Route_Info']['Mesh_Filename']).set_index('Index')
         self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
         self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph,crs='EPSG:4326', geometry='geometry')
 
         # Reformating the columns into corret type
         self.neighbour_graph['case'] = self.neighbour_graph['case'].apply(lambda x: ast.literal_eval(x))
-        #self.neighbour_graph['cell_info'] = self.neighbour_graph['cell_info'].apply(lambda x: ast.literal_eval(x))
         self.neighbour_graph['neighbourIndex'] = self.neighbour_graph['neighbourIndex'].apply(lambda x: ast.literal_eval(x))
-        #self.neighbour_graph['Vector'] = self.neighbour_graph['Vector'].apply(lambda x: ast.literal_eval(x))
 
-        # ====== Speed Function Checking
+        # ====== Speed Function Checking ======
         # Checking if Speed defined in file
         if 'Speed' not in self.neighbour_graph:
             self.neighbour_graph['Speed'] = self.config["Vehicle_Info"]["Speed"]
 
-        # ===== Objective Function Information =====
-        #  Checking if objective function is in the cellgrid
-        print(self.config['Route_Info']['Objective_Function'])
+        # ====== Objective Function Information ======
+        #  Checking if objective function is in the cellgrid            
         if (self.config['Route_Info']['Objective_Function'] != 'traveltime'):
             if (self.config['Route_Info']['Objective_Function'] not in self.neighbour_graph):
                     raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['Route_Info']['Objective_Function']))
 
     
-        # ===== Setting Up Dijkstra Graph =====
+        # ===== Dijkstra Graph =====
+        # Adding the required columns needed for the dijkstra graph
         self.neighbour_graph['positionLocked']          = False
         for vrbl in self.config['Route_Info']['Path_Variables']:
             self.neighbour_graph['shortest_{}'.format(vrbl)]    = np.inf
@@ -144,15 +116,25 @@ class TravelTime:
                 wpts['index'].loc[idx] = int(indices[0])
         self.config['Route_Info']['WayPoints'] = wpts[~wpts['index'].isnull()]
         self.config['Route_Info']['WayPoints']['index'] = self.config['Route_Info']['WayPoints']['index'].astype(int)
+        self.config['Route_Info']['WayPoints'] =  self.config['Route_Info']['WayPoints'].to_json()
 
 
         # ==== Printing Configuration and Information
-        self.verbose = verbose
-        if self.verbose:
-            # JDS - Add in configuration print, read and write functions
-            print(self.config)
 
-    def dijkstra_paths(self,start_waypoints,end_waypoints):
+        if self.verbose:
+            print('================================================')
+            print('================================================')
+            print('============= CONFIG INFORMATION  ============')
+            print('================================================')
+            print('================================================')
+            print(' ---- Processing for Objective Function = {} ----'.format(self.config['Route_Info']['Objective_Function']))
+            print(json.dumps(self.config, indent=4, sort_keys=True))
+
+
+
+        self.config['Route_Info']['WayPoints'] =  pd.read_json(self.config['Route_Info']['WayPoints'])
+
+    def _dijkstra_paths(self,start_waypoints,end_waypoints):
         '''
             FILL
         '''
@@ -221,14 +203,18 @@ class TravelTime:
         return geojson
 
 
-    def save_paths(self):
+    def _save_paths(self,filename):
         '''
+            FILL
         '''
-        with open(self.config['Route_Info']['Paths_Filename'], 'w') as fp:
+        with open(filename, 'w') as fp:
             json.dump(self.paths, fp)
 
 
-    def objective_value(self,variable,source_graph,neighbour_graph,traveltime):
+    def _objective_value(self,variable,source_graph,neighbour_graph,traveltime):
+        '''
+            FILL
+        '''
         if variable == 'traveltime':
             return np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
         else:
@@ -239,17 +225,9 @@ class TravelTime:
                     traveltime[1]*neighbour_graph['{}'.format(variable)]])
 
 
-    def neighbour_cost(self,wpt_name,minimum_objective_index):
+    def _neighbour_cost(self,wpt_name,minimum_objective_index):
         '''
-        Function for computing the shortest travel-time from a cell to its neighbours by applying the Newtonian method for optimisation
-        
-        Inputs:
-        index - Index of the cell to process
-        
-        Output:
-
-        Bugs/Alterations:
-            - If corner of cell is land in adjacent cell then also return 'inf'
+            FILL
         '''
         # Determining the nearest neighbour index for the cell
         source_graph   = self.dijkstra_info[wpt_name].loc[minimum_objective_index]
@@ -272,38 +250,23 @@ class TravelTime:
             source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
 
             # Using neighbourhood cost determine objective function value
-            value = self.objective_value(self.config['Route_Info']['Objective_Function'],source_graph,neighbour_graph,traveltime)
+            value = self._objective_value(self.config['Route_Info']['Objective_Function'],source_graph,neighbour_graph,traveltime)
             if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])]:
                 for vrbl in self.config['Route_Info']['Path_Variables']:
-                    value = self.objective_value(vrbl,source_graph,neighbour_graph,traveltime)
+                    value = self._objective_value(vrbl,source_graph,neighbour_graph,traveltime)
                     neighbour_graph['shortest_{}'.format(vrbl)] = value[1]
                     neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + list(value)
                 neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
                 neighbour_graph['pathPoints'] = source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]
-
-                # neighbour_graph = pd.Series(
-                #     {
-                #     'cX':neighbour_graph['cX'],
-                #     'cY':neighbour_graph['cY'],
-                #     'case':neighbour_graph['case'],
-                #     'neighbourIndex':neighbour_graph['neighbourIndex'],
-                #     'positionLocked':neighbour_graph['positionLocked'],
-                #     'traveltime': neighbour_cost[1],
-                #     'neighbourTravelLegs':neighbour_graph['neighbourTravelLegs'],
-                #     'neighbourCrossingPoints':neighbour_graph['neighbourCrossingPoints'],
-                #     'pathIndex': source_graph['pathIndex']  + [indx],
-                #     'path_traveltime':source_graph['path_traveltime']   + neighbour_cost,
-                #     'pathPoints':source_graph['pathPoints'] +[list(crossing_points)] +[list(cell_points)]}
-                #     )
-
                 self.dijkstra_info[wpt_name].loc[indx] = neighbour_graph
 
         self.dijkstra_info[wpt_name].loc[minimum_objective_index] = source_graph
 
 
     def _dijkstra(self,wpt_name):
-
-
+        '''
+            FILL
+        '''
         # Including only the End Waypoints defined by the user
         wpts = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(self.end_waypoints)]
         
@@ -327,14 +290,10 @@ class TravelTime:
             minimum_objective_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked']==False]['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])].idxmin()
   
             # Finding the cost of the nearest neighbours from the source cell (Sc)
-            self.neighbour_cost(wpt_name,minimum_objective_index)
+            self._neighbour_cost(wpt_name,minimum_objective_index)
 
             # Updating Position to be locked
             self.dijkstra_info[wpt_name].loc[minimum_objective_index,'positionLocked'] = True
-
-
-        # Correct travel-time off grid for start and end indices
-        # ----> TO-DO
 
     def compute_routes(self):
         '''
@@ -362,35 +321,32 @@ class TravelTime:
             print('================================================')
             print('================================================')
 
-
-        # if multiprocessing:
-
-        #     pool = mp.Pool(mp.cpu_count())
-        #     [pool.apply(self._dijkstra, args=source) for source in source_waypoints]
-        #     pool.close()
-        #     pool_obj = multiprocessing.Pool()
-        #     answer = pool_obj.map(self._dijkstra,source_waypoints)
-
         for wpt in self.source_waypoints:
             if self.verbose:
                 print('=== Processing Waypoint = {} ==='.format(wpt))
-            self._dijkstra(wpt)
+            try:
+                self._dijkstra(wpt)
+            except:
+                continue
 
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
-        self.paths = self.dijkstra_paths(self.source_waypoints,self.end_waypoints)
+        self.paths = self._dijkstra_paths(self.source_waypoints,self.end_waypoints)
 
         # if self.config['Route_Info']['Save_Dijkstra_Graphs']:
         #     print('Currently not operational - Come back soon :) ')
         #     #JDS - Add in saving option for the full dijkstra graphs.
 
-        self.save_paths()
-        # save paths
-        
+        self._save_paths(self.config['Route_Info']['Paths_Filename'])
+    
 
-    def compute_smoothed_routes(self,maxiter=10000,minimumDiff=1e-2,verbose=False,debugging=False):
+    def compute_smoothed_routes(self):
             '''
-                Given a series of pathways smooth without centroid locations using great circle smoothing
+                FILL
             '''
+            maxiter     = self.config['Route_Info']['Smooth Path']['Max Iteration Number']
+            minimumDiff = self.config['Route_Info']['Smooth Path']['Minimum Difference']
+
+            # 
             SmoothedPaths = []
             geojson = {}
             geojson['type'] = "FeatureCollection"
@@ -413,7 +369,7 @@ class TravelTime:
                 Path = Pths[ii]
                 counter =0 
 
-                if verbose:
+                if self.verbose:
                     print('===Smoothing {}'.format(Path['properties']['name']))
 
                 nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']],self.config,maxiter=1,zerocurrents=self.zero_currents)
@@ -444,10 +400,7 @@ class TravelTime:
                 #try:
 
                 #while iter < nc.pathIter:
-                from tqdm import tqdm
-                import time
-
-                if verbose:
+                if self.verbose:
                     pbar = tqdm(np.arange(nc.pathIter))
                 else:
                     pbar = np.arange(nc.pathIter)
@@ -455,8 +408,6 @@ class TravelTime:
 
 
                 # Determining the computational time averaged across all pairs
-
-
                 self.allDist = []
                 self.allDist2 = []
                 for iter in pbar:
@@ -464,51 +415,20 @@ class TravelTime:
                     id = 0
                     while id <= (len(nc.CrossingDF) - 3):
                         nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                        
-                        if (id==0) and debugging:
-                            time_crossingpoint = 0.0
-                            time_horseshoe     = 0.0
-                            time_reversecase   = 0.0
-
-
-                        if debugging:
-                            if iter == 0:
-                                start = time.time()
+                
                         nc._updateCrossingPoint()
                         self.nc = nc
-                        if debugging:
-                            if (iter == 0):
-                                end = time.time()
-                                time_crossingpoint += (end-start)
 
                         # -- Horseshoe Case Detection -- 
-                        if debugging:
-                            if (iter == 0):
-                                start = time.time()
                         nc._horseshoe()
-                        if debugging:
-                            if (iter == 0):
-                                end = time.time()
-                                time_horseshoe += (end-start)
-                        # -- Removing reseverse cases
-                        if debugging:
-                            if (iter == 0):
-                                start = time.time()                        
+
+                        # -- Removing reseverse cases                    
                         nc._reverseCase()
-                        if debugging:
-                                end = time.time()
-                                time_reversecase += (end-start)
+
                         id+=1+nc.id
 
                     self.nc = nc
 
-                    if debugging and (iter==0):
-                        print('Computational Time - Crossing Points = {}'.format(time_crossingpoint/(len(nc.CrossingDF) - 3)))
-                        print('Computational Time - Horseshoe Points = {}'.format(time_horseshoe/(len(nc.CrossingDF) - 3)))
-                        print('Computational Time - Reverse Points = {}'.format(time_reversecase/(len(nc.CrossingDF) - 3)))
-
-                    if debugging and (iter==0):
-                        start = time.time()    
                     try:
                         nc._mergePoint()
                         self.nc = nc
@@ -517,26 +437,20 @@ class TravelTime:
                         self.nc = nc
                         iter+=1
                         
-
-                    if debugging and (iter==0):
-                        end = time.time()
-                        print('Computational Time - Merge Points = {}'.format(end-start))
-
-
                     # Stop optimisation if the points are within some minimum difference
                     if (len(nc.previousDF) == len(nc.CrossingDF)):
                         Dist = np.mean(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
                         self.allDist.append(Dist)
-                        if verbose:
+                        if self.verbose:
                             pbar.set_description("Mean Difference = {}".format(Dist))
 
                         if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 5:
-                            if verbose:
+                            if self.verbose:
                                print('{} iterations - dDist={}  - Terminated from Horshoe repreating'.format(iter,Dist))
                             
                             break
                         if (Dist < minimumDiff) and (Dist!=0.0):
-                            if verbose:
+                            if self.verbose:
                                 print('{} iterations - dDist={}'.format(iter,Dist))
                             break
                     else:
@@ -548,7 +462,7 @@ class TravelTime:
 
 
 
-                if verbose:
+                if self.verbose:
                     print('{} iterations'.format(iter))
 
                 # Determining the traveltime 

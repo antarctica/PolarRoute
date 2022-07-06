@@ -1,11 +1,9 @@
 '''
-    FILL
-'''
+    The python pacakge `crossing` implement the optimisation for the crossing point for the unsmoothed and smoothed path construction. The package is separted into two classes `NewtonianDistance` and `NewtonianCurve`. In the section below we will go over a stage by stage of how the crossing point is determined, and the functions used within the classes.
 
+'''
 import copy
 import pandas as pd
-import numpy as np
-
 import numpy as np
 np.seterr(divide='ignore', invalid='ignore')
 
@@ -98,6 +96,9 @@ class NewtonianDistance:
         return y0,self._unit_time(np.array([t1,t2]))
 
     def _unit_speed(self,val):
+        '''
+            FILL
+        '''
         if not isinstance(val,type(None)):
             if self.unit_shipspeed == 'km/hr':
                 val = val*(1000/(60*60))
@@ -108,6 +109,9 @@ class NewtonianDistance:
             return None
 
     def _unit_time(self,val):
+        '''
+            FILL
+        '''
         if self.unit_time == 'days':
             val = val/(60*60*24.)
         elif self.unit_time == 'hr':
@@ -120,6 +124,7 @@ class NewtonianDistance:
 
     def waypoint_correction(self,Wp,Cp):
         '''
+            FILL
         '''
         x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*self.m_lat
@@ -130,6 +135,9 @@ class NewtonianDistance:
         return self._unit_time(traveltime)
 
     def _F(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
+        '''
+            FILL
+        '''
         C1 = s1**2 - u1**2 - v1**2
         C2 = s2**2 - u2**2 - v2**2
         D1 = x*u1 + y*v1
@@ -369,10 +377,7 @@ class NewtonianDistance:
 class NewtonianCurve:
     def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True,verbose=True):
         '''
-    
-            BUG:
-                - Currently the speed is fixed. Move the construction of the cellBox speed to a function of the cellBox
-        
+            FILL
         '''
         # Passing the Dijkstra Graph
         self.neighbour_graph = copy.copy(neighbour_graph)
@@ -417,6 +422,9 @@ class NewtonianCurve:
             self.zc = 1.0
 
     def _unit_speed(self,Val):
+        '''
+            FILL
+        '''
         if self.unit_shipspeed == 'km/hr':
             Val = Val*(1000/(60*60))
         if self.unit_shipspeed == 'knots':
@@ -424,6 +432,9 @@ class NewtonianCurve:
         return Val
 
     def _unit_time(self,Val):
+        '''
+            FILL
+        '''
         if self.unit_time == 'days':
             Val = Val/(60*60*24)
         elif self.unit_time == 'hr':
@@ -435,113 +446,125 @@ class NewtonianCurve:
         return Val
 
 
-    def calXDist(self,start_long,end_long):#,centralLat):
+    def _calXDist(self,start_long,end_long):
+        '''
+            FILL
+        '''
         return (end_long - start_long)*self.m_long#*np.cos(centralLat)
-    def calYDist(self,start_lat,end_lat):
+    def _calYDist(self,start_lat,end_lat):
+        '''
+            FILL
+        '''
         return (end_lat-start_lat)*self.m_lat
 
     def _long_case(self):
-            def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
-                    tryNum=1
-                    iter=0
-                    improving=True
-                    while improving:  
-                        F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r)
-                        if (F==0) or (dF==0):
-                            dY = 0
-                        else:
-                            dY = (F/dF)
-                        improving =  (abs(dY)>self._epsilon) or (abs(dY) > self._epsilon*(X1*X2) and (abs(dY)/iter) > self._epsilon)
-                        y0  -= dY
-                        iter+=1
+        '''
+            FILL
+        '''
+        def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
+                tryNum=1
+                iter=0
+                improving=True
+                while improving:  
+                    F,dF,X1,X2  = f(y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r)
+                    if (F==0) or (dF==0):
+                        dY = 0
+                    else:
+                        dY = (F/dF)
+                    improving =  (abs(dY)>self._epsilon) or (abs(dY) > self._epsilon*(X1*X2) and (abs(dY)/iter) > self._epsilon)
+                    y0  -= dY
+                    iter+=1
 
-                        if (iter>100 and tryNum == 1):
-                            y0 = Y*x/(x+a)
-                            tryNum+=1
-                        if (iter > 200) and tryNum>= 2 and tryNum < 10:
-                            tryNum+=1
-                            iter-=100
-                            if(Y < 0):
-                                if v2>v1:
-                                    y0 = (tryNum-2)*Y
-                                else:
-                                    y0 = (tryNum-3)*-Y
+                    if (iter>100 and tryNum == 1):
+                        y0 = Y*x/(x+a)
+                        tryNum+=1
+                    if (iter > 200) and tryNum>= 2 and tryNum < 10:
+                        tryNum+=1
+                        iter-=100
+                        if(Y < 0):
+                            if v2>v1:
+                                y0 = (tryNum-2)*Y
                             else:
-                                if (v2<v1):
-                                    y0 = (tryNum-2)*Y
-                                else:
-                                    y0 = (tryNum-3)*-Y
-                        if iter > 1000:
-                            raise Exception('Newton Curve Issue')
-                    return y0
+                                y0 = (tryNum-3)*-Y
+                        else:
+                            if (v2<v1):
+                                y0 = (tryNum-2)*Y
+                            else:
+                                y0 = (tryNum-3)*-Y
+                    if iter > 1000:
+                        raise Exception('Newton Curve Issue')
+                return y0
 
-            def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
-                θ  = (y/R + λ_s*(np.pi/180))
-                zl = x*np.cos(θ)
-                ψ  = (-(Y-y)/R + φ_r*(np.pi/180))
-                zr = a*np.cos(ψ)
+        def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
+            θ  = (y/R + λ_s*(np.pi/180))
+            zl = x*np.cos(θ)
+            ψ  = (-(Y-y)/R + φ_r*(np.pi/180))
+            zr = a*np.cos(ψ)
 
-                C1  = speed_s**2 - u1**2 - v1**2
-                C2  = speed_e**2 - u2**2 - v2**2
-                D1  = zl*u1 + y*v1
-                D2  = zr*u2 + (Y-y)*v2
-                X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
-                X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
+            C1  = speed_s**2 - u1**2 - v1**2
+            C2  = speed_e**2 - u2**2 - v2**2
+            D1  = zl*u1 + y*v1
+            D2  = zr*u2 + (Y-y)*v2
+            X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
+            X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
 
-                dzr = -zr*np.sin(ψ)/R
-                dzl = -zl*np.sin(θ)/R
+            dzr = -zr*np.sin(ψ)/R
+            dzl = -zl*np.sin(θ)/R
 
-                dD1 = dzl*u1 + v1
-                dD2 = dzr*u2 - v2
-                dX1 = (D1*v1 + C1*y + dzl*(D1*u1 + C1*zl))/X1
-                dX2 = (-v2*D2 - C2*(Y-y) + dzr*(D2*u2 + C2*zr))/X2     
+            dD1 = dzl*u1 + v1
+            dD2 = dzr*u2 - v2
+            dX1 = (D1*v1 + C1*y + dzl*(D1*u1 + C1*zl))/X1
+            dX2 = (-v2*D2 - C2*(Y-y) + dzr*(D2*u2 + C2*zr))/X2     
 
-                zr_term = (zr - (X2 - D2)*u2/C2)
-                zl_term = (zl - (X1 - D1)*u1/C1)
+            zr_term = (zr - (X2 - D2)*u2/C2)
+            zl_term = (zl - (X1 - D1)*u1/C1)
 
-                F = (X1+X2)*y - v1*(X1-D1)*X2/C1 - (Y - v2*(X2-D2)/C2)*X1 + dzr*zr_term*X1 + dzl*zl_term*X2
+            F = (X1+X2)*y - v1*(X1-D1)*X2/C1 - (Y - v2*(X2-D2)/C2)*X1 + dzr*zr_term*X1 + dzl*zl_term*X2
 
-                dF = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1))\
-                    - Y*dX1 + (v2/C2)*(dX1*(X2-D2) + X1*(dX2-dD2))\
-                    - (zr/(R**2))*zr_term*X1\
-                    - (zl/(R**2))*zl_term*X2\
-                    + dzr*(dzr-u2*(dX2-dD2))/C2*X1\
-                    + dzl*(dzl-u1*(dX1-dD1))/C1*X2\
-                    + dzr*zr_term*dX1 + dzl*zl_term*dX2
+            dF = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1))\
+                - Y*dX1 + (v2/C2)*(dX1*(X2-D2) + X1*(dX2-dD2))\
+                - (zr/(R**2))*zr_term*X1\
+                - (zl/(R**2))*zl_term*X2\
+                + dzr*(dzr-u2*(dX2-dD2))/C2*X1\
+                + dzl*(dzl-u1*(dX1-dD1))/C1*X2\
+                + dzr*zr_term*dX1 + dzl*zl_term*dX2
 
-                return F,dF,X1,X2
+            return F,dF,X1,X2
 
-            Sp   = tuple(self.triplet[['cx','cy']].iloc[0])
-            Cp   = tuple(self.triplet[['cx','cy']].iloc[1])
-            Np   = tuple(self.triplet[['cx','cy']].iloc[2])
+        Sp   = tuple(self.triplet[['cx','cy']].iloc[0])
+        Cp   = tuple(self.triplet[['cx','cy']].iloc[1])
+        Np   = tuple(self.triplet[['cx','cy']].iloc[2])
 
-            cell_s_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_x']
-            cell_s_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_y']
-            cell_e_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_x']
-            cell_e_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_y']
+        cell_s_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_x']
+        cell_s_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellStart'].name,'Vector_y']
+        cell_e_u = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_x']
+        cell_e_v = self.neighbour_graph.loc[self.triplet.iloc[1]['cellEnd'].name,'Vector_y']
 
-            if self.triplet.iloc[1].case == 2:   
-                sgn  = 1
-            else:
-                sgn  = -1
+        if self.triplet.iloc[1].case == 2:   
+            sgn  = 1
+        else:
+            sgn  = -1
 
-            λ_s  = Sp[1]
-            φ_r  = Np[1]
+        λ_s  = Sp[1]
+        φ_r  = Np[1]
 
-            x           = sgn*self.calXDist(Sp[0],Cp[0])
-            a           = sgn*self.calXDist(Cp[0],Np[0])
-            Y           = (Np[1]-Sp[1])*self.m_lat
-            y0          = Y/2
-            u1          = sgn*self.zc*cell_s_u; v1 = self.zc*cell_s_v
-            u2          = sgn*self.zc*cell_e_u; v2 = self.zc*cell_e_v
-            y           = NewtonOptimisationLong(_F,y0,x,a,Y,u1,v1,u2,v2,self.speed_s,self.speed_e,self.R,λ_s,φ_r)
+        x           = sgn*self._calXDist(Sp[0],Cp[0])
+        a           = sgn*self._calXDist(Cp[0],Np[0])
+        Y           = (Np[1]-Sp[1])*self.m_lat
+        y0          = Y/2
+        u1          = sgn*self.zc*cell_s_u; v1 = self.zc*cell_s_v
+        u2          = sgn*self.zc*cell_e_u; v2 = self.zc*cell_e_v
+        y           = NewtonOptimisationLong(_F,y0,x,a,Y,u1,v1,u2,v2,self.speed_s,self.speed_e,self.R,λ_s,φ_r)
 
-            # Updating the crossing points
-            self.triplet['cx'].iloc[1] = Cp[0]
-            self.triplet['cy'].iloc[1] = Sp[1] + y/self.m_lat
+        # Updating the crossing points
+        self.triplet['cx'].iloc[1] = Cp[0]
+        self.triplet['cy'].iloc[1] = Sp[1] + y/self.m_lat
 
 
     def _lat_case(self):
+        '''
+            FILL
+        '''
         def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
                 tryNum=1
                 iter=0
@@ -624,8 +647,8 @@ class NewtonianCurve:
         θ=Cp[1]   
         ψ=Np[1]  
 
-        x     = sgn*self.calYDist(Sp[1],Cp[1])
-        a     = sgn*self.calYDist(Cp[1],Np[1])
+        x     = sgn*self._calYDist(Sp[1],Cp[1])
+        a     = sgn*self._calYDist(Cp[1],Np[1])
         Y     = sgn*(Np[0]-Sp[0])*self.m_long*np.cos(Cp[1]*(np.pi/180))
         Su    = -sgn*self.zc*cell_s_v; Sv = sgn*self.zc*cell_s_u
         Nu    = -sgn*self.zc*cell_e_v; Nv = sgn*self.zc*cell_e_u
@@ -639,6 +662,7 @@ class NewtonianCurve:
 
     def _corner_case(self):
         '''
+            FILL
         '''
         # Separting out the Long/Lat of each of the points
         Xs,Ys = tuple(self.triplet.iloc[0][['cx','cy']])
@@ -695,11 +719,10 @@ class NewtonianCurve:
 
     def _mergePoint(self):
         '''
-            Function to merge point if on the corner 
+            FILL
         '''
-
         def PtDist(Ser1,Ser2):
-            #return np.sqrt(self.calXDist(Ser2['cx'],Ser1['cx'])**2 + self.calXDist(Ser2['cy'],Ser1['cy'])**2)
+            #return np.sqrt(self._calXDist(Ser2['cx'],Ser1['cx'])**2 + self._calXDist(Ser2['cy'],Ser1['cy'])**2)
             return np.sqrt((Ser1['cx'] - Ser2['cx'])**2 + (Ser1['cy'] - Ser2['cy'])**2)
 
         id=0
@@ -733,9 +756,8 @@ class NewtonianCurve:
 
     def _horseshoe(self):
         '''
-
+            FILL
         '''
-
         # Defining the case information
         Cp             = tuple(self.triplet[['cx','cy']].iloc[1])
         Sp             = tuple(self.triplet.iloc[0][['cx','cy']])
@@ -930,7 +952,9 @@ class NewtonianCurve:
                         # self.id=-1
 
     def _reverseCase(self):
-
+        '''
+            FILL
+        '''
         # Removing Reverse Edge Type 1
         startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
         endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
@@ -956,16 +980,12 @@ class NewtonianCurve:
 
     def _updateCrossingPoint(self):
         '''
-            COMPLETE:
-                - Unsmoothed _long_case_ Path, Unsplit & No Currents - 
+            FILL
         '''
 
-
         self.org_triplet = copy.deepcopy(self.triplet) 
-
         self.speed_s = self._unit_speed(self.triplet.iloc[1]['cellStart']['Speed'])
         self.speed_e = self._unit_speed(self.triplet.iloc[1]['cellEnd']['Speed'])
-
 
         # ------ Case Deginitions & Dealing
         if self.debugging:
@@ -984,36 +1004,36 @@ class NewtonianCurve:
 
 
     def _traveltime_in_cell(self,xdist,ydist,U,V,S):
-            '''
-                Determines the travel-time within cell between two points
-            '''
-            dist  = np.sqrt(xdist**2 + ydist**2)
-            cval  = np.sqrt(U**2 + V**2)
+        '''
+            FILL
+        '''
+        dist  = np.sqrt(xdist**2 + ydist**2)
+        cval  = np.sqrt(U**2 + V**2)
 
-            dotprod  = xdist*U + ydist*V
-            diffsqrs = S**2 - cval**2
+        dotprod  = xdist*U + ydist*V
+        diffsqrs = S**2 - cval**2
 
-            # if (dotprod**2 + diffsqrs*(dist**2) < 0)
-            if diffsqrs == 0.0:
-                if dotprod == 0.0:
+        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
+        if diffsqrs == 0.0:
+            if dotprod == 0.0:
+                return np.inf
+                #raise Exception(' ')
+            else:
+                if ((dist**2)/(2*dotprod))  <0:
                     return np.inf
                     #raise Exception(' ')
                 else:
-                    if ((dist**2)/(2*dotprod))  <0:
-                        return np.inf
-                        #raise Exception(' ')
-                    else:
-                        traveltime = dist * dist / (2 * dotprod)
-                        return traveltime
+                    traveltime = dist * dist / (2 * dotprod)
+                    return traveltime
 
-            traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
-            if traveltime < 0:
-                traveltime = np.inf
-                #raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
-            return traveltime
+        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
+        if traveltime < 0:
+            traveltime = np.inf
+        return traveltime
 
     def _waypoint_correction(self,source_graph,Wp,Cp):
         '''
+            FILL
         '''
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
@@ -1026,9 +1046,10 @@ class NewtonianCurve:
         traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
         return traveltime
 
-
-
     def objective_function(self):
+        '''
+            FILL
+        '''
         TravelTime = np.zeros(len(self.CrossingDF))
         index      = np.zeros(len(self.CrossingDF))
         for ii in range(len(self.CrossingDF)-1):

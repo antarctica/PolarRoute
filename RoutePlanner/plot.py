@@ -365,7 +365,7 @@ class InteractiveMap:
             points = points[:,::-1]
 
             if info['Colorline']:
-                folium.PolyLine(points,color="black", weight=info['Line_Width'], opacity=1).add_to(pths)
+                #folium.PolyLine(points,color="black", weight=info['Line_Width'], opacity=1).add_to(pths)
                 colormap = linear._colormaps[info['Cmap']].scale(0,max_val)
                 colormap.caption = '{} ({},Max Value={:.3f})'.format(info['Data_Name'],info['Data_Units'],max_val)
                 folium.ColorLine(points,data_val,colormap=colormap,nb_steps=50, weight=info['Line_Width'], opacity=1).add_to(pths)
