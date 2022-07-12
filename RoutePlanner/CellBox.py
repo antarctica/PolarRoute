@@ -205,6 +205,28 @@ class CellBox:
             return "HOM"
         return "HET"
 
+    def hom_condition(self):
+        hom_conditions = []
+
+        for splitting_condition in self._splitting_conditions:
+            value = list(splitting_condition.keys())[0]
+            threshold = float(splitting_condition[value]['threshold'])
+            upperbound = float(splitting_condition[value]['upperBound'])
+            lowerbound = float(splitting_condition[value]['lowerBound'])
+
+            hom_conditions.append(self.value_hom_condition(value,threshold,lowerbound,upperbound))
+
+        if "HOM" in hom_conditions:
+            return "HOM"
+        if "MIN" in hom_conditions:
+            return "MIN"
+        if "HET" in hom_conditions: 
+            return "HET"
+        if hom_conditions.count("CLR") == len(hom_conditions):
+            return "CLR"
+        
+        return "ERR"
+
     def should_be_split(self):
         """
             returns true or false dependant on if any of the splitting condtions
