@@ -71,6 +71,32 @@ def load_bsose(file, long_min, long_max, lat_min,
 
     return bsose_df
 
+def load_bsose_depth(file, long_min, long_max, lat_min,
+    lat_max, time_start, time_end):
+    """
+        Load BSOSE data from a netCDF file and transform it
+        into a format injestable by the pyRoutePlanner
+    """
+
+    bsose = xr.open_dataset(file)
+    bsose = bsose.sel(time = slice(time_start, time_end))
+    bsose_df = bsose.to_dataframe()
+    bsose_df = bsose_df.reset_index()
+
+    # BSOSE data is indexed between 0:360 degrees in longitude where as the route planner
+    # requires data index between -180:180 degrees in longitude
+    bsose_df['long'] = bsose_df['XC'].apply(lambda x: x - 360 if x > 180 else x)
+    bsose_df['lat'] = bsose_df['YC']
+    bsose_df = bsose_df[['lat','long','Depth','time']]
+    bsose_df = bsose_df.rename(columns ={'Depth':'depth'})
+    bsose_df['depth'] = -bsose_df['depth']
+
+    bsose_df = bsose_df[bsose_df['long'].between(long_min, long_max)]
+    bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
+
+    return bsose_df
+
+
 def load_gebco(file, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
     """
@@ -101,8 +127,9 @@ def load_sose_currents(file, long_min, long_max, lat_min,
 
     # SOSE data is indexed between 0:360 degrees in longitude where as the route planner
     # requires data index between -180:180 degrees in longitude
-    sose_df['long'] = sose_df['XC'].apply(lambda x: x - 360 if x > 180 else x)
-    sose_df['lat'] = sose_df['YC']
+    sose_df['long'] = sose_df['lon'].apply(lambda x: x - 360 if x > 180 else x)
+    
+    sose_df = sose_df[['lat','long','uC', 'vC']]
 
     sose_df = sose_df[sose_df['long'].between(long_min, long_max)]
     sose_df = sose_df[sose_df['lat'].between(lat_min, lat_max)]
