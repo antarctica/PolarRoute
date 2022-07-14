@@ -8,6 +8,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 from matplotlib.patches import Polygon as MatplotPolygon
 from RoutePlanner.CellBox import CellBox
+import RoutePlanner.data_loaders as data_loader
 
 class CellGrid:
     """
@@ -88,10 +89,26 @@ class CellGrid:
             # set focus of cellBox
             cellbox.set_focus([])
         self.splitting_conditions = []
-        for data_source in config['Data_sources']:
-            self.add_data_source(data_source)
 
-        self.iterative_split(config['Region']["splitDepth"])
+        for data_source in config['Data_sources']:
+            loader = getattr(data_loader, data_source['loader'])
+            data_points = loader(data_source['path'],
+                self._long_min, self._long_max, self._lat_min, self._lat_max,
+                self._start_time, self._end_time)
+            
+            self.add_data_points(data_points)
+
+        for splitting_condition in config['splitting_conditions']:
+            for cellbox in self.cellboxes:
+                if isinstance(cellbox, CellBox):
+                    cellbox.add_splitting_condition(splitting_condition)
+            
+            self.split_to_depth(config['Region']['splitDepth'])
+
+        #for data_source in config['Data_sources']:
+            #self.add_data_source(data_source)
+
+        #self.iterative_split(config['Region']["splitDepth"])
 
     # Functions for adding data to the cellgrid
     def add_data_source(self, data_source):
