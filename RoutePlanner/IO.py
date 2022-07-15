@@ -167,9 +167,9 @@ def MeshDF(cellGrid):
             Shape.append(Polygon(bounds))
             IceArea.append(c.iceArea()*100)
             if cellGrid._j_grid:
-                IsLand.append(c.isLandM())
+                IsLand.append(c.is_land_m())
             else:
-                IsLand.append(c.containsLand())
+                IsLand.append(c.contains_land())
             dpth.append(c.depth())
             vec.append([c.getuC(),c.getvC()])
             CentroidCx.append(c.cx)

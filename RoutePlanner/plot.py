@@ -36,6 +36,7 @@ import numpy as np
 import sys
 from branca.colormap import linear
 import folium
+from pyproj import transform
 from shapely import wkt
 import geopandas as gpd
 from folium import plugins
@@ -49,7 +50,7 @@ import folium
 # Adapted from: https://nbviewer.org/gist/BibMartin/f153aa957ddc5fadc64929abdee9ff2e
 from branca.element import MacroElement
 from jinja2 import Template
-from matplotlib.collections import LineCollection   
+from matplotlib.collections import LineCollection
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
@@ -155,8 +156,6 @@ class StaticMap:
                 colour = info['Color']
             self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],info["Size"],c=colour,marker='o',transform=ccrs.PlateCarree(),zorder=self.zorder)
         else:
-
-
             self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],info["Size"],marker='o',transform=ccrs.PlateCarree(),color=info['Color'],zorder=self.zorder)
 
     def _paths(self,info):
@@ -231,7 +230,7 @@ class StaticMap:
                 if ('Fill_trim_min' not in info):
                     info['Fill_trim_min'] = dataframe_geo[info['Data_Name']].min()
                 if ('Fill_trim_max' not in info):
-                    info['Fill_trim_max'] = dataframe_geo[info['Data_Name']].max()            
+                    info['Fill_trim_max'] = dataframe_geo[info['Data_Name']].max()
 
                 dataframe_geo = dataframe_geo[(dataframe_geo[info['Data_Name']] >= info['Fill_trim_min']) &
                                             (dataframe_geo[info['Data_Name']] <= info['Fill_trim_max'])]
