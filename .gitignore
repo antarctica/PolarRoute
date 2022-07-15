@@ -6,7 +6,6 @@ Data
 TestingNotebook.ipynb
 .DS_Store
 *.pdf
-*.html
 dist
 *.egg-info
 build

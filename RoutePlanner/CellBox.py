@@ -494,9 +494,11 @@ class CellBox:
         """
         return "(" + str(int(self.x_coord)) + "," + str(int(self.y_coord)) + ")"
 
+
     def node_string(self):
         """
             returns a string representing the node of this cellbox
+
 
             for use in j_grid regression testing
         """
