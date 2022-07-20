@@ -244,17 +244,20 @@ class CellGrid:
                     is_land = cellbox.contains_land()
 
                 index_df = pd.Series({'Index':int(idx),
-                        'geometry':Polygon(cellbox.get_bounds()),
-                        'cell_info':[cellbox.getcx(),
-                            cellbox.getcy(),cellbox.getdcx(),cellbox.getdcy()],
+                        'geometry':Polygon(c.getBounds()),
+                        'cx':c.cx,
+                        'cy':c.cy,
+                        'dcx':c.dcx,
+                        'dcy':c.dcy,
                         'case':cases,
                         'neighbourIndex':neigh_indx,
-                        'Land':is_land,
-                        'Ice Area':cellbox.get_value('iceArea')*100,
-                        'Ice Thickness':cellbox.ice_thickness(self.config['Region']['startTime']),
-                        'Ice Density':cellbox.ice_density(self.config['Region']['startTime']),
-                        'Depth': cellbox.get_value('depth'),
-                        'Vector':[cellbox.get_value('uC'),cellbox.get_value('vC')]
+                        'Land':IsLand,
+                        'Ice Area':c.iceArea()*100,
+                        'Ice Thickness':c.iceThickness(self.config['Region']['startTime']),
+                        'Ice Density':c.iceDensity(self.config['Region']['startTime']),
+                        'Depth': c.depth(),
+                        'Vector_x':c.getuC(),
+                        'Vector_y':c.getvC()
                         })
 
                 cellgrid_dataframe.append(index_df)
@@ -262,8 +265,7 @@ class CellGrid:
         cellgrid_dataframe = pd.concat(cellgrid_dataframe,axis=1).transpose()
 
         ## Cell Further South than -78.0 set to land.
-        cellgrid_dataframe['Land'][np.array([x[1] for x in cellgrid_dataframe['cell_info']])
-            < -78.0] = True
+        cellgrid_dataframe['Land'][cellgrid_dataframe['cy']< -78.0] = True 
 
         cellgrid_dataframe = gpd.GeoDataFrame(cellgrid_dataframe,
             crs={'init': 'epsg:4326'},geometry='geometry')
