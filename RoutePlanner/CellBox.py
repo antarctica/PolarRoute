@@ -206,6 +206,9 @@ class CellBox:
         return "HET"
 
     def hom_condition(self):
+        """
+            TODO   
+        """
         hom_conditions = []
 
         for splitting_condition in self._splitting_conditions:

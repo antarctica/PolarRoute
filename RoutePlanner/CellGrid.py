@@ -4,10 +4,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import xarray as xr
 import geopandas as gpd
+import json as JSON
 
 from shapely.geometry import Polygon
 from matplotlib.patches import Polygon as MatplotPolygon
 from RoutePlanner.CellBox import CellBox
+import RoutePlanner.data_loaders as data_loader
 
 class CellGrid:
     """
@@ -88,10 +90,26 @@ class CellGrid:
             # set focus of cellBox
             cellbox.set_focus([])
         self.splitting_conditions = []
-        for data_source in config['Data_sources']:
-            self.add_data_source(data_source)
 
-        self.iterative_split(config['Region']["splitDepth"])
+        for data_source in config['Data_sources']:
+            loader = getattr(data_loader, data_source['loader'])
+            data_points = loader(data_source['params'],
+                self._long_min, self._long_max, self._lat_min, self._lat_max,
+                self._start_time, self._end_time)
+            
+            self.add_data_points(data_points)
+
+        for splitting_condition in config['splitting_conditions']:
+            for cellbox in self.cellboxes:
+                if isinstance(cellbox, CellBox):
+                    cellbox.add_splitting_condition(splitting_condition)
+            
+            self.split_to_depth(config['Region']['splitDepth'])
+
+        #for data_source in config['Data_sources']:
+            #self.add_data_source(data_source)
+
+        #self.iterative_split(config['Region']["splitDepth"])
 
     # Functions for adding data to the cellgrid
     def add_data_source(self, data_source):
@@ -116,6 +134,9 @@ class CellGrid:
                     }
                 ]
             }
+
+            DEPRICATED - used add_data_points() function in conjunction with
+            loader function in data_loaders.py
 
         """
         for cellbox in self.cellboxes:
@@ -266,24 +287,24 @@ class CellGrid:
                 # create cellbox identifiers
                 cell = {
                     "id":str(self.cellboxes.index(cellbox)),
-                    "geometry":Polygon(cellbox.get_bounds()),
+                    "geometry":str(Polygon(cellbox.get_bounds())),
                     'cx':cellbox.getcx(),
                     'cy':cellbox.getcy(),
                     'dcx':cellbox.getdcx(),
                     'dcy':cellbox.getdcy()
                 }
 
-                # get neighbours of cellbox
-                neighbour_case = []
-                neighbour_indx = []
-                neighbour_graph = self.neighbour_graph[cell_indx]
-                for case in neighbour_graph.keys():
-                    for neighbour in neighbour_graph[case]:
-                        neighbour_case.append(case)
-                        neighbour_indx.append(neighbour)
+                # # get neighbours of cellbox
+                # neighbour_case = []
+                # neighbour_indx = []
+                # neighbour_graph = self.neighbour_graph[cell_indx]
+                # for case in neighbour_graph.keys():
+                #     for neighbour in neighbour_graph[case]:
+                #         neighbour_case.append(case)
+                #         neighbour_indx.append(neighbour)
 
-                cell['case'] = neighbour_case
-                cell['neighbourIndex'] = neighbour_indx
+                # cell['case'] = neighbour_case
+                # cell['neighbourIndex'] = neighbour_indx
 
                 # assigned selected values to cellbox
                 for value in selected_values:
@@ -296,9 +317,10 @@ class CellGrid:
             Returns this cellGrid converted to JSON format.
         """
         json = {}
+        json['config'] = self.config
         json["cellboxes"] = self.get_cellboxes(selected_values)
         json['neighbour_graph'] = self.neighbour_graph
-        json['config'] = self.config
+        
 
         return json
 

@@ -40,6 +40,7 @@ from pyproj import transform
 from shapely import wkt
 import geopandas as gpd
 from folium import plugins
+from shapely.geometry import Polygon
 
 sys.path.insert(0, 'folium')
 sys.path.insert(0, 'branca')
@@ -93,7 +94,7 @@ import json
 
 
 class StaticMap:
-    def __init__(self,config):
+    def __init__(self,config, cellboxes):
         self.config = config
         self.basemap = config["Static_Map"]['Basemap_Info']
         self.layers  = config['Static_Map']['Layers']
@@ -113,19 +114,13 @@ class StaticMap:
 
 
         # Overlaying the layers
-        for idx,layer in enumerate(self.layers):
-            self.zorder = idx
-            if layer['Show'] == False:
-                continue
-            try:
-                if layer['Type'] == 'Maps':
-                    self._maps(layer) 
-                if layer['Type'] == 'Paths':
-                    self._paths(layer)
-                if layer['Type'] == 'Points':
-                    self._points(layer)
-            except:
-                print('Cannot Plot')
+        for layer in self.layers:
+            if layer['Type'] == 'Maps':
+                self._maps(layer, cellboxes)
+            if layer['Type'] == 'Paths':
+                self._paths(layer)
+            if layer['Type'] == 'Points':
+                self._points(layer)
 
         if 'Output_Filename' in self.config['Static_Map']:
             plt.savefig(self.config['Static_Map']['Output_Filename'])
@@ -211,12 +206,12 @@ class StaticMap:
 
 
 
-    def _maps(self,info):
+    def _maps(self,info, cellboxes):
             '''
                 Plotting a map type object
             '''
-
-            dataframe_pandas = pd.read_csv(info['filename'])
+            dataframe_pandas = pd.DataFrame(cellboxes)
+            #dataframe_pandas = pd.read_csv(info['filename'])
             dataframe_pandas['geometry'] = dataframe_pandas['geometry'].apply(wkt.loads)
             dataframe_geo = gpd.GeoDataFrame(dataframe_pandas,crs='EPSG:4326', geometry='geometry')
 
