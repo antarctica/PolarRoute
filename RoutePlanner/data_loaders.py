@@ -17,14 +17,14 @@ import math
 from pyproj import Transformer
 from pyproj import CRS
 
-def load_amsr(file, long_min, long_max, lat_min,
+def load_amsr(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
     """
         Load AMSR2 data from a netCDF file and transform
         it into a format injestable by the pyRoutePlanner
     """
 
-    amsr = xr.open_dataset(file)
+    amsr = xr.open_dataset(params['file'])
     amsr = amsr.sel(time=slice(time_start, time_end))
     amsr_df = amsr.to_dataframe()
     amsr_df = amsr_df.reset_index()
@@ -40,21 +40,27 @@ def load_amsr(file, long_min, long_max, lat_min,
     amsr_df['lat'] = y
     amsr_df['long'] = x
     amsr_df = amsr_df[['lat','long','z','time']]
-    amsr_df = amsr_df.rename(columns={'z':'amsr_SIC'})
+
+    if "data_name" in params:
+        amsr_df = amsr_df.rename(columns={'z':params['data_name']})
+    else:
+        amsr_df = amsr_df.rename(columns={'z':'amsr_SIC'})
+
+    
 
     amsr_df = amsr_df[amsr_df['long'].between(long_min, long_max)]
     amsr_df = amsr_df[amsr_df['lat'].between(lat_min, lat_max)]
 
     return amsr_df
 
-def load_bsose(file, long_min, long_max, lat_min,
+def load_bsose(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
         into a format injestable by the pyRoutePlanner
     """
 
-    bsose = xr.open_dataset(file)
+    bsose = xr.open_dataset(params['file'])
     bsose = bsose.sel(time = slice(time_start, time_end))
     bsose_df = bsose.to_dataframe()
     bsose_df = bsose_df.reset_index()
@@ -64,21 +70,25 @@ def load_bsose(file, long_min, long_max, lat_min,
     bsose_df['long'] = bsose_df['XC'].apply(lambda x: x - 360 if x > 180 else x)
     bsose_df['lat'] = bsose_df['YC']
     bsose_df = bsose_df[['lat','long','SIarea','time']]
-    bsose_df = bsose_df.rename(columns = {'SIarea':'bsose_SIC'})
+
+    if "data_name" in params:
+        bsose_df = bsose_df.rename(columns = {'SIarea':params['data_name']})
+    else:
+        bsose_df = bsose_df.rename(columns = {'SIarea':'bsose_SIC'})
 
     bsose_df = bsose_df[bsose_df['long'].between(long_min, long_max)]
     bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
 
     return bsose_df
 
-def load_bsose_depth(file, long_min, long_max, lat_min,
+def load_bsose_depth(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
         into a format injestable by the pyRoutePlanner
     """
 
-    bsose = xr.open_dataset(file)
+    bsose = xr.open_dataset(params['file'])
     bsose = bsose.sel(time = slice(time_start, time_end))
     bsose_df = bsose.to_dataframe()
     bsose_df = bsose_df.reset_index()
@@ -88,8 +98,12 @@ def load_bsose_depth(file, long_min, long_max, lat_min,
     bsose_df['long'] = bsose_df['XC'].apply(lambda x: x - 360 if x > 180 else x)
     bsose_df['lat'] = bsose_df['YC']
     bsose_df = bsose_df[['lat','long','Depth','time']]
-    bsose_df = bsose_df.rename(columns ={'Depth':'depth'})
-    bsose_df['depth'] = -bsose_df['depth']
+    bsose_df['Depth'] = -bsose_df['Depth']
+
+    if "data_name" in params:
+        bsose_df = bsose_df.rename(columns ={'Depth':params['data_name']})
+    else:
+        bsose_df = bsose_df.rename(columns ={'Depth':'depth'})
 
     bsose_df = bsose_df[bsose_df['long'].between(long_min, long_max)]
     bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
@@ -97,23 +111,27 @@ def load_bsose_depth(file, long_min, long_max, lat_min,
     return bsose_df
 
 
-def load_gebco(file, long_min, long_max, lat_min,
+def load_gebco(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
     """
         Load GEBCO data from a netCDF file and transform it
         into a format injestable by the pyRoutePlanner
     """
 
-    gebco = xr.open_dataset(file)
+    gebco = xr.open_dataset(params['file'])
     gebco_df = gebco.to_dataframe()
     gebco_df = gebco_df.reset_index()
     gebco_df = gebco_df.rename(columns = {'lon':'long'})
+
+    if "data_name" in params:
+        gebco_df = gebco_df.rename(columns = {'elevation':params['data_name']})
+
     gebco_df = gebco_df[gebco_df['long'].between(long_min, long_max)]
     gebco_df = gebco_df[gebco_df['lat'].between(lat_min,lat_max)]
 
     return gebco_df
 
-def load_sose_currents(file, long_min, long_max, lat_min,
+def load_sose_currents(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
     """
         Load SOSE current data from a netCDF file and#
@@ -121,7 +139,7 @@ def load_sose_currents(file, long_min, long_max, lat_min,
         by the pyRoutePlanner
     """
 
-    sose = xr.open_dataset(file)
+    sose = xr.open_dataset(params['file'])
     sose_df = sose.to_dataframe()
     sose_df = sose_df.reset_index()
 
@@ -136,14 +154,14 @@ def load_sose_currents(file, long_min, long_max, lat_min,
 
     return sose_df
 
-def load_modis(file, long_min, long_max, lat_min,
+def load_modis(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
     """
         Load MODIS data from a netCDF file and transform it
         into a format that is injestable by the pyRoutePlanner
     """
 
-    modis = xr.open_dataset(file)
+    modis = xr.open_dataset(params['file'])
     modis_df = modis.to_dataframe()
     modis_df = modis_df.reset_index()
 
@@ -157,3 +175,29 @@ def load_modis(file, long_min, long_max, lat_min,
     modis_df = modis_df[modis_df['lat'].between(lat_min, lat_max)]
 
     return modis_df
+
+def load_era5_wind(params, long_min, long_max, lat_min,
+    lat_max, time_start, time_end):
+    """
+        Load era5 wind data from a netCDF file and transform it
+        into a format that is injestable by the pyRoutePlanner
+    """
+
+    era5_wind = xr.open_dataset(params['file'])
+
+    # era5_wind data is available in monthly slices, not daily. 
+    # time_start is set to the start of the given month to ensure that data is loaded.
+    time_start_split = time_start.split('-')
+    time_start = time_start_split[0] + "-" + time_start_split[1] + "-01"
+
+    era5_wind = era5_wind.sel(time=slice(time_start, time_end))
+
+    era5_wind_df = era5_wind.to_dataframe()
+    era5_wind_df = era5_wind_df.reset_index()
+
+    era5_wind_df = era5_wind_df.rename(columns = {'longitude':'long', 'latitude':'lat'})
+    era5_wind_df = era5_wind_df[era5_wind_df['long'].between(long_min, long_max)]
+    era5_wind_df = era5_wind_df[era5_wind_df['lat'].between(lat_min, lat_max)]
+
+    return era5_wind_df
+    
