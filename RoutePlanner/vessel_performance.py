@@ -18,7 +18,7 @@ import ast
 import json
 
 
-class SpeedFunctions:
+class VesselPerformance:
     def __init__(self, config):
         """
             FILL
