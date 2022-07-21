@@ -16,6 +16,7 @@ import numpy as np
 import math
 from pyproj import Transformer
 from pyproj import CRS
+from datetime import date, timedelta, datetime
 
 def load_amsr(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
@@ -52,6 +53,98 @@ def load_amsr(params, long_min, long_max, lat_min,
     amsr_df = amsr_df[amsr_df['lat'].between(lat_min, lat_max)]
 
     return amsr_df
+
+def daterange(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
+def load_density(params, long_min, long_max, lat_min,
+              lat_max, time_start, time_end):
+    """
+        Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
+        Data taken from Table 3 in: doi:10.1029/2007JC004254
+    """
+
+    def iceden(d):
+        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+                   12: 'su'}
+        densities = {'su': 875.0, 'sp': 900.0, 'a': 900.0, 'w': 920.0}
+
+        month = int(d[5:7])
+        season = seasons[month]
+        den = densities[season]
+        return den
+
+    dense_data = []
+
+    start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
+    end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
+
+    for single_date in daterange(start_date, end_date):
+        dt = single_date.strftime("%Y-%m-%d")
+        for lat in np.arange(lat_min, lat_max, 0.16):
+            for long in np.arange(long_min, long_max, 0.16):
+                dense_data.append({'time': dt, 'lat': lat, 'long': long, 'density': iceden(dt)})
+
+    dense_df = pd.DataFrame(dense_data).set_index(['lat', 'long', 'time'])
+    dense_df = dense_df.reset_index()
+
+    return dense_df
+
+def load_thickness(params, long_min, long_max, lat_min,
+              lat_max, time_start, time_end):
+    """
+        Create ice thickness dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
+        Data taken from Table 3 in: doi:10.1029/2007JC004254
+    """
+
+    def iceThickness(d, long):
+        """
+            Returns ice thickness. Data taken from Table 3 in: doi:10.1029/2007JC004254
+        """
+        # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, these may require further thought
+        thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
+                       'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
+                       'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
+                       'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
+                       'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
+                       'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79}
+                       }
+        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+                   12: 'su'}
+        month = int(d[5:7])
+        season = seasons[month]
+        sea = None
+
+        if -130 <= long < -60:
+            sea = 'Bellinghausen'
+        elif -60 <= long < -45:
+            sea = 'Weddell W'
+        elif -45 <= long < 20:
+            sea = 'Weddell E'
+        elif 20 <= long < 90:
+            sea = 'Indian'
+        elif 90 <= long < 160:
+            sea = 'West Pacific'
+        elif (160 <= long < 180) or (-180 <= long < -130):
+            sea = 'Ross'
+
+        return thicknesses[sea][season]
+
+    thick_data = []
+    start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
+    end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
+
+    for single_date in daterange(start_date, end_date):
+        dt = single_date.strftime("%Y-%m-%d")
+        for lat in np.arange(lat_min, lat_max, 0.1):
+            for long in np.arange(long_min, long_max, 0.1):
+                thick_data.append({'time': dt, 'lat': lat, 'long': long, 'thickness': iceThickness(dt, long)})
+
+    thick_df = pd.DataFrame(thick_data).set_index(['lat', 'long', 'time'])
+    thick_df = thick_df.reset_index()
+
+    return thick_df
 
 def load_bsose(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
