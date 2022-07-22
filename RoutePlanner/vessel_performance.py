@@ -114,10 +114,10 @@ class VesselPerformance:
                 self.mesh_df.loc[idx, 'speed'] = 0.0
                 self.mesh_df.loc[idx, 'ice resistance'] = np.inf
             else:
-                rp = self.ice_resistance(self.vessel_params['Speed'],row['SIC'],row['thickness'],row['density'])
+                rp = self.ice_resistance(self.vessel_params['Speed'], row['SIC'], row['thickness'], row['density'])
                 if rp > self.vessel_params['ForceLimit']:
-                    new_speed = self.inverse_resistance(row['SIC'], row['thickness'],row['density'])
-                    rp = self.ice_resistance(new_speed, row['SIC'],row['thickness'],row['density'])
+                    new_speed = self.inverse_resistance(row['SIC'], row['thickness'], row['density'])
+                    rp = self.ice_resistance(new_speed, row['SIC'], row['thickness'], row['density'])
                     self.mesh_df.loc[idx, 'speed'] = new_speed
                     self.mesh_df.loc[idx, 'ice resistance'] = rp
                 else:
@@ -134,9 +134,9 @@ class VesselPerformance:
         """
 
         self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
-                                        self.mesh_df['speed'] + 0.25290433
-                                        + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2
-                                        + 6.48113363e-06 * self.mesh_df['ice resistance']) * 24.0
+                                self.mesh_df['speed'] + 0.25290433
+                                + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2
+                                + 6.48113363e-06 * self.mesh_df['ice resistance']) * 24.0
 
     def remove_nodes(self, neighbour_graph, inaccessible_nodes):
         """
