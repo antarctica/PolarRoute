@@ -1,53 +1,53 @@
 """
-    FILL
+    Class for modelling the vessel performance.
+    Takes a mesh as input in json format and modifies it according to include vessel specifics.
 """
 import numpy as np
-import copy
 import pandas as pd
-
-import time
-import multiprocessing as mp
-
-from RoutePlanner.crossing import NewtonianDistance, NewtonianCurve
-from RoutePlanner.CellBox import CellBox
-
-from shapely.geometry import Polygon, Point
-from shapely import wkt
-import geopandas as gpd
-import ast
-import json
 
 
 class VesselPerformance:
-    def __init__(self, config):
+    def __init__(self, mesh):
         """
             FILL
         """
 
-        self.config = config
-
-        self.neighbour_graph = pd.read_csv(self.config['Speed_Function']['Mesh_Input_Filename'])
-        self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
-        self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph, crs='EPSG:4326', geometry='geometry')
+        self.mesh = mesh
+        self.config = mesh['config']
+        self.mesh_df = pd.DataFrame(mesh['cellboxes']).set_index('id')
+        self.vessel_params = self.config['Vessel']
 
         # Removing land or thick-ice cells
-        # self.neighbour_graph = self.neighbour_graph[(self.neighbour_graph['Land']==False) &
-        # (self.neighbour_graph['Ice Area'] <= self.config['Vehicle_Info']['MaxIceExtent'])]
-
-        # Reformatting the columns into correct type
-        self.neighbour_graph['case'] = self.neighbour_graph['case'].apply(lambda x: ast.literal_eval(x))
-        self.neighbour_graph['neighbourIndex'] = self.neighbour_graph['neighbourIndex'].apply(
-            lambda x: ast.literal_eval(x))
+        self.inaccessible_nodes()
 
         # Checking if Speed defined in file
-        if 'Speed' not in self.neighbour_graph:
-            self.neighbour_graph['Speed'] = self.config["Vehicle_Info"]["Speed"]
+        if 'speed' not in self.mesh_df:
+            self.mesh_df['speed'] = self.vessel_params["Speed"]
 
+        # Modify speed based on ice resistance
         self.speed()
 
+        # Calculate fuel usage based on speed and ice resistance
         self.fuel()
 
-        self.neighbour_graph.to_csv(self.config['Speed_Function']['Mesh_Output_Filename'], index=False)
+    def to_json(self):
+        """
+        Method to return the modified mesh in json format.
+        """
+        self.mesh['cellboxes'] = self.mesh_df.to_dict('records')
+        return self.mesh
+
+    def inaccessible_nodes(self):
+        """
+        Method to determine which nodes are inaccessible and remove them from the neighbour graph.
+        """
+        ext_ice = self.mesh_df[self.mesh_df['SIC'] > self.vessel_params['MaxIceExtent']]
+        land = self.mesh_df[self.mesh_df['elevation'] > self.vessel_params['MinDepth']]
+
+        inaccessible = list(ext_ice.index) + list(land.index)
+        inaccessible = list(set(inaccessible))
+
+        self.mesh['neighbour_graph'] = self.remove_nodes(self.mesh['neighbour_graph'], inaccessible)
 
     def ice_resistance(self, velocity, area, thickness, density):
         """
@@ -61,8 +61,8 @@ class VesselPerformance:
         """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
-        hull = self.config['Vehicle_Info']['HullType']
-        beam = self.config['Vehicle_Info']['Beam']
+        hull = self.vessel_params['HullType']
+        beam = self.vessel_params['Beam']
         kparam, bparam, nparam = hull_params[hull]
         gravity = 9.81  # m/s-2
 
@@ -85,10 +85,10 @@ class VesselPerformance:
         speed - Vehicle Speed
         """
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
-        force_limit = self.config['Vehicle_Info']['ForceLimit']
+        force_limit = self.vessel_params['ForceLimit']
 
-        hull = self.config['Vehicle_Info']['HullType']
-        beam = self.config['Vehicle_Info']['Beam']
+        hull = self.vessel_params['HullType']
+        beam = self.vessel_params['Beam']
         kparam, bparam, nparam = hull_params[hull]
         gravity = 9.81  # m/s-2
 
@@ -102,43 +102,43 @@ class VesselPerformance:
 
     def speed(self):
         """
-            FILL
+            A function to compile the new speeds calculated based on the ice resistance into the mesh.
         """
 
-        self.neighbour_graph['Ice Resistance'] = np.nan
-        for idx, row in self.neighbour_graph.iterrows():
-            if row['Ice Area'] == 0.0:
-                self.neighbour_graph.loc[idx, 'Speed'] = self.config['Vehicle_Info']['Speed']
-                self.neighbour_graph.loc[idx, 'Ice Resistance'] = 0.0
-            elif row['Ice Area'] > self.config['Vehicle_Info']['MaxIceExtent']:
-                self.neighbour_graph.loc[idx, 'Speed'] = 0.0
-                self.neighbour_graph.loc[idx, 'Ice Resistance'] = np.inf
+        self.mesh_df['ice resistance'] = np.nan
+        for idx, row in self.mesh_df.iterrows():
+            if row['SIC'] == 0.0:
+                self.mesh_df.loc[idx, 'speed'] = self.vessel_params['Speed']
+                self.mesh_df.loc[idx, 'ice resistance'] = 0.0
+            elif row['SIC'] > self.vessel_params['MaxIceExtent']:
+                self.mesh_df.loc[idx, 'speed'] = 0.0
+                self.mesh_df.loc[idx, 'ice resistance'] = np.inf
             else:
-                rp = self.ice_resistance(self.config['Vehicle_Info']['Speed'],row['Ice Area'],row['Ice Thickness'],row['Ice Density'])
-                if rp > self.config['Vehicle_Info']['ForceLimit']:
-                    speed = self.inverse_resistance(row['Ice Area'], row['Ice Thickness'],row['Ice Density'])
-                    rp = self.ice_resistance(speed, row['Ice Area'],row['Ice Thickness'],row['Ice Density'])
-                    self.neighbour_graph.loc[idx, 'Speed'] = speed
-                    self.neighbour_graph.loc[idx, 'Ice Resistance'] = rp
+                rp = self.ice_resistance(self.vessel_params['Speed'],row['SIC'],row['thickness'],row['density'])
+                if rp > self.vessel_params['ForceLimit']:
+                    new_speed = self.inverse_resistance(row['SIC'], row['thickness'],row['density'])
+                    rp = self.ice_resistance(new_speed, row['SIC'],row['thickness'],row['density'])
+                    self.mesh_df.loc[idx, 'speed'] = new_speed
+                    self.mesh_df.loc[idx, 'ice resistance'] = rp
                 else:
-                    self.neighbour_graph.loc[idx, 'Speed'] = self.config['Vehicle_Info']['Speed']
-                    self.neighbour_graph.loc[idx, 'Ice Resistance'] = rp
+                    self.mesh_df.loc[idx, 'speed'] = self.vessel_params['Speed']
+                    self.mesh_df.loc[idx, 'ice resistance'] = rp
 
     def speed_simple(self):
-        self.neighbour_graph['Speed'] = (1 - np.sqrt(self.neighbour_graph['Ice Area'] / 100)) * \
-                                        self.config['Vehicle_Info']['Speed']
+        self.mesh_df['speed'] = (1 - np.sqrt(self.mesh_df['SIC'] / 100)) * \
+                                        self.vessel_params['Speed']
 
     def fuel(self):
         """
         Fuel usage in tons per day based on speed in km/h and ice resistance.
         """
 
-        self.neighbour_graph['Fuel'] = (0.00137247 * self.neighbour_graph['Speed'] ** 2 - 0.0029601 *
-                                        self.neighbour_graph['Speed'] + 0.25290433
-                                        + 7.75218178e-11 * self.neighbour_graph['Ice Resistance'] ** 2
-                                        + 6.48113363e-06 * self.neighbour_graph['Ice Resistance']) * 24.0
+        self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
+                                        self.mesh_df['speed'] + 0.25290433
+                                        + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2
+                                        + 6.48113363e-06 * self.mesh_df['ice resistance']) * 24.0
 
-    def remove_nodes(neighbour_graph, inaccessible_nodes):
+    def remove_nodes(self, neighbour_graph, inaccessible_nodes):
         """
             neighbour_graph -> a dictionary containing indexes of cellboxes
             and how they are connected
@@ -170,6 +170,6 @@ class VesselPerformance:
                         accessibility_graph[node][case].remove(int(inaccessible_node))
 
         for node in inaccessible_nodes:
-            accessibility_graph.pop(int(node))
+            accessibility_graph.pop(node)
 
         return accessibility_graph
