@@ -94,10 +94,10 @@ import json
 
 
 class StaticMap:
-    def __init__(self,config, cellboxes):
+    def __init__(self, config, cellboxes):
         self.config = config
         self.basemap = config["Static_Map"]['Basemap_Info']
-        self.layers  = config['Static_Map']['Layers']
+        self.layers = config['Static_Map']['Layers']
 
         
 
@@ -114,19 +114,17 @@ class StaticMap:
 
 
         # Overlaying the layers
-        for idx,layer in enumerate(self.layers):
+        for idx, layer in enumerate(self.layers):
             self.zorder = idx+1
-            if layer['Show'] == False:
+            if not layer['Show']:
                 continue
             #try:
             if layer['Type'] == 'Maps':
-                self._maps(layer)
+                self._maps(layer, cellboxes)
             if layer['Type'] == 'Paths':
                 self._paths(layer)
             if layer['Type'] == 'Points':
                 self._points(layer)
-            if layer['Type'] == 'Vectors':
-                self._vectors(layer)
 
         if 'Output_Filename' in self.config['Static_Map']:
             plt.savefig(self.config['Static_Map']['Output_Filename'])
@@ -159,14 +157,6 @@ class StaticMap:
         else:
             self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],info["Size"],marker='o',transform=ccrs.PlateCarree(),color=info['Color'],zorder=self.zorder)
 
-    def _vectors(self,info):
-        dataframe_pandas = pd.read_csv(info['filename'])
-        Vector = np.array(dataframe_pandas[[info['Data_Name'][0],info['Data_Name'][1]]], dtype=float)
-        cx = np.array(dataframe_pandas['cx'], dtype=float)
-        cy = np.array(dataframe_pandas['cy'], dtype=float)
-
-        M = np.hypot(Vector[:,0],Vector[:,1])
-        self.ax.quiver(cx,cy,Vector[:,0],Vector[:,1],M,scale=info['Size'],color=info['Color'],transform=ccrs.PlateCarree(),width=info['Width'])
 
     def _paths(self,info):
         '''
