@@ -316,11 +316,11 @@ class CellGrid:
         """
             Returns this cellGrid converted to JSON format.
         """
-        json = {}
+        json = dict()
         json['config'] = self.config
         json["cellboxes"] = self.get_cellboxes(selected_values)
         json['neighbour_graph'] = self.neighbour_graph
-        
+        json = JSON.dumps(json)
 
         return json
 
