@@ -324,7 +324,7 @@ class CellGrid:
 
         return json
 
-    # Functions for spltting cellboxes within the cellgrid
+    # Functions for splitting cellboxes within the cellgrid
 
     def split_and_replace(self, cellbox):
         """

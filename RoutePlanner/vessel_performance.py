@@ -2,22 +2,25 @@
     Class for modelling the vessel performance.
     Takes a mesh as input in json format and modifies it to include vessel specifics.
 """
+import json
 import numpy as np
 import pandas as pd
 
 
 class VesselPerformance:
-    def __init__(self, mesh):
+    def __init__(self, mesh_json):
         """
             FILL
         """
 
-        self.mesh = mesh
-        self.config = mesh['config']
-        self.mesh_df = pd.DataFrame(mesh['cellboxes']).set_index('id')
+        self.mesh = json.loads(mesh_json)
+        self.config = self.mesh['config']
+        self.mesh_df = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.vessel_params = self.config['Vessel']
 
-        # Removing land or thick-ice cells
+        # Identifying land and extreme ice cells then removing them from the neighbour graph
+        self.land()
+        self.extreme_ice()
         self.inaccessible_nodes()
 
         # Checking if Speed defined in file
@@ -35,19 +38,23 @@ class VesselPerformance:
         Method to return the modified mesh in json format.
         """
         self.mesh['cellboxes'] = self.mesh_df.to_dict('records')
-        return self.mesh
+        return json.dumps(self.mesh)
+
+    def land(self):
+        self.mesh_df['land'] = self.mesh_df['elevation'] > self.vessel_params['MinDepth']
+
+    def extreme_ice(self):
+        self.mesh_df['ext_ice'] = self.mesh_df['SIC'] > self.vessel_params['MaxIceExtent']
 
     def inaccessible_nodes(self):
         """
         Method to determine which nodes are inaccessible and remove them from the neighbour graph.
         """
-        ext_ice = self.mesh_df[self.mesh_df['SIC'] > self.vessel_params['MaxIceExtent']]
-        land = self.mesh_df[self.mesh_df['elevation'] > self.vessel_params['MinDepth']]
 
-        inaccessible = list(ext_ice.index) + list(land.index)
-        inaccessible = list(set(inaccessible))
+        inaccessible = self.mesh_df[(self.mesh_df['land']) | (self.mesh_df['ext_ice'])]
+        inaccessible_idx = list(inaccessible.index)
 
-        self.mesh['neighbour_graph'] = self.remove_nodes(self.mesh['neighbour_graph'], inaccessible)
+        self.mesh['neighbour_graph'] = self.remove_nodes(self.mesh['neighbour_graph'], inaccessible_idx)
 
     def ice_resistance(self, velocity, area, thickness, density):
         """
