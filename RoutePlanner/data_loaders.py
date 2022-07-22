@@ -1,7 +1,7 @@
 """
     functions for loading datasets into the py_RoutePlanner.
     the pyRoutePlanner requires data as a pandas dataframe
-    in for following format:
+    in the following format:
 
     long | lat | (time)* | value_1 | ... | value_n
 

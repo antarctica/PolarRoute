@@ -1,6 +1,6 @@
 """
     Class for modelling the vessel performance.
-    Takes a mesh as input in json format and modifies it according to include vessel specifics.
+    Takes a mesh as input in json format and modifies it to include vessel specifics.
 """
 import numpy as np
 import pandas as pd
