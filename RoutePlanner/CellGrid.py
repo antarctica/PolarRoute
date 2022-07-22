@@ -288,8 +288,8 @@ class CellGrid:
                 cell = {
                     "id":str(self.cellboxes.index(cellbox)),
                     "geometry":str(Polygon(cellbox.get_bounds())),
-                    'cx':cellbox.getcx(),
-                    'cy':cellbox.getcy(),
+                    'cx':float(cellbox.getcx()),
+                    'cy':float(cellbox.getcy()),
                     'dcx':cellbox.getdcx(),
                     'dcy':cellbox.getdcy()
                 }
@@ -308,7 +308,7 @@ class CellGrid:
 
                 # assigned selected values to cellbox
                 for value in selected_values:
-                    cell[value]= cellbox.get_value(value)
+                    cell[value] = float(cellbox.get_value(value))
                 return_cellboxes.append(cell)
         return return_cellboxes
 
