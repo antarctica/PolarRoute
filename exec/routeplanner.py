@@ -1,6 +1,6 @@
 import sys,json
 from RoutePlanner.CellGrid import CellGrid
-from RoutePlanner.speed import SpeedFunctions
+from RoutePlanner.vessel_performance import VesselPerformance
 from RoutePlanner.optimisation import TravelTime
 
 # Loading Configuration
@@ -11,7 +11,7 @@ with open(sys.argv[1], 'r') as f:
 mesh = CellGrid(config)
 
 # Vehicle Specs
-sf = SpeedFunctions(config)
+sf = VesselPerformance(config)
 
 # Route Planning
 TT = TravelTime(config)

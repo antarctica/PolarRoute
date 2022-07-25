@@ -94,10 +94,10 @@ import json
 
 
 class StaticMap:
-    def __init__(self,config, cellboxes):
+    def __init__(self, config, cellboxes):
         self.config = config
         self.basemap = config["Static_Map"]['Basemap_Info']
-        self.layers  = config['Static_Map']['Layers']
+        self.layers = config['Static_Map']['Layers']
 
         
 
@@ -114,7 +114,11 @@ class StaticMap:
 
 
         # Overlaying the layers
-        for layer in self.layers:
+        for idx, layer in enumerate(self.layers):
+            self.zorder = idx+1
+            if not layer['Show']:
+                continue
+            #try:
             if layer['Type'] == 'Maps':
                 self._maps(layer, cellboxes)
             if layer['Type'] == 'Paths':
@@ -152,6 +156,7 @@ class StaticMap:
             self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],info["Size"],c=colour,marker='o',transform=ccrs.PlateCarree(),zorder=self.zorder)
         else:
             self.ax.scatter(dataframe_points['Long'],dataframe_points['Lat'],info["Size"],marker='o',transform=ccrs.PlateCarree(),color=info['Color'],zorder=self.zorder)
+
 
     def _paths(self,info):
         '''
