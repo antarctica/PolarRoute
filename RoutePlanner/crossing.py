@@ -879,7 +879,7 @@ class NewtonianCurve:
                         
 
                         # Trimminng back if the cell is worse off
-                        if (np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']]) < (np.max([sGNGraph['Ice Area'],eGNGraph['Ice Area']]) +  0.2*np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']]))):
+                        if (np.max([cellStartGraph['SIC'],cellEndGraph['SIC']]) < (np.max([sGNGraph['SIC'],eGNGraph['SIC']]) +  0.2*np.max([cellStartGraph['SIC'],cellEndGraph['SIC']]))):
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
@@ -924,7 +924,7 @@ class NewtonianCurve:
 
 
                         # Trimminng back if the cell is worse off
-                        if np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']]) < (NeighGraph['Ice Area'] +  0.2*np.max([cellStartGraph['Ice Area'],cellEndGraph['Ice Area']])):
+                        if np.max([cellStartGraph['SIC'],cellEndGraph['SIC']]) < (NeighGraph['SIC'] +  0.2*np.max([cellStartGraph['SIC'],cellEndGraph['SIC']])):
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:

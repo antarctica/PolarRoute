@@ -33,11 +33,14 @@ class VesselPerformance:
         # Calculate fuel usage based on speed and ice resistance
         self.fuel()
 
+        # Updating the mesh information
+        self.mesh_df['id'] = self.mesh_df.index
+        self.mesh['cellboxes'] = self.mesh_df.to_dict('records')
+
     def to_json(self):
         """
         Method to return the modified mesh in json format.
         """
-        self.mesh['cellboxes'] = self.mesh_df.to_dict('records')
         return json.dumps(self.mesh)
 
     def land(self):
