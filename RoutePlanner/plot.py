@@ -83,6 +83,31 @@ class BindColormap(MacroElement):
 
 
 
+def deep_search(needles, haystack):
+    found = {}
+    if type(needles) != type([]):
+        needles = [needles]
+
+    if type(haystack) == type(dict()):
+        for needle in needles:
+            if needle in haystack.keys():
+                found[needle] = haystack[needle]
+            elif len(haystack.keys()) > 0:
+                for key in haystack.keys():
+                    result = deep_search(needle, haystack[key])
+                    if result:
+                        for k, v in result.items():
+                            found[k] = v
+    elif type(haystack) == type([]):
+        for node in haystack:
+            result = deep_search(needles, node)
+            if result:
+                for k, v in result.items():
+                    found[k] = v
+    return found
+
+
+
 from shapely.geometry.polygon import Polygon
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
@@ -94,11 +119,13 @@ import json
 
 
 class StaticMap:
-    def __init__(self, config, cellboxes):
-        self.config = config
-        self.basemap = config["Static_Map"]['Basemap_Info']
-        self.layers = config['Static_Map']['Layers']
-
+    def __init__(self, json):
+    
+        self.json = json
+        self.config  = json['config']
+        self.basemap = self.config["Static_Map"]['Basemap_Info']
+        self.layers  = self.config['Static_Map']['Layers']
+        cellboxes    = json['cellboxes']
         
 
 
@@ -143,7 +170,14 @@ class StaticMap:
         plt.title(r'Route Planner | {}'.format(self.basemap['Title']),fontsize=14,loc='left',color='blue')
 
     def _points(self,info):
-        dataframe_points = pd.read_csv(info['filename'])
+
+        if 'filename' in info:
+            dataframe_points = pd.read_csv(info['filename'])
+        elif 'object' in info:
+            dataframe_points = pd.DataFrame(deep_search([info['object']],self.json )[info['object']])
+        else:
+            print('Please define either a filename or object in the json')
+
         if ('Name' in info) and info['Name']:
             dataframe_points[info['Name']][dataframe_points[info['Name']] > info['Fill_trim_max']] = np.nan
             dataframe_points[info['Name']][dataframe_points[info['Name']] <= info['Fill_trim_min']] = np.nan
@@ -164,9 +198,15 @@ class StaticMap:
         '''
 
         # Loading the path information
-        with open(info['filename'], 'r') as f:
-            geojson = json.load(f)
-            paths = geojson['features']
+
+        if 'filename' in info:
+            with open(info['filename'], 'r') as f:
+                geojson = json.load(f)
+        elif 'object' in info:
+            geojson = deep_search([info['object']],self.json)[info['object']]
+        else:
+            print('Please define either a filename or object in the json')
+        paths = geojson['features']
 
         # Determining max values of all paths
         if info['Colorline']:

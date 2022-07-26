@@ -152,6 +152,8 @@ class Optimisation:
         '''
             Outputing the information in JSON format
         '''
+
+        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'].to_dict()
         return json.dumps(self.mesh)
 
 
