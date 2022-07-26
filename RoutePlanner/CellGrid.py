@@ -13,10 +13,97 @@ import RoutePlanner.data_loaders as data_loader
 
 class CellGrid:
     """
-        TODO
+        Attributes:
+            cellboxes (list<CellBox>): A list of CellBox objects forming the CellGrid
+            
+            neighbour_graph (dic>): A graphical representation of the adjacency
+                relationship between CellBoxes in the CellGrid. The neighbour_graph is
+                of the form
+
+               {
+                    <CellBox id_1>: {
+                        "0": [id_1,...,id_n],
+                        "1": [id_1,...,id_n],
+                        "2": [id_1,...,id_n],
+                        "3": [id_1,...,id_n],
+                        "4": [id_1,...,id_n],
+                        "-1": [id_1,...,id_n],
+                        "-2": [id_1,...,id_n],
+                        "-3": [id_1,...,id_n],
+                        "-4": [id_1,...,id_n],
+                    },
+                    ...,
+                    {
+                        <CellBox id_n>: {
+                            ...
+                        }
+                    }
+               }
+
+            ---Hidden---
+            _long_min (real): minimum longitude bound of the CellGrid
+            _long_max (real): maximum longitude bound of the CellGrid
+            _lat_min (real): minimum latitude bound of the CellGrid
+            _lat_max (real): maximum latitude bound of the CellGrid
+            _cell_width (real): width of initial CellBoxes in construction of the CellGrid,
+                width is measured in degrees longitude
+            _cell_height (real): height of initital CellBoxes in construction of the CellGrid,
+                height is measured in degrees latitude
+
+            _start_time (string): minimum temporal bound of the CellGrid,
+                given in format "YYYY-MM-DD"
+            _end_time (string): maximum temporal bound of the CellGrid,
+                given in format: "YYYY-MM-DD"
+
+            _data_sources (list<dict>): list of datasources used in the construction of the
+                CellGrid, data_sources of of the format
+                [
+                    {
+                        "loader": <name of loader function used to generate data_points>
+                        "params": {
+                            <optional parameters to be passed to the loader function>
+                        }
+                    }
+                    ...
+                    {
+                        ...
+                    }
+                ]
+
+            _j_grid (bool): True if the CellGrid generated should be of the same form as
+                the original Java codebase - to be used for regression testing
+
     """
 
     def __init__(self, config, j_grid=False):
+        """
+            Contructs a CellGrid from a given config file.
+
+            Args:
+                config (dict): config file which defines the attributes of the CellGrid
+                    to be contructed. config is of the form -
+
+                    {
+                        "config": {
+                            "Region": {
+                                "latMin": (real),
+                                "latMax": (real),
+                                "longMin": (real),
+                                "longMax": (real),
+                                "startTime": (string) 'YYYY-MM-DD',
+                                "endTime": (string) 'YYYY-MM-DD',
+                                "cellWidth": (real), 
+                                "cellHeight" (real),
+                                "splitDepth" (int)
+                            },
+                            "Data_souces": list<dict>,
+                            "splitting_conditions": list<dict>
+                        }
+                    }
+
+                j_grid (bool): True if the CellGrid to be constructed should be of the same
+                    format as the original Java CellGrid, to be used for regression testing.
+        """
         self.config = config
 
         self._long_min = config['Region']['longMin']
@@ -185,6 +272,11 @@ class CellGrid:
         """
             takes a dataframe containing geospatial-temporal located values and assigns them to
             cellboxes within this cellgrid.
+
+            Args:
+                data_points (dataframe): a dataframe of datapoints to be added to the CellGrid.
+                    data_points is of the form
+                    lat | long | (time)* | value_1 | ... | value_n
         """
         for cell_box in self.cellboxes:
             if isinstance(cell_box, CellBox):
@@ -278,11 +370,32 @@ class CellGrid:
             is specifed those specifed in the list parameter 'selected_values'
 
             all cellboxes will include id, geometry, cell_info
+
+            Args:
+                selected_values (list): values to be included in the outputed cellboxes
+
+            Returns:
+                cellboxes (list<dict>): a list of CellBoxes which form the CellGrid.
+                    CellBoxes are of the form - 
+
+                    {
+                        "id": (string) ...
+                        "geometry": (string) POLYGON(...),
+                        "cx": (float) ...,
+                        "cy": (float) ...,
+                        "dcx": (float) ...,
+                        "dcy": (float) ...,
+
+                        "value_1": (float) ...,
+                        ...,
+                        "value_n": (float) ...
+
+                    }
         """
         return_cellboxes = []
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
-                cell_indx = self.cellboxes.index(cellbox)
+                #cell_indx = self.cellboxes.index(cellbox)
 
                 # create cellbox identifiers
                 cell = {
@@ -314,7 +427,21 @@ class CellGrid:
 
     def to_json(self, selected_values):
         """
-            Returns this cellGrid converted to JSON format.
+            Returns this CellGrid converted to string parsable as a JSON object.
+
+            Args:
+                selected_values (list<string>): values to be included in each outputed CellBox
+
+            Returns:
+                json (string): a string representation of the CellGird parseable as a
+                    JSON object. The JSON object is of the form - 
+
+                    {
+                        "config": the config used to initialize the CellGrid,
+                        "cellboxes": a list of CellBoxes contained within the CellGrid,
+                        "neighbour_graph": a graph representing the adjacency of CellBoxes
+                            within the CellGrid
+                    } 
         """
         json = dict()
         json['config'] = self.config
@@ -332,6 +459,10 @@ class CellGrid:
             4 smaller cellBoxes representing the four corners of the given cellBox.
             A neighbours map is then created for each of the 4 new cellBoxes
             and the neighbours map for all surrounding cell boxes is updated.
+
+            Args:
+                cellbox (CellBox): the CellBox within this CellGrid to be split into
+                    4 smaller CellBox objects.
 
         """
         split_cellboxes = cellbox.split()
@@ -553,6 +684,10 @@ class CellGrid:
         """
             splits all cellboxes in this grid until a maximum split depth
             is reached, or all cellboxes are homogenous.
+
+            Args:
+                split_depth (int): The maximum split depth reached by any CellBox
+                    within this CellGrid after splitting.
         """
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
@@ -643,19 +778,28 @@ class CellGrid:
 
     def get_neighbour_case(self, cellbox_a, cellbox_b):
         """
-            Given two cellBoxes (cellBoxA, cellBoxB) returns a case number
+            Given two cellBoxes (cellbox_a, cellbox_b) returns a case number
             representing where the two cellBoxes are touching.
 
-            case 0 -> cellBoxes are not neighbours
+            Args:
+                cellbox_a (CellBox): starting CellBox
+                cellbox_b (CellBox): destination CellBox
 
-            case 1 -> cellBoxB is the North-East corner of cellBoxA
-            case 2 -> cellBoxB is East of cellBoxA
-            case 3 -> cellBoxB is the South-East corner of cellBoxA
-            case 4 -> cellBoxB is South of cellBoxA
-            case -1 -> cellBoxB is the South-West corner of cellBoxA
-            case -2 -> cellBoxB is West of cellBoxA
-            case -3 -> cellBoxB is the North-West corner of cellBoxA
-            case -4 -> cellBoxB is North of cellBoxA
+            Returns:
+                case (int): an int representing the direction of the adjacency
+                    between input cellbox_a and cellbox_b. The meaning of each case
+                    is as follows - 
+
+                        case 0 -> CellBoxes are not neighbours
+
+                        case 1 -> cellbox_b is the North-East corner of cellbox_a
+                        case 2 -> cellbox_b is East of cellbox_a
+                        case 3 -> cellbox_b is the South-East corner of cellbox_a
+                        case 4 -> cellbox_b is South of cellbox_a
+                        case -1 -> cellbox_b is the South-West corner of cellbox_a
+                        case -2 -> cellbox_b is West of cellbox_a
+                        case -3 -> cellbox_b is the North-West corner of cellbox_a
+                        case -4 -> cellbox_b is North of cellbox_a
         """
 
         if (cellbox_a.long + cellbox_a.width) == cellbox_b.long and (
@@ -691,13 +835,21 @@ class CellGrid:
     def get_cellbox(self, long, lat):
         """
             Returns the CellBox which contains a point, given by parameters lat, long
+
+            Args:
+                long (long): longitude of a given point
+                lat (float): latitude of given point
+
+            Returns:
+                cellbox (CellBox): the cellbox which contains the point given my parameters
+                (long, lat)
         """
         selected_cell = []
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
                 if cellbox.contains_point(lat, long):
                     selected_cell.append(cellbox)
-        return selected_cell
+        return selected_cell[0]
 
     # Functions used for j_grid regression testing
     def dump_mesh(self, file_location):
