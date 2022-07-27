@@ -106,18 +106,18 @@ class CellGrid:
         """
         self.config = config
 
-        self._long_min = config['Region']['longMin']
-        self._long_max = config['Region']['longMax']
-        self._lat_min = config['Region']['latMin']
-        self._lat_max = config['Region']['latMax']
+        self._long_min = config['Mesh_info']['Region']['longMin']
+        self._long_max = config['Mesh_info']['Region']['longMax']
+        self._lat_min = config['Mesh_info']['Region']['latMin']
+        self._lat_max = config['Mesh_info']['Region']['latMax']
 
-        self._cell_width = config['Region']['cellWidth']
-        self._cell_height = config['Region']['cellHeight']
+        self._cell_width = config['Mesh_info']['Region']['cellWidth']
+        self._cell_height = config['Mesh_info']['Region']['cellHeight']
 
-        self._start_time = config['Region']['startTime']
-        self._end_time = config['Region']['endTime']
+        self._start_time = config['Mesh_info']['Region']['startTime']
+        self._end_time = config['Mesh_info']['Region']['endTime']
 
-        self._data_sources = config['Data_sources']
+        self._data_sources = config['Mesh_info']['Data_sources']
 
         self._j_grid = j_grid
 
@@ -178,20 +178,20 @@ class CellGrid:
             cellbox.set_focus([])
         self.splitting_conditions = []
 
-        for data_source in config['Data_sources']:
+        for data_source in config['Mesh_info']['Data_sources']:
             loader = getattr(data_loader, data_source['loader'])
             data_points = loader(data_source['params'],
                 self._long_min, self._long_max, self._lat_min, self._lat_max,
                 self._start_time, self._end_time)
-            
+    
             self.add_data_points(data_points)
 
-        for splitting_condition in config['splitting_conditions']:
+        for splitting_condition in config['Mesh_info']['splitting_conditions']:
             for cellbox in self.cellboxes:
                 if isinstance(cellbox, CellBox):
                     cellbox.add_splitting_condition(splitting_condition)
-            
-            self.split_to_depth(config['Region']['splitDepth'])
+
+            self.split_to_depth(config['Mesh_info']['Region']['splitDepth'])
 
         #for data_source in config['Data_sources']:
             #self.add_data_source(data_source)
@@ -224,7 +224,7 @@ class CellGrid:
     def get_cellboxes(self):
         """
             returns a list of dictories containing information about each cellbox
-            in this cellgrid. 
+            in this cellgrid.
             all cellboxes will include id, geometry, cx, cy, dcx, dcy
 
             Returns:
@@ -247,35 +247,12 @@ class CellGrid:
         return_cellboxes = []
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
-                #cell_indx = self.cellboxes.index(cellbox)
 
-                # create cellbox identifiers
+                # Get json for CellBox
                 cell = cellbox.to_json()
+                # Append ID to CellBox
                 cell['id'] = str(self.cellboxes.index(cellbox))
-                # cell = {
-                #     "id":str(self.cellboxes.index(cellbox)),
-                #     "geometry":str(Polygon(cellbox.get_bounds())),
-                #     'cx':float(cellbox.getcx()),
-                #     'cy':float(cellbox.getcy()),
-                #     'dcx':cellbox.getdcx(),
-                #     'dcy':cellbox.getdcy()
-                # }
 
-                # # get neighbours of cellbox
-                # neighbour_case = []
-                # neighbour_indx = []
-                # neighbour_graph = self.neighbour_graph[cell_indx]
-                # for case in neighbour_graph.keys():
-                #     for neighbour in neighbour_graph[case]:
-                #         neighbour_case.append(case)
-                #         neighbour_indx.append(neighbour)
-
-                # cell['case'] = neighbour_case
-                # cell['neighbourIndex'] = neighbour_indx
-
-                # assigned selected values to cellbox
-                # for value in selected_values:
-                #     cell[value] = float(cellbox.get_value(value))
                 return_cellboxes.append(cell)
         return return_cellboxes
 
@@ -292,7 +269,7 @@ class CellGrid:
                         "cellboxes": a list of CellBoxes contained within the CellGrid,
                         "neighbour_graph": a graph representing the adjacency of CellBoxes
                             within the CellGrid
-                    } 
+                    }
         """
         json = dict()
         json['config'] = self.config
