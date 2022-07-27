@@ -12,41 +12,62 @@ Example:
         from RoutePlanner import CellBox
         ....
 
-Additional information on constructing document strings using the Google
-DocString method can be found at
-https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
-
-Attributes:
-    Some of the key attributes that the CellBox comprises are ...
-
-Todo:
-    * Adding the addition of ...
-
-
+Note:
+    CellBoxes are intended to be contructed by and used within a CellGrid
+    object. The methods provided are to extract information for CellBoxes
+    contained with a CellGrid
 """
 
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon as MatplotPolygon
+from shapely.geometry import Polygon
 import math
 import numpy as np
 import pandas as pd
 
 class CellBox:
-    """Exceptions are documented in the same way as classes.
+    """
+    A CellBox is a collection of data-points contained within a given geo-spatial/temporal
+    boundary. Information about any given value of a CellBox is calculated from 
+    the mean of all data-points of that type within those bounds. CellBoxes may
+    be split into smaller CellBoxes and the data-points it contains distribued 
+    between the newly created CellBoxes so as to construct a non-uniform mesh
+    of CellBoxes, such as within a CellGrid.
 
-    Note:
-        Do not include the `self` parameter in the ``Args`` section.
 
-    Args:
-        lat    (:obj:`float`): ...
-        long   (:obj:`float`): ...
-        width  (:obj:`float`): ...
-        height (:obj:`float`): ...
     Attributes:
-        ...
+        lat (float): The latitude of the top-left corner of the CellBox
+        long (float): The longitude of the top-left corner of the CellBox
+        width (float): The width of the CellBox, given in degrees longitude
+        height (float): The height of the CellBox, given in degrees latitude
+        
+    Note:
+        All geo-spatial boundaries of a CellBox are given in a 'EPSG:4326' projection
     """
     split_depth = 0
 
     def __init__(self, lat, long, width, height, splitting_conditions = [], j_grid=False):
+        """
+
+            Args:
+                lat (float): The latitude of the top-left corner of the CellBox
+                long (float): The longitude of the top-left corner of the CellBox
+                width (float): The width of the CellBox, given in degrees longitude
+                height (float): The height of the CellBox, given in degrees latitude
+                splitting_conditions (list<(dict)>): conditions in which the CellBox
+                    will be split into 4 smaller CellBoxes.
+
+                    splitting_conditions are of the form -
+                        {
+                            <value>:{
+                                "threshold" (float):,\n
+                                "upperBound" (float):,\n
+                                "lowerBound" (float)
+                            }
+                        }
+
+                j_grid (bool): True if the CellBox should be constructed using the
+                    format of the original Java codebase
+        """
         # Box information relative to bottom left
         self.lat = lat
         self.long = long
@@ -110,6 +131,23 @@ class CellBox:
                     centroid of the CellBox. Given in degrees latitude
         """
         return self.height/2
+
+    def get_data_names(self):
+        """
+            Returns the data names of all values which have been added to this CellBox
+
+            Returns:
+                data_names (list<(String)>): A list of all the names of data types which
+                    have been added to this CellBox
+        """
+        data_names = list(self._data_points.columns)
+
+        to_remove = ['lat', 'long', 'time']
+        for item in to_remove:
+            data_names.remove(item)
+
+        return data_names
+
 
     def get_data_points(self, values = []):
         """
@@ -315,7 +353,7 @@ class CellBox:
             return "HET"
         if hom_conditions.count("CLR") == len(hom_conditions):
             return "CLR"
-        
+
         return "ERR"
 
     def should_be_split(self):
@@ -440,57 +478,6 @@ class CellBox:
         return split_boxes
 
     #Misc
-    def ice_thickness(self, date):
-        """
-            DEPRICATED - externally generated ice thickness data should be used instead
-
-            Returns mean ice thickness within this cellBox.
-            Data taken from Table 3 in: doi:10.1029/2007JC004254
-        """
-        # The table has missing data points for Bellinghausen Autumn and Weddell W Winter,
-        # these require further thought
-        thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
-                    'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
-                    'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
-                    'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
-                    'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
-                    'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79}
-                    }
-        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w',
-                    7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp', 12: 'su'}
-        month = int(date[5:7])
-        season = seasons[month]
-
-        if -130 <= self.long < -60:
-            sea = 'Bellinghausen'
-        elif -60 <= self.long < -45:
-            sea = 'Weddell W'
-        elif -45 <= self.long < 20:
-            sea = 'Weddell E'
-        elif 20 <= self.long < 90:
-            sea = 'Indian'
-        elif 90 <= self.long < 160:
-            sea = 'West Pacific'
-        elif (160 <= self.long < 180) or (-180 <= self.long < -130):
-            sea = 'Ross'
-
-        return thicknesses[sea][season]
-
-    def ice_density(self, date):
-        """
-            DEPRICATED - externally generated ice density data should be used instead
-
-            Returns mean ice density within this cellBox
-        """
-        seasons = {1:'su',2:'su',3:'a',4:'a',5:'a',6:'w',7:'w',8:'w',9:'sp',10:'sp',11:'sp',12:'su'}
-        densities = {'su':875.0,'sp':900.0,'a':900.0,'w':920.0}
-
-        month = int(date[5:7])
-        season = seasons[month]
-        density = densities[season]
-
-        # Seasonal values from: https://doi.org/10.1029/2007JC004254
-        return density
 
     def contains_point(self,lat,long):
         """
@@ -520,11 +507,35 @@ class CellBox:
     def to_json(self):
         '''
             convert cellBox to JSON
-            TODO
+
+            The returned object is of the form -
+
+                {
+                    "geometry" (String): POLYGON(...),\n
+                    "cx" (float): ...,\n
+                    "cy" (float): ...,\n
+                    "dcx" (float): ...,\n
+                    "dcy" (float): ..., \n
+                    \n
+                    "value_1" (float): ...,\n
+                    ...,\n
+                    "value_n" (float): ...
+                }
+            Returns:
+                cell_json (dict): A JSON parsable dictionary representation of this CellBox
         '''
-        cellbox_json = "{"
-        cellbox_json += "}"
-        return cellbox_json
+        cell_json = {
+            "geometry":str(Polygon(self.get_bounds())),
+            'cx':float(self.getcx()),
+            'cy':float(self.getcy()),
+            'dcx':float(self.getdcx()),
+            'dcy':float(self.getdcy())
+        }
+
+        for value in self.get_data_names():
+            cell_json[value] = float(self.get_value(value))
+
+        return cell_json
 
     def contains_land(self):
         """

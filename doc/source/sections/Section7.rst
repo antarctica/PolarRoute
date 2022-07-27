@@ -22,20 +22,57 @@ Outlined below is an example configuration file for running the RoutePlanner. Us
       "splitDepth":0
    },
    "Data_sources": [
+      {
+        "loader":"load_bsose_depth",
+        "params":{
+          "file":"../../Data/BSOSE/bsose_i122_2013to2017_1day_SeaIceArea.nc",
+          "data_name": "elevation"
+        }
+      }, 
+      {
+        "loader":"load_amsr",
+        "params":{
+          "file":"../../Data/AMSR/asi-AMSR-2017.nc"
+        }
+      },
+      {
+        "loader":"load_sose_currents",
+        "params":{
+          "file":"../../Data/SOSE_surface_velocity_6yearMean_2005-2010.nc"
+        }
+      },
+      {
+        "loader":"load_thickness",
+        "params":{
+        }
+      },
+      {
+        "loader":"load_density",
+        "params":{
+        }
+      }
    ],
-   "Speed_Function":{
-      "Mesh_Input_Filename": "./cellgrid_dataframe.csv",
-      "Mesh_Output_Filename": "./cellgrid_dataframe_speed.csv"
-      
-   },
-   "Vehicle_Info": {
-      "Speed": 26.5,
-      "Unit": "km/hr",
-      "Beam": 24.0,
-      "HullType":"slender",
-      "ForceLimit":96634.5,
-      "MaxIceExtent":80
-   },
+   "splitting_conditions":[
+      {"elevation":{
+          "threshold":-10,
+          "upperBound": 1,
+          "lowerBound":0
+      }},
+      {"SIC":{
+          "threshold":35,
+          "upperBound": 0.9,
+          "lowerBound":0.1
+      }}
+  ],
+    "Vessel": {
+    "Speed": 26.5,
+    "Unit": "km/hr",
+    "Beam": 24.0,
+    "HullType": "slender",
+    "ForceLimit": 96634.5,
+    "MaxIceExtent": 80,
+    "MinDepth": -10
+  },
    "Route_Info": {
       "Mesh_Filename": "./cellgrid_dataframe_speed.csv",
       "Paths_Filename": "./paths_traveltime.json",

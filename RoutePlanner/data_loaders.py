@@ -1,13 +1,14 @@
 """
     functions for loading datasets into the py_RoutePlanner.
-    the pyRoutePlanner requires data as a pandas dataframe
+    The pyRoutePlanner requires data as a pandas dataframe
     in the following format:
 
     long | lat | (time)* | value_1 | ... | value_n
 
     *time is optional
 
-    long and lat values must be in a EPSG:4326 projection
+    Note:
+        long and lat values must be in a EPSG:4326 projection
 """
 
 import xarray as xr
@@ -37,7 +38,7 @@ def load_amsr(params, long_min, long_max, lat_min,
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file] (string): file location of the AMSR2 dataset
+                params['file'] (string): file location of the AMSR2 dataset
 
         Returns:
             amsr_df (Dataframe): A dataframe containing AMSR2 Sea Ice Concentration
@@ -81,6 +82,22 @@ def load_density(params, long_min, long_max, lat_min,
     """
         Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
         Data taken from Table 3 in: doi:10.1029/2007JC004254
+
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retreived
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+        Returns:
+            density_df (Dataframe): A dataframe containing ice density
+                data. The dataframe is of the format -
+
+                lat | long | time | density
     """
 
     def icedensity(d):
@@ -115,6 +132,22 @@ def load_thickness(params, long_min, long_max, lat_min,
     """
         Create ice thickness dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
         Data taken from Table 3 in: doi:10.1029/2007JC004254
+
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retreived
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+        Returns:
+            thickness_df (Dataframe): A dataframe containing ice thickness
+                data. The dataframe is of the format -
+
+                lat | long | time | thickness
     """
 
     def icethickness(d, long):
@@ -185,7 +218,7 @@ def load_bsose(params, long_min, long_max, lat_min,
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file] (string): file location of the BSOSE dataset
+                params['file'] (string): file location of the BSOSE dataset
 
         Returns:
             bsose_df (Dataframe): A dataframe containing BSOSE Sea Ice Concentration
@@ -233,7 +266,7 @@ def load_bsose_depth(params, long_min, long_max, lat_min,
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file] (string): file location of the BSOSE dataset
+                params['file'] (string): file location of the BSOSE dataset
 
         Returns:
             bsose_df (Dataframe): A dataframe containing BSOSE bathymetry
@@ -281,7 +314,7 @@ def load_gebco(params, long_min, long_max, lat_min,
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file] (string): file location of the GEBCO dataset
+                params['file'] (string): file location of the GEBCO dataset
 
         Returns:
             gebco_df (Dataframe): A dataframe containing GEBCO elevation
@@ -321,7 +354,7 @@ def load_sose_currents(params, long_min, long_max, lat_min,
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file] (string): file location of the SOSE dataset
+                params['file'] (string): file location of the SOSE dataset
 
         Returns:
             sose_df (Dataframe): A dataframe containing SOSE current
@@ -364,8 +397,8 @@ def load_modis(params, long_min, long_max, lat_min,
 
             params (dict): A dictionary containing optional parameters. This
                 function requires -
-    
-                params['file] (string): file location of the MODIS dataset
+  
+                params['file'] (string): file location of the MODIS dataset
 
         Returns:
             modis_df (Dataframe): A dataframe containing MODIS Sea Ice Concentration
@@ -410,7 +443,7 @@ def load_era5_wind(params, long_min, long_max, lat_min,
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file] (string): file location of the era5 dataset
+                params['file'] (string): file location of the era5 dataset
 
         Returns:
             era5_wind_df (Dataframe): A dataframe containing era5 wind
