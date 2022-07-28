@@ -22,9 +22,18 @@ The outline of the toolkit can be separted into the four main sections demonstra
 
 The separate stages can be broken down into:
 
-1. **Multi Data Input** - Reading in different datasets of differening types. Throughout this section we will outline the form that the input datasets should take and useful tips for pre-processing your data of interest
-2. **Discrete Meshing** - Generating a Digitial Twin of the environmental condtions. In this section we outline the different Python classes that are used to constucted a discretised represention across the user defined datasets, giving a coding background into the dynamic splitting of the mesh to finer resolution in regions of datasets that are spatially varying
-3. **Vehicles Specifics** - Application of vehicle specific features applied to the discret mesh. In this section we will supply the user with the knowledge of how vehcile specific features are applied to the discret mesh or with varibles applied to the computational graph of the mesh. 
-4. **Route Planning** - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (E.g. Traveltime, Fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths.
+1. :ref:`Data Loaders` - Reading in different datasets of differening types. Throughout this section we will outline the form that the input datasets should take and useful tips for pre-processing your data of interest 
+2. :ref:`Mesh Construction` - Generating a Digitial Twin of the environmental condtions. In this section we outline the different Python classes that are used to constucted a discretised represention across the user defined datasets, giving a coding background into the dynamic splitting of the mesh to finer resolution in regions of datasets that are spatially varying 
+3. :ref:`Vessel Performance` - Application of vehicle specific features applied to the discret mesh. In this section we will supply the user with the knowledge of how vehcile specific features are applied to the discret mesh or with varibles applied to the computational graph of the mesh. 
+4. :ref:`Route Planner` - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (E.g. Traveltime, Fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths. 
+
+.. figure:: ./Figures/System_overview.png
+   :align: center
+   :width: 700
+
+   *Overview figure outlining the Input/Output of all sections of the Route Planning pipeline
+
+Each stage of this pipeline require a configuration file, found in the :ref:`Configuration` section of this document
+and produce and output file, the form of which can be found in the :ref:`Outputs` section of this document
 
 In addition to the main section of the codebase we have also developed a series of plotting classes that allows the user to generate Interactive maps and static figures for the Mesh Features and Route Paths. These can be found in the `Plotting` section later in the manual. 

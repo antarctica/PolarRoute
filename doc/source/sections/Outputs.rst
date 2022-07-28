@@ -24,7 +24,7 @@ of mesh construction and json object generation are as follows:
 
 .. note:: 
     Examples and description of configuration files can be found in 
-    the 'Configuration' section of this document.
+    the :ref:`Configuration` section of this document.
 
 
 The json object outputed by the CellGrid consist of 3 sections: **config**, 
@@ -160,11 +160,11 @@ apply transformation which are specifc to a given vehicle.
     To be compatable with vessel performance transformations, a CellGrid must be contructed with
     the following attributes:
     
-    * SIC
-    * uC 
-    * vC 
-    * thickness
-    * density
+    * SIC (available via data_loaders: *loader_amsr*, *load_bsose*, *load_modis*)
+    * thickness (available via data_loaders: *load_thickness*)
+    * density (available via data_loaders: *load_density*)
+
+    see section **Multi Data Input** for more information on data_loaders
 
 
 TODO - Description of transformation applied to the mesh json object by Vessel Performance.
