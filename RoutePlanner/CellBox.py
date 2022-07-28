@@ -200,7 +200,7 @@ class CellBox:
         """
             returns the bounds of this cellbox
 
-            Returns: 
+            Returns:
                 bounds (list<tuples>): The geo-spatial boundaries of this CellBox.
         """
         bounds = [[self.long, self.lat],

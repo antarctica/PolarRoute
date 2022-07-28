@@ -6,10 +6,11 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
-   ./sections/Section1
-   ./sections/Section2
-   ./sections/Section3
-   ./sections/Section4
-   ./sections/Section5
-   ./sections/Section6
-   ./sections/Section7
+   ./sections/Code_structure
+   ./sections/Installation
+   ./sections/Multi_data_input
+   ./sections/Discrete_meshing
+   ./sections/Vehicle_specifics
+   ./sections/Route_optimisation
+   ./sections/Configuration
+   ./sections/Outputs
