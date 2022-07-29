@@ -8,6 +8,8 @@ The input to the class is the mesh object produced by the CellGrid class in json
 in the same format via the VesselPerformance.to_json method.
 
 Example:
+    An example of how to use this code can be executed by running the following::
+
         import json
         from RoutePlanner.CellGrid import CellGrid
         from RoutePlanner.vessel_performance import VesselPerformance
