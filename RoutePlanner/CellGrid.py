@@ -169,6 +169,10 @@ class CellGrid:
 
             self.neighbour_graph[cellbox_indx] = neighbour_map
 
+            # set value output types of a cellbox
+            if 'value_output_types' in config['Mesh_info'].keys():
+                cellbox.add_value_output_type(config['Mesh_info']['value_output_types'])
+
             # set gridCoord of cellBox
             x_coord = cellbox_indx % grid_width
             y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
@@ -183,8 +187,10 @@ class CellGrid:
             data_points = loader(data_source['params'],
                 self._long_min, self._long_max, self._lat_min, self._lat_max,
                 self._start_time, self._end_time)
-    
+
             self.add_data_points(data_points)
+
+
 
         for splitting_condition in config['Mesh_info']['splitting_conditions']:
             for cellbox in self.cellboxes:
