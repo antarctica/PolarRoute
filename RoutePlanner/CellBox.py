@@ -185,6 +185,10 @@ class CellBox:
             Args:
                 value (string): The value type requested
 
+                value_type (string): The output type of a value requested.
+                    value_type may be < MEAN | MIN | MAX >. If none is given
+                    a default of MIN is used.
+
             Returns:
                 value (float): The mean of all data_points of type 'value'
                     within this CellBox
