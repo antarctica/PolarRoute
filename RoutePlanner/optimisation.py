@@ -111,10 +111,10 @@ class Optimisation:
 
         # Dropping waypoints outside domain
         self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][\
-                                                              (self.config['Route_Info']['WayPoints']['Long'] >= self.config['Region']['longMin']) &\
-                                                              (self.config['Route_Info']['WayPoints']['Long'] <=  self.config['Region']['longMax']) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] <=  self.config['Region']['latMax']) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] >=  self.config['Region']['latMin'])] 
+                                                              (self.config['Route_Info']['WayPoints']['Long'] >= self.config['Mesh_info']['Region']['longMin']) &\
+                                                              (self.config['Route_Info']['WayPoints']['Long'] <=  self.config['Mesh_info']['Region']['longMax']) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] <=  self.config['Mesh_info']['Region']['latMax']) &\
+                                                              (self.config['Route_Info']['WayPoints']['Lat'] >=  self.config['Mesh_info']['Region']['latMin'])] 
 
         # # Initialising Waypoints positions and cell index
         wpts = self.config['Route_Info']['WayPoints']

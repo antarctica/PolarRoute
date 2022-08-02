@@ -162,7 +162,7 @@ class StaticMap:
         matplotlib.rcParams.update({'font.size': 16})
 
         self.ax = plt.axes(projection=self.ccrs)
-        self.ax.set_extent([self.config['Region']['longMin']+1e-6,self.config['Region']['longMax']-1e-6,self.config['Region']['latMin'],self.config['Region']['latMax']], crs=ccrs.PlateCarree())
+        self.ax.set_extent([self.config['Mesh_info']['Region']['longMin']+1e-6,self.config['Mesh_info']['Region']['longMax']-1e-6,self.config['Mesh_info']['Region']['latMin'],self.config['Mesh_info']['Region']['latMax']], crs=ccrs.PlateCarree())
         self.ax.add_image(cimgt.GoogleTiles(), 3)
         self.ax.coastlines(resolution='50m')
         self.ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False,linewidth=0.5,linestyle='--')
