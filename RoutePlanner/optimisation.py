@@ -456,9 +456,9 @@ class Optimisation:
 
                             id+=1+nc.id
 
-                        if  id <= (len(nc.CrossingDF) - 3):
-                            print('Path Smoothing Failed!')
-                            break
+                        # if  id <= (len(nc.CrossingDF) - 3):
+                        #     print('Path Smoothing Failed!')
+                        #     break
 
 
                         self.nc = nc
@@ -478,7 +478,7 @@ class Optimisation:
                             if self.verbose:
                                 pbar.set_description("Mean Difference = {}".format(Dist))
 
-                            if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 5:
+                            if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 20:
                                 if self.verbose:
                                     print('{} iterations - dDist={}  - Terminated from Horshoe repreating'.format(iter,Dist))
                                 
@@ -490,7 +490,7 @@ class Optimisation:
                         else:
                             if 'Dist' in locals():
                                 self.allDist2.append(Dist)
-                                if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>5:
+                                if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>20:
                                     print('{} iterations - dDist={}  - Terminated as value stagnated for more than 5 iterations'.format(iter,Dist))
                                     break
 

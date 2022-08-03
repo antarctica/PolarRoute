@@ -79,8 +79,8 @@ def load_density(params, long_min, long_max, lat_min,
 
     for single_date in daterange(start_date, end_date):
         dt = single_date.strftime("%Y-%m-%d")
-        for lat in np.arange(lat_min, lat_max, 0.16):
-            for long in np.arange(long_min, long_max, 0.16):
+        for lat in np.arange(lat_min, lat_max, 0.05):#0.16):
+            for long in np.arange(long_min, long_max,0.05):# 0.16):
                 dense_data.append({'time': dt, 'lat': lat, 'long': long, 'density': icedensity(dt)})
 
     dense_df = pd.DataFrame(dense_data).set_index(['lat', 'long', 'time'])
