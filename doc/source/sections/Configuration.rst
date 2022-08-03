@@ -8,7 +8,7 @@ Configuration
 
 In this section we will outline the standard structure for a configuration file used in all portions of the RoutePlanner software.
 
-Outlined below is an example configuration file for running the RoutePlanner. Using this as a template we will go through each of the definitions in turn, descibing what each portion does with the subsections in the manual given by the main sections in the configuration file.
+Outlined below is an example configuration file for running the RoutePlanner. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.
 ::
    {
       "Mesh_info":{
@@ -101,13 +101,13 @@ Outlined below is an example configuration file for running the RoutePlanner. Us
       }
    }
 
-The Configuration file is composed of three distict sections 'Mesh_info', 'Vessel', and 'Route_Info'.
-Each of these contain configuration infromation for the various stages of the route planning pipeline.
+The Configuration file is composed of three distinct sections 'Mesh_info', 'Vessel', and 'Route_Info'.
+Each of these contain configuration information for the various stages of the route planning pipeline.
 
 ^^^^^^^^^^^^^^^^^^
 Mesh_info
 ^^^^^^^^^^^^^^^^^^
-Mesh_info contains information required to build the discretised enviroment in which the route planner
+Mesh_info contains information required to build the discretised environment in which the route planner
 operates. Information here dictates the region in which the mesh is constructed, the data contained within
 the mesh and how the mesh is split to a non-uniform resolution. 
 
@@ -116,7 +116,7 @@ The 'Mesh_info' section of the configuration file contains three primary section
 ################
 Region
 ################
-The region section gives detailed information for the construction of the Discrete Mesh. The main defintions are the bounding region and temporal portion of interest (`longMin`, `latMin`, `longMax`, `latMax`, `startTime`, `endTime`), but also the starting shape of the spatial grid cell boxes (`cellWidth`, `cellHeight`) is defined before splitting is applied to a max split depth level (`splitDepth`). Further detail in each parameter is given below:
+The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (`longMin`, `latMin`, `longMax`, `latMax`, `startTime`, `endTime`), but also the starting shape of the spatial grid cell boxes (`cellWidth`, `cellHeight`) is defined before splitting is applied to a max split depth level (`splitDepth`). Further detail in each parameter is given below:
 
 ::
 
@@ -134,8 +134,8 @@ The region section gives detailed information for the construction of the Discre
     
 where the variables are as follows:
 
-* **longMin**      *(float, degress)*      : Minimum Longitude Edge Mesh 
-* **longMax**      *(float, degress)*      : Maximum Longitude Edge Mesh 
+* **longMin**      *(float, degrees)*      : Minimum Longitude Edge Mesh
+* **longMax**      *(float, degrees)*      : Maximum Longitude Edge Mesh
 * **latMin**       *(float, degrees)*      : Minimum Latitude Edge Mesh  
 * **latMax**       *(float, degrees)*      : Maximum Latitude Edge Mesh  
 * **startTime**    *(string, 'YYYY-mm-dd')*   : Start Datetime of Time averaging 
@@ -220,7 +220,7 @@ of non-uniform spatial resolution.
 where the variables are as follows:
 
 * **<value_name>** *(string)* : The name of the value which the splitting condition will be applied to.
-* **threshold** *(float)* : CellBoxes will be sub-divided as to seperate the data points contained within
+* **threshold** *(float)* : CellBoxes will be sub-divided as to separate the data points contained within
    into CellBox which contain either above or below the given threshold.
 * **upperBound** *(float)* : A percentage normalized between 0 and 1. A CellBox is deemed homogenous in 
    a given data type if greater than this percentage of data-points within are above the given threshold.
@@ -228,15 +228,15 @@ where the variables are as follows:
    a given data type if less than this percentage of data-points within are below the given threshold.
 
 .. note:: 
-   splitting conditions are applied in the order they are specified in the configuaration file.
+   splitting conditions are applied in the order they are specified in the configuration file.
 
 
 #############
 value_output_types (optional)
 #############
 
-The value_output_types section is an optional section which may be added to Mesh_info. This dicates how data
-of each value of a cellbox is returned when outputing the (CellBox) or (CellGrid). By default values associated
+The value_output_types section is an optional section which may be added to Mesh_info. This dictates how data
+of each value of a cellbox is returned when outputting the (CellBox) or (CellGrid). By default values associated
 with a (CellBox) are calculated by taking the mean of all data-point of a given value within the CellBoxes bounds.
 *value_output_type* allows this default to be changed to either the minimum or maximum of data-points.
 
@@ -252,7 +252,9 @@ with a (CellBox) are calculated by taking the mean of all data-point of a given 
 Vessel
 ^^^^^^^^
 
-TODO intro to vessel peformance
+The Vessel section of the configuration file provides all the necessary information about the vessel that will execute
+the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the `VesselPerformance`
+class for this vessel.
 
 
 ::
@@ -269,14 +271,13 @@ TODO intro to vessel peformance
 
 where the variables are as follows:
 
-* **Speed** *(float)* : The maximum speed of the vessel in open water 
-* **Unit** *(string)* : The units of measurement for the speed of the vessel
-* **Beam** *(float)* : 
-* **HullType** *(string)* :
-* **ForceLimit** *(float)* :
-* **MaxIceExtent** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel though
-   given as a percentage
-* **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through
+* **Speed** *(float)* : The maximum speed of the vessel in open water.
+* **Unit** *(string)* : The units of measurement for the speed of the vessel (currently only "km/hr" is supported).
+* **Beam** *(float)* : The beam (width) of the ship in metres.
+* **HullType** *(string)* : The hull profile of the ship (should be one of either "slender" or "blunt").
+* **ForceLimit** *(float)* : The maximum allowed resistance force, specified in Newtons.
+* **MaxIceExtent** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
+* **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through in metres. Negative values correspond to a depth below sea level.
 
 
 ^^^^^^^^^^^^^^^
@@ -332,7 +333,7 @@ Python/iPython Notebooks
 
 Discrete Mesh
 ^^^^^^^^^^^^^^^^^^
-In this section outline an example usecase ...
+In this section outline an example use case ...
 
 
 ::
@@ -344,12 +345,12 @@ This requires some definition of the datasets to load
 
 Vehicles Specifics
 ^^^^^^^^^^^^^^^^^^
-In this section outline an example usecase ...
+In this section outline an example use case ...
 
 
 Route Optimisation
 ^^^^^^^^^^^^^^^^^^
-In this section outline an example usecase ...
+In this section outline an example use case ...
 
 .. raw:: html
    :file: example_routepath.html
@@ -365,7 +366,7 @@ The command line execution
 
    python ./exec/routeplanner.py config.json 
 
-In addition, within the exec folder there is the independet stages used within the route planner. These include:
+In addition, within the exec folder there is the independent stages used within the route planner. These include:
 
 * `meshing.py` - Discrete Meshing
 * `vehiclespecs.py` - Vehicle Specifics

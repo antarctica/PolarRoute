@@ -25,4 +25,4 @@ Vessel Performance
 
 .. autoclass:: RoutePlanner.vessel_performance.VesselPerformance
    :special-members: __init__
-   :members:
+   :members: to_json
