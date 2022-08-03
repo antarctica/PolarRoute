@@ -27,7 +27,7 @@ The separate stages can be broken down into:
 3. :ref:`Vessel Performance` - Application of vehicle specific features applied to the discret mesh. In this section we will supply the user with the knowledge of how vehcile specific features are applied to the discret mesh or with varibles applied to the computational graph of the mesh. 
 4. :ref:`Route Planner` - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (E.g. Traveltime, Fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths. 
 
-.. figure:: ./Figures/System_overview.png
+.. figure:: ./Figures/PolarRoute_CodeFlowDiagram.png
    :align: center
    :width: 700
 
