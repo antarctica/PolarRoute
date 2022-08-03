@@ -65,7 +65,10 @@ Outlined below is an example configuration file for running the RoutePlanner. Us
                "upperBound": 0.9,
                "lowerBound":0.1
             }}
-         ]
+         ],
+         "value_output_types":{
+            "elevation":"MAX"
+         }
       },
       "Vessel": {
          "Speed": 26.5,
@@ -76,7 +79,6 @@ Outlined below is an example configuration file for running the RoutePlanner. Us
          "MaxIceExtent": 80,
          "MinDepth": -10
       },
-
       "Route_Info": {
          "Objective_Function": "traveltime",
          "Path_Variables": [
@@ -109,7 +111,7 @@ Mesh_info contains information required to build the discretised enviroment in w
 operates. Information here dictates the region in which the mesh is constructed, the data contained within
 the mesh and how the mesh is split to a non-uniform resolution. 
 
-The 'Mesh_info' section of the configuration file contains three distinct sections:
+The 'Mesh_info' section of the configuration file contains three primary sections:
 
 ################
 Region
@@ -204,14 +206,14 @@ of non-uniform spatial resolution.
 
    "splitting_conditions":[
       {"<value_name>":{
-         "threshold":-10,
-         "upperBound": 1,
-         "lowerBound":0
+         "threshold":...,
+         "upperBound": ...,
+         "lowerBound":...
       }},
       {"<value_name>":{
-         "threshold":35,
-         "upperBound": 0.9,
-         "lowerBound":0.1
+         "threshold":...,
+         "upperBound": ...,
+         "lowerBound":...
       }}
    ]
 
@@ -225,6 +227,26 @@ where the variables are as follows:
 * **lowerBound** *(float)* : A percentage normalized between 0 and 1. A Cellbox is deemed homogenous in
    a given data type if less than this percentage of data-points within are below the given threshold.
 
+.. note:: 
+   splitting conditions are applied in the order they are specified in the configuaration file.
+
+
+#############
+value_output_types (optional)
+#############
+
+The value_output_types section is an optional section which may be added to Mesh_info. This dicates how data
+of each value of a cellbox is returned when outputing the (CellBox) or (CellGrid). By default values associated
+with a (CellBox) are calculated by taking the mean of all data-point of a given value within the CellBoxes bounds.
+*value_output_type* allows this default to be changed to either the minimum or maximum of data-points.
+
+::
+
+   "value_output_types":{
+      "<value_name>":< "MIN" | "MAX" | "MEAN" >
+    }
+
+* **<value_name>** *(string)* : The name of the value which the output type change will be applied to 
 
 ^^^^^^^^
 Vessel

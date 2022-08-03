@@ -39,7 +39,7 @@ class CellBox:
         long (float): The longitude of the top-left corner of the CellBox
         width (float): The width of the CellBox, given in degrees longitude
         height (float): The height of the CellBox, given in degrees latitude
-        
+  
     Note:
         All geo-spatial boundaries of a CellBox are given in a 'EPSG:4326' projection
     """
@@ -81,6 +81,8 @@ class CellBox:
 
         self._splitting_conditions = splitting_conditions
 
+        self._value_out_types = dict()
+
         # For initial implementation of land based from Java codebase.
         self._j_grid = j_grid
         self.land_locked = False
@@ -89,7 +91,7 @@ class CellBox:
         self.x_coord = 0
         self.y_coord = 0
         self.focus = ""
-        self._current_points = pd.DataFrame
+        self._current_points = pd.DataFrame()
 
     # Functions used for getting data from a cellBox
     def getcx(self):
@@ -148,7 +150,6 @@ class CellBox:
 
         return data_names
 
-
     def get_data_points(self, values = []):
         """
             Returns a dataframe of containing values specifed in parameter 'values'.
@@ -176,7 +177,7 @@ class CellBox:
             columns =  ['lat', 'long', 'time'] + values
             return data_points[columns]
 
-    def get_value(self, value):
+    def get_value(self, value_name, value_type = "MEAN"):
         """
             returns the mean value of the datapoints within this cellbox
             specifed by the parameter 'value'.
@@ -184,16 +185,23 @@ class CellBox:
             Args:
                 value (string): The value type requested
 
+                value_type (string): The output type of a value requested.
+                    value_type may be < MEAN | MIN | MAX >. If none is given
+                    a default of MIN is used.
+
             Returns:
                 value (float): The mean of all data_points of type 'value'
                     within this CellBox
         """
-        data_frame = self.get_data_points(values = [value])
+        data_frame = self.get_data_points(values = [value_name])
 
-        value = data_frame[value].mean()
-        # temporary fix to avoid crashing - should be changed!
-        # if np.isnan(value):
-        #     value = 0
+        if value_type == "MIN":
+            value = data_frame[value_name].min()
+        elif value_type == "MAX":
+            value = data_frame[value_name].max()
+        else: #value_type == MEAN
+            value = data_frame[value_name].mean()
+
         return value
 
     def get_bounds(self):
@@ -209,6 +217,12 @@ class CellBox:
                     [self.long + self.width, self.lat],
                     [self.long, self.lat]]
         return bounds
+
+    def get_value_out_types(self):
+        """
+            TODO
+        """
+        return dict(self._value_out_types)
 
     # Functions used for adding data to a cellbox
     def add_data_points(self, new_data_points):
@@ -231,7 +245,7 @@ class CellBox:
 
             Args:
                 splitting_condition (dict): a splitting condition to be added to
-                this CellBox. splitting_condition must be of the form - 
+                this CellBox. splitting_condition must be of the form -
 
                 splitting condition is of form:
                 {<value>: {
@@ -241,6 +255,23 @@ class CellBox:
                 }}
         """
         self._splitting_conditions = self._splitting_conditions + [splitting_condition]
+
+    def add_value_output_type(self, value_out_type):
+        """
+            appends a dictionary mapping values in a cellbox to there output types to the cellboxes
+            interal memory of values to output type mappings.
+
+            Args:
+                value_out_type (string): A dictionary containing a mapping of a value held within the
+                cellbox to its output type. An output type may be either MEAN, MIN or MAX. If no output
+                type is defined for a value in a cellbox, this defaults as MEAN.
+
+                {
+                    <value>: < MEAN | MIN | MAX >,
+                    ...
+                }
+        """
+        self._value_out_types.update(value_out_type)
 
     # Functions used for splitting a cellbox
     def value_should_be_split(self, value, threshold, lowerbound, upperbound):
@@ -459,6 +490,8 @@ class CellBox:
 
             split_box.add_data_points(lat_long_loc)
 
+            split_box.add_value_output_type(self.get_value_out_types())
+
             # if parent box is land, all child boxes are considered land
             if self.land_locked:
                 split_box.land_locked = True
@@ -533,7 +566,10 @@ class CellBox:
         }
 
         for value in self.get_data_names():
-            cell_json[value] = float(self.get_value(value))
+            if value in self.get_value_out_types().keys():
+                cell_json[value] = float(self.get_value(value, self.get_value_out_types()[value]))
+            else:
+                cell_json[value] = float(self.get_value(value))
 
         return cell_json
 

@@ -32,7 +32,7 @@ class CellGrid:
     """
         Attributes:
             cellboxes (list<(CellBox)>): A list of CellBox objects forming the CellGrid
-       
+
             neighbour_graph (dict): A graphical representation of the adjacency
                 relationship between CellBoxes in the CellGrid. The neighbour_graph is
                 of the form
@@ -67,37 +67,39 @@ class CellGrid:
                     \n
                     {\n
                         "config": {\n
-                            "Region": {\n
-                                "latMin": (real),\n
-                                "latMax": (real),\n
-                                "longMin": (real),\n
-                                "longMax": (real),\n
-                                "startTime": (string) 'YYYY-MM-DD',\n
-                                "endTime": (string) 'YYYY-MM-DD',\n
-                                "cellWidth": (real),\n
-                                "cellHeight" (real),\n
-                                "splitDepth" (int)\n
-                            },\n
-                            "Data_sources": [
-                                {
-                                    "loader": (string)\n
-                                    "params" (dict)\n
+                            "Mesh_info":{\n
+                                "Region": {\n
+                                    "latMin": (real),\n
+                                    "latMax": (real),\n
+                                    "longMin": (real),\n
+                                    "longMax": (real),\n
+                                    "startTime": (string) 'YYYY-MM-DD',\n
+                                    "endTime": (string) 'YYYY-MM-DD',\n
+                                    "cellWidth": (real),\n
+                                    "cellHeight" (real),\n
+                                    "splitDepth" (int)\n
                                 },\n
-                                ...,\n
-                                {...}
+                                "Data_sources": [
+                                    {
+                                        "loader": (string)\n
+                                        "params" (dict)\n
+                                    },\n
+                                    ...,\n
+                                    {...}
 
-                            ]\n
-                            "splitting_conditions": [
-                                {
-                                    <value>: {
-                                        "threshold": (float),\n
-                                        "upperBound": (float),\n
-                                        "lowerBound": (float) \n
-                                    }
-                                },\n
-                                ...,\n
-                                {...}\n
-                            ]
+                                ]\n,
+                                "splitting_conditions": [
+                                    {
+                                        <value>: {
+                                            "threshold": (float),\n
+                                            "upperBound": (float),\n
+                                            "lowerBound": (float) \n
+                                        }
+                                    },\n
+                                    ...,\n
+                                    {...}\n
+                                ]
+                            }\n
                         }\n
                     }\n
 
@@ -169,6 +171,10 @@ class CellGrid:
 
             self.neighbour_graph[cellbox_indx] = neighbour_map
 
+            # set value output types of a cellbox
+            if 'value_output_types' in config['Mesh_info'].keys():
+                cellbox.add_value_output_type(config['Mesh_info']['value_output_types'])
+
             # set gridCoord of cellBox
             x_coord = cellbox_indx % grid_width
             y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
@@ -176,27 +182,27 @@ class CellGrid:
 
             # set focus of cellBox
             cellbox.set_focus([])
+
+        # Add data points to CellGrid from config
+        if 'Data_sources' in config['Mesh_info'].keys():
+            for data_source in config['Mesh_info']['Data_sources']:
+                loader = getattr(data_loader, data_source['loader'])
+                data_points = loader(data_source['params'],
+                    self._long_min, self._long_max, self._lat_min, self._lat_max,
+                    self._start_time, self._end_time)
+
+                self.add_data_points(data_points)
+
+        # Add splitting conditions from config and split CellGrid.
         self.splitting_conditions = []
+        if 'splitting_conditions' in config['Mesh_info'].keys():
+            for splitting_condition in config['Mesh_info']['splitting_conditions']:
+                for cellbox in self.cellboxes:
+                    if isinstance(cellbox, CellBox):
+                        cellbox.add_splitting_condition(splitting_condition)
 
-        for data_source in config['Mesh_info']['Data_sources']:
-            loader = getattr(data_loader, data_source['loader'])
-            data_points = loader(data_source['params'],
-                self._long_min, self._long_max, self._lat_min, self._lat_max,
-                self._start_time, self._end_time)
-    
-            self.add_data_points(data_points)
+                self.split_to_depth(config['Mesh_info']['Region']['splitDepth'])
 
-        for splitting_condition in config['Mesh_info']['splitting_conditions']:
-            for cellbox in self.cellboxes:
-                if isinstance(cellbox, CellBox):
-                    cellbox.add_splitting_condition(splitting_condition)
-
-            self.split_to_depth(config['Mesh_info']['Region']['splitDepth'])
-
-        #for data_source in config['Data_sources']:
-            #self.add_data_source(data_source)
-
-        #self.iterative_split(config['Region']["splitDepth"])
 
     # Functions for adding data to the cellgrid
 
