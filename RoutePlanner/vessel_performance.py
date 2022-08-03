@@ -1,6 +1,28 @@
 """
-    Class for modelling the vessel performance.
-    Takes a mesh as input in json format and modifies it to include vessel specifics.
+The VesselPerformance class deals with all the vehicle specific features of the meshed environment model. It uses the
+specific vessel parameters defined in the config to determine which cells in the mesh are inaccessible to a given
+vehicle, either based on elevation or sea ice concentration, and determines vessel performance characteristics, such as
+the speed and fuel consumption, based on the content of the cellboxes.
+
+The input to the class is the mesh object produced by the CellGrid class in json format and it returns a modified mesh
+in the same format via the VesselPerformance.to_json method.
+
+Example:
+    An example of how to use this code can be executed by running the following::
+
+        import json
+        from RoutePlanner.CellGrid import CellGrid
+        from RoutePlanner.vessel_performance import VesselPerformance
+
+        with open("config.json", 'r') as f:
+            cfg = json.load(f)
+
+        mesh = CellGrid(cfg)
+        mesh_json = mesh.to_json()
+
+        vp = VesselPerformance(mesh_json)
+
+        vehicle_mesh = vp.to_json()
 """
 import json
 import numpy as np
@@ -8,9 +30,25 @@ import pandas as pd
 
 
 class VesselPerformance:
+    """
+        Class for modelling the vessel performance.
+        Takes a mesh as input in json format and modifies it to include vessel specifics.
+
+        Attributes:
+            mesh (dict): A dictionary containing all the mesh information
+            config (dict): The config used to generate the input mesh
+            mesh_df (DataFrame): The cellbox information from the mesh stored in a pandas DataFrame
+            vessel_params (dict): The vessel specific information contained within the config
+
+    """
     def __init__(self, mesh_json):
         """
-            FILL
+            Constructs the VesselPerformance class from a given input mesh in json format which is then modified
+            according to the vessel parameters defined in the config.
+
+            Args:
+                mesh_json (str): The input mesh containing the cellboxes and neighbour graph as well as the config used
+                to generate the mesh.
         """
 
         self.mesh = json.loads(mesh_json)
@@ -23,7 +61,7 @@ class VesselPerformance:
         self.extreme_ice()
         self.inaccessible_nodes()
 
-        # Checking if Speed defined in file
+        # Checking if the speed is defined in the input mesh
         if 'speed' not in self.mesh_df:
             self.mesh_df['speed'] = self.vessel_params["Speed"]
 
@@ -33,25 +71,35 @@ class VesselPerformance:
         # Calculate fuel usage based on speed and ice resistance
         self.fuel()
 
-        # Updating the mesh information
+        # Updating the mesh indexing and cellboxes
         self.mesh_df['id'] = self.mesh_df.index
         self.mesh['cellboxes'] = self.mesh_df.to_dict('records')
 
     def to_json(self):
         """
-        Method to return the modified mesh in json format.
+            Method to return the modified mesh in json format.
+
+            Returns:
+                j_mesh (str): a string representation of the modified mesh.
         """
-        return json.dumps(self.mesh)
+        j_mesh = json.dumps(self.mesh)
+        return j_mesh
 
     def land(self):
+        """
+            Method to determine which cells are land based on configured minimum depth.
+        """
         self.mesh_df['land'] = self.mesh_df['elevation'] > self.vessel_params['MinDepth']
 
     def extreme_ice(self):
+        """
+            Method to determine which cells are inaccessible based on configured max ice concentration.
+        """
         self.mesh_df['ext_ice'] = self.mesh_df['SIC'] > self.vessel_params['MaxIceExtent']
 
     def inaccessible_nodes(self):
         """
-        Method to determine which nodes are inaccessible and remove them from the neighbour graph.
+            Method to determine which nodes are inaccessible and remove them from the neighbour graph.
         """
 
         inaccessible = self.mesh_df[(self.mesh_df['land']) | (self.mesh_df['ext_ice'])]
@@ -61,14 +109,18 @@ class VesselPerformance:
 
     def ice_resistance(self, velocity, area, thickness, density):
         """
-                Function to find the ice resistance force at a given speed in a given cell.
+            Method to find the ice resistance force at a given speed in a given cell.
 
-                Inputs:
-                cell - Cell box object
+            Args:
+                velocity (float): The speed of the vessel in km/h
+                area (float): The average sea ice concentration in the cell as a percentage
+                thickness (float): The average ice thickness in the cell in m
+                density (float): The average ice density in the cell in kg/m^3
 
-                Outputs:
-                resistance - Resistance force
+            Returns:
+                resistance (float): Resistance force in N
         """
+        # Model parameters for different hull types
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
         hull = self.vessel_params['HullType']
@@ -85,16 +137,19 @@ class VesselPerformance:
 
     def inverse_resistance(self, area, thickness, density):
         """
-        Function to find the speed that keeps the ice resistance force below a given threshold.
+            Method to find the vessel speed that keeps the ice resistance force below a given threshold in a given cell.
 
-        Inputs:
-        force_limit - Force limit
-        cell        - Cell box object
+            Args:
+                area (float): The average sea ice concentration in the cell as a percentage
+                thickness (float): The average ice thickness in the cell in m
+                density (float): The average ice density in the cell in kg/m^3
 
-        Outputs:
-        speed - Vehicle Speed
+            Returns:
+                speed (float): Safe vessel speed in km/h
         """
+        # Model parameters for different hull types
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
+        # force_limit (float): Resistance force value that should not be exceeded in N
         force_limit = self.vessel_params['ForceLimit']
 
         hull = self.vessel_params['HullType']
@@ -112,7 +167,7 @@ class VesselPerformance:
 
     def speed(self):
         """
-            A function to compile the new speeds calculated based on the ice resistance into the mesh.
+            Method to compile the new speeds calculated based on the ice resistance into the mesh.
         """
 
         self.mesh_df['ice resistance'] = np.nan
@@ -135,12 +190,15 @@ class VesselPerformance:
                     self.mesh_df.loc[idx, 'ice resistance'] = rp
 
     def speed_simple(self):
+        """
+            Method to calculate the speed based on the sea ice concentration using a simple toy model.
+        """
         self.mesh_df['speed'] = (1 - np.sqrt(self.mesh_df['SIC'] / 100)) * \
                                         self.vessel_params['Speed']
 
     def fuel(self):
         """
-        Fuel usage in tons per day based on speed in km/h and ice resistance.
+            Method to calculate the fuel usage in tons per day based on speed in km/h and ice resistance in N.
         """
 
         self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
@@ -150,26 +208,30 @@ class VesselPerformance:
 
     def remove_nodes(self, neighbour_graph, inaccessible_nodes):
         """
-            neighbour_graph -> a dictionary containing indexes of cellboxes
-            and how they are connected
+            Method to remove a list of inaccessible nodes from a given neighbour graph.
 
-            {
-                'index':{
-                    '1':[index,...],
-                    '2':[index,...],
-                    '3':[index,...],
-                    '4':[index,...],
-                    '-1':[index,...],
-                    '-2':[index,...],
-                    '-3':[index,...],
-                    '-4':[index,...]
-                },
-                'index':{...},
-                ...
-            }
+            Args:
+                neighbour_graph (dict): A dictionary containing indexes of cellboxes and how they are connected
 
-            inaccessible_nodes -> a list in indexes to be removed from the
-            neighbour_graph
+                {
+                    'index':{
+                        '1':[index,...],
+                        '2':[index,...],
+                        '3':[index,...],
+                        '4':[index,...],
+                        '-1':[index,...],
+                        '-2':[index,...],
+                        '-3':[index,...],
+                        '-4':[index,...]
+                    },
+                    'index':{...},
+                    ...
+                }
+
+                inaccessible_nodes (list): A list of indexes to be removed from the neighbour_graph
+
+            Returns:
+                accessibility_graph (dict): A new neighbour graph with the inaccessible nodes removed
         """
         accessibility_graph = neighbour_graph.copy()
 

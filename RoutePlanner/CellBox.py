@@ -12,41 +12,62 @@ Example:
         from RoutePlanner import CellBox
         ....
 
-Additional information on constructing document strings using the Google
-DocString method can be found at
-https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
-
-Attributes:
-    Some of the key attributes that the CellBox comprises are ...
-
-Todo:
-    * Adding the addition of ...
-
-
+Note:
+    CellBoxes are intended to be contructed by and used within a CellGrid
+    object. The methods provided are to extract information for CellBoxes
+    contained with a CellGrid
 """
 
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon as MatplotPolygon
+from shapely.geometry import Polygon
 import math
 import numpy as np
 import pandas as pd
 
 class CellBox:
-    """Exceptions are documented in the same way as classes.
+    """
+    A CellBox is a collection of data-points contained within a given geo-spatial/temporal
+    boundary. Information about any given value of a CellBox is calculated from 
+    the mean of all data-points of that type within those bounds. CellBoxes may
+    be split into smaller CellBoxes and the data-points it contains distribued 
+    between the newly created CellBoxes so as to construct a non-uniform mesh
+    of CellBoxes, such as within a CellGrid.
 
-    Note:
-        Do not include the `self` parameter in the ``Args`` section.
 
-    Args:
-        lat    (:obj:`float`): ...
-        long   (:obj:`float`): ...
-        width  (:obj:`float`): ...
-        height (:obj:`float`): ...
     Attributes:
-        ...
+        lat (float): The latitude of the top-left corner of the CellBox
+        long (float): The longitude of the top-left corner of the CellBox
+        width (float): The width of the CellBox, given in degrees longitude
+        height (float): The height of the CellBox, given in degrees latitude
+  
+    Note:
+        All geo-spatial boundaries of a CellBox are given in a 'EPSG:4326' projection
     """
     split_depth = 0
 
     def __init__(self, lat, long, width, height, splitting_conditions = [], j_grid=False):
+        """
+
+            Args:
+                lat (float): The latitude of the top-left corner of the CellBox
+                long (float): The longitude of the top-left corner of the CellBox
+                width (float): The width of the CellBox, given in degrees longitude
+                height (float): The height of the CellBox, given in degrees latitude
+                splitting_conditions (list<(dict)>): conditions in which the CellBox
+                    will be split into 4 smaller CellBoxes.
+
+                    splitting_conditions are of the form -
+                        {
+                            <value>:{
+                                "threshold" (float):,\n
+                                "upperBound" (float):,\n
+                                "lowerBound" (float)
+                            }
+                        }
+
+                j_grid (bool): True if the CellBox should be constructed using the
+                    format of the original Java codebase
+        """
         # Box information relative to bottom left
         self.lat = lat
         self.long = long
@@ -60,6 +81,8 @@ class CellBox:
 
         self._splitting_conditions = splitting_conditions
 
+        self._value_out_types = dict()
+
         # For initial implementation of land based from Java codebase.
         self._j_grid = j_grid
         self.land_locked = False
@@ -68,37 +91,80 @@ class CellBox:
         self.x_coord = 0
         self.y_coord = 0
         self.focus = ""
-        self._current_points = pd.DataFrame
+        self._current_points = pd.DataFrame()
 
     # Functions used for getting data from a cellBox
     def getcx(self):
         """
             returns x-position of the centroid of the cellbox
+
+            Returns:
+                cx (float): the x-position of the top-left corner of the CellBox
+                    given in degrees longitude.
         """
         return self.long + self.width/2
 
     def getcy(self):
         """
             returns y-position of the centroid of the cellbox
+
+            Returns:
+                cy (float): the y-position of the top-left corner of the CellBox
+                    given in degrees latitude.
         """
         return self.lat + self.height/2
 
     def getdcx(self):
         """
             returns x-distance from the edge to the centroid of the cellbox
+
+            Returns:
+                dcx (float): the x-distance from the edge of the CellBox to the 
+                    centroid of the CellBox. Given in degrees longitude
         """
         return self.width/2
 
     def getdcy(self):
         """
             returns y-distance from the edge to the centroid of the cellbox
+
+            Returns:
+                dxy (float): the y-distance from the edge of the CellBox to the
+                    centroid of the CellBox. Given in degrees latitude
         """
         return self.height/2
+
+    def get_data_names(self):
+        """
+            Returns the data names of all values which have been added to this CellBox
+
+            Returns:
+                data_names (list<(String)>): A list of all the names of data types which
+                    have been added to this CellBox
+        """
+        data_names = list(self._data_points.columns)
+
+        to_remove = ['lat', 'long', 'time']
+        for item in to_remove:
+            data_names.remove(item)
+
+        return data_names
 
     def get_data_points(self, values = []):
         """
             Returns a dataframe of containing values specifed in parameter 'values'.
-            If values is empty, return full dataframe.
+            If values is empty, return a dataframe containing all datapoints within
+            the CellBox.
+
+            Args:
+                values (list<string>): datapoints within the CellBox to be included
+                    in the returned dataframe
+
+            Returns:
+                data_points (Dataframe): a dataframe of datapoints within the CellBox.
+                The dataframe is of the form - 
+
+                    long | lat | time | value_1 | ... | value_n
         """
         if len(values) == 0:
             return self._data_points
@@ -111,22 +177,39 @@ class CellBox:
             columns =  ['lat', 'long', 'time'] + values
             return data_points[columns]
 
-    def get_value(self, value):
+    def get_value(self, value_name, value_type = "MEAN"):
         """
             returns the mean value of the datapoints within this cellbox
-            specifed by the parameter 'value'
-        """
-        data_frame = self.get_data_points(values = [value])
+            specifed by the parameter 'value'.
 
-        value = data_frame[value].mean()
-        # temporary fix to avoid crashing - should be changed!
-        # if np.isnan(value):
-        #     value = 0
+            Args:
+                value (string): The value type requested
+
+                value_type (string): The output type of a value requested.
+                    value_type may be < MEAN | MIN | MAX >. If none is given
+                    a default of MIN is used.
+
+            Returns:
+                value (float): The mean of all data_points of type 'value'
+                    within this CellBox
+        """
+        data_frame = self.get_data_points(values = [value_name])
+
+        if value_type == "MIN":
+            value = data_frame[value_name].min()
+        elif value_type == "MAX":
+            value = data_frame[value_name].max()
+        else: #value_type == MEAN
+            value = data_frame[value_name].mean()
+
         return value
 
     def get_bounds(self):
         """
             returns the bounds of this cellbox
+
+            Returns:
+                bounds (list<tuples>): The geo-spatial boundaries of this CellBox.
         """
         bounds = [[self.long, self.lat],
                     [self.long, self.lat + self.height],
@@ -135,34 +218,80 @@ class CellBox:
                     [self.long, self.lat]]
         return bounds
 
+    def get_value_out_types(self):
+        """
+            TODO
+        """
+        return dict(self._value_out_types)
+
     # Functions used for adding data to a cellbox
     def add_data_points(self, new_data_points):
         """
             adds a dataframe containing datapoints to the dataframe
-            of datapoints within this cellbox
+            of datapoints within this CellBox
+
+            Args:
+                new_data_points (Dataframe): A dataframe of data_points to be added
+                to this CellBox. new_data_points must be of the format -
+
+                    lat | long | (time)* | value_1 | ... | value_n
         """
         self._data_points = pd.concat([self._data_points, new_data_points], axis=0)
 
     def add_splitting_condition(self, splitting_condition):
         """
             adds a dictionary containing a splitting condition to the
-            list of splitting conditions contained within this cellbox
+            list of splitting conditions contained within this CellBox
 
-            splitting condition is of form:
-            {'': {
-                'threshold':,
-                'upperbound':,
-                'lowerbound':
-            }}
+            Args:
+                splitting_condition (dict): a splitting condition to be added to
+                this CellBox. splitting_condition must be of the form -
+
+                splitting condition is of form:
+                {<value>: {
+                    'threshold': (float) ...,
+                    'upperbound': (float) ...,
+                    'lowerbound' (float) ...:
+                }}
         """
         self._splitting_conditions = self._splitting_conditions + [splitting_condition]
+
+    def add_value_output_type(self, value_out_type):
+        """
+            appends a dictionary mapping values in a cellbox to there output types to the cellboxes
+            interal memory of values to output type mappings.
+
+            Args:
+                value_out_type (string): A dictionary containing a mapping of a value held within the
+                cellbox to its output type. An output type may be either MEAN, MIN or MAX. If no output
+                type is defined for a value in a cellbox, this defaults as MEAN.
+
+                {
+                    <value>: < MEAN | MIN | MAX >,
+                    ...
+                }
+        """
+        self._value_out_types.update(value_out_type)
 
     # Functions used for splitting a cellbox
     def value_should_be_split(self, value, threshold, lowerbound, upperbound):
         """
             returns true or false dependant of wether a splitting condition associated
             with parameter 'value' should cause the cellbox to be split dependant on
-            parameters 'threshold', 'upperbound' and 'lowerbound
+            parameters 'threshold', 'upperbound' and 'lowerbound'.
+
+            Args:
+                value (string): the name of a value a splitting condition is checked against.
+                threshold (float): The threshold of at which data_points of type 'value' within
+                    this CellBox are checked to be either above or below
+                lowerbound (float): The lowerbound of acceptable percentage of data_points of
+                    type value within this CellBox that are above 'threshold'
+                upperbound (float): the upperbound of acceptable percentage of data_points of
+                    type value within this CellBox that are above 'threshold' 
+
+            Returns:
+                should_be_split (bool): True if the splitting_condition given would result in
+                    this CellBox being split. 
         """
         data_limit = 4
 
@@ -179,16 +308,29 @@ class CellBox:
     def value_hom_condition(self, value, threshold, lowerbound, upperbound):
         """
             returns 'CLR', 'HET' or 'HOM' dependant on the distribution of
-            datapoints contained within
+            datapoints contained within.
 
-            CLR = the proportion of datapoints within this cellbox over a given
-                threshold is lower than the lowerbound
-            HOM = the proportion of datapoints within this cellbox over a given
-                threshold is higher than the upperbound
-            MIN = the cellbox contains less than a minimum number of datapoints
+            Args:
+                value (string): the name of a value a splitting condition is checked against.
+                threshold (float): The threshold of at which data_points of type 'value' within
+                    this CellBox are checked to be either above or below
+                lowerbound (float): The lowerbound of acceptable percentage of data_points of
+                    type value within this CellBox that are above 'threshold'
+                upperbound (float): the upperbound of acceptable percentage of data_points of
+                    type value within this CellBox that are above 'threshold'
 
-            HET = the proportion of datapoints within this cellbox over a given
-                threshold if between the upper and lower bound
+            Returns:
+                hom_condition (string): The homogeniety condtion of this CellBox by given parameters
+                    hom_condition is of the form - 
+
+                CLR = the proportion of datapoints within this cellbox over a given
+                    threshold is lower than the lowerbound
+                HOM = the proportion of datapoints within this cellbox over a given
+                    threshold is higher than the upperbound
+                MIN = the cellbox contains less than a minimum number of datapoints
+
+                HET = the proportion of datapoints within this cellbox over a given
+                    threshold if between the upper and lower bound
         """
         data_limit = 4
         data_points = self.get_data_points([value])
@@ -207,7 +349,22 @@ class CellBox:
 
     def hom_condition(self):
         """
-            TODO   
+            The total homogeneity condition of this CellBox, determined by
+            all splitting_conditions within this CellBox.
+
+            Returns:
+                hom_condition (string): The homogeneity condition of this CellBox.
+                    hom_condition is of the form - 
+
+                    CLR = the proportion of datapoints within this CellBox over a given
+                        threshold is lower than the lowerbound
+                    HOM = the proportion of datapoints within this cellbox over a given
+                        threshold is higher than the upperbound
+                    MIN = the cellbox contains less than a minimum number of datapoints
+
+                    HET = the proportion of datapoints within this cellbox over a given
+                        threshold if between the upper and lower bound
+
         """
         hom_conditions = []
 
@@ -227,7 +384,7 @@ class CellBox:
             return "HET"
         if hom_conditions.count("CLR") == len(hom_conditions):
             return "CLR"
-        
+
         return "ERR"
 
     def should_be_split(self):
@@ -270,6 +427,10 @@ class CellBox:
                 do not split
             else (mixture of CLR & HET):
                 split
+
+            Returns:
+                should_split (bool): True if the splitting_conditions of this CellBox
+                    will result in the CellBox being split.
         """
         hom_conditions = []
 
@@ -293,6 +454,10 @@ class CellBox:
     def split(self):
         '''
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
+
+            Returns:
+                split_boxes (list<CellBox>): The 4 corner cellboxes generates by splitting
+                    this current cellboxes and dividing the data_points contained between.
         '''
 
         # split_boxes = [{}, {}, {}, {}]
@@ -325,6 +490,8 @@ class CellBox:
 
             split_box.add_data_points(lat_long_loc)
 
+            split_box.add_value_output_type(self.get_value_out_types())
+
             # if parent box is land, all child boxes are considered land
             if self.land_locked:
                 split_box.land_locked = True
@@ -344,61 +511,18 @@ class CellBox:
         return split_boxes
 
     #Misc
-    def ice_thickness(self, date):
-        """
-            Returns mean ice thickness within this cellBox.
-            Data taken from Table 3 in: doi:10.1029/2007JC004254
-
-            DEPRICATED - externally generated ice thickness data should be used instead
-        """
-        # The table has missing data points for Bellinghausen Autumn and Weddell W Winter,
-        # these require further thought
-        thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
-                    'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
-                    'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
-                    'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
-                    'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
-                    'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79}
-                    }
-        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w',
-                    7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp', 12: 'su'}
-        month = int(date[5:7])
-        season = seasons[month]
-
-        if -130 <= self.long < -60:
-            sea = 'Bellinghausen'
-        elif -60 <= self.long < -45:
-            sea = 'Weddell W'
-        elif -45 <= self.long < 20:
-            sea = 'Weddell E'
-        elif 20 <= self.long < 90:
-            sea = 'Indian'
-        elif 90 <= self.long < 160:
-            sea = 'West Pacific'
-        elif (160 <= self.long < 180) or (-180 <= self.long < -130):
-            sea = 'Ross'
-
-        return thicknesses[sea][season]
-
-    def ice_density(self, date):
-        """
-            Returns mean ice density within this cellBox
-
-            DEPRICATED - externally generated ice density data should be used instead
-        """
-        seasons = {1:'su',2:'su',3:'a',4:'a',5:'a',6:'w',7:'w',8:'w',9:'sp',10:'sp',11:'sp',12:'su'}
-        densities = {'su':875.0,'sp':900.0,'a':900.0,'w':920.0}
-
-        month = int(date[5:7])
-        season = seasons[month]
-        density = densities[season]
-
-        # Seasonal values from: https://doi.org/10.1029/2007JC004254
-        return density
 
     def contains_point(self,lat,long):
         """
             Returns true if a given lat/long coordinate is contained within this cellBox.
+
+            Args:
+                lat (float): latitude of a given point
+                long (float): longitude of a given point
+
+            Returns:
+                contains_points (bool): True if this CellBox contains a point given by
+                    parameters (lat, long)
         """
         if (lat >= self.lat) & (lat <= self.lat + self.height):
             if (long >= self.long) & (long <= self.long + self.width):
@@ -416,18 +540,45 @@ class CellBox:
     def to_json(self):
         '''
             convert cellBox to JSON
-            TODO
+
+            The returned object is of the form -
+
+                {
+                    "geometry" (String): POLYGON(...),\n
+                    "cx" (float): ...,\n
+                    "cy" (float): ...,\n
+                    "dcx" (float): ...,\n
+                    "dcy" (float): ..., \n
+                    \n
+                    "value_1" (float): ...,\n
+                    ...,\n
+                    "value_n" (float): ...
+                }
+            Returns:
+                cell_json (dict): A JSON parsable dictionary representation of this CellBox
         '''
-        cellbox_json = "{"
-        cellbox_json += "}"
-        return cellbox_json
+        cell_json = {
+            "geometry":str(Polygon(self.get_bounds())),
+            'cx':float(self.getcx()),
+            'cy':float(self.getcy()),
+            'dcx':float(self.getdcx()),
+            'dcy':float(self.getdcy())
+        }
+
+        for value in self.get_data_names():
+            if value in self.get_value_out_types().keys():
+                cell_json[value] = float(self.get_value(value, self.get_value_out_types()[value]))
+            else:
+                cell_json[value] = float(self.get_value(value))
+
+        return cell_json
 
     def contains_land(self):
         """
+            DEPRICATED - Land mask are now calculated based on the average depth of a cell.
+
             Returns True if any icepoint within the cell has a
             depth less than the specified minimum depth.
-
-            DEPRICATED - Land mask are now calculated based on the average depth of a cell.
         """
 
         if self._j_grid:
@@ -441,10 +592,10 @@ class CellBox:
 
     def is_land(self):
         """
+            DEPRICATED - land masked are now calculated based on the average depth of a cell
+
             Returns True if all icepoints within the cell have a
             depth less than the specified minimum depth.
-
-            DEPRICATED - land masked are now calculated based on the average depth of a cell
         """
         if self._j_grid:
             return self.is_land_m()
