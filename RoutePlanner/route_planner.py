@@ -25,7 +25,7 @@ def _flattenCases(id,mesh):
             neighbour_indx.append(int(neighbour))
     return neighbour_case, neighbour_indx
 
-class Optimisation:
+class RoutePlanner:
     """The summary line for a class docstring should fit on one line.   
         ....
     """
@@ -360,6 +360,9 @@ class Optimisation:
         #     #JDS - Add in saving option for the full dijkstra graphs.
         # self._save_paths(self.config['Route_Info']['Paths_Filename'])
         self.mesh['Paths'] = self.paths
+
+        for ii in range(len(self.mesh['Paths']['features'])):
+            self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
     
 
     def compute_smoothed_routes(self):
@@ -453,9 +456,9 @@ class Optimisation:
 
                             id+=1+nc.id
 
-                        if  id <= (len(nc.CrossingDF) - 3):
-                            print('Path Smoothing Failed!')
-                            break
+                        # if  id <= (len(nc.CrossingDF) - 3):
+                        #     print('Path Smoothing Failed!')
+                        #     break
 
 
                         self.nc = nc
@@ -475,7 +478,7 @@ class Optimisation:
                             if self.verbose:
                                 pbar.set_description("Mean Difference = {}".format(Dist))
 
-                            if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 5:
+                            if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 20:
                                 if self.verbose:
                                     print('{} iterations - dDist={}  - Terminated from Horshoe repreating'.format(iter,Dist))
                                 
@@ -487,7 +490,7 @@ class Optimisation:
                         else:
                             if 'Dist' in locals():
                                 self.allDist2.append(Dist)
-                                if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>5:
+                                if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>20:
                                     print('{} iterations - dDist={}  - Terminated as value stagnated for more than 5 iterations'.format(iter,Dist))
                                     break
 
@@ -517,7 +520,11 @@ class Optimisation:
                     geojson['features'] = SmoothedPaths
                     self.smoothed_paths = geojson
 
-                    self.mesh['Smooth Paths'] = self.smoothed_paths
+                    self.mesh['Paths'] = self.smoothed_paths
+
+                    for ii in range(len(self.mesh['Paths']['features'])):
+                        self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+
                     # with open(self.config['Route_Info']['Smoothpaths_Filename'], 'w') as fp:
                     #     json.dump(self.smoothed_paths, fp)
                     
