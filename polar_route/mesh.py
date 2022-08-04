@@ -25,10 +25,10 @@ import json as JSON
 
 from shapely.geometry import Polygon
 from matplotlib.patches import Polygon as MatplotPolygon
-from RoutePlanner.CellBox import CellBox
-import RoutePlanner.data_loaders as data_loader
+from polar_route.cellbox import CellBox
+import polar_route.data_loaders as data_loader
 
-class CellGrid:
+class Mesh:
     """
         Attributes:
             cellboxes (list<(CellBox)>): A list of CellBox objects forming the CellGrid

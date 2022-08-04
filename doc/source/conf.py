@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'RoutePlanner'
+project = 'PolarRoute'
 copyright = '2022, BAS AI Lab'
 author = 'BAS AI Lab'
 

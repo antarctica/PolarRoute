@@ -13,7 +13,7 @@ import geopandas as gpd
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from RoutePlanner.crossing import NewtonianDistance, NewtonianCurve
+from polar_route.crossing import NewtonianDistance, NewtonianCurve
 
 def _flattenCases(id,mesh):
     neighbour_case = []
@@ -38,8 +38,8 @@ class RoutePlanner:
         #self.mesh    = copy.copy(mesh)
         self.mesh = json.loads(mesh) 
         self.config  = self.mesh['config']
-        self.source_waypoints = self.config['Route_Info']['Source_Waypoints']
-        self.end_waypoints    = self.config['Route_Info']['End_Waypoints']
+        self.source_waypoints = self.config['Route_Info']['source_waypoints']
+        self.end_waypoints    = self.config['Route_Info']['end_waypoints']
 
         # Creating a blank path construct
         self.paths          = None
@@ -62,8 +62,8 @@ class RoutePlanner:
         self.neighbour_graph.index = self.neighbour_graph.index.astype(int)
 
         # Renaming the vector columns
-        self.neighbour_graph = self.neighbour_graph.rename(columns={self.config['Route_Info']['Vector Names'][0]: "Vector_x", 
-                                                                    self.config['Route_Info']['Vector Names'][1]: "Vector_y"})
+        self.neighbour_graph = self.neighbour_graph.rename(columns={self.config['Route_Info']['vector_names'][0]: "Vector_x", 
+                                                                    self.config['Route_Info']['vector_names'][1]: "Vector_y"})
 
         # ====== Speed Function Checking ======
         # Checking if Speed defined in file
@@ -73,20 +73,20 @@ class RoutePlanner:
 
         # ====== Objective Function Information ======
         #  Checking if objective function is in the cellgrid            
-        if (self.config['Route_Info']['Objective_Function'] != 'traveltime'):
-            if (self.config['Route_Info']['Objective_Function'] not in self.neighbour_graph):
-                    raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['Route_Info']['Objective_Function']))
+        if (self.config['Route_Info']['objective_function'] != 'traveltime'):
+            if (self.config['Route_Info']['objective_function'] not in self.neighbour_graph):
+                    raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['Route_Info']['objective_function']))
 
     
         # ===== Dijkstra Graph =====
         # Adding the required columns needed for the dijkstra graph
         self.neighbour_graph['positionLocked']          = False
-        for vrbl in self.config['Route_Info']['Path_Variables']:
+        for vrbl in self.config['Route_Info']['path_variables']:
             self.neighbour_graph['shortest_{}'.format(vrbl)]    = np.inf
         self.neighbour_graph['neighbourTravelLegs']     = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['pathIndex']               = [list() for x in range(len(self.neighbour_graph.index))]
-        for vrbl in self.config['Route_Info']['Path_Variables']:
+        for vrbl in self.config['Route_Info']['path_variables']:
             self.neighbour_graph['path_{}'.format(vrbl)] = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['pathPoints']               = [list() for x in range(len(self.neighbour_graph.index))]
 
@@ -95,9 +95,9 @@ class RoutePlanner:
 
         # ====== Outlining some constant values ======
         self.unit_shipspeed = self.config['Vessel']['Unit']
-        self.unit_time      = self.config['Route_Info']['Time_Unit']
-        self.zero_currents  = self.config['Route_Info']['Zero_Currents']
-        self.variable_speed  =self.config['Route_Info']['Variable_Speed']
+        self.unit_time      = self.config['Route_Info']['time_unit']
+        self.zero_currents  = self.config['Route_Info']['zero_currents']
+        self.variable_speed  =self.config['Route_Info']['variable_speed']
 
         if self.variable_speed == False:
             self.neighbour_graph['Speed'] = self.config["Vessel"]["Speed"]
@@ -105,19 +105,17 @@ class RoutePlanner:
 
 
         # ====== Waypoints ======
-        # Reading in Waypoints and casting into pandas if not already
-        if not isinstance(self.config['Route_Info']['WayPoints'],pd.core.frame.DataFrame):
-            self.config['Route_Info']['WayPoints'] = pd.read_csv(self.config['Route_Info']['WayPoints'])
+        self.mesh['waypoints'] = pd.read_csv(self.config['Route_Info']['waypoints_path'])
 
         # Dropping waypoints outside domain
-        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'][\
-                                                              (self.config['Route_Info']['WayPoints']['Long'] >= self.config['Mesh_info']['Region']['longMin']) &\
-                                                              (self.config['Route_Info']['WayPoints']['Long'] <=  self.config['Mesh_info']['Region']['longMax']) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] <=  self.config['Mesh_info']['Region']['latMax']) &\
-                                                              (self.config['Route_Info']['WayPoints']['Lat'] >=  self.config['Mesh_info']['Region']['latMin'])] 
+        self.mesh['waypoints'] = self.mesh['waypoints'][\
+                                                              (self.mesh['waypoints']['Long'] >= self.config['Mesh_info']['Region']['longMin']) &\
+                                                              (self.mesh['waypoints']['Long'] <=  self.config['Mesh_info']['Region']['longMax']) &\
+                                                              (self.mesh['waypoints']['Lat'] <=  self.config['Mesh_info']['Region']['latMax']) &\
+                                                              (self.mesh['waypoints']['Lat'] >=  self.config['Mesh_info']['Region']['latMin'])] 
 
         # # Initialising Waypoints positions and cell index
-        wpts = self.config['Route_Info']['WayPoints']
+        wpts = self.mesh['waypoints']
         wpts['index'] = np.nan
         for idx,wpt in wpts.iterrows():
             indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long','Lat']]))].index
@@ -127,9 +125,9 @@ class RoutePlanner:
                 continue
             else:
                 wpts['index'].loc[idx] = int(indices[0])
-        self.config['Route_Info']['WayPoints'] = wpts[~wpts['index'].isnull()]
-        self.config['Route_Info']['WayPoints']['index'] = self.config['Route_Info']['WayPoints']['index'].astype(int)
-        self.config['Route_Info']['WayPoints'] =  self.config['Route_Info']['WayPoints'].to_json()
+        self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
+        self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
+        self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
 
 
         # ==== Printing Configuration and Information
@@ -140,12 +138,12 @@ class RoutePlanner:
             print('============= CONFIG INFORMATION  ============')
             print('================================================')
             print('================================================')
-            print(' ---- Processing for Objective Function = {} ----'.format(self.config['Route_Info']['Objective_Function']))
+            print(' ---- Processing for Objective Function = {} ----'.format(self.config['Route_Info']['objective_function']))
             print(json.dumps(self.config, indent=4, sort_keys=True))
 
 
 
-        self.config['Route_Info']['WayPoints'] =  pd.read_json(self.config['Route_Info']['WayPoints'])
+        self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
 
 
     def to_json(self):
@@ -153,7 +151,7 @@ class RoutePlanner:
             Outputing the information in JSON format
         '''
 
-        self.config['Route_Info']['WayPoints'] = self.config['Route_Info']['WayPoints'].to_dict()
+        self.mesh['waypoints'] = self.mesh['waypoints'].to_dict()
         return json.dumps(self.mesh)
 
 
@@ -166,8 +164,8 @@ class RoutePlanner:
         geojson['type'] = "FeatureCollection"
 
         paths = []
-        wpts_s = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(start_waypoints)]
-        wpts_e = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(end_waypoints)]
+        wpts_s = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(start_waypoints)]
+        wpts_e = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(end_waypoints)]
         for _,wpt_a in wpts_s.iterrows():
             wpt_a_name  = wpt_a['Name']
             wpt_a_index = int(wpt_a['index'])
@@ -208,7 +206,7 @@ class RoutePlanner:
                         path['properties']['traveltime'] = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
                         path['properties']['traveltime'][-1] = (path['properties']['traveltime'][-2] + tt_end)
 
-                        for vrbl in self.config['Route_Info']['Path_Variables']:
+                        for vrbl in self.config['Route_Info']['path_variables']:
                             if vrbl == 'traveltime':
                                 continue
                             path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]*self.dijkstra_info[wpt_a_name].loc[path_indices,'{}'.format(vrbl)].to_numpy()).tolist()
@@ -224,14 +222,6 @@ class RoutePlanner:
 
         geojson['features'] = paths
         return geojson
-
-
-    # def _save_paths(self,filename):
-    #     '''
-    #         FILL
-    #     '''
-    #     with open(filename, 'w') as fp:
-    #         json.dump(self.paths, fp)
 
 
     def _objective_value(self,variable,source_graph,neighbour_graph,traveltime):
@@ -273,9 +263,9 @@ class RoutePlanner:
             source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
 
             # Using neighbourhood cost determine objective function value
-            value = self._objective_value(self.config['Route_Info']['Objective_Function'],source_graph,neighbour_graph,traveltime)
-            if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])]:
-                for vrbl in self.config['Route_Info']['Path_Variables']:
+            value = self._objective_value(self.config['Route_Info']['objective_function'],source_graph,neighbour_graph,traveltime)
+            if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['objective_function'])]:
+                for vrbl in self.config['Route_Info']['path_variables']:
                     value = self._objective_value(vrbl,source_graph,neighbour_graph,traveltime)
                     neighbour_graph['shortest_{}'.format(vrbl)] = value[1]
                     neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + list(value)
@@ -291,18 +281,18 @@ class RoutePlanner:
             FILL
         '''
         # Including only the End Waypoints defined by the user
-        wpts = self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'].isin(self.end_waypoints)]
+        wpts = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(self.end_waypoints)]
         
         # Initalising zero traveltime at the source location
-        source_index = int(self.config['Route_Info']['WayPoints'][self.config['Route_Info']['WayPoints']['Name'] == wpt_name]['index'])
+        source_index = int(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt_name]['index'])
         
 
-        for vrbl in self.config['Route_Info']['Path_Variables']:
+        for vrbl in self.config['Route_Info']['path_variables']:
             self.dijkstra_info[wpt_name].loc[source_index,'shortest_{}'.format(vrbl)] = 0.0
         self.dijkstra_info[wpt_name].loc[source_index,'pathIndex'].append(source_index)
         
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
-        if self.config['Route_Info']['Early_Stopping_Criterion']:
+        if self.config['Route_Info']['early_stopping_criterion']:
             stopping_criterion_indices = wpts['index']
         else:
             stopping_criterion_indices = self.dijkstra_info[wpt_name].index
@@ -310,7 +300,7 @@ class RoutePlanner:
         while (self.dijkstra_info[wpt_name].loc[stopping_criterion_indices,'positionLocked'] == False).any():
 
             # Determining the index of the minimum objective function that has not been visited
-            minimum_objective_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked']==False]['shortest_{}'.format(self.config['Route_Info']['Objective_Function'])].idxmin()
+            minimum_objective_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked']==False]['shortest_{}'.format(self.config['Route_Info']['objective_function'])].idxmin()
   
             # Finding the cost of the nearest neighbours from the source cell (Sc)
             self._neighbour_cost(wpt_name,minimum_objective_index)
@@ -325,9 +315,9 @@ class RoutePlanner:
 
         # Subsetting the waypoints
         if len(self.source_waypoints) == 0:
-            self.source_waypoints = list(self.config['Route_Info']['WayPoints']['Name'])
+            self.source_waypoints = list(self.mesh['waypoints']['Name'])
         if len(self.end_waypoints) == 0:
-            self.end_waypoints = list(self.config['Route_Info']['WayPoints']['Name'])
+            self.end_waypoints = list(self.mesh['waypoints']['Name'])
 
         # Removing end and source
 
@@ -355,22 +345,22 @@ class RoutePlanner:
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         self.paths = self._dijkstra_paths(self.source_waypoints,self.end_waypoints)
 
-        # if self.config['Route_Info']['Save_Dijkstra_Graphs']:
+        # if self.config['Route_Info']['save_dijkstra_graphs']:
         #     print('Currently not operational - Come back soon :) ')
         #     #JDS - Add in saving option for the full dijkstra graphs.
         # self._save_paths(self.config['Route_Info']['Paths_Filename'])
-        self.mesh['Paths'] = self.paths
+        self.mesh['paths'] = self.paths
 
-        for ii in range(len(self.mesh['Paths']['features'])):
-            self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+        for ii in range(len(self.mesh['paths']['features'])):
+            self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
     
 
     def compute_smoothed_routes(self):
             '''
                 FILL
             '''
-            maxiter     = self.config['Route_Info']['Smooth Path']['Max Iteration Number']
-            minimumDiff = self.config['Route_Info']['Smooth Path']['Minimum Difference']
+            maxiter     = self.config['Route_Info']['smooth_path']['max_iteration_number']
+            minimumDiff = self.config['Route_Info']['smooth_path']['minimum_difference']
 
             # 
             SmoothedPaths = []
@@ -520,10 +510,10 @@ class RoutePlanner:
                     geojson['features'] = SmoothedPaths
                     self.smoothed_paths = geojson
 
-                    self.mesh['Paths'] = self.smoothed_paths
+                    self.mesh['paths'] = self.smoothed_paths
 
-                    for ii in range(len(self.mesh['Paths']['features'])):
-                        self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+                    for ii in range(len(self.mesh['paths']['features'])):
+                        self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
 
                     # with open(self.config['Route_Info']['Smoothpaths_Filename'], 'w') as fp:
                     #     json.dump(self.smoothed_paths, fp)
