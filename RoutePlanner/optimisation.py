@@ -362,7 +362,7 @@ class Optimisation:
         self.mesh['Paths'] = self.paths
 
         for ii in range(len(self.mesh['Paths']['features'])):
-            self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+            self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
     
 
     def compute_smoothed_routes(self):
@@ -523,7 +523,7 @@ class Optimisation:
                     self.mesh['Paths'] = self.smoothed_paths
 
                     for ii in range(len(self.mesh['Paths']['features'])):
-                        self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+                        self.mesh['Paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['Paths']['features'][ii]['properties']['traveltime'],unit='days'))]
 
                     # with open(self.config['Route_Info']['Smoothpaths_Filename'], 'w') as fp:
                     #     json.dump(self.smoothed_paths, fp)
