@@ -1,17 +1,14 @@
-# RoutePlanner: Long-distance marine navigation route planner
----
+# PolarRoute: Long-distance marine polar navigation route planner
+
 ## Introduction
-A long-distance route planner for marine navigation around Antartica. This work is a refactor from the original Java code at [link](https://github.com/foxm1/RoutePlanner). 
+A long-distance polar route planner for marine navigation. This work is a refactor from the original Java code at [link](https://github.com/foxm1/RoutePlanner). 
 
----
+
 ## Installation
-For installation of the package we suggest that the use sets up their Python enviroments using Conda/MiniCoda distributions. Depending on the use case the additional information is supplied for the installation on the different operating systems
-
-### Installation
-The RoutePlanner software can be installed by using the following. Be careful and make sure that the following lines are done in AnacondaComandPrompt
+The PolarRoute software can be installed by using the following. Be careful and make sure that the following lines are done in AnacondaComandPrompt
 ```
-  conda create -n RoutePlanner python=3.9
-  conda activate RoutePlanner
+  conda create -n PolarRoute python=3.9
+  conda activate PolarRoute
   pip install numpy
   pip install sphinx
   pip install tqdm
@@ -19,29 +16,8 @@ The RoutePlanner software can be installed by using the following. Be careful an
   python setup.py install
 ```
 ---
-## BAS Developers
+## Developers
 Maria Fox, Jonathan Smith, Samuel Hall, James Byrne, George Coombs &  Michael Thorne
 
-
-Documentation for the Code
-**************************
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-Background
-====================
-The software package can be broadly separated into four main stages.
-
-
-CellBox
-=====================
-Module Information
------------------
-.. automodule:: RoutePlanner.CellBox
-
-
-Class Information
-------------------
-.. autoclass:: RoutePlanner.CellBox.CellBox
-   :members:
+## License
+This software is licensed under a MIT license. For more information please see attached license for more information.
