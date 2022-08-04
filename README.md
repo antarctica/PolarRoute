@@ -1,4 +1,4 @@
-# PolarRoute: Long-distance marine polar navigation route planner
+# PolarRoute: Long-distance marine polar navigation route planner  
 
 ## Introduction
 A long-distance polar route planner for marine navigation. This work is a refactor from the original Java code at [link](https://github.com/foxm1/RoutePlanner). 
