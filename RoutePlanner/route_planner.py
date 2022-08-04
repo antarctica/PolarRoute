@@ -25,7 +25,7 @@ def _flattenCases(id,mesh):
             neighbour_indx.append(int(neighbour))
     return neighbour_case, neighbour_indx
 
-class Optimisation:
+class RoutePlanner:
     """The summary line for a class docstring should fit on one line.   
         ....
     """
