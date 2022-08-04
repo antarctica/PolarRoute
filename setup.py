@@ -16,12 +16,12 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
 
-NAME    = "RoutePlanner"
-VERSION = '0.0.4'
+NAME    = "PolarRoute"
+VERSION = '0.0.1'
 
 INCLUDE_DIRS = numpy.distutils.misc_util.get_numpy_include_dirs()
 
-META_PATH = os.path.join("RoutePlanner", "__init__.py")
+META_PATH = os.path.join("PolarRoute", "__init__.py")
 KEYWORDS = ["BAS", "SDT", "DT"]
 
 CLASSIFIERS = [
@@ -60,7 +60,7 @@ def find_packages():
     """
     modules = []
     for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-                                                      "RoutePlanner")):
+                                                      "PolarRoute")):
         if "__init__.py" in filenames:
             modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
     return [_i.replace(os.sep, ".") for _i in modules]
@@ -100,7 +100,7 @@ def setup_package():
         install_requires=INSTALL_REQUIRES,
         include_package_data=True,
         include_dirs=INCLUDE_DIRS,
-        package_data={"RoutePlanner": ["lib/*.so"]})
+        package_data={"PolarRoute": ["lib/*.so"]})
 
 
 
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         except Exception:
             pass
         # delete all shared libs from lib directory
-        path = os.path.join(SETUP_DIRECTORY, 'RoutePlanner', 'lib')
+        path = os.path.join(SETUP_DIRECTORY, 'PolarRoute', 'lib')
         for filename in glob.glob(path + os.sep + '*.pyd'):
             try:
                 os.remove(filename)
