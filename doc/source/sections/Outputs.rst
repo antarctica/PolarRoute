@@ -3,7 +3,7 @@ Outputs
 ********
 
 #####
-CellGrid construction
+Mesh construction
 #####
 
 The first stage in the route planning pipeline is constructing a discrete 
@@ -14,12 +14,12 @@ of mesh construction and json object generation are as follows:
 
 ::
 
-    from RoutePlanner.CellGrid import CellGrid
+    from polar_route.mesh import Mesh
 
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    mesh = CellGrid(config)
+    mesh = Mesh(config)
     mesh_json = mesh.to_json()
 
 .. note:: 
@@ -27,7 +27,7 @@ of mesh construction and json object generation are as follows:
     the :ref:`Configuration` section of this document.
 
 
-The json object outputed by the CellGrid consist of 3 sections: **config**, 
+The json object outputed by the Mesh consist of 3 sections: **config**, 
 **cellboxes** and **neighbour_graph**.
 
 ::
@@ -54,9 +54,9 @@ The json object outputed by the CellGrid consist of 3 sections: **config**,
 
 where the parts of the json object are as follows:
 
-* **config** : The configuration file used to generate the CellGrid
-* **cellboxes** : A list of json representations of CellBox objects that form the CellGrid
-* **neighbour_graph** : A graphical representation of the adjacency of CellBoxes within the CellGrid
+* **config** : The configuration file used to generate the Mesh
+* **cellboxes** : A list of json representations of CellBox objects that form the Mesh
+* **neighbour_graph** : A graphical representation of the adjacency of CellBoxes within the Mesh
 
 =============
 cellboxes
@@ -81,7 +81,7 @@ the following form:
 
 Where the values within the CellBox represent the following:
 
-* **id** : The index of the CellBox within the CellGrid
+* **id** : The index of the CellBox within the Mesh
 * **geometry** : The spatial boundaries of the CellBox
 * **cx** : The x-position of the centroid of the CellBox, given in degrees latitude
 * **cy** : The y-position of the centroid of the CellBox, given in degrees longitude
@@ -144,20 +144,20 @@ apply transformation which are specifc to a given vehicle.
 
 :: 
 
-    from RoutePlanner.CellGrid import CellGrid
-    from RoutePlanner.vessel_performance import VesselPerformance
+    from polar_route.mesh import Mesh
+    from polar_route.vessel_performance import VesselPerformance
 
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    mesh = CellGrid(config)
+    mesh = Mesh(config)
     mesh_json = mesh.to_json()
 
     vp = VesselPerformance(mesh_json)
     vessel_mesh_json = vp.to_json()
 
 .. note::
-    To be compatable with vessel performance transformations, a CellGrid must be contructed with
+    To be compatable with vessel performance transformations, a Mesh must be contructed with
     the following attributes:
     
     * SIC (available via data_loaders: *loader_amsr*, *load_bsose*, *load_modis*)

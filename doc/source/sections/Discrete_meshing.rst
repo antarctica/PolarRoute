@@ -25,7 +25,7 @@ CellBox
    :special-members: __init__
    :members: getcx, getcy, getdcx, getdcy, get_data_points, get_value, get_bounds, add_data_points, add_splitting_condition, value_should_be_split, value_hom_condition, hom_condition, should_split, split, contains_point, to_json
 
-CellGrid
+Mesh
 ##############
 
 .. automodule:: RoutePlanner.CellGrid

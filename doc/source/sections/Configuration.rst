@@ -195,7 +195,7 @@ splitting_conditions
 ##############
 
 The splitting_conditions section of the Configuration file determines how the CellBoxes that form the
-CellGrid will be sub-divided based on the homogeneity of the data points contained within to form a mesh
+Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
 of non-uniform spatial resolution.
 
 ::
@@ -232,7 +232,7 @@ value_output_types (optional)
 #############
 
 The value_output_types section is an optional section which may be added to Mesh_info. This dictates how data
-of each value of a cellbox is returned when outputting the (CellBox) or (CellGrid). By default values associated
+of each value of a cellbox is returned when outputting the (CellBox) or (Mesh). By default values associated
 with a (CellBox) are calculated by taking the mean of all data-point of a given value within the CellBoxes bounds.
 *value_output_type* allows this default to be changed to either the minimum or maximum of data-points.
 
