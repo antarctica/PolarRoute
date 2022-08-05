@@ -38,7 +38,9 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file'] (string): folder location of the AMSR2 dataset
+                params['folder'] (string): folder location of the AMSR2 dataset.
+                    Files within the folder must be named in the form
+                    *asi-AMSR2-s6250-<year><month><day>-v.5.4.nc*
 
         Returns:
             amsr_df (Dataframe): A dataframe containing AMSR2 Sea Ice Concentration
@@ -46,6 +48,8 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
 
                 lat | long | time | SIC
     """
+
+    # strip year/month/day from time_start and end_start strings.
     start_year = float(time_start.split('-')[0])
     start_month = float(time_start.split('-')[1])
     start_day = float(time_start.split('-')[2])
@@ -57,7 +61,11 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
     amsr_array = []
     time_array = []
 
-    for file in sorted(glob.glob(params['file'] + '/*.nc')):
+    # iterate through all files in folder passed as a parameter
+    for file in sorted(glob.glob(params['folder'] + '/*.nc')):
+        # string year/month/day out of file name.
+        # files in the folder must be named in the form 
+        # asi-AMSR2-s6250-<year><month><day>-v.5.4.nc
         year = int(file.split('-')[-2][0:4])
         month = int(file.split('-')[-2][4:6])
         day = int(file.split('-')[-2][6:])
@@ -65,13 +73,13 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
         if start_year <= year <= end_year:
             if start_month <= month <= end_month:
                 if start_day <= day <= end_day:
-                    
+
                     amsr = xr.open_dataset(file)
                     amsr_array.append(amsr)
 
                     time = str(year) + '-' + str(month) + '-' + str(day)
                     time_array.append(time)
-    
+
     amsr_concat = xr.concat(amsr_array, pd.Index(time_array, name="time"))
     amsr_df = amsr_concat.to_dataframe()
     amsr_df = amsr_df.reset_index()
