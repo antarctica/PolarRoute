@@ -6,7 +6,7 @@ Examples
 Python/iPython Notebooks
 ========================
 
-Inside the folder `./Examples` is an example ipython notebook that can be used for the generation of an example route between two waypoints 'Halley' and 'Rothera'. In this example the processing procedure is split into the three main stages with an outline below showing this usecase. All the data required for processing this example can be found at ..., please place all the files from the link into a folder at `./Examples/Data`.
+Inside the folder `./Examples` is an example ipython notebook that can be used for the generation of an example route between two waypoints 'Halley' and 'Rothera'. In this example the processing procedure is split into the three main stages with an outline below showing this usecase. All the data required for processing this example can be found at https://drive.google.com/drive/folders/1EgtNrcXyVQMYPKqce6BNO2GbllAeaJJd?usp=sharing, please place all the files from the link into a folder at `./Examples/Data`.
 
 Configuration Loading
 ^^^^^^^^^^^^^^^^^^

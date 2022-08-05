@@ -10,12 +10,20 @@ The PolarRoute software can be installed by using the following. Be careful and 
   conda create -n PolarRoute python=3.9
   conda activate PolarRoute
   conda install geopandas ipykernel
-  pip install sphinx tqdm numpy==1.22
+  pip install sphinx tqdm rinohtype numpy==1.22
   python setup.py install
 ```
 ---
+
+## Manual
+The manual for this software can be installed by running
+```
+  sphinx-build -b html ./doc/source ./doc/build
+```
+the html manual can then be found at ./doc/build
+
 ## Developers
-Maria Fox, Jonathan Smith, Samuel Hall, James Byrne, George Coombs &  Michael Thorne
+Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
 
 ## License
 This software is licensed under a MIT license. For more information please see attached license for more information.
