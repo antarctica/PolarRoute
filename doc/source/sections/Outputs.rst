@@ -168,10 +168,117 @@ apply transformation which are specifc to a given vehicle.
 
 
 TODO - Description of transformation applied to the mesh json object by Vessel Performance.
-
+................................................................................................................
+................................................................................................................
+................................................................................................................
+................................................................................................................
+................................................................................................................
+................................................................................................................
 
 #####
 Route planning
 #####
 
-TODO - Description of tranformation applied to mesh json by Route Planner
+During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Outlined below are the discriptions of the structure of the two outputs:
+
+==================
+waypoints
+==================
+
+An entry in the json including all the information of the waypoints defined by the user from the `waypoints_path` file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints are returned to this entry. The structure of the entry follows:
+
+:: 
+
+    {\n
+        "Name":{\n
+            '0':"Falklands",\n
+            '1':"Rothera",\n
+            ...\n
+        },\n
+        "Lat":{\n
+            '0':-52.6347222222,
+            '1':-75.26722,\n
+            ...\n
+        },\n
+        "Long":{\n
+            ...\n
+        },\n
+        "index":{\n
+            ...\n
+        }\n
+    }
+
+where each of the values represent the following: 
+
+* **<Name>** : The waypoint name defined by user
+    * **0**  : The name of waypoint for index row '0'
+    * **1**  : The name of waypoint for index row '1' etc
+* **<Lat>** : The latitude of the waypoints in WGS84
+    * **0**  : The latitude of waypoint for index row '0'
+    * **1**  : The latitude of waypoint for index row '1' etc
+* **<Long>** : The longitude of the waypoints in WGS84
+    * **0**  : The longitude of waypoint for index row '0'
+    * **1**  : The longitude of waypoint for index row '1' etc
+* **<index>** : The cellboxes index that the waypoint recides
+    * **0**  : The cellbox index of waypoint for index row '0'
+    * **1**  : The cellbox index of waypoint for index row '1' etc
+* **<...>** : Any additional column names defined in the origional .csv that was loaded
+
+This output can be changed to a pandas dataframe by running
+::
+    waypoints_dataframe = pd.DataFrame(waypoints) 
+
+
+==================
+paths
+==================
+An entry in the json, in a geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:
+
+:: 
+
+    {\n
+        'types':'FeatureCollection',\n
+        "features":{[\n
+            'type':'feature',\n
+            'geometry':{\n
+                'type': 'LineString',
+
+                'coordinates': [[-27.21694, -75.26722],\n
+                                [-27.5, -75.07960297382266],\n
+                                [-27.619238882768894, -75.0],\n
+                                ...]\n
+            },
+            'properties':{\n
+                'from': 'Halley',\n
+                'to': 'Rothera',\n
+                'traveltime': [0.0,\n
+                               0.03531938671648596,\n
+                               0.050310986633880575,\n
+                               ...],\n
+                'fuel': [0.0,\n
+                         0.9648858923588642,\n
+                         1.3745886107069096,\n
+                         ...],\n
+                'times': ['2017-01-01 00:00:00',
+                          '2017-01-01 00:50:51.595036800',
+                          '2017-01-01 01:12:26.869276800',
+                          ...]\n
+            }\n
+        ]}\n
+    }\n
+
+
+where the output takes a GeoJSON standard form (more infor given at https://geojson.org) given by: 
+
+
+* **<features>** : A list of the features representing each of the separate routes constructed
+    * **geometry**  : The positioning of the route locations
+        * **coordinates**  : A list of the Lat,Long position of all the route points
+    * **<properties>** : A list of metainformation about the route
+        * **from**  : Starting waypoint of route
+        * **to**  : Ending waypoint of route
+        * **traveltime** : A list of float values representing the cumulative traveltime along the route. This entry was origionally defined as a output in the configuration file by the `path_variables` definition.
+        * **fuel** : A list of float values representing the cumulative fuel along the route. This entry was origionally defined as a output in the configuration file by the `path_variables` definition.
+        * **times** : A list of strings reprenting UTC Datatimes of the route points, given that the route started from `startTime` given in the configuration file
+
+

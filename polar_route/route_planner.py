@@ -69,9 +69,36 @@ class RoutePlanner:
 
             paths (geojson): A GeoJSON of all paths constructed. The paths are in the form:
 
-               {\n
-                ...
-               }
+                {\n
+                    'types':'FeatureCollection',\n
+                    "features":{[\n
+                        'type':'feature',\n
+                        'geometry':{\n
+                            'type': 'LineString',
+
+                            'coordinates': [[-27.21694, -75.26722],\n
+                                            [-27.5, -75.07960297382266],\n
+                                            [-27.619238882768894, -75.0],\n
+                                            ...]\n
+                        },
+                        'properties':{\n
+                            'from': 'Halley',\n
+                            'to': 'Rothera',\n
+                            'traveltime': [0.0,\n
+                                        0.03531938671648596,\n
+                                        0.050310986633880575,\n
+                                        ...],\n
+                            'fuel': [0.0,\n
+                                    0.9648858923588642,\n
+                                    1.3745886107069096,\n
+                                    ...],\n
+                            'times': ['2017-01-01 00:00:00',
+                                    '2017-01-01 00:50:51.595036800',
+                                    '2017-01-01 01:12:26.869276800',
+                                    ...]\n
+                        }\n
+                    ]}\n
+                }\n
 
         ---
 

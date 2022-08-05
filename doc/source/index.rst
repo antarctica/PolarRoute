@@ -14,3 +14,4 @@ Contents:
    ./sections/Route_optimisation
    ./sections/Configuration
    ./sections/Outputs
+   ./sections/Examples
