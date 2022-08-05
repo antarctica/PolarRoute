@@ -17,7 +17,82 @@ import numpy as np
 from pyproj import Transformer
 from pyproj import CRS
 from datetime import timedelta, datetime
+import glob
 
+def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Load AMSR2 data from a folder containing seperate
+        days of AMSR2 data in netCDF files and transform
+        it into a format ingestable by Polar Route
+
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retreived
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+            params (dict): A dictionary containing optional parameters. This
+                function requires -
+
+                params['file'] (string): folder location of the AMSR2 dataset
+
+        Returns:
+            amsr_df (Dataframe): A dataframe containing AMSR2 Sea Ice Concentration
+                data. The dataframe is of the format -
+
+                lat | long | time | SIC
+    """
+    start_year = float(time_start.split('-')[0])
+    start_month = float(time_start.split('-')[1])
+    start_day = float(time_start.split('-')[2])
+
+    end_year = float(time_end.split('-')[0])
+    end_month = float(time_end.split('-')[1])
+    end_day = float(time_end.split('-')[2])
+
+    amsr_array = []
+    time_array = []
+
+    for file in sorted(glob.glob(params['file'] + '/*.nc')):
+        year = int(file.split('-')[-2][0:4])
+        month = int(file.split('-')[-2][4:6])
+        day = int(file.split('-')[-2][6:])
+
+        if start_year <= year <= end_year:
+            if start_month <= month <= end_month:
+                if start_day <= day <= end_day:
+                    
+                    amsr = xr.open_dataset(file)
+                    amsr_array.append(amsr)
+
+                    time = str(year) + '-' + str(month) + '-' + str(day)
+                    time_array.append(time)
+    
+    amsr_concat = xr.concat(amsr_array, pd.Index(time_array, name="time"))
+    amsr_df = amsr_concat.to_dataframe()
+    amsr_df = amsr_df.reset_index()
+
+    in_proj = CRS('EPSG:3412')
+    out_proj = CRS('EPSG:4326')
+
+    x,y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
+        amsr_df['x'].to_numpy(), amsr_df['y'].to_numpy())
+
+    amsr_df['lat'] = y
+    amsr_df['long'] = x
+    amsr_df = amsr_df[['lat', 'long', 'z', 'time']]
+
+    amsr_df = amsr_df.rename(columns={'z': 'SIC'})
+
+    amsr_df = amsr_df[amsr_df['long'].between(long_min, long_max)]
+    amsr_df = amsr_df[amsr_df['lat'].between(lat_min, lat_max)]
+
+
+    return amsr_df
 
 def load_amsr(params, long_min, long_max, lat_min,
     lat_max, time_start, time_end):
