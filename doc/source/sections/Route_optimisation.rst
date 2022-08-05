@@ -8,25 +8,23 @@ Overview
 In this section we will outline the construction of the route paths using the Mesh construction corrected to include the objective functions define and generated in the earlier section ...
 
 
-Optimisation
+RoutePlanner
 ##############
 
-.. automodule:: RoutePlanner.optimisation
+.. automodule:: polar_route.route_planner
    :members: 
 
-.. autoclass:: RoutePlanner.optimisation.TravelTime
-   :members:
 
-Crossing Points
-##############
+.. Crossing Points
+.. ##############
 
-.. automodule:: RoutePlanner.crossing
-   :members:
+.. .. automodule:: polar_route.crossing
+..    :members:
 
-.. autoclass:: RoutePlanner.crossing.NewtonianDistance
-   :members:
+.. .. autoclass:: polar_route.crossing.NewtonianDistance
+..    :members:
    
-.. autoclass:: RoutePlanner.crossing.NewtonianCurve
-   :members:
+.. .. autoclass:: polar_route.crossing.NewtonianCurve
+..    :members:
 
 
