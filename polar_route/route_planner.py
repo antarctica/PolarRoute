@@ -143,7 +143,7 @@ class RoutePlanner:
 
         # Load in the current cell structure & Optimisation Info̦
         #self.mesh    = copy.copy(mesh)
-        self.mesh = json.loads(mesh) 
+        self.mesh = mesh
         self.config  = self.mesh['config']
         self.source_waypoints = self.config['Route_Info']['source_waypoints']
         self.end_waypoints    = self.config['Route_Info']['end_waypoints']
@@ -259,7 +259,7 @@ class RoutePlanner:
         '''
 
         self.mesh['waypoints'] = self.mesh['waypoints'].to_dict()
-        return json.dumps(self.mesh)
+        return json.loads(json.dumps(self.mesh))
 
 
     def _dijkstra_paths(self,start_waypoints,end_waypoints):
@@ -318,13 +318,10 @@ class RoutePlanner:
                                 continue
                             path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]*self.dijkstra_info[wpt_a_name].loc[path_indices,'{}'.format(vrbl)].to_numpy()).tolist()
                         path['properties']['traveltime'] = path['properties']['traveltime'].tolist()
-
-
-
                         paths.append(path)
 
                     except:
-                        print('Failure to construct path from Dijkstra information')
+                        print('Failure to construct path from Dijkstra information - Issues with Mesh containing cellBoxes with no information.')
 
 
         geojson['features'] = paths
