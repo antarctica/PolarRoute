@@ -281,9 +281,7 @@ class Mesh:
         json['config'] = self.config
         json["cellboxes"] = self.get_cellboxes()
         json['neighbour_graph'] = self.neighbour_graph
-        json = JSON.dumps(json)
-
-        return json
+        return JSON.loads(JSON.dumps(json))
 
     # Functions for splitting cellboxes within the cellgrid
 
