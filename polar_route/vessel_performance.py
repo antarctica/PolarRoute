@@ -51,7 +51,7 @@ class VesselPerformance:
                 to generate the mesh.
         """
 
-        self.mesh = json.loads(mesh_json)
+        self.mesh = mesh_json
         self.config = self.mesh['config']
         self.mesh_df = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.vessel_params = self.config['Vessel']
@@ -82,7 +82,7 @@ class VesselPerformance:
             Returns:
                 j_mesh (str): a string representation of the modified mesh.
         """
-        j_mesh = json.dumps(self.mesh)
+        j_mesh = json.loads(json.dumps(self.mesh))
         return j_mesh
 
     def land(self):

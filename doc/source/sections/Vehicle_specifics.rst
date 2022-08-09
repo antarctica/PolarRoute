@@ -21,8 +21,8 @@ This module contains a `VesselPerformance` class that determines which cells in 
 Vessel Performance
 ##############
 
-.. automodule:: RoutePlanner.vessel_performance
+.. automodule:: polar_route.vessel_performance
 
-.. autoclass:: RoutePlanner.vessel_performance.VesselPerformance
+.. autoclass:: polar_route.vessel_performance.VesselPerformance
    :special-members: __init__
    :members: to_json
