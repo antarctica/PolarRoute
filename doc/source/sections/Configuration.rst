@@ -2,9 +2,9 @@
 Configuration
 ********
 
-In this section we will outline the standard structure for a configuration file used in all portions of the RoutePlanner software.
+In this section we will outline the standard structure for a configuration file used in all portions of the PolarRoute software package.
 
-Outlined below is an example configuration file for running the RoutePlanner. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.
+Outlined below is an example configuration file for running PolarRoute. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.
 ::
    {
       "Mesh_info":{
@@ -112,7 +112,7 @@ The 'Mesh_info' section of the configuration file contains three primary section
 ################
 Region
 ################
-The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (`longMin`, `latMin`, `longMax`, `latMax`, `startTime`, `endTime`), but also the starting shape of the spatial grid cell boxes (`cellWidth`, `cellHeight`) is defined before splitting is applied to a max split depth level (`splitDepth`). Further detail in each parameter is given below:
+The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (`longMin`, `latMin`, `longMax`, `latMax`, `startTime`, `endTime`), but also the starting shape of the spatial grid cell boxes (`cellWidth`, `cellHeight`) is defined before splitting is applied to a max split depth level (`splitDepth`). Further detail on each parameter is given below:
 
 ::
 
@@ -188,7 +188,7 @@ where the variables are as follows:
 * **loader** *(string)* : The function name of the data loader to be used to add this data source to the mesh
       see section 'Multi Data Input' for further information about data loader functions.
 * **params** *(dict)* : A dictionary containing optional parameters which may be required by data loader function
-      named in variable 'loader'
+      named in variable 'loader'.
 
 ##############
 splitting_conditions
@@ -216,12 +216,12 @@ of non-uniform spatial resolution.
 where the variables are as follows:
 
 * **<value_name>** *(string)* : The name of the value which the splitting condition will be applied to.
-* **threshold** *(float)* : CellBoxes will be sub-divided as to separate the data points contained within
-   into CellBox which contain either above or below the given threshold.
-* **upperBound** *(float)* : A percentage normalized between 0 and 1. A CellBox is deemed homogenous in 
-   a given data type if greater than this percentage of data-points within are above the given threshold.
-* **lowerBound** *(float)* : A percentage normalized between 0 and 1. A Cellbox is deemed homogenous in
-   a given data type if less than this percentage of data-points within are below the given threshold.
+* **threshold** *(float)* : The threshold above or below which CellBoxes will be sub-divided to separate the data
+   points into homogeneous cells.
+* **upperBound** *(float)* : A percentage normalised between 0 and 1. A CellBox is deemed homogeneous in
+   a given data type if greater than this percentage of data points are above the given threshold.
+* **lowerBound** *(float)* : A percentage normalised between 0 and 1. A Cellbox is deemed homogeneous in
+   a given data type if less than this percentage of data points are below the given threshold.
 
 .. note:: 
    splitting conditions are applied in the order they are specified in the configuration file.
@@ -233,7 +233,7 @@ value_output_types (optional)
 
 The value_output_types section is an optional section which may be added to Mesh_info. This dictates how data
 of each value of a cellbox is returned when outputting the (CellBox) or (Mesh). By default values associated
-with a (CellBox) are calculated by taking the mean of all data-point of a given value within the CellBoxes bounds.
+with a (CellBox) are calculated by taking the mean of all data points of a given value within the CellBoxes bounds.
 *value_output_type* allows this default to be changed to either the minimum or maximum of data-points.
 
 ::
