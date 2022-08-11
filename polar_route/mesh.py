@@ -116,12 +116,21 @@ class Mesh:
         self._cell_width = config['Mesh_info']['Region']['cellWidth']
         self._cell_height = config['Mesh_info']['Region']['cellHeight']
 
+        assert (self._long_max - self._long_min) % self._cell_width == 0, \
+            f"""The defined longitude region <{self._long_min} :{self._long_max}>
+            is not divisable by the initial cell width <{self._cell_width}>"""
+
+        assert (self._lat_max - self._lat_min) % self._cell_height == 0, \
+            f"""The defined longitude region <{self._lat_min} :{self._lat_max}>
+            is not divisable by the initial cell width <{self._cell_height}>"""
+
+
         self._start_time = config['Mesh_info']['Region']['startTime']
         self._end_time = config['Mesh_info']['Region']['endTime']
 
-        self._data_sources = config['Mesh_info']['Data_sources']
-
         self._j_grid = j_grid
+        if 'j_grid' in config['Mesh_info'].keys():
+            self._j_grid = config['Mesh_info']['j_grid']
 
         self.cellboxes = []
 
@@ -499,8 +508,12 @@ class Mesh:
         """
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
-                if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
-                    self.split_and_replace(cellbox)
+                if self._j_grid:
+                    if (cellbox.split_depth < split_depth) & (cellbox.should_be_split()):
+                        self.split_and_replace(cellbox)
+                else:
+                    if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
+                        self.split_and_replace(cellbox)
 
     # Functions for debugging
     def plot(self, highlight_cellboxes = {}, plot_ice = True, plot_currents = False,
