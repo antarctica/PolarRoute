@@ -84,7 +84,12 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
     amsr_df = amsr_concat.to_dataframe()
     amsr_df = amsr_df.reset_index()
 
-    in_proj = CRS('EPSG:3412')
+    if ('Hemisphere' in params.keys()) and (params['Hemisphere'] == 'North'):
+        in_proj = CRS('EPSG:3411')
+    elif ('Hemisphere' in params.keys()) and (params['Hemisphere'] == 'South'):
+        in_proj = CRS('EPSG:3412')
+    else:
+        in_proj = CRS('EPSG:3412')
     out_proj = CRS('EPSG:4326')
 
     x,y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
@@ -243,8 +248,8 @@ def load_thickness(params, long_min, long_max, lat_min,
                        'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
                        'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
                        'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
-                       'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79}
-                       }
+                       'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79},
+                       'None': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07}}
         seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
                    12: 'su'}
         month = int(d[5:7])
@@ -263,6 +268,8 @@ def load_thickness(params, long_min, long_max, lat_min,
             sea = 'West Pacific'
         elif (160 <= long < 180) or (-180 <= long < -130):
             sea = 'Ross'
+        else:
+            sea = 'None'
 
         return thicknesses[sea][season]
 
@@ -272,8 +279,8 @@ def load_thickness(params, long_min, long_max, lat_min,
 
     for single_date in daterange(start_date, end_date):
         dt = single_date.strftime("%Y-%m-%d")
-        for lat in np.arange(lat_min, lat_max, 0.1):
-            for lng in np.arange(long_min, long_max, 0.1):
+        for lat in np.arange(lat_min, lat_max, 0.05):
+            for lng in np.arange(long_min, long_max, 0.05):
                 thick_data.append({'time': dt, 'lat': lat, 'long': lng, 'thickness': icethickness(dt, lng)})
 
     thick_df = pd.DataFrame(thick_data).set_index(['lat', 'long', 'time'])
@@ -398,15 +405,22 @@ def load_gebco(params, long_min, long_max, lat_min,
                 function requires -
 
                 params['file'] (string): file location of the GEBCO dataset
+                params['downsample_factors'] ([int,int]): Downsample factors in horizontal and vertical respectively.
 
         Returns:
             gebco_df (Dataframe): A dataframe containing GEBCO elevation
                 data. The dataframe is of the format -
 
-                lat | long | time | elevation
+                lat | long | time | elevation 
     """
 
     gebco = xr.open_dataset(params['file'])
+
+    if 'downsample_factors' in params.keys():
+        elev = gebco['elevation'][::params['downsample_factors'][0],::params['downsample_factors'][1]]
+        gebco = xr.Dataset()
+        gebco['elevation'] = elev
+
     gebco_df = gebco.to_dataframe()
     gebco_df = gebco_df.reset_index()
     gebco_df = gebco_df.rename(columns={'lon': 'long'})

@@ -257,9 +257,11 @@ class RoutePlanner:
         '''
             Outputing the information in JSON format
         '''
-
-        self.mesh['waypoints'] = self.mesh['waypoints'].to_dict()
-        return json.loads(json.dumps(self.mesh))
+        mesh = copy.copy(self.mesh)
+        mesh['waypoints'] = mesh['waypoints'].to_dict()
+        output_json = json.loads(json.dumps(mesh))
+        del mesh
+        return output_json
 
 
     def _dijkstra_paths(self,start_waypoints,end_waypoints):
@@ -486,7 +488,7 @@ class RoutePlanner:
 
         for ii in range(len(Pths)):
                 Path = Pths[ii]
-                counter =0 
+                counter = 0 
 
                 if self.verbose:
                     print('===Smoothing {}'.format(Path['properties']['name']))
@@ -533,36 +535,32 @@ class RoutePlanner:
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0
                     while id <= (len(nc.CrossingDF) - 3):
-                        try:
-                            nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                    
-                            nc._updateCrossingPoint()
-                            self.nc = nc
+                        #try:
+                        nc.triplet = nc.CrossingDF.iloc[id:id+3]
+                
+                        nc._updateCrossingPoint()
+                        self.nc = nc
 
-                            # -- Horseshoe Case Detection -- 
-                            nc._horseshoe()
+                        # -- Horseshoe Case Detection -- 
+                        nc._horseshoe()
 
-                            # -- Removing reseverse cases                    
-                            nc._reverseCase()
-                        except:
-                            break
+                        # -- Removing reseverse cases                    
+                        nc._reverseCase()
+                        # except:
+                        #     break
 
                         id+=1+nc.id
 
-                    # if  id <= (len(nc.CrossingDF) - 3):
-                    #     print('Path Smoothing Failed!')
-                    #     break
+                    if  id <= (len(nc.CrossingDF) - 3):
+                        print('Path Smoothing Failed!')
+                        break
 
 
                     self.nc = nc
 
-                    try:
-                        nc._mergePoint()
-                        self.nc = nc
-                        iter+=1
-                    except:
-                        self.nc = nc
-                        iter+=1
+                    nc._mergePoint()
+                    self.nc = nc
+                    iter+=1
                         
                     # Stop optimisation if the points are within some minimum difference
                     if (len(nc.previousDF) == len(nc.CrossingDF)):
@@ -571,7 +569,7 @@ class RoutePlanner:
                         if self.verbose:
                             pbar.set_description("Mean Difference = {}".format(Dist))
 
-                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 20:
+                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 5:
                             if self.verbose:
                                 print('{} iterations - dDist={}  - Terminated from Horshoe repreating'.format(iter,Dist))
                             
@@ -583,20 +581,17 @@ class RoutePlanner:
                     else:
                         if 'Dist' in locals():
                             self.allDist2.append(Dist)
-                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>20:
-                                print('{} iterations - dDist={}  - Terminated as value stagnated for more than 5 iterations'.format(iter,Dist))
+                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>5:
+                                if self.verbose:
+                                    print('{} iterations - dDist={}  - Terminated as value stagnated for more than 5 iterations'.format(iter,Dist))
                                 break
 
 
 
-                if self.verbose:
-                    print('{} iterations'.format(iter))
 
                 # Determining the traveltime 
-
                 TravelTimeLegs,pathIndex = nc.objective_function()
                 FuelLegs = TravelTimeLegs*self.neighbour_graph['fuel'].loc[pathIndex]
-
 
                 SmoothedPath ={}
                 SmoothedPath['type'] = 'Feature'
@@ -612,10 +607,8 @@ class RoutePlanner:
 
                 geojson['features'] = SmoothedPaths
                 self.smoothed_paths = geojson
-
                 self.mesh['paths'] = self.smoothed_paths
-
-                for ii in range(len(self.mesh['paths']['features'])):
-                    self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+        for ii in range(len(self.mesh['paths']['features'])):
+            self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
 
                     
