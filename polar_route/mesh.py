@@ -130,7 +130,7 @@ class Mesh:
 
         self._j_grid = j_grid
         if 'j_grid' in config['Mesh_info'].keys():
-            self._j_grid = config['Mesh_info']['j_grid']
+            self._j_grid = True
 
         self.cellboxes = []
 
@@ -193,6 +193,16 @@ class Mesh:
             cellbox.set_focus([])
 
         # Add data points to CellGrid from config
+        # j_grids represent currents differently from other data sources, so a bispoke
+        # function 'add_current_points' must be called
+        if self._j_grid:
+            loader = getattr(data_loader, config['Mesh_info']['j_grid']['Currents']['loader'])
+            data_points = loader(config['Mesh_info']['j_grid']['Currents']['params'],
+                self._long_min, self._long_max, self._lat_min, self._lat_max,
+                self._start_time, self._end_time)
+
+            self.add_current_points(data_points)
+
         if 'Data_sources' in config['Mesh_info'].keys():
             for data_source in config['Mesh_info']['Data_sources']:
                 loader = getattr(data_loader, data_source['loader'])
@@ -508,12 +518,8 @@ class Mesh:
         """
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
-                if self._j_grid:
-                    if (cellbox.split_depth < split_depth) & (cellbox.should_be_split()):
-                        self.split_and_replace(cellbox)
-                else:
-                    if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
-                        self.split_and_replace(cellbox)
+                if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
+                    self.split_and_replace(cellbox)
 
     # Functions for debugging
     def plot(self, highlight_cellboxes = {}, plot_ice = True, plot_currents = False,

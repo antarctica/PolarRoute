@@ -162,7 +162,7 @@ class CellBox:
 
             Returns:
                 data_points (Dataframe): a dataframe of datapoints within the CellBox.
-                The dataframe is of the form - 
+                The dataframe is of the form -
 
                     long | lat | time | value_1 | ... | value_n
         """
@@ -262,9 +262,9 @@ class CellBox:
             interal memory of values to output type mappings.
 
             Args:
-                value_out_type (string): A dictionary containing a mapping of a value held within the
-                cellbox to its output type. An output type may be either MEAN, MIN or MAX. If no output
-                type is defined for a value in a cellbox, this defaults as MEAN.
+                value_out_type (string): A dictionary containing a mapping of a value held within
+                the cellbox to its output type. An output type may be either MEAN, MIN or MAX.
+                If no output type is defined for a value in a cellbox, this defaults as MEAN.
 
                 {
                     <value>: < MEAN | MIN | MAX >,
@@ -287,11 +287,11 @@ class CellBox:
                 lowerbound (float): The lowerbound of acceptable percentage of data_points of
                     type value within this CellBox that are above 'threshold'
                 upperbound (float): the upperbound of acceptable percentage of data_points of
-                    type value within this CellBox that are above 'threshold' 
+                    type value within this CellBox that are above 'threshold'
 
             Returns:
                 should_be_split (bool): True if the splitting_condition given would result in
-                    this CellBox being split. 
+                    this CellBox being split.
         """
         data_limit = 4
 
@@ -321,7 +321,7 @@ class CellBox:
 
             Returns:
                 hom_condition (string): The homogeniety condtion of this CellBox by given parameters
-                    hom_condition is of the form - 
+                    hom_condition is of the form -
 
                 CLR = the proportion of datapoints within this cellbox over a given
                     threshold is lower than the lowerbound
@@ -333,6 +333,9 @@ class CellBox:
                     threshold if between the upper and lower bound
         """
         data_limit = 4
+        if self._j_grid:
+            data_limit = 3000
+
         data_points = self.get_data_points([value])
 
         if data_points.shape[0] < data_limit:
@@ -354,7 +357,7 @@ class CellBox:
 
             Returns:
                 hom_condition (string): The homogeneity condition of this CellBox.
-                    hom_condition is of the form - 
+                    hom_condition is of the form -
 
                     CLR = the proportion of datapoints within this CellBox over a given
                         threshold is lower than the lowerbound
@@ -675,12 +678,15 @@ class CellBox:
         mesh_dump += self.node_string() + "; "  # add node string
         mesh_dump += "0 "
         mesh_dump += str(self.getcy()) + ", " + str(self.getcx()) + "; "  # add lat,lon
-        mesh_dump += str(self.get_value('iceArea')) + "; "  # add ice area
+        ice_area = self.get_value('SIC')
+        if np.isnan(ice_area):
+            ice_area = 0
+        mesh_dump += str(ice_area) + "; "  # add ice area
         if np.isnan(self.grid_uc):
             mesh_dump += str(0) + ", " + str(0) + ", "
         else:
             mesh_dump += str(self.grid_uc) + ", " + str(self.grid_vc) + ", "
-        mesh_dump += str(self.get_data_points(['iceArea']).shape[0])
+        mesh_dump += str(self.get_data_points(['SIC']).shape[0])
         mesh_dump += "\n"
 
         return mesh_dump
