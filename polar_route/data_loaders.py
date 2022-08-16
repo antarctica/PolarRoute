@@ -280,6 +280,43 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
     return thick_df
 
 
+def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Create ice thickness and density dataframe for baltic route
+
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retrieved
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+        Returns:
+            thickness_df (Dataframe): A dataframe containing ice thickness and density
+                data. The dataframe is of the format -
+
+                lat | long | time | thickness | density
+    """
+
+    baltic_thick_data = []
+    start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
+    end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
+
+    for single_date in daterange(start_date, end_date):
+        dt = single_date.strftime("%Y-%m-%d")
+        for lat in np.arange(lat_min, lat_max, 0.1):
+            for lng in np.arange(long_min, long_max, 0.1):
+                baltic_thick_data.append({'time': dt, 'lat': lat, 'long': lng, 'thickness': 0.3, 'density': 900.})
+
+    baltic_thick_df = pd.DataFrame(baltic_thick_data).set_index(['lat', 'long', 'time'])
+    baltic_thick_df = baltic_thick_df.reset_index()
+
+    return baltic_thick_df
+
+
 def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
@@ -325,6 +362,51 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
 
     return bsose_df
+
+
+def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Load Sea ice data for the baltic sea from a netCDF file and transform it
+        into a format ingestable by PolarRoute
+
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retrieved
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+            params (dict): A dictionary containing optional parameters. This
+                function requires -
+
+                params['file'] (string): file location of the Baltic ice dataset
+
+        Returns:
+            baltic_df (Dataframe): A dataframe containing Baltic Sea Ice Concentration
+                data. The dataframe is of the format -
+
+                lat | long | time | SIC
+    """
+
+    baltic = xr.open_dataset(params['file'])
+    baltic = baltic.sel(time=slice(time_start, time_end))
+    baltic_df = baltic.to_dataframe()
+    baltic_df = baltic_df.reset_index()
+
+    # The Baltic ice data has spatial variables: 'lon' and 'lat'
+    baltic_df['long'] = baltic_df['lon']
+
+    baltic_df = baltic_df[['lat', 'long', 'ice_concentration', 'time']]
+
+    baltic_df = baltic_df.rename(columns={'ice_concentration': 'SIC'})
+
+    baltic_df = baltic_df[baltic_df['long'].between(long_min, long_max)]
+    baltic_df = baltic_df[baltic_df['lat'].between(lat_min, lat_max)]
+
+    return baltic_df
 
 
 def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
@@ -454,6 +536,48 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
     sose_df = sose_df[sose_df['lat'].between(lat_min, lat_max)]
 
     return sose_df
+
+
+def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Load Baltic Sea current data from a netCDF file and
+        transform it into a format that is ingestable
+        by the pyRoutePlanner
+
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retrieved
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+            params (dict): A dictionary containing optional parameters. This
+                function requires -
+
+                params['file'] (string): file location of the Baltic current dataset
+
+        Returns:
+            bc_df (Dataframe): A dataframe containing Baltic Sea current
+                data. The dataframe is of the format -
+
+                lat | long | time | uC | vC
+    """
+
+    bc = xr.open_dataset(params['file'])
+    bc_df = bc.to_dataframe()
+    bc_df = bc_df.reset_index()
+
+    bc_df = bc_df[['latitude', 'longitude', 'uo', 'vo']]
+
+    bc_df = bc_df.rename(columns={'longitude': 'long', 'latitude': 'lat', 'uo': 'uC', 'vo': 'vC'})
+
+    bc_df = bc_df[bc_df['long'].between(long_min, long_max)]
+    bc_df = bc_df[bc_df['lat'].between(lat_min, lat_max)]
+
+    return bc_df
 
 
 def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
