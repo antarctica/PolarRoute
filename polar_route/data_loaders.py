@@ -300,6 +300,9 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
 
                 params['file'] (string): file location of the BSOSE dataset
 
+                params['units'] (string)(optional): The units SIC will be measured
+                    in. <percentage> | <fraction>. Default is percentage
+
         Returns:
             bsose_df (Dataframe): A dataframe containing BSOSE Sea Ice Concentration
                 data. The dataframe is of the format -
@@ -319,7 +322,14 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     bsose_df = bsose_df[['lat', 'long', 'SIarea', 'time']]
 
     bsose_df = bsose_df.rename(columns={'SIarea': 'SIC'})
-    bsose_df['SIC'] = bsose_df['SIC']*100.
+
+    if 'units' in params.keys():
+        if params['units'] == "percentage":
+            bsose_df['SIC'] = bsose_df['SIC']*100
+        if params['units'] == 'fraction':
+            """""" #BSOSE source data is fractional, no transformation required
+    else:
+        bsose_df['SIC'] = bsose_df['SIC']*100
 
     bsose_df = bsose_df[bsose_df['long'].between(long_min, long_max)]
     bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
@@ -433,6 +443,9 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
 
                 params['file'] (string): file location of the SOSE dataset
 
+                params['units'] (string)(optional) : The units of measurements
+                    uC and vC will be given in - <km/h> | <m/s>. Default is m/s
+
         Returns:
             sose_df (Dataframe): A dataframe containing SOSE current
                 data. The dataframe is of the format -
@@ -447,11 +460,17 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
     # SOSE data is indexed between 0:360 degrees in longitude where as the route planner
     # requires data index between -180:180 degrees in longitude
     sose_df['long'] = sose_df['lon'].apply(lambda x: x - 360 if x > 180 else x)
-    
     sose_df = sose_df[['lat', 'long', 'uC', 'vC']]
 
     sose_df = sose_df[sose_df['long'].between(long_min, long_max)]
     sose_df = sose_df[sose_df['lat'].between(lat_min, lat_max)]
+
+    if 'units' in params.keys():
+        if params['units'] == "km/h":
+            sose_df['uC'] = sose_df['uC'] * 3.6
+            sose_df['vC'] = sose_df['vC'] * 3.6
+        if params['units'] == 'm/s':
+            """""" # SOSE source data is in m/s, no transformation required
 
     return sose_df
 
