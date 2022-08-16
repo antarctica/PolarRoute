@@ -808,10 +808,10 @@ class NewtonianCurve:
             # --- Cases where StartCell is smaller than end Cell ---
             if (Cp[1]>=smax) and (smax<emax):
                 hrshCaseStart = -4
-                hrshCaseEnd   = case
+                hrshCaseEnd   = -case
             if (Cp[1]<=smin) and (emin<smin):
                 hrshCaseStart = 4
-                hrshCaseEnd   = case                    
+                hrshCaseEnd   = -case                    
 
         elif abs(case) == 4:
             # Defining the min and max of the start and end cells
@@ -839,17 +839,17 @@ class NewtonianCurve:
             # --- Cases where StartCell is Larger than end Cell ---
             if (Cp[0]>emax) and (smax>emax):
                 hrshCaseStart = case
-                hrshCaseEnd   = (-2)                
+                hrshCaseEnd   = (2)                
             if (Cp[0]<emin) and (smin<emin):
                 hrshCaseStart = case
-                hrshCaseEnd   = (2)                   
+                hrshCaseEnd   = (-2)                   
 
             # --- Cases where StartCell is smaller than end Cell ---
             if (Cp[0]>smax) and (smax<emax):
-                hrshCaseStart = 2
+                hrshCaseStart = (2)
                 hrshCaseEnd   = -case
             if (Cp[0]<smin) and (emin<smin):
-                hrshCaseStart = -2
+                hrshCaseStart = (-2)
                 hrshCaseEnd   = -case   
 
 
@@ -857,12 +857,8 @@ class NewtonianCurve:
         startGraphNeighbours = [cellStartGraph['neighbourIndex'][ii] for ii in list(np.where(np.array(cellStartGraph['case'])==hrshCaseStart)[0])]
         endGraphNeighbours   = [cellEndGraph['neighbourIndex'][ii] for ii in list(np.where(np.array(cellEndGraph['case'])==hrshCaseEnd)[0])]
 
+        # If there is no neighbour trim back to the edge of the cell
         if (len(startGraphNeighbours)==0) or (len(endGraphNeighbours)==0):
-            # if abs(case) == 2:
-            #     self.triplet['cy'].iloc[1] = self.org_triplet['cy'].iloc[1]
-            # if abs(case) == 4:
-            #     self.triplet['cx'].iloc[1] = self.org_triplet['cx'].iloc[1]        
-            # return
             if abs(case) == 2:
                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
             if abs(case) == 4:
@@ -877,13 +873,22 @@ class NewtonianCurve:
                         sGNGraph = self.neighbour_graph.loc[sGN]
                         eGNGraph = self.neighbour_graph.loc[eGN]
 
-                        Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
-                        Crp2 = np.array(sGNGraph['neighbourCrossingPoints'])[np.where(np.array(sGNGraph['neighbourIndex']) == eGN)[0][0],:]
-                        Crp3 = np.array(eGNGraph['neighbourCrossingPoints'])[np.where(np.array(eGNGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
+
+                        try:
+
+                            Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
+                            Crp2 = np.array(sGNGraph['neighbourCrossingPoints'])[np.where(np.array(sGNGraph['neighbourIndex']) == eGN)[0][0],:]
+                            Crp3 = np.array(eGNGraph['neighbourCrossingPoints'])[np.where(np.array(eGNGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
                         
+                        except:
+                            if abs(case) == 2:
+                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                            if abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                            return
 
                         # Trimminng back if the cell is worse off
-                        if (np.max([cellStartGraph['SIC'],cellEndGraph['SIC']]) < (np.max([sGNGraph['SIC'],eGNGraph['SIC']]) +  0.2*np.max([cellStartGraph['SIC'],cellEndGraph['SIC']]))):
+                        if (sGNGraph['SIC'] - cellStartGraph['SIC'])>=20:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
@@ -923,12 +928,22 @@ class NewtonianCurve:
                     if (np.array(sGN==eGN).any()):
                         
                         NeighGraph = self.neighbour_graph.loc[sGN]               
-                        Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
-                        Crp2 = np.array(NeighGraph['neighbourCrossingPoints'])[np.where(np.array(NeighGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
+                        
+                        
+                        try:
+                            Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
+                            Crp2 = np.array(NeighGraph['neighbourCrossingPoints'])[np.where(np.array(NeighGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
+
+                        except:
+                            if abs(case) == 2:
+                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                            if abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                            return
 
 
                         # Trimminng back if the cell is worse off
-                        if np.max([cellStartGraph['SIC'],cellEndGraph['SIC']]) < (NeighGraph['SIC'] +  0.2*np.max([cellStartGraph['SIC'],cellEndGraph['SIC']])):
+                        if (NeighGraph['SIC'] - cellStartGraph['SIC'])>=20:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
@@ -977,6 +992,16 @@ class NewtonianCurve:
             indxReverseEdge = np.where(boolReverseEdge)[0]+2
             for id in indxReverseEdge:
                 self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
+
+        # Removing Reverse Edge Type 3
+        startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
+        endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
+        boolReverseEdge  = (startIndex[:-1] == startIndex[1:])
+        if boolReverseEdge.any():
+            indxReverseEdge = np.where(boolReverseEdge)[0]+1
+            for id in indxReverseEdge:
+                self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
+
 
 
         self.CrossingDF.index = np.arange(0,int(len(self.CrossingDF)*1e3),int(1e3))

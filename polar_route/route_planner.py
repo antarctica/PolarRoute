@@ -232,25 +232,18 @@ class RoutePlanner:
         self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
 
         # ==== Printing Configuration and Information
+        self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
 
-        if self.verbose:
-            print('================================================')
-            print('================================================')
-            print('============= CONFIG INFORMATION  ============')
-            print('================================================')
-            print('================================================')
-            print(' ---- Processing for Objective Function = {} ----'.format(self.config['Route_Info']['objective_function']))
-            print(json.dumps(self.config, indent=4, sort_keys=True))
-
-        self.mesh['waypoints'] = pd.read_json(self.mesh['waypoints'])
 
     def to_json(self):
-        """
-            Outputting the information in JSON format
-        """
-
-        self.mesh['waypoints'] = self.mesh['waypoints'].to_dict()
-        return json.loads(json.dumps(self.mesh))
+        '''
+            Outputing the information in JSON format
+        '''
+        mesh = copy.copy(self.mesh)
+        mesh['waypoints'] = mesh['waypoints'].to_dict()
+        output_json = json.loads(json.dumps(mesh))
+        del mesh
+        return output_json
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
@@ -418,15 +411,19 @@ class RoutePlanner:
 
         # 
         if self.verbose:
-            print('================================================')
-            print('================================================')
-            print('============= Dijkstra Path Creation ============')
-            print('================================================')
-            print('================================================')
+            print('============= Dijkstr Path Creation ============\n')
 
         for wpt in self.source_waypoints:
+
             if self.verbose:
-                print('=== Processing Waypoint = {} ==='.format(wpt))
+                print('--- Processing Waypoint = {} ---'.format(wpt))
+
+            # Continue if the waypoint is not in the accessible list
+            if len(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt]) == 0:
+                if self.verbose:
+                    print('{} not in accessible waypoints, continuing'.format(wpt))
+                continue
+
             # try:
             self._dijkstra(wpt)
             # except:
@@ -462,18 +459,14 @@ class RoutePlanner:
         Pths = copy.deepcopy(self.paths)['features']  
 
         if self.verbose:
-            print('================================================')
-            print('================================================')
-            print('========= Determining Smoothed Paths ===========')
-            print('================================================')
-            print('================================================')
+            print('========= Determining Smoothed Paths ===========\n')
 
         for ii in range(len(Pths)):
                 Path = Pths[ii]
-                counter = 0
+                counter = 0 
 
                 if self.verbose:
-                    print('===Smoothing {}'.format(Path['properties']['name']))
+                    print('---Smoothing {}'.format(Path['properties']['name']))
 
                 nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']], self.config, maxiter=1,
                                              zerocurrents=self.zero_currents)
@@ -515,36 +508,32 @@ class RoutePlanner:
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0
                     while id <= (len(nc.CrossingDF) - 3):
-                        try:
-                            nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                    
-                            nc._updateCrossingPoint()
-                            self.nc = nc
+                        #try:
+                        nc.triplet = nc.CrossingDF.iloc[id:id+3]
+                
+                        nc._updateCrossingPoint()
+                        self.nc = nc
 
-                            # -- Horseshoe Case Detection -- 
-                            nc._horseshoe()
+                        # -- Horseshoe Case Detection -- 
+                        nc._horseshoe()
 
-                            # -- Removing reverse cases
-                            nc._reverseCase()
-                        except:
-                            break
+                        # -- Removing reseverse cases                    
+                        nc._reverseCase()
+                        # except:
+                        #     break
 
                         id += 1+nc.id
 
-                    # if  id <= (len(nc.CrossingDF) - 3):
-                    #     print('Path Smoothing Failed!')
-                    #     break
+                    if  id <= (len(nc.CrossingDF) - 3):
+                        print('Path Smoothing Failed!')
+                        break
 
 
                     self.nc = nc
 
-                    try:
-                        nc._mergePoint()
-                        self.nc = nc
-                        iter += 1
-                    except:
-                        self.nc = nc
-                        iter += 1
+                    nc._mergePoint()
+                    self.nc = nc
+                    iter+=1
                         
                     # Stop optimisation if the points are within some minimum difference
                     if len(nc.previousDF) == len(nc.CrossingDF):
@@ -553,9 +542,9 @@ class RoutePlanner:
                         if self.verbose:
                             pbar.set_description("Mean Difference = {}".format(Dist))
 
-                        if (Dist == np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 20:
+                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 25:
                             if self.verbose:
-                                print('{} iterations - dDist={}  - Terminated from Horseshoe repeating'.format(iter, Dist))
+                                print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path'.format(iter,Dist))
                             
                             break
                         if (Dist < minimumDiff) and (Dist != 0.0):
@@ -565,18 +554,17 @@ class RoutePlanner:
                     else:
                         if 'Dist' in locals():
                             self.allDist2.append(Dist)
-                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter > 50) and len(self.allDist2) > 20:
-                                print('{} iterations - dDist={}  - Terminated as value stagnated for more than 5 iterations'.format(iter, Dist))
+                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>25:
+                                if self.verbose:
+                                    print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path'.format(iter,Dist))
                                 break
 
-                if self.verbose:
-                    print('{} iterations'.format(iter))
+
+
 
                 # Determining the traveltime 
-
                 TravelTimeLegs,pathIndex = nc.objective_function()
                 FuelLegs = TravelTimeLegs*self.neighbour_graph['fuel'].loc[pathIndex]
-
 
                 SmoothedPath ={}
                 SmoothedPath['type'] = 'Feature'
@@ -592,10 +580,8 @@ class RoutePlanner:
 
                 geojson['features'] = SmoothedPaths
                 self.smoothed_paths = geojson
-
                 self.mesh['paths'] = self.smoothed_paths
-
-                for ii in range(len(self.mesh['paths']['features'])):
-                    self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+        for ii in range(len(self.mesh['paths']['features'])):
+            self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
 
                     
