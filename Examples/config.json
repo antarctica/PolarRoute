@@ -15,20 +15,20 @@
       {
         "loader":"load_bsose_depth",
         "params":{
-          "file":"./Data/bsose_i122_2013to2017_1day_SeaIceArea.nc",
+          "file":"../Data/bsose_i122_2013to2017_1day_SeaIceArea.nc",
           "data_name": "elevation"
         }
       }, 
       {
         "loader":"load_amsr",
         "params":{
-          "file":"./Data/asi-AMSR-2017.nc"
+          "file":"../Data/asi-AMSR-2017.nc"
         }
       },
       {
         "loader":"load_sose_currents",
         "params":{
-          "file":"./Data/SOSE_surface_velocity_6yearMean_2005-2010.nc"
+          "file":"../Data/SOSE_surface_velocity_6yearMean_2005-2010.nc"
         }
       },
       {

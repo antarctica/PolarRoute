@@ -5,9 +5,9 @@ Mesh Construction
 Overview
 ##############
 
-Throughout this section we will outline the usecase for the Discrete Meshing of the environment. The two main functions used are `CellGrid` composed of a series of `CellBox` objects. 
+Throughout this section we will outline the use case for the Discrete Meshing of the environment. The two main classes used are `Mesh` and `CellBox`, with a Mesh being composed of a series of CellBox objects.
 
-The general overview for the method can be seen in 
+A general overview of the method can be seen below:
 
 .. figure:: ./Figures/FlowDiagram_MeshGraph.png
     :align: center
