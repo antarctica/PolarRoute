@@ -56,6 +56,11 @@ class VesselPerformance:
         self.mesh_df = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.vessel_params = self.config['Vessel']
 
+        # CHANGE !!! THIS IS WRONG BUT noNaNs !! 
+        # Setting NaN currents to 0.0
+        self.mesh_df['uC'][np.isnan(self.mesh_df['uC'])] = 0.0
+        self.mesh_df['vC'][np.isnan(self.mesh_df['vC'])] = 0.0
+
         # Identifying land and extreme ice cells then removing them from the neighbour graph
         self.land()
         self.extreme_ice()
