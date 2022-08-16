@@ -710,7 +710,7 @@ class Mesh:
 
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
-                if (not cellbox.landLocked) and cellbox.get_value('iceArea') < max_ice_area:
+                if (not cellbox.land_locked) and cellbox.get_value('SIC') < max_ice_area:
                     graph_dump += cellbox.node_string()
 
                     cellbox_indx = self.cellboxes.index(cellbox)
@@ -718,51 +718,51 @@ class Mesh:
                     # case -3 neighbours
                     nw_neighbour_indx = self.neighbour_graph[cellbox_indx][-3]
                     for neighbour in nw_neighbour_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                                self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":-3"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":-3"
                     # case -2 neighbours
                     w_neighbours_indx = self.neighbour_graph[cellbox_indx][-2]
                     for neighbour in w_neighbours_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                                self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":-2"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":-2"
                     # case -1 neighbours
                     sw_neighbours_indx = self.neighbour_graph[cellbox_indx][-1]
                     for neighbour in sw_neighbours_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                                self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":-1"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":-1"
                     # case -4 neighbours
                     n_neighbour_indx = self.neighbour_graph[cellbox_indx][-4]
                     for neighbour in n_neighbour_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                            self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":-4"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                            self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":-4"
                     # case 4 neighbours
                     s_neighbours_indx = self.neighbour_graph[cellbox_indx][4]
                     for neighbour in s_neighbours_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                                self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":4"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":4"
                     # case 1 neighbours
                     ne_neighbour_indx = self.neighbour_graph[cellbox_indx][1]
                     for neighbour in ne_neighbour_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                                self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":1"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":1"
                     # case 2 neighbours
                     e_neighbour_indx = self.neighbour_graph[cellbox_indx][2]
                     for neighbour in e_neighbour_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                                self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":2"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":2"
                     # case 3 neighbours
                     se_neighbour_indx = self.neighbour_graph[cellbox_indx][3]
                     for neighbour in se_neighbour_indx:
-                        if (not self.cellboxes[neighbour].landLocked) and (
-                                self.cellboxes[neighbour].get_value('iceArea') < max_ice_area):
-                            graph_dump += "," + self.cellboxes[neighbour].nodeString() + ":3"
+                        if (not self.cellboxes[neighbour].land_locked) and (
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                            graph_dump += "," + self.cellboxes[neighbour].node_string() + ":3"
 
                     graph_dump += "\n"
 
@@ -782,7 +782,18 @@ class Mesh:
                 long_loc['lat'] <= (cellbox.lat + cellbox.height))]
 
             cellbox.add_current_points(lat_long_loc)
-            cellbox.set_land()
+
+            # find data point closest to centre to determin land
+            def closest_point(df, lat, long):
+                n_lat_df = df.iloc[(df['lat'] - lat).abs().argsort()[:15]]
+                n_long_df = n_lat_df.iloc[(n_lat_df['long'] - long).abs().argsort()[:1]]
+                return n_long_df
+
+            point = closest_point(lat_long_loc, cellbox.getcy(), cellbox.getcx())
+            if np.isnan(point['uC'].mean()) or np.isnan(point['vC'].mean()):
+                cellbox.land_locked = True
+
+            #cellbox.set_land()
 
     def cellbox_by_node_string(self, node_string):
         """

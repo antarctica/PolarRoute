@@ -568,11 +568,20 @@ class CellBox:
             'dcy':float(self.getdcy())
         }
 
-        for value in self.get_data_names():
-            if value in self.get_value_out_types().keys():
-                cell_json[value] = float(self.get_value(value, self.get_value_out_types()[value]))
-            else:
-                cell_json[value] = float(self.get_value(value))
+        if self._j_grid:
+            cell_json['uC'] = self.grid_uc
+            cell_json['vC'] = self.grid_vc
+            cell_json['SIC'] = self.get_value('SIC')
+            cell_json['elevation'] = 0 if self.is_land_m() else -100
+            cell_json['thickness'] = 2
+            cell_json['density'] = 875
+        else:
+            for value in self.get_data_names():
+                if value in self.get_value_out_types().keys():
+                    cell_json[value] = float(self.get_value(value, 
+                        self.get_value_out_types()[value]))
+                else:
+                    cell_json[value] = float(self.get_value(value))
 
         return cell_json
 
@@ -714,6 +723,9 @@ class CellBox:
             Only to be used on un-split cells
 
             for use in j_grid regression testing
+
+            TODO requires changing to deem a cell land if the datapoint closest
+            to the centre of the cell is nan
         """
         if self.split_depth == 0:  # Check if a cell has not been split
             total_currents = self._current_points.dropna()
