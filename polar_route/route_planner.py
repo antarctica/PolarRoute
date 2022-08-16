@@ -238,18 +238,6 @@ class RoutePlanner:
 
 
         # ==== Printing Configuration and Information
-
-        if self.verbose:
-            print('================================================')
-            print('================================================')
-            print('============= CONFIG INFORMATION  ============')
-            print('================================================')
-            print('================================================')
-            print(' ---- Processing for Objective Function = {} ----'.format(self.config['Route_Info']['objective_function']))
-            print(json.dumps(self.config, indent=4, sort_keys=True))
-
-
-
         self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
 
 
@@ -435,15 +423,19 @@ class RoutePlanner:
 
         # 
         if self.verbose:
-            print('================================================')
-            print('================================================')
-            print('============= Dijkstr Path Creation ============')
-            print('================================================')
-            print('================================================')
+            print('============= Dijkstr Path Creation ============\n')
 
         for wpt in self.source_waypoints:
+
             if self.verbose:
-                print('=== Processing Waypoint = {} ==='.format(wpt))
+                print('--- Processing Waypoint = {} ---'.format(wpt))
+
+            # Continue if the waypoint is not in the accessible list
+            if len(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt]) == 0:
+                if self.verbose:
+                    print('{} not in accessible waypoints, continuing'.format(wpt))
+                continue
+
             # try:
             self._dijkstra(wpt)
             # except:
@@ -480,18 +472,14 @@ class RoutePlanner:
         Pths = copy.deepcopy(self.paths)['features']  
 
         if self.verbose:
-            print('================================================')
-            print('================================================')
-            print('========= Determining Smoothed Paths ===========')
-            print('================================================')
-            print('================================================')
+            print('========= Determining Smoothed Paths ===========\n')
 
         for ii in range(len(Pths)):
                 Path = Pths[ii]
                 counter = 0 
 
                 if self.verbose:
-                    print('===Smoothing {}'.format(Path['properties']['name']))
+                    print('---Smoothing {}'.format(Path['properties']['name']))
 
                 nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']],self.config,maxiter=1,zerocurrents=self.zero_currents)
                 nc.pathIter = maxiter
@@ -569,9 +557,9 @@ class RoutePlanner:
                         if self.verbose:
                             pbar.set_description("Mean Difference = {}".format(Dist))
 
-                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 5:
+                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 25:
                             if self.verbose:
-                                print('{} iterations - dDist={}  - Terminated from Horshoe repreating'.format(iter,Dist))
+                                print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path'.format(iter,Dist))
                             
                             break
                         if (Dist < minimumDiff) and (Dist!=0.0):
@@ -581,9 +569,9 @@ class RoutePlanner:
                     else:
                         if 'Dist' in locals():
                             self.allDist2.append(Dist)
-                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>5:
+                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>25:
                                 if self.verbose:
-                                    print('{} iterations - dDist={}  - Terminated as value stagnated for more than 5 iterations'.format(iter,Dist))
+                                    print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path'.format(iter,Dist))
                                 break
 
 
