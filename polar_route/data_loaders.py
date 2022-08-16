@@ -1,6 +1,6 @@
 """
-    functions for loading datasets into the py_RoutePlanner.
-    The pyRoutePlanner requires data as a pandas dataframe
+    functions for loading datasets into PolarRoute.
+    PolarRoute requires data as a pandas dataframe
     in the following format:
 
     long | lat | (time)* | value_1 | ... | value_n
@@ -19,15 +19,16 @@ from pyproj import CRS
 from datetime import timedelta, datetime
 import glob
 
+
 def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
-        Load AMSR2 data from a folder containing seperate
+        Load AMSR2 data from a folder containing separate
         days of AMSR2 data in netCDF files and transform
-        it into a format ingestable by Polar Route
+        it into a format ingestable by PolarRoute
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -87,7 +88,7 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
     in_proj = CRS('EPSG:3412')
     out_proj = CRS('EPSG:4326')
 
-    x,y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
+    x, y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
         amsr_df['x'].to_numpy(), amsr_df['y'].to_numpy())
 
     amsr_df['lat'] = y
@@ -99,18 +100,17 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
     amsr_df = amsr_df[amsr_df['long'].between(long_min, long_max)]
     amsr_df = amsr_df[amsr_df['lat'].between(lat_min, lat_max)]
 
-
     return amsr_df
 
-def load_amsr(params, long_min, long_max, lat_min,
-    lat_max, time_start, time_end):
+
+def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load AMSR2 data from a netCDF file and transform
-        it into a format ingestable by the pyRoutePlanner
+        it into a format ingestable by PolarRoute
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -140,7 +140,7 @@ def load_amsr(params, long_min, long_max, lat_min,
     in_proj = CRS('EPSG:3412')
     out_proj = CRS('EPSG:4326')
 
-    x,y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
+    x, y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
         amsr_df['x'].to_numpy(), amsr_df['y'].to_numpy())
 
     amsr_df['lat'] = y
@@ -160,15 +160,14 @@ def daterange(start_date, end_date):
         yield start_date + timedelta(n)
 
 
-def load_density(params, long_min, long_max, lat_min,
-              lat_max, time_start, time_end):
+def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
         Data taken from Table 3 in: doi:10.1029/2007JC004254
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -200,8 +199,8 @@ def load_density(params, long_min, long_max, lat_min,
 
     for single_date in daterange(start_date, end_date):
         dt = single_date.strftime("%Y-%m-%d")
-        for lat in np.arange(lat_min, lat_max, 0.05):#0.16):
-            for long in np.arange(long_min, long_max,0.05):# 0.16):
+        for lat in np.arange(lat_min, lat_max, 0.05):  #0.16):
+            for long in np.arange(long_min, long_max, 0.05):  # 0.16):
                 dense_data.append({'time': dt, 'lat': lat, 'long': long, 'density': icedensity(dt)})
 
     dense_df = pd.DataFrame(dense_data).set_index(['lat', 'long', 'time'])
@@ -210,15 +209,14 @@ def load_density(params, long_min, long_max, lat_min,
     return dense_df
 
 
-def load_thickness(params, long_min, long_max, lat_min,
-              lat_max, time_start, time_end):
+def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
-        Create ice thickness dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
+        Create ice thickness dataframe for given time and region and put it into a format ingestable by PolarRoute.
         Data taken from Table 3 in: doi:10.1029/2007JC004254
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -282,15 +280,14 @@ def load_thickness(params, long_min, long_max, lat_min,
     return thick_df
 
 
-def load_bsose(params, long_min, long_max, lat_min,
-    lat_max, time_start, time_end):
+def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
-        into a format ingestable by the pyRoutePlanner
+        into a format ingestable by PolarRoute
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -340,15 +337,14 @@ def load_bsose(params, long_min, long_max, lat_min,
     return bsose_df
 
 
-def load_bsose_depth(params, long_min, long_max, lat_min,
-    lat_max, time_start, time_end):
+def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
-        into a format ingestable by the pyRoutePlanner
+        into a format ingestable by PolarRoute
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -388,15 +384,14 @@ def load_bsose_depth(params, long_min, long_max, lat_min,
     return bsose_df
 
 
-def load_gebco(params, long_min, long_max, lat_min,
-    lat_max, time_start, time_end):
+def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load GEBCO data from a netCDF file and transform it
         into a format ingestable by the pyRoutePlanner
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -427,8 +422,7 @@ def load_gebco(params, long_min, long_max, lat_min,
     return gebco_df
 
 
-def load_sose_currents(params, long_min, long_max, lat_min,
-    lat_max, time_start, time_end):
+def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load SOSE current data from a netCDF file and#
         transform it into a format that is ingestable
@@ -436,7 +430,7 @@ def load_sose_currents(params, long_min, long_max, lat_min,
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -481,15 +475,14 @@ def load_sose_currents(params, long_min, long_max, lat_min,
     return sose_df
 
 
-def load_modis(params, long_min, long_max, lat_min,
-    lat_max, time_start, time_end):
+def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load MODIS data from a netCDF file and transform it
         into a format that is ingestable by the pyRoutePlanner
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,
@@ -514,7 +507,7 @@ def load_modis(params, long_min, long_max, lat_min,
     modis_df = modis_df.reset_index()
 
     # MODIS Sea Ice Concentration data is partially obscured by cloud cover.
-    # Where a datapoint indicates that there is cloud cover above it, 
+    # Where a data point indicates that there is cloud cover above it,
     # set the SIC of that datapoint to NaN
     modis_df['iceArea'] = np.where(modis_df['cloud'] == 1, np.NaN, modis_df['iceArea'])
     modis_df = modis_df.rename(columns={'iceArea': 'SIC'})
@@ -526,15 +519,14 @@ def load_modis(params, long_min, long_max, lat_min,
     return modis_df
 
 
-def load_era5_wind(params, long_min, long_max, lat_min,
-    lat_max, time_start, time_end):
+def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load era5 wind data from a netCDF file and transform it
         into a format that is ingestable by the pyRoutePlanner
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retreived
+            long_max (float): The maximum longitude of the data to be retrieved
             lat_min (float): The minimum latitude of the data to be retrieved
             lat_max (float): The maximum latitude of the data to be retrieved
             time_start (string): The start time of the data to be retrieved,

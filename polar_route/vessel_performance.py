@@ -47,7 +47,7 @@ class VesselPerformance:
             according to the vessel parameters defined in the config.
 
             Args:
-                mesh_json (str): The input mesh containing the cellboxes and neighbour graph as well as the config used
+                mesh_json (dict): The input mesh containing the cellboxes and neighbour graph as well as the config used
                 to generate the mesh.
         """
 
@@ -80,7 +80,7 @@ class VesselPerformance:
             Method to return the modified mesh in json format.
 
             Returns:
-                j_mesh (str): a string representation of the modified mesh.
+                j_mesh (dict): a dictionary representation of the modified mesh.
         """
         j_mesh = json.loads(json.dumps(self.mesh))
         return j_mesh

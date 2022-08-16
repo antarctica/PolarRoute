@@ -6,11 +6,11 @@ Examples
 Python/iPython Notebooks
 ========================
 
-Inside the folder `./Examples` is an example ipython notebook that can be used for the generation of an example route between two waypoints 'Halley' and 'Rothera'. In this example the processing procedure is split into the three main stages with an outline below showing this usecase. All the data required for processing this example can be found at https://drive.google.com/drive/folders/1EgtNrcXyVQMYPKqce6BNO2GbllAeaJJd?usp=sharing, please place all the files from the link into a folder at `./Examples/Data`.
+Inside the folder `./Examples` is an example ipython notebook that can be used for the generation of an example route between two waypoints 'Halley' and 'Rothera'. In this example the processing procedure is split into the three main stages with an outline below showing this use case. All the data required for processing this example can be found at https://drive.google.com/drive/folders/1EgtNrcXyVQMYPKqce6BNO2GbllAeaJJd?usp=sharing, please place all the files from the link into a folder at `./Examples/Data`.
 
 Configuration Loading
 ^^^^^^^^^^^^^^^^^^
-The configuration file is loaded into the codebase. As this file will be appened to throughout the construction of the paths we name the ouput file `info`. More information can be found in the configuration section of the manual for the construction of this input file
+The configuration file is loaded into the codebase. As this file will be appended to throughout the construction of the paths we name the output file `info`. More information can be found in the configuration section of the manual for the construction of this input file.
 ::
     import json
     with open('config.json', 'r') as f:
@@ -28,7 +28,7 @@ The `info` object is passed to the polar_route software to construct a mesh. Onc
 
 Vehicles Specifics
 ^^^^^^^^^^^^^^^^^^
-The `info` object now with mesh information is used in the vessel performance. The section of the code-base alters the mesh information to append new quantaties and alter the neighbourhood graph. This altered object is then output to `info`
+The `info` object now with mesh information is used as an input by the vessel performance class. The section of the codebase alters the neighbour graph and appends new derived quantities to the mesh information. This altered object is then output to `info`.
 ::
    from polar_route.vessel_performance import VesselPerformance
    vp = VesselPerformance(info)
@@ -36,7 +36,7 @@ The `info` object now with mesh information is used in the vessel performance. T
 
 Route Optimisation
 ^^^^^^^^^^^^^^^^^^
-Now that the vessel depened environmental mesh is defined, and representing in the `info` object, we can construct routes, with parameters defined by the user in the configuration file. The route construction is done in two stages: construction of the meshed dijkstra optimal routes, `.compute_routes()`; and, the smoothing of the dijkstra routes to further optimise the solution and reduce mesh dependencies, `.compute_smooth_routes()`. During `.compute_routes()` the paths are appened to the `info` object as a entry `paths`, which are replaced by the smoothed paths after running `.compute_smooth_routes()`. An additional entry `waypoints` is generated to give the waypoints information used in route construction. For further info about the structure of the outputs of the paths please see the Outputs section of the manual.
+Now that the vessel dependent environmental mesh is defined, and represented in the `info` object, we can construct routes, with parameters defined by the user in the configuration file. The route construction is done in two stages: construction of the meshed dijkstra optimal routes, `.compute_routes()`; and, the smoothing of the dijkstra routes to further optimise the solution and reduce mesh dependencies, `.compute_smooth_routes()`. During `.compute_routes()` the paths are appended to the `info` object as an entry `paths`, which are replaced by the smoothed paths after running `.compute_smooth_routes()`. An additional entry `waypoints` is generated to give the waypoints information used in route construction. For further info about the structure of the outputs of the paths please see the Outputs section of the manual.
 ::
     from polar_route.route_planner import RoutePlanner
     rp = RoutePlanner(info)
@@ -72,7 +72,7 @@ To plot the routes constructed and mesh information we use the python package `g
 Command Line Execution
 ========================
 
-In the previous section we outlined how to run the codebase from within a Python file or in iPython notebooks. In this section we will outline how the code can be run directly from command line by passing a configuration file to a exicutable python file found in `./exec/` from the root directly. 
+In the previous section we outlined how to run the codebase from within a Python file or an iPython notebook. In this section we will outline how the code can be run directly from the command line by passing a configuration file to an executable python file found in `./exec/` from the root directly.
 
 The command line execution
 
@@ -80,7 +80,7 @@ The command line execution
 
    python ./exec/polar_route.py config.json 
 
-In addition, within the exec folder there is the independent stages used within the route planner. These include:
+In addition, within the exec folder there are executable files for each of the independent stages used within the route planner. These include:
 
 * `mesh.py` - Discrete Meshing
 * `vessel_performance.py` - Vehicle Specifics applied to pre-computed mesh

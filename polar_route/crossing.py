@@ -1,11 +1,15 @@
-'''
-    The python pacakge `crossing` implement the optimisation for the crossing point for the unsmoothed and smoothed path construction. The package is separted into two classes `NewtonianDistance` and `NewtonianCurve`. In the section below we will go over a stage by stage of how the crossing point is determined, and the functions used within the classes.
+"""
+    The python package `crossing` implement the optimisation for the crossing point for the unsmoothed and smoothed path
+     construction. The package is separated into two classes `NewtonianDistance` and `NewtonianCurve`.
+     In the section below we will go through, stage by stage, how the crossing point is determined and the methods
+     used within the classes.
 
-'''
+"""
 import copy
 import pandas as pd
 import numpy as np
 np.seterr(divide='ignore', invalid='ignore')
+
 
 class NewtonianDistance:
     """The summary line for a class docstring should fit on one line.
@@ -74,7 +78,7 @@ class NewtonianDistance:
         # For Debugging purposes
         self.debugging     = debugging
 
-    def _newton_optimisation(self,f,x,a,Y,u1,v1,u2,v2,s1,s2):
+    def _newton_optimisation(self, f, x, a, Y, u1, v1, u2, v2, s1, s2):
         '''
             FILL
         '''

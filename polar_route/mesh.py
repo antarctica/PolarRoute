@@ -1,18 +1,18 @@
 """
-Outlined in this section we will discuss the useage of the CellGrid
-functionality of the pyRoutePlanner.
+In this section we will discuss the usage of the Mesh
+functionality of PolarRoute.
 
 Example:
-    An example of running this code can be executed by running the
-    following in a ipython/Jupyter Notebook::
+    An example of how to run this code can be executed by running the
+    following in an ipython/Jupyter Notebook::
 
-        from RoutePlanner import CellGrid
+        from RoutePlanner import Mesh
 
         import json
         with open('./config.json', 'r') as f:
             config = json.load(f)
 
-        mesh = CellGrid(config)
+        mesh = Mesh(config)
 """
 
 import math
@@ -28,13 +28,14 @@ from matplotlib.patches import Polygon as MatplotPolygon
 from polar_route.cellbox import CellBox
 import polar_route.data_loaders as data_loader
 
+
 class Mesh:
     """
         Attributes:
-            cellboxes (list<(CellBox)>): A list of CellBox objects forming the CellGrid
+            cellboxes (list<(CellBox)>): A list of CellBox objects forming the Mesh
 
             neighbour_graph (dict): A graphical representation of the adjacency
-                relationship between CellBoxes in the CellGrid. The neighbour_graph is
+                relationship between CellBoxes in the Mesh. The neighbour_graph is
                 of the form
 
                {\n
@@ -59,11 +60,11 @@ class Mesh:
 
     def __init__(self, config, j_grid=False):
         """
-            Contructs a CellGrid from a given config file.
+            Constructs a Mesh from a given config file.
 
             Args:
-                config (dict): config file which defines the attributes of the CellGrid
-                    to be contructed. config is of the form - \n
+                config (dict): config file which defines the attributes of the Mesh
+                    to be constructed. config is of the form - \n
                     \n
                     {\n
                         "config": {\n
@@ -103,7 +104,7 @@ class Mesh:
                         }\n
                     }\n
 
-                j_grid (bool): True if the CellGrid to be constructed should be of the same
+                j_grid (bool): True if the Mesh to be constructed should be of the same
                     format as the original Java CellGrid, to be used for regression testing.
         """
         self.config = config
@@ -138,7 +139,7 @@ class Mesh:
         for lat in np.arange(self._lat_min, self._lat_max, self._cell_height):
             for long in np.arange(self._long_min, self._long_max, self._cell_width):
                 cellbox = CellBox(lat, long, self._cell_width, self._cell_height,
-                                    splitting_conditions = [], j_grid = self._j_grid)
+                                  splitting_conditions=[], j_grid=self._j_grid)
                 self.cellboxes.append(cellbox)
 
         grid_width = (self._long_max - self._long_min) / self._cell_width
@@ -161,7 +162,7 @@ class Mesh:
                     neighbour_map[3].append(int((cellbox_indx - grid_width) + 1))
 
             # add west neighbours to neighbour graph
-            if (cellbox_indx) % grid_width != 0:
+            if cellbox_indx % grid_width != 0:
                 neighbour_map[-2].append(cellbox_indx - 1)
                 # add south-west neighbours to neighbour graph
                 if cellbox_indx + grid_width < len(self.cellboxes):
@@ -202,17 +203,16 @@ class Mesh:
                 self._start_time, self._end_time)
 
             self.add_current_points(data_points)
-
         if 'Data_sources' in config['Mesh_info'].keys():
             for data_source in config['Mesh_info']['Data_sources']:
                 loader = getattr(data_loader, data_source['loader'])
                 data_points = loader(data_source['params'],
-                    self._long_min, self._long_max, self._lat_min, self._lat_max,
-                    self._start_time, self._end_time)
+                                     self._long_min, self._long_max, self._lat_min, self._lat_max,
+                                     self._start_time, self._end_time)
 
                 self.add_data_points(data_points)
 
-        # Add splitting conditions from config and split CellGrid.
+        # Add splitting conditions from config and split Mesh.
         self.splitting_conditions = []
         if 'splitting_conditions' in config['Mesh_info'].keys():
             for splitting_condition in config['Mesh_info']['splitting_conditions']:
@@ -222,38 +222,37 @@ class Mesh:
 
                 self.split_to_depth(config['Mesh_info']['Region']['splitDepth'])
 
-
-    # Functions for adding data to the cellgrid
+    # Functions for adding data to the Mesh
 
     def add_data_points(self, data_points):
         """
             takes a dataframe containing geospatial-temporal located values and assigns them to
-            cellboxes within this cellgrid.
+            cellboxes within this Mesh.
 
             Args:
-                data_points (DataFrame): a dataframe of datapoints to be added to the CellGrid.
+                data_points (DataFrame): a dataframe of datapoints to be added to the Mesh.
                     data_points is of the form \n
                     lat | long | (time)* | value_1 | ... | value_n
         """
         for cell_box in self.cellboxes:
             if isinstance(cell_box, CellBox):
                 long_loc = data_points.loc[(data_points['long'] > cell_box.long) &
-                    (data_points['long'] <= (cell_box.long + cell_box.width))]
+                                           (data_points['long'] <= (cell_box.long + cell_box.width))]
                 lat_long_loc = long_loc.loc[(long_loc['lat'] > cell_box.lat) &
-                    (long_loc['lat'] <= (cell_box.lat + cell_box.height))]
+                                            (long_loc['lat'] <= (cell_box.lat + cell_box.height))]
 
                 cell_box.add_data_points(lat_long_loc)
 
-    # Functions for outputting the cellgrid
+    # Functions for outputting the Mesh
 
     def get_cellboxes(self):
         """
-            returns a list of dictories containing information about each cellbox
-            in this cellgrid.
+            returns a list of dictionaries containing information about each cellbox
+            in this Mesh.
             all cellboxes will include id, geometry, cx, cy, dcx, dcy
 
             Returns:
-                cellboxes (list<dict>): a list of CellBoxes which form the CellGrid.
+                cellboxes (list<dict>): a list of CellBoxes which form the Mesh.
                     CellBoxes are of the form -
 
                     {
@@ -283,17 +282,17 @@ class Mesh:
 
     def to_json(self):
         """
-            Returns this CellGrid converted to string parsable as a JSON object.
+            Returns this Mesh converted to string parsable as a JSON object.
 
             Returns:
                 json (string): a string representation of the CellGird parseable as a
                     JSON object. The JSON object is of the form -
 
                     {
-                        "config": the config used to initialize the CellGrid,
-                        "cellboxes": a list of CellBoxes contained within the CellGrid,
+                        "config": the config used to initialize the Mesh,
+                        "cellboxes": a list of CellBoxes contained within the Mesh,
                         "neighbour_graph": a graph representing the adjacency of CellBoxes
-                            within the CellGrid
+                            within the Mesh
                     }
         """
         json = dict()
@@ -302,7 +301,7 @@ class Mesh:
         json['neighbour_graph'] = self.neighbour_graph
         return JSON.loads(JSON.dumps(json))
 
-    # Functions for splitting cellboxes within the cellgrid
+    # Functions for splitting cellboxes within the Mesh
 
     def split_and_replace(self, cellbox):
         """
@@ -312,7 +311,7 @@ class Mesh:
             and the neighbours map for all surrounding cell boxes is updated.
 
             Args:
-                cellbox (CellBox): the CellBox within this CellGrid to be split into
+                cellbox (CellBox): the CellBox within this Mesh to be split into
                     4 smaller CellBox objects.
 
         """
@@ -334,13 +333,13 @@ class Mesh:
 
         # Create neighbour map for SW split cell.
         sw_neighbour_map = {1: [north_east_indx],
-                          2: [south_east_indx],
-                          3: [],
-                          4: [],
-                          -1: self.neighbour_graph[cellbox_indx][-1],
-                          -2: [],
-                          -3: [],
-                          -4: [north_west_indx]}
+                            2: [south_east_indx],
+                            3: [],
+                            4: [],
+                            -1: self.neighbour_graph[cellbox_indx][-1],
+                            -2: [],
+                            -3: [],
+                            -4: [north_west_indx]}
 
         for indx in south_neighbour_indx:
             if self.get_neighbour_case(self.cellboxes[south_west_indx], self.cellboxes[indx]) == 3:
@@ -357,13 +356,13 @@ class Mesh:
 
         # Create neighbour map for NW split cell
         nw_neighbour_map = {1: [],
-                          2: [north_east_indx],
-                          3: [south_east_indx],
-                          4: [south_west_indx],
-                          -1: [],
-                          -2: [],
-                          -3: self.neighbour_graph[cellbox_indx][-3],
-                          -4: []}
+                            2: [north_east_indx],
+                            3: [south_east_indx],
+                            4: [south_west_indx],
+                            -1: [],
+                            -2: [],
+                            -3: self.neighbour_graph[cellbox_indx][-3],
+                            -4: []}
 
         for indx in north_neighbour_indx:
             if self.get_neighbour_case(self.cellboxes[north_west_indx], self.cellboxes[indx]) == -4:
@@ -380,13 +379,13 @@ class Mesh:
 
         # Create neighbour map for NE split cell
         ne_neighbour_map = {1: self.neighbour_graph[cellbox_indx][1],
-                          2: [],
-                          3: [],
-                          4: [south_east_indx],
-                          -1: [south_west_indx],
-                          -2: [north_west_indx],
-                          -3: [],
-                          -4: []}
+                            2: [],
+                            3: [],
+                            4: [south_east_indx],
+                            -1: [south_west_indx],
+                            -2: [north_west_indx],
+                            -3: [],
+                            -4: []}
 
         for indx in north_neighbour_indx:
             if self.get_neighbour_case(self.cellboxes[north_east_indx], self.cellboxes[indx]) == -4:
@@ -403,13 +402,13 @@ class Mesh:
 
         # Create neighbour map for SE split cell
         se_neighbour_map = {1: [],
-                          2: [],
-                          3: self.neighbour_graph[cellbox_indx][3],
-                          4: [],
-                          -1: [],
-                          -2: [south_west_indx],
-                          -3: [north_west_indx],
-                          -4: [north_east_indx]}
+                            2: [],
+                            3: self.neighbour_graph[cellbox_indx][3],
+                            4: [],
+                            -1: [],
+                            -2: [south_west_indx],
+                            -3: [north_west_indx],
+                            -4: [north_east_indx]}
 
         for indx in south_neighbour_indx:
             if self.get_neighbour_case(self.cellboxes[south_east_indx], self.cellboxes[indx]) == 4:
@@ -431,12 +430,12 @@ class Mesh:
             self.neighbour_graph[indx][4].remove(cellbox_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[north_west_indx])
+                                                    self.cellboxes[north_west_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(north_west_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[north_east_indx])
+                                                    self.cellboxes[north_east_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(north_east_indx)
 
@@ -445,12 +444,12 @@ class Mesh:
             self.neighbour_graph[indx][-2].remove(cellbox_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[north_east_indx])
+                                                    self.cellboxes[north_east_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(north_east_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[south_east_indx])
+                                                    self.cellboxes[south_east_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(south_east_indx)
 
@@ -459,12 +458,12 @@ class Mesh:
             self.neighbour_graph[indx][-4].remove(cellbox_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[south_east_indx])
+                                                    self.cellboxes[south_east_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(south_east_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[south_west_indx])
+                                                    self.cellboxes[south_west_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(south_west_indx)
 
@@ -473,12 +472,12 @@ class Mesh:
             self.neighbour_graph[indx][2].remove(cellbox_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[north_west_indx])
+                                                    self.cellboxes[north_west_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(north_west_indx)
 
             crossing_case = self.get_neighbour_case(self.cellboxes[indx],
-                self.cellboxes[south_west_indx])
+                                                    self.cellboxes[south_west_indx])
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(south_west_indx)
 
@@ -500,9 +499,9 @@ class Mesh:
             self.neighbour_graph[south_west_corner_indx[0]][1] = [south_west_indx]
 
         split_container = {"northEast": north_east_indx,
-                          "northWest": north_west_indx,
-                          "southEast": south_east_indx,
-                          "southWest": south_west_indx}
+                           "northWest": north_west_indx,
+                           "southEast": south_east_indx,
+                           "southWest": south_west_indx}
 
         self.cellboxes[cellbox_indx] = split_container
         self.neighbour_graph.pop(cellbox_indx)
@@ -510,11 +509,11 @@ class Mesh:
     def split_to_depth(self, split_depth):
         """
             splits all cellboxes in this grid until a maximum split depth
-            is reached, or all cellboxes are homogenous.
+            is reached, or all cellboxes are homogeneous.
 
             Args:
                 split_depth (int): The maximum split depth reached by any CellBox
-                    within this CellGrid after splitting.
+                    within this Mesh after splitting.
         """
         for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
@@ -522,10 +521,10 @@ class Mesh:
                     self.split_and_replace(cellbox)
 
     # Functions for debugging
-    def plot(self, highlight_cellboxes = {}, plot_ice = True, plot_currents = False,
-        plot_borders = True, paths=None, routepoints=False,waypoints=None):
+    def plot(self, highlight_cellboxes={}, plot_ice=True, plot_currents=False,
+             plot_borders=True, paths=None, routepoints=False, waypoints=None):
         """
-            creates and displays a plot for this cellGrid
+            creates and displays a plot for this Mesh
 
             To be used for debugging purposes only.
         """
@@ -542,63 +541,62 @@ class Mesh:
                     if self._j_grid:
                         if cellbox.get_value('iceArea') >= 0.04:
                             axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                                closed=True, fill=True, color='white', alpha=1))
+                                           closed=True, fill=True, color='white', alpha=1))
                             if cellbox.get_value('iceArea') < 0.8:
                                 axis.add_patch(
                                     MatplotPolygon(cellbox.get_bounds(),
-                                        closed=True, fill=True, color='grey',
-                                            alpha=(1 - cellbox.get_value('iceArea'))))
+                                                   closed=True, fill=True, color='grey',
+                                                   alpha=(1 - cellbox.get_value('iceArea'))))
                     else:
                         axis.add_patch(MatplotPolygon(cellbox.get_bounds(), closed=True,
-                            fill=True, color='white', alpha=cellbox.get_value('iceArea')))
+                                       fill=True, color='white', alpha=cellbox.get_value('iceArea')))
 
                 # plot land
                 if self._j_grid:
                     if cellbox.land_locked:
                         axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                            closed=True, fill=True, facecolor='lime'))
+                                                      closed=True, fill=True, facecolor='lime'))
                 else:
                     if cellbox.contains_land():
                         axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                            closed=True, fill=True, facecolor='mediumseagreen'))
+                                                      closed=True, fill=True, facecolor='mediumseagreen'))
 
                 # plot currents
                 if plot_currents:
                     axis.quiver((cellbox.long + cellbox.width / 2),
-                        (cellbox.lat + cellbox.height / 2),
-                        cellbox.get_value('uC'), cellbox.get_value('vC'),
-                        scale=1, width=0.002, color='gray')
+                                (cellbox.lat + cellbox.height / 2),
+                                cellbox.get_value('uC'), cellbox.get_value('vC'),
+                                scale=1, width=0.002, color='gray')
 
                 # plot borders
                 if plot_borders:
                     axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                        closed=True, fill=False, edgecolor='black'))
+                                                  closed=True, fill=False, edgecolor='black'))
 
         # plot highlighted cells
         for colour in highlight_cellboxes:
             for cellbox in highlight_cellboxes[colour]:
                 axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                    closed=True,
-                    fill=False,
-                    edgecolor=colour,
-                    linewidth = 0.5 + len(list(highlight_cellboxes.keys())) -
-                        list(highlight_cellboxes.keys()).index(colour)))
+                                              closed=True,
+                                              fill=False,
+                                              edgecolor=colour,
+                                              linewidth=0.5 + len(list(highlight_cellboxes.keys())) -
+                                              list(highlight_cellboxes.keys()).index(colour)))
 
         # plot paths if supplied
-        if not paths is None:
+        if paths is not None:
             for path in paths:
                 if path['Time'] == np.inf:
                     continue
                 points = np.array(path['Path']['Points'])
                 if routepoints:
-                    axis.plot(points[:,0],points[:,1],linewidth=3.0,color='b')
-                    axis.scatter(points[:,0],points[:,1],30,zorder=99,color='b')
+                    axis.plot(points[:, 0], points[:, 1], linewidth=3.0, color='b')
+                    axis.scatter(points[:, 0], points[:, 1], 30, zorder=99, color='b')
                 else:
-                    axis.plot(points[:,0],points[:,1],linewidth=3.0,color='b')
+                    axis.plot(points[:, 0], points[:, 1], linewidth=3.0, color='b')
 
-
-        if not waypoints is None:
-            axis.scatter(waypoints['Long'],waypoints['Lat'],150,marker='^',color='r')
+        if waypoints is not None:
+            axis.scatter(waypoints['Long'], waypoints['Lat'], 150, marker='^', color='r')
 
         axis.set_xlim(self._long_min, self._long_max)
         axis.set_ylim(self._lat_min, self._lat_max)
@@ -681,8 +679,8 @@ class Mesh:
     # Functions used for j_grid regression testing
     def dump_mesh(self, file_location):
         """
-            creates a string representaion of this cellgrid which
-            is then saved to a file location specifed by parameter
+            creates a string representation of this Mesh which
+            is then saved to a file location specified by parameter
             'file_location'
 
             for use in j_grid regression testing
@@ -699,7 +697,7 @@ class Mesh:
     def dump_graph(self, file_location):
         """
             creates a string representation of the neighbour relation
-            of this cellgrid which is then saved to a file location#
+            of this Mesh which is then saved to a file location#
             specified by parameter 'file_location'
 
             for use in j_grid regression testing
@@ -773,7 +771,7 @@ class Mesh:
     def add_current_points(self, current_points):
         """
             Takes a dataframe containing current points and assigns
-            then to cellboxes within the cellgrid
+            then to cellboxes within the Mesh
         """
         for cellbox in self.cellboxes:
             long_loc = current_points.loc[(current_points['long'] > cellbox.long) & (
@@ -797,7 +795,7 @@ class Mesh:
 
     def cellbox_by_node_string(self, node_string):
         """
-            given a node string specifed by parameter 'node_string'
+            given a node string specified by parameter 'node_string'
             returns a cellbox object which that node string identifies
 
             used for debugging of j_grids.

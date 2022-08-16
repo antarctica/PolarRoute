@@ -7,7 +7,7 @@ Mesh construction
 #####
 
 The first stage in the route planning pipeline is constructing a discrete 
-mesh of the enviroment in which the route planner can operate. Once this 
+mesh of the environment in which the route planner can operate. Once this
 mesh is constructed, it can then be exported as a json object and passed 
 down-stream to the vehicle specifics and route planner. An example 
 of mesh construction and json object generation are as follows:
@@ -23,11 +23,11 @@ of mesh construction and json object generation are as follows:
     mesh_json = mesh.to_json()
 
 .. note:: 
-    Examples and description of configuration files can be found in 
+    Examples and a description of the configuration files can be found in
     the :ref:`Configuration` section of this document.
 
 
-The json object outputed by the Mesh consist of 3 sections: **config**, 
+The json object outputted by the Mesh consists of 3 sections: **config**,
 **cellboxes** and **neighbour_graph**.
 
 ::
@@ -52,17 +52,17 @@ The json object outputed by the Mesh consist of 3 sections: **config**,
         ]
     }
 
-where the parts of the json object are as follows:
+where the parts of the json object can be understood as follows:
 
-* **config** : The configuration file used to generate the Mesh
-* **cellboxes** : A list of json representations of CellBox objects that form the Mesh
-* **neighbour_graph** : A graphical representation of the adjacency of CellBoxes within the Mesh
+* **config** : The configuration file used to generate the Mesh.
+* **cellboxes** : A list of json representations of CellBox objects that form the Mesh.
+* **neighbour_graph** : A graphical representation of the adjacency of CellBoxes within the Mesh.
 
 =============
 cellboxes
 =============
 
-Each CellBox object within *cellboxes* in the outputed json object is of 
+Each CellBox object within *cellboxes* in the outputted json object is of
 the following form:
 
 ::
@@ -81,10 +81,10 @@ the following form:
 
 Where the values within the CellBox represent the following:
 
-* **id** : The index of the CellBox within the Mesh
-* **geometry** : The spatial boundaries of the CellBox
-* **cx** : The x-position of the centroid of the CellBox, given in degrees latitude
-* **cy** : The y-position of the centroid of the CellBox, given in degrees longitude
+* **id** : The index of the CellBox within the Mesh.
+* **geometry** : The spatial boundaries of the CellBox.
+* **cx** : The x-position of the centroid of the CellBox, given in degrees latitude.
+* **cy** : The y-position of the centroid of the CellBox, given in degrees longitude.
 * **dcx** : The x-distance from the edge of the CellBox to the centroid of the CellBox. Given in degrees longitude.
 * **dxy** : the y-distance from the edge of the CellBox to the centroid of the CellBox. Given in degrees latitude.
 
@@ -97,11 +97,11 @@ Where the values within the CellBox represent the following:
 neighbour_graph
 ==================
 
-For each CellBox in the list *cellboxes* section of the outputed json object, there will be a
+For each CellBox in the *cellboxes* section of the outputted json object, there will be a
 corresponding entry in the *neighbour_graph*.
 
 .. note::
-    Onces vehicle accessibility is applied to the outputed json object, this may no longer be true
+    Once the vehicle accessibility conditions have been applied to the json object, this may no longer be true
     as inaccessible CellBoxes will be removed from *neighbour_graph* but will remain in *cellboxes*
 
 Each entry in the *neighbour_graph* is of the following form:
@@ -122,25 +122,25 @@ Each entry in the *neighbour_graph* is of the following form:
 where each of the values represent the following: 
 
 * **<id>** : The id of a CellBox within *cellboxes*
-    * **1**  : A list of id's of CellBoxes within *cellboxes* to the North-East of the CellBox specifed by 'id'
-    * **2**  : A list of id's of CellBoxes within *cellboxes* to the East of the CellBox specifed by 'id'
-    * **3**  : A list of id's of CellBoxes within *cellboxes* to the South-East of the CellBox specifed by 'id'
-    * **4**  : A list of id's of CellBoxes within *cellboxes* to the South-West of the CellBox specifed by 'id'
-    * **-1** : A list of id's of CellBoxes within *cellboxes* to the South of the CellBox specifed by 'id'
-    * **-2** : A list of id's of CellBoxes within *cellboxes* to the South-West of the CellBox specifed by 'id'
-    * **-3** : A list of id's of CellBoxes within *cellboxes* to the North-West of the CellBox specifed by 'id'
-    * **-4** : A list of id's of CellBoxes within *cellboxes* to the South of the CellBox specifed by 'id'
+    * **1**  : A list of id's of CellBoxes within *cellboxes* to the North-East of the CellBox specified by 'id'.
+    * **2**  : A list of id's of CellBoxes within *cellboxes* to the East of the CellBox specified by 'id'.
+    * **3**  : A list of id's of CellBoxes within *cellboxes* to the South-East of the CellBox specified by 'id'.
+    * **4**  : A list of id's of CellBoxes within *cellboxes* to the South-West of the CellBox specified by 'id'.
+    * **-1** : A list of id's of CellBoxes within *cellboxes* to the South of the CellBox specified by 'id'.
+    * **-2** : A list of id's of CellBoxes within *cellboxes* to the South-West of the CellBox specified by 'id'.
+    * **-3** : A list of id's of CellBoxes within *cellboxes* to the North-West of the CellBox specified by 'id'.
+    * **-4** : A list of id's of CellBoxes within *cellboxes* to the South of the CellBox specified by 'id'.
 
 .. figure:: ./Figures/neighbour_graph_json.png
    :align: center
    :width: 700
 
 #####
-Vehicle_specifics
+Vehicle specifics
 #####
 
-Once a discrete mesh enviroment is contructed, it is then passed to the vessel performance object 
-apply transformation which are specifc to a given vehicle. 
+Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
+which applies transformations which are specific to a given vehicle.
 
 :: 
 
@@ -157,7 +157,7 @@ apply transformation which are specifc to a given vehicle.
     vessel_mesh_json = vp.to_json()
 
 .. note::
-    To be compatable with vessel performance transformations, a Mesh must be contructed with
+    To be compatible with vessel performance transformations, a Mesh must be constructed with
     the following attributes:
     
     * SIC (available via data_loaders: *loader_amsr*, *load_bsose*, *load_modis*)
@@ -179,7 +179,7 @@ TODO - Description of transformation applied to the mesh json object by Vessel P
 Route planning
 #####
 
-During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Outlined below are the discriptions of the structure of the two outputs:
+During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:
 
 ==================
 waypoints
@@ -219,12 +219,12 @@ where each of the values represent the following:
 * **<Long>** : The longitude of the waypoints in WGS84
     * **0**  : The longitude of waypoint for index row '0'
     * **1**  : The longitude of waypoint for index row '1' etc
-* **<index>** : The cellboxes index that the waypoint recides
+* **<index>** : The index of the cellbox containing the waypoint
     * **0**  : The cellbox index of waypoint for index row '0'
     * **1**  : The cellbox index of waypoint for index row '1' etc
-* **<...>** : Any additional column names defined in the origional .csv that was loaded
+* **<...>** : Any additional column names defined in the original .csv that was loaded
 
-This output can be changed to a pandas dataframe by running
+This output can be converted to a pandas dataframe by running
 ::
     waypoints_dataframe = pd.DataFrame(waypoints) 
 
@@ -277,8 +277,8 @@ where the output takes a GeoJSON standard form (more infor given at https://geoj
     * **<properties>** : A list of metainformation about the route
         * **from**  : Starting waypoint of route
         * **to**  : Ending waypoint of route
-        * **traveltime** : A list of float values representing the cumulative traveltime along the route. This entry was origionally defined as a output in the configuration file by the `path_variables` definition.
-        * **fuel** : A list of float values representing the cumulative fuel along the route. This entry was origionally defined as a output in the configuration file by the `path_variables` definition.
-        * **times** : A list of strings reprenting UTC Datatimes of the route points, given that the route started from `startTime` given in the configuration file
+        * **traveltime** : A list of float values representing the cumulative travel time along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
+        * **fuel** : A list of float values representing the cumulative fuel along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
+        * **times** : A list of strings representing UTC Datetimes of the route points, given that the route started from `startTime` given in the configuration file.
 
 
