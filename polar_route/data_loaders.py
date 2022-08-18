@@ -385,6 +385,7 @@ def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start
     """
         Load Sea ice data for the baltic sea from a netCDF file and transform it
         into a format ingestable by PolarRoute
+        Data Source: https://doi.org/10.48670/moi-00131
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
@@ -576,6 +577,7 @@ def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_star
         Load Baltic Sea current data from a netCDF file and
         transform it into a format that is ingestable
         by the pyRoutePlanner
+        Data source: https://doi.org/10.48670/moi-00013
 
         Args:
             long_min (float): The minimum longitude of the data to be retrieved
