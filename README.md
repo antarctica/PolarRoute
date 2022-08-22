@@ -5,7 +5,7 @@ A long-distance polar route planner for marine navigation. This work is a refact
 
 
 ## Installation
-The PolarRoute software can be installed by running the following commands. Be careful and make sure that these are done in Anaconda.
+The PolarRoute software can be installed by running the following commands:
 ```
   conda create -n PolarRoute python=3.9
   conda activate PolarRoute
