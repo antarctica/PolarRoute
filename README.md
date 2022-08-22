@@ -9,7 +9,7 @@ The PolarRoute software can be installed by running the following commands. Be c
 ```
   conda create -n PolarRoute python=3.9
   conda activate PolarRoute
-  conda install geopandas ipykernel
+  pip install geopandas ipykernel
   pip install sphinx tqdm rinohtype numpy==1.22
   python setup.py install
 ```
