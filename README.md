@@ -16,7 +16,7 @@ The PolarRoute software can be installed by running the following commands:
 ---
 
 ## Manual
-The manual for this software can be installed by running:
+The manual for this software can be installed by running in conda:
 ```
   sphinx-build -b html ./doc/source ./doc/build
 ```
