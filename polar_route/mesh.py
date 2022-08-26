@@ -214,13 +214,15 @@ class Mesh:
 
         # Add splitting conditions from config and split Mesh.
         self.splitting_conditions = []
-        if 'splitting_conditions' in config['Mesh_info'].keys():
-            for splitting_condition in config['Mesh_info']['splitting_conditions']:
+        if 'splitting' in config['Mesh_info'].keys():
+            for splitting_condition in config['Mesh_info']['splitting']['splitting_conditions']:
                 for cellbox in self.cellboxes:
                     if isinstance(cellbox, CellBox):
                         cellbox.add_splitting_condition(splitting_condition)
+                        cellbox.set_minimum_datapoints(config['Mesh_info']['splitting']['minimum_datapoints'])
+                        cellbox.set_value_fill_types(config['Mesh_info']['splitting']['value_fill_types'])
 
-                self.split_to_depth(config['Mesh_info']['Region']['splitDepth'])
+                self.split_to_depth(config['Mesh_info']['splitting']['split_depth'])
 
     # Functions for adding data to the Mesh
 

@@ -39,7 +39,7 @@ class CellBox:
         long (float): The longitude of the top-left corner of the CellBox
         width (float): The width of the CellBox, given in degrees longitude
         height (float): The height of the CellBox, given in degrees latitude
-  
+
     Note:
         All geospatial boundaries of a CellBox are given in a 'EPSG:4326' projection
     """
@@ -74,14 +74,14 @@ class CellBox:
         self.width = width
         self.height = height
 
-        # Minimum Depth to be used in the land mask
-        self.min_depth = -10
-
         self._data_points = pd.DataFrame()
 
+        self.minimum_datapoints = 10
         self._splitting_conditions = splitting_conditions
+        self._value_fill_types = dict()
 
         self._value_out_types = dict()
+        
 
         # For initial implementation of land based from Java codebase.
         self._j_grid = j_grid
@@ -91,6 +91,7 @@ class CellBox:
         self.x_coord = 0
         self.y_coord = 0
         self.focus = ""
+        self.min_depth = 10
         self._current_points = pd.DataFrame()
 
     # Functions used for getting data from a cellBox
@@ -224,6 +225,18 @@ class CellBox:
         """
         return dict(self._value_out_types)
 
+    def get_value_fill_types(self):
+        """
+            TODO
+        """
+        return dict(self._value_fill_types)
+
+    def set_minimum_datapoints(self, minimum_datapoints):
+        """
+            TODO
+        """
+        self.minimum_datapoints = minimum_datapoints
+
     # Functions used for adding data to a cellbox
     def add_data_points(self, new_data_points):
         """
@@ -273,6 +286,13 @@ class CellBox:
         """
         self._value_out_types.update(value_out_type)
 
+    def set_value_fill_types(self, value_fill_types):
+        """
+            TODO
+        """
+        self._value_fill_types = value_fill_types
+
+
     # Functions used for splitting a cellbox
     def value_should_be_split(self, value, threshold, lowerbound, upperbound):
         """
@@ -293,7 +313,7 @@ class CellBox:
                 should_be_split (bool): True if the splitting_condition given would result in
                     this CellBox being split.
         """
-        data_limit = 4
+        data_limit = self.minimum_datapoints
 
         data_points = self.get_data_points(values=[value])
 
@@ -492,6 +512,28 @@ class CellBox:
             split_box.add_data_points(lat_long_loc)
 
             split_box.add_value_output_type(self.get_value_out_types())
+            split_box.set_value_fill_types(self.get_value_fill_types())
+            split_box.set_minimum_datapoints(self.minimum_datapoints)
+
+            for value in split_box.get_value_fill_types().keys():
+                if value in split_box.get_value_out_types().keys():
+                    value_output_type = split_box.get_value_out_types()['value']
+                else:
+                    value_output_type = "MEAN"
+
+                if np.isnan(split_box.get_value(value)):
+                    if split_box.get_value_fill_types()[value] == "zero":
+                        fill_value = 0
+                    elif split_box.get_value_fill_types()[value] == "parent":
+                        fill_value = self.get_value(value, value_output_type)
+                    else:
+                        fill_value = np.nan
+              
+                    if not np.isnan(fill_value):
+                        datapoint = [[split_box.getcy(), split_box.getcx(), fill_value]]
+                        fill_df = pd.DataFrame(datapoint, columns=['lat','long',value])
+
+                        split_box.add_data_points(fill_df)
 
             # if parent box is land, all child boxes are considered land
             if self.land_locked:
