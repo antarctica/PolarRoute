@@ -16,8 +16,7 @@ Outlined below is an example configuration file for running PolarRoute. Using th
             "startTime": "2017-02-01",
             "endTime": "2017-02-14",
             "cellWidth":5,
-            "cellHeight":2.5,
-            "splitDepth":4
+            "cellHeight":2.5
          },
          "Data_sources": [
             {
@@ -50,18 +49,27 @@ Outlined below is an example configuration file for running PolarRoute. Using th
             }
             }
          ],
-         "splitting_conditions":[
-            {"elevation":{
-               "threshold":-10,
-               "upperBound": 1,
-               "lowerBound":0
-            }},
-            {"SIC":{
-               "threshold":35,
-               "upperBound": 0.9,
-               "lowerBound":0.1
-            }}
-         ],
+         "splitting": {
+            "split_depth":3,
+            "minimum_datapoints":5,
+            "splitting_conditions":[
+               {"elevation":{
+                  "threshold":-10,
+                  "upperBound": 1,
+                  "lowerBound":0
+               }},
+               {"SIC":{
+                  "threshold":35,
+                  "upperBound": 0.9,
+                  "lowerBound":0.1
+               }}
+            ],
+            "value_fill_types":{
+               "SIC": "parent",
+               "uC": "parent",
+               "vC": "parent"
+            }
+         },
          "value_output_types":{
             "elevation":"MAX"
          }
@@ -112,7 +120,7 @@ The 'Mesh_info' section of the configuration file contains three primary section
 ################
 Region
 ################
-The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (`longMin`, `latMin`, `longMax`, `latMax`, `startTime`, `endTime`), but also the starting shape of the spatial grid cell boxes (`cellWidth`, `cellHeight`) is defined before splitting is applied to a max split depth level (`splitDepth`). Further detail on each parameter is given below:
+The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (`longMin`, `latMin`, `longMax`, `latMax`, `startTime`, `endTime`), but also the starting shape of the spatial grid cell boxes (`cellWidth`, `cellHeight`) is defined before splitting is applied . Further detail on each parameter is given below:
 
 ::
 
@@ -124,8 +132,7 @@ The region section gives detailed information for the construction of the Discre
       "startTime": "2017-02-01",
       "endTime": "2017-02-14",
       "cellWidth":5,
-      "cellHeight":2.5,
-      "splitDepth":4
+      "cellHeight":2.5
    }
     
 where the variables are as follows:
@@ -191,38 +198,49 @@ where the variables are as follows:
       named in variable 'loader'.
 
 ##############
-splitting_conditions
+splitting
 ##############
 
-The splitting_conditions section of the Configuration file determines how the CellBoxes that form the
+The splitting section of the Configuration file determines how the CellBoxes that form the
 Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
 of non-uniform spatial resolution.
 
 ::
 
-   "splitting_conditions":[
-      {"<value_name>":{
-         "threshold":...,
-         "upperBound": ...,
-         "lowerBound":...
-      }},
-      {"<value_name>":{
-         "threshold":...,
-         "upperBound": ...,
-         "lowerBound":...
-      }}
-   ]
+   "splitting": {
+      "split_depth":3,
+      "minimum_datapoints":5,
+      "splitting_conditions":[
+        {"elevation":{
+            "threshold":-10,
+            "upperBound": 1,
+            "lowerBound":0
+        }},
+        {"SIC":{
+            "threshold":35,
+            "upperBound": 0.9,
+            "lowerBound":0.1
+        }}
+      ],
+      "value_fill_types":{
+        "SIC": "parent",
+        "uC": "parent",
+        "vC": "parent"
+      }
+    }
 
 where the variables are as follows:
 
-* **<value_name>** *(string)* : The name of the value which the splitting condition will be applied to.
-* **threshold** *(float)* : The threshold above or below which CellBoxes will be sub-divided to separate the data
-   points into homogeneous cells.
-* **upperBound** *(float)* : A percentage normalised between 0 and 1. A CellBox is deemed homogeneous in
-   a given data type if greater than this percentage of data points are above the given threshold.
-* **lowerBound** *(float)* : A percentage normalised between 0 and 1. A Cellbox is deemed homogeneous in
-   a given data type if less than this percentage of data points are below the given threshold.
-
+* **split_depth** *(float)* : The number of times the mesh will sub-divided each initial cellbox
+* **minimum_datapoints** *(float)* : The minimum number of datapoints a cellbox must contain for each value type to be able to split
+* **splitting_conditions** *(list)* : The conditions which determine if a cellbox should be split.
+   * **<value_name>** *(string)* : The name of the value which the splitting condition will be applied to.
+   * **threshold** *(float)* : The threshold above or below which CellBoxes will be sub-divided to separate the datapoints into homogeneous cells.
+   * **upperBound** *(float)* : A percentage normalised between 0 and 1. A CellBox is deemed homogeneous in a given data type if greater than this percentage of data points are above the given threshold.
+   * **lowerBound** *(float)* : A percentage normalised between 0 and 1. A Cellbox is deemed homogeneous in a given data type if less than this percentage of data points are below the given threshold.
+* **value_fill_types** *(dict)* : Determines the actions taken if a cellbox is generated with no data for a given value type
+   * **<value_name>** *(string)* : The name of the value which the fill type will be applied to.
+   * **<fill_type>** *(string)* : <parent | zero | nan>
 .. note:: 
    splitting conditions are applied in the order they are specified in the configuration file.
 
