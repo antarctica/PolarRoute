@@ -8,8 +8,7 @@
       "startTime": "2017-01-01",
       "endTime": "2017-01-14",
       "cellWidth":5,
-      "cellHeight":2.5,
-      "splitDepth":3
+      "cellHeight":2.5
     },
     "Data_sources": [
       {
@@ -42,18 +41,27 @@
         }
       }
     ],
-    "splitting_conditions":[
-      {"elevation":{
-          "threshold":-10,
-          "upperBound": 1,
-          "lowerBound":0
-      }},
-      {"SIC":{
-          "threshold":35,
-          "upperBound": 0.9,
-          "lowerBound":0.1
-      }}
-    ],
+    "splitting": {
+      "split_depth":5,
+      "minimum_datapoints":5,
+      "splitting_conditions":[
+        {"elevation":{
+            "threshold":-10,
+            "upperBound": 1,
+            "lowerBound":0
+        }},
+        {"SIC":{
+            "threshold":35,
+            "upperBound": 0.9,
+            "lowerBound":0.1
+        }}
+      ],
+      "value_fill_types":{
+        "SIC": "parent",
+        "uC": "parent",
+        "vC": "parent"
+      }
+    },
     "value_output_types":{
       "elevation":"MAX"
     }
