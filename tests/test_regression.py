@@ -265,7 +265,8 @@ def main():
         print("test_neighbour_graph_values : failed")
         print("    " + str(warning))
     print("tests complete!")
-    
+  
 
 if __name__ == "__main__":
     main()
+    
