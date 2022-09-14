@@ -42,7 +42,7 @@
       }
     ],
     "splitting": {
-      "split_depth":5,
+      "split_depth":3,
       "minimum_datapoints":5,
       "splitting_conditions":[
         {"elevation":{
