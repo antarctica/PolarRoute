@@ -25,23 +25,31 @@ from polar_route.route_planner import RoutePlanner
 from geoplot.interactive import Map
 
 def main():
+    """
+        Main method for route planner command line interface
+    """
 
+    # Load arguments passed to CLI
     args = sys.argv[1:]
     config = args[0]
     output_location = args[1]
     output_type = args[2]
 
+    # Load config
     with open(config, 'r') as f:
         info = json.load(f)
 
+    # Build Mesh
     print("Constructing Mesh...")
     cg = Mesh(info)
     info = cg.to_json()
 
+    # Apply Vessel Performance
     print("Calculating Vessel Performance...")
     vp = VesselPerformance(info)
     info = vp.to_json()
 
+    # Calculate Routes
     print("Calculating Routes...")
     rp = RoutePlanner(info)
     rp.compute_routes()
@@ -55,6 +63,7 @@ def main():
         with open(output_location, 'w') as f:
             json.dump(info['paths'], f)
     if output_type == "HTML":
+        # Build interactive map
         print("Building interactive map...")
 
         config    = info['config']

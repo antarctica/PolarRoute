@@ -81,7 +81,6 @@ class CellBox:
         self._value_fill_types = dict()
 
         self._value_out_types = dict()
-        
 
         # For initial implementation of land based from Java codebase.
         self._j_grid = j_grid
