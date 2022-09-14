@@ -22,7 +22,7 @@ import json
 from polar_route.mesh import Mesh
 from polar_route.vessel_performance import VesselPerformance
 from polar_route.route_planner import RoutePlanner
-from geoplot.interactive import Map
+
 
 def main():
     """
@@ -64,6 +64,7 @@ def main():
             json.dump(info['paths'], f)
     if output_type == "HTML":
         # Build interactive map
+        from geoplot.interactive import Map
         print("Building interactive map...")
 
         config    = info['config']
