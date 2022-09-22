@@ -29,10 +29,10 @@ python setup.py build bdist_wheel
 The manual for this software can be installed by running:
 ```
 source venv/bin/activate
-pip install doc/requirements.txt
-sphinx-build -b html ./doc/source ./doc/build
+pip install .[docs]
+sphinx-build -b html ./docs/source ./docs/build
 ```
-the html manual can then be found at ./doc/build.
+the html manual can then be found at ./docs/build.
 
 ## Developers
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox

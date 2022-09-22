@@ -12,17 +12,17 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))
 
+import polar_route
 
 # -- Project information -----------------------------------------------------
 
-project = 'PolarRoute'
-copyright = '2022, BAS AI Lab'
-author = 'BAS AI Lab'
+project = polar_route.__name__
+copyright = polar_route.__copyright__
+author = polar_route.__author__
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
+release = polar_route.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -30,7 +30,13 @@ release = '1.0.0'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon','rinoh.frontend.sphinx','sphinx.ext.todo','sphinx.ext.autosectionlabel']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.coverage',
+    'sphinx.ext.napoleon',
+    'rinoh.frontend.sphinx',
+    'sphinx.ext.todo',
+    'sphinx.ext.autosectionlabel']
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -53,7 +59,6 @@ html_theme = "bizstyle"#"agogo"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
 
 # import sphinx_pdj_theme
 # html_theme = 'sphinx_pdj_theme'

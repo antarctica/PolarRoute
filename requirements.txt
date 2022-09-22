@@ -3,6 +3,5 @@ geopandas
 matplotlib
 numpy==1.22
 pandas
-rinohtype
 tqdm
 xarray
