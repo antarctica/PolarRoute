@@ -1,14 +1,17 @@
 *.pyc
-**/__pycache__
+__pycache__/
 *.ipynb_checkpoints
 Data
 /.vscode/
 TestingNotebook.ipynb
 .DS_Store
 *.pdf
-dist
+/dist/
 *.egg-info
-build
+/doc/build/
+/build/
+/.idea/
+/venv/
 
 # Jonny's GitIgnores. Remove Later
 resources

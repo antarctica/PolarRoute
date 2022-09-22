@@ -1,0 +1,5 @@
+geopandas
+ipykernel
+tqdm
+rinohtype
+numpy==1.22
