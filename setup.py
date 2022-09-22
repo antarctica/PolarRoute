@@ -3,19 +3,19 @@ from setuptools import setup, find_packages
 import polar_route
 
 
-def get_content(filename, array=True):
+def get_content(filename):
     with open(filename, "r") as fh:
-        if array:
-            return [el.strip() for el in fh.read()]
         return fh.read()
 
 
+requirements = get_content("requirements.txt")
+print("REQ: {}".format(requirements))
 setup(
     name=polar_route.__name__,
     version=polar_route.__version__,
     description=polar_route.__description__,
     license=polar_route.__license__,
-    long_description=get_content("README.md", False),
+    long_description=get_content("README.md"),
     long_description_content_type="text/markdown",
     author=polar_route.__author__,
     author_email=polar_route.__email__,
@@ -41,7 +41,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.8, <4',
     zip_safe=False,
-    install_requires=get_content("requirements.txt"),
+    install_requires=requirements,
     tests_require=["pytest"],
     extras_require={
         "docs": get_content("docs/requirements.txt"),
