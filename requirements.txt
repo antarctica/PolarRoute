@@ -1,5 +1,8 @@
+folium
 geopandas
-ipykernel
-tqdm
-rinohtype
+matplotlib
 numpy==1.22
+pandas
+rinohtype
+tqdm
+xarray

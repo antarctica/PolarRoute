@@ -8,7 +8,7 @@ TestingNotebook.ipynb
 *.pdf
 /dist/
 *.egg-info
-/doc/build/
+/docs/build/
 /build/
 /.idea/
 /venv/
