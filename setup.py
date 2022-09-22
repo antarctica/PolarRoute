@@ -9,7 +9,7 @@ def get_content(filename):
 
 
 requirements = get_content("requirements.txt")
-print("REQ: {}".format(requirements))
+
 setup(
     name=polar_route.__name__,
     version=polar_route.__version__,
