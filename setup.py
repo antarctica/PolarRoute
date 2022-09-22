@@ -37,14 +37,25 @@ setup(
         Programming Language :: Python :: 3.9
         Topic :: Scientific/Engineering
     """.split('\n')],
+    entry_points={
+        'console_scripts': [
+            "create_mesh=polar_route.cli:create_mesh_cli",
+            "add_vehicle=polar_route.cli:add_vehicle_cli",
+            "optimise_routes=polar_route.cli:optimise_routes_cli",
+            "route_plotting=polar_route.cli:route_plotting_cli",
+        ],
+    },
     keywords=[],
     packages=find_packages(),
-    python_requires='>=3.8, <4',
-    zip_safe=False,
     install_requires=requirements,
     tests_require=["pytest"],
     extras_require={
         "docs": get_content("docs/requirements.txt"),
+        "plotting": [
+            "GeoPlot @ git+ssh://git@github.com/antarctica/GeoPlot.git",
+        ],
         "tests": get_content("tests/requirements.txt"),
     },
+    python_requires='>=3.8, <4',
+    zip_safe=False,
     include_package_data=True)
