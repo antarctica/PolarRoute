@@ -38,7 +38,7 @@ def create_mesh_cli():
     """
     from polar_route.mesh import Mesh
 
-    args = get_args("create_mesh.json")
+    args = get_args("create_mesh.output.json")
     config = json.load(args.config)
 
     # Discrete Meshing
@@ -53,7 +53,7 @@ def add_vehicle_cli():
     """
     from polar_route.vessel_performance import VesselPerformance
 
-    args = get_args("add_vehicle.json", config_arg=False, info_arg=True)
+    args = get_args("add_vehicle.output.json", config_arg=False, info_arg=True)
 
     vp = VesselPerformance(args.info)
     info = vp.to_json()
@@ -66,7 +66,8 @@ def optimise_routes_cli():
     """
     from polar_route.route_planner import RoutePlanner
 
-    args = get_args("optimise_routes.json", config_arg=False, info_arg=True)
+    args = get_args("optimise_routes.output.json",
+                    config_arg=False, info_arg=True)
 
     rp = RoutePlanner(args.info)
     rp.compute_routes()
