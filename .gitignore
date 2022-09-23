@@ -12,7 +12,5 @@ TestingNotebook.ipynb
 /build/
 /.idea/
 /venv/
-
-# Jonny's GitIgnores. Remove Later
-resources
-Data
+/data/
+/resources/
