@@ -9,7 +9,7 @@ Example:
     An example of running this code can be executed by running the following
     in a ipython/Jupyter Notebook::
 
-        from PolarRoute import cellbox
+        from polar_route import cellbox
         ....
 
 Note:

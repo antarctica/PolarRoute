@@ -1,130 +1,61 @@
-import codecs
-import glob
-import inspect
-import os
-import re
-from setuptools import setup
-import sys
-import time
-import numpy.distutils.misc_util
-import sphinx
+from setuptools import setup, find_packages
+
+import polar_route
 
 
-# Directory of the current file
-SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
-    inspect.currentframe())))
-
-LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
-
-NAME    = "polar_route"
-VERSION = '0.0.1'
-
-INCLUDE_DIRS = numpy.distutils.misc_util.get_numpy_include_dirs()
-
-META_PATH = os.path.join("polar_route", "__init__.py")
-KEYWORDS = ["BAS", "SDT", "DT"]
-
-CLASSIFIERS = [
-    "Development Status :: Beta",
-    "Intended Audience :: BAS",
-    "Natural Language :: English",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
-    "Topic :: Scientific/Engineering",
-]
-
-INSTALL_REQUIRES = [
-    'pandas',
-    'shapely',
-    'geopandas',
-    'xarray',
-    'netCDF4',
-    'matplotlib',
-    'folium']
+def get_content(filename):
+    with open(filename, "r") as fh:
+        return fh.read()
 
 
-def read(*parts):
-    """
-    Build an absolute path from *parts* and and return the contents of the
-    resulting file.  Assume UTF-8 encoding.
-    """
-    with codecs.open(os.path.join(SETUP_DIRECTORY, *parts),
-                     "rb", "utf-8") as f:
-        return f.read()
+requirements = get_content("requirements.txt")
 
-
-def find_packages():
-    """
-    Simple function to find all modules under the current folder.
-    """
-    modules = []
-    for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-                                                      "polar_route")):
-        if "__init__.py" in filenames:
-            modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
-    return [_i.replace(os.sep, ".") for _i in modules]
-
-
-META_FILE = read(META_PATH)
-
-
-def find_meta(meta):
-    """
-    Extract __*meta*__ from META_FILE.
-    """
-    meta_match = re.search(
-        r"^__{meta}__ = ['\"]([^'\"]*)['\"]".format(meta=meta),
-        META_FILE, re.M
-    )
-    if meta_match:
-        return meta_match.group(1)
-    raise RuntimeError("Unable to find __{meta}__ string.".format(meta=meta))
-
-
-def setup_package():
-    """Setup package"""
-    setup(
-        name=NAME,
-        version=VERSION,
-        description=find_meta("description"),
-        long_description=read("README.md"),
-        author=find_meta("author"),
-        author_email=find_meta("email"),
-        maintainer=find_meta("author"),
-        maintainer_email=find_meta("email"),
-        classifiers=CLASSIFIERS,
-        keywords=KEYWORDS,
-        packages=find_packages(),
-        zip_safe=False,
-        install_requires=INSTALL_REQUIRES,
-        include_package_data=True,
-        include_dirs=INCLUDE_DIRS,
-        package_data={"polar_route": ["lib/*.so"]})
-
-
-
-if __name__ == "__main__":
-    # clean --all does not remove extensions automatically
-    if 'clean' in sys.argv and '--all' in sys.argv:
-        import shutil
-        # delete complete build directory
-        path = os.path.join(SETUP_DIRECTORY, 'build')
-        try:
-            shutil.rmtree(path)
-        except Exception:
-            pass
-        # delete all shared libs from lib directory
-        path = os.path.join(SETUP_DIRECTORY, 'polar_route', 'lib')
-        for filename in glob.glob(path + os.sep + '*.pyd'):
-            try:
-                os.remove(filename)
-            except Exception:
-                pass
-        for filename in glob.glob(path + os.sep + '*.so'):
-            try:
-                os.remove(filename)
-            except Exception:
-                pass
-    else:
-        setup_package()
+setup(
+    name=polar_route.__name__,
+    version=polar_route.__version__,
+    description=polar_route.__description__,
+    license=polar_route.__license__,
+    long_description=get_content("README.md"),
+    long_description_content_type="text/markdown",
+    author=polar_route.__author__,
+    author_email=polar_route.__email__,
+    maintainer=polar_route.__author__,
+    maintainer_email=polar_route.__email__,
+    url="https://www.github.com/antarctica",
+    project_urls={
+    },
+    classifiers=[el.lstrip() for el in """
+        Development Status :: 3 - Alpha
+        Intended Audience :: Science/Research
+        Intended Audience :: System Administrators
+        License :: OSI Approved :: MIT License
+        Natural Language :: English
+        Operating System :: OS Independent
+        Programming Language :: Python
+        Programming Language :: Python :: 3
+        Programming Language :: Python :: 3.8
+        Programming Language :: Python :: 3.9
+        Topic :: Scientific/Engineering
+    """.split('\n')],
+    entry_points={
+        'console_scripts': [
+            "create_mesh=polar_route.cli:create_mesh_cli",
+            "add_vehicle=polar_route.cli:add_vehicle_cli",
+            "optimise_routes=polar_route.cli:optimise_routes_cli",
+            "route_plotting=polar_route.cli:route_plotting_cli",
+        ],
+    },
+    keywords=[],
+    packages=find_packages(),
+    install_requires=requirements,
+    tests_require=["pytest"],
+    extras_require={
+        "docs": get_content("docs/requirements.txt"),
+        "plotting": [
+            "GeoPlot @ git+ssh://git@github.com/antarctica/GeoPlot.git@pythonic_install",
+        ],
+        "tests": get_content("tests/requirements.txt"),
+    },
+    python_requires='>=3.8, <4',
+    zip_safe=False,
+    include_package_data=True)

@@ -21,6 +21,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import xarray as xr
 import geopandas as gpd
+
+# FIXME: This is weird
 import json as JSON
 
 from shapely.geometry import Polygon
@@ -301,6 +303,8 @@ class Mesh:
         json['config'] = self.config
         json["cellboxes"] = self.get_cellboxes()
         json['neighbour_graph'] = self.neighbour_graph
+
+        # FIXME: Eh?
         return JSON.loads(JSON.dumps(json))
 
     # Functions for splitting cellboxes within the Mesh

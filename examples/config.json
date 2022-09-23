@@ -1,0 +1,104 @@
+{
+  "Mesh_info":{
+    "Region": {
+      "latMin": -77.5,
+      "latMax": -45,
+      "longMin": -120,
+      "longMax": -10,
+      "startTime": "2017-01-01",
+      "endTime": "2017-01-14",
+      "cellWidth":5,
+      "cellHeight":2.5
+    },
+    "Data_sources": [
+      {
+        "loader":"load_bsose_depth",
+        "params":{
+          "file":"./data/bsose_i122_2013to2017_1day_SeaIceArea.nc",
+          "data_name": "elevation"
+        }
+      }, 
+      {
+        "loader":"load_amsr",
+        "params":{
+          "file":"./data/asi-AMSR-2017.nc"
+        }
+      },
+      {
+        "loader":"load_sose_currents",
+        "params":{
+          "file":"./data/SOSE_surface_velocity_6yearMean_2005-2010.nc"
+        }
+      },
+      {
+        "loader":"load_thickness",
+        "params":{
+        }
+      },
+      {
+        "loader":"load_density",
+        "params":{
+        }
+      }
+    ],
+    "splitting": {
+      "split_depth":3,
+      "minimum_datapoints":5,
+      "splitting_conditions":[
+        {"elevation":{
+            "threshold":-10,
+            "upperBound": 1,
+            "lowerBound":0
+        }},
+        {"SIC":{
+            "threshold":35,
+            "upperBound": 0.9,
+            "lowerBound":0.1
+        }}
+      ],
+      "value_fill_types":{
+        "SIC": "parent",
+        "uC": "parent",
+        "vC": "parent"
+      }
+    },
+    "value_output_types":{
+      "elevation":"MAX"
+    }
+  },
+  "Vessel": {
+    "Speed": 26.5,
+    "Unit": "km/hr",
+    "Beam": 24.0,
+    "HullType": "slender",
+    "ForceLimit": 96634.5,
+    "MaxIceExtent": 80,
+    "MinDepth": -10
+  },
+
+  "averaging_type":{
+    "elevation":"min"
+  },
+
+  "Route_Info": {
+    "objective_function": "traveltime",
+    "path_variables": [
+      "fuel",
+      "traveltime"
+    ],
+    "waypoints_path": "./examples/waypoints.csv",
+    "source_waypoints": ["Halley"],
+    "end_waypoints": ["Rothera"],
+    "vector_names": ["uC","vC"],
+    "zero_currents": false,
+    "variable_speed": true,
+    "time_unit": "days",
+    "early_stopping_criterion": true,
+    "save_dijkstra_graphs": false,
+    "smooth_path":{
+      "max_iteration_number":1000,
+      "minimum_difference": 1e-3
+    }
+  }
+}
+  
