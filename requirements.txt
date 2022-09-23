@@ -1,6 +1,7 @@
 folium
 geopandas
 matplotlib
+netcdf4
 numpy>=1.22
 pandas>=1.4.3,<1.5
 tqdm
