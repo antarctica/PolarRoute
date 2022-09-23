@@ -52,7 +52,7 @@ setup(
     extras_require={
         "docs": get_content("docs/requirements.txt"),
         "plotting": [
-            "GeoPlot @ git+ssh://git@github.com/antarctica/GeoPlot.git",
+            "GeoPlot @ git+ssh://git@github.com/antarctica/GeoPlot.git@pythonic_install",
         ],
         "tests": get_content("tests/requirements.txt"),
     },
