@@ -703,4 +703,38 @@ def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, tim
     era5_wind_df = era5_wind_df[era5_wind_df['lat'].between(lat_min, lat_max)]
 
     return era5_wind_df
-    
+
+
+
+def load_north_sea_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retrieved
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+            params (dict): A dictionary containing optional parameters. This
+                function requires -
+
+                params['file'] (string): file location of the Baltic current dataset
+
+        Returns:
+            bc_df (Dataframe): A dataframe containing Baltic Sea current
+                data. The dataframe is of the format -
+
+                lat | long | time | uC | vC
+    """
+
+    bc = xr.open_dataset(params['file'])
+    bc_df = bc.to_dataframe()
+
+    bc_df = bc_df.reset_index()
+    bc_df = bc_df[['lat', 'lon', 'U', 'V']]
+    bc_df = bc_df.rename(columns={'lon': 'long', 'lat': 'lat', 'U': 'uC', 'V': 'vC'})
+
+    return bc_df

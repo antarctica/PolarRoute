@@ -160,6 +160,8 @@ class RoutePlanner:
         self.neighbour_graph = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
         self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph, crs='EPSG:4326', geometry='geometry')
+
+        # Removing any point not in accessible positions
         self.neighbour_graph = self.neighbour_graph.loc[list(self.mesh['neighbour_graph'].keys())]
 
         # Using neighbour graph to determine neighbour indices and cases
