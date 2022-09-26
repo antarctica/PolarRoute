@@ -1,5 +1,6 @@
 import logging
 import time
+import tracemalloc
 
 from datetime import timedelta
 from functools import wraps
@@ -12,6 +13,22 @@ Utilities that might be of use
 def date_range(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
+
+
+def memory_trace(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        tracemalloc.start(20)
+        res = func(*args, **kwargs)
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics('traceback')
+
+        stat = top_stats[0]
+        logging.info("{} memory blocks: {.1f} KiB".
+                     format(stat.count, stat.size / 1024))
+        logging.info("\n".join(stat.traceback.format()))
+        return res
+    return wrapper
 
 
 def timed_call(func):
