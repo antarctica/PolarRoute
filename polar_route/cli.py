@@ -4,7 +4,7 @@ import inspect
 import logging
 
 from polar_route import __version__ as version
-from polar_route.utils import setup_logging
+from polar_route.utils import setup_logging, timed_call
 
 
 @setup_logging
@@ -42,6 +42,7 @@ def get_args(
     return ap.parse_args()
 
 
+@timed_call
 def create_mesh_cli():
     """
 
@@ -59,6 +60,7 @@ def create_mesh_cli():
     json.dump(info, open(args.output, "w"))
 
 
+@timed_call
 def add_vehicle_cli():
     """
 
@@ -73,6 +75,7 @@ def add_vehicle_cli():
     json.dump(info, open(args.output, "w"))
 
 
+@timed_call
 def optimise_routes_cli():
     """
 
@@ -83,7 +86,6 @@ def optimise_routes_cli():
                     config_arg=False, info_arg=True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-
     rp = RoutePlanner(args.info)
     rp.compute_routes()
     rp.compute_smoothed_routes()
@@ -91,6 +93,7 @@ def optimise_routes_cli():
     json.dump(info, open(args.output, "w"))
 
 
+@timed_call
 def route_plotting_cli():
     from geoplot.interactive import Map
     import pandas as pd

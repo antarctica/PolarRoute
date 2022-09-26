@@ -1,11 +1,32 @@
 import logging
+import time
 
+from datetime import timedelta
 from functools import wraps
 
 """
-
+Utilities that might be of use
 """
 
+
+def date_range(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
+
+def timed_call(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        res = func(*args, **kwargs)
+        end = time.perf_counter()
+        logging.warning("Timed call to {} took {:02f} seconds".
+                        format(func.__name__, end - start))
+        return res
+    return wrapper
+
+
+# CLI utilities
 def setup_logging(func,
                   log_format="[%(asctime)-17s :%(levelname)-8s] - %(message)s"):
     """Wraps a CLI endpoint and sets up logging for it
@@ -13,6 +34,8 @@ def setup_logging(func,
     This is probably not the smoothest implementation, but it's an educational
     one for people who aren't aware of decorators and how they're implemented.
     In addition, it supports a nice pattern for CLI endpoints
+
+    TODO: start handling level configuration from logging yaml config
 
     :param func:
     :param log_format:
@@ -32,7 +55,6 @@ def setup_logging(func,
             datefmt="%d-%m-%y %T",
         )
 
-        # TODO: better way of handling these on a case by case basis
         logging.getLogger("cdsapi").setLevel(logging.WARNING)
         logging.getLogger("matplotlib").setLevel(logging.WARNING)
         logging.getLogger("matplotlib.pyplot").setLevel(logging.WARNING)
@@ -41,3 +63,5 @@ def setup_logging(func,
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         return parsed_args
     return wrapper
+
+

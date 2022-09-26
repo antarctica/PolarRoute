@@ -11,15 +11,20 @@
         long and lat values must be in a EPSG:4326 projection
 """
 
+from datetime import timedelta, datetime
+
 import xarray as xr
 import pandas as pd
 import numpy as np
-from pyproj import Transformer
-from pyproj import CRS
-from datetime import timedelta, datetime
 import glob
 
+from pyproj import Transformer
+from pyproj import CRS
 
+from polar_route.utils import date_range, timed_call
+
+
+@timed_call
 def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load AMSR2 data from a folder containing separate
@@ -108,6 +113,7 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
     return amsr_df
 
 
+@timed_call
 def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load AMSR2 data from a netCDF file and transform
@@ -160,11 +166,7 @@ def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end
     return amsr_df
 
 
-def daterange(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + timedelta(n)
-
-
+@timed_call
 def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
@@ -202,7 +204,7 @@ def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_
     start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
     end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
 
-    for single_date in daterange(start_date, end_date):
+    for single_date in date_range(start_date, end_date):
         dt = single_date.strftime("%Y-%m-%d")
         for lat in np.arange(lat_min, lat_max, 0.05):  #0.16):
             for long in np.arange(long_min, long_max, 0.05):  # 0.16):
@@ -214,6 +216,7 @@ def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_
     return dense_df
 
 
+@timed_call
 def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice thickness dataframe for given time and region and put it into a format ingestable by PolarRoute.
@@ -275,7 +278,7 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
     start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
     end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
 
-    for single_date in daterange(start_date, end_date):
+    for single_date in date_range(start_date, end_date):
         dt = single_date.strftime("%Y-%m-%d")
         for lat in np.arange(lat_min, lat_max, 0.05):
             for lng in np.arange(long_min, long_max, 0.05):
@@ -287,6 +290,7 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
     return thick_df
 
 
+@timed_call
 def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice thickness and density dataframe for baltic route
@@ -312,7 +316,7 @@ def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, 
     start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
     end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
 
-    for single_date in daterange(start_date, end_date):
+    for single_date in date_range(start_date, end_date):
         dt = single_date.strftime("%Y-%m-%d")
         for lat in np.arange(lat_min, lat_max, 0.1):
             for lng in np.arange(long_min, long_max, 0.1):
@@ -324,6 +328,7 @@ def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, 
     return baltic_thick_df
 
 
+@timed_call
 def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
@@ -381,6 +386,7 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     return bsose_df
 
 
+@timed_call
 def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load Sea ice data for the baltic sea from a netCDF file and transform it
@@ -427,6 +433,7 @@ def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start
     return baltic_df
 
 
+@timed_call
 def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
@@ -474,6 +481,7 @@ def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, t
     return bsose_df
 
 
+@timed_call
 def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load GEBCO data from a netCDF file and transform it
@@ -519,6 +527,7 @@ def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     return gebco_df
 
 
+@timed_call
 def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load SOSE current data from a netCDF file and#
@@ -572,6 +581,7 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
     return sose_df
 
 
+@timed_call
 def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load Baltic Sea current data from a netCDF file and
@@ -615,6 +625,7 @@ def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_star
     return bc_df
 
 
+@timed_call
 def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load MODIS data from a netCDF file and transform it
@@ -659,6 +670,7 @@ def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     return modis_df
 
 
+@timed_call
 def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load era5 wind data from a netCDF file and transform it
