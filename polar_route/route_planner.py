@@ -506,6 +506,9 @@ class RoutePlanner:
                 # Determining the computational time averaged across all pairs
                 self.allDist = []
                 self.allDist2 = []
+
+                self.nc = nc
+
                 for iter in pbar:
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0

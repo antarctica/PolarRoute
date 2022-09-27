@@ -929,13 +929,19 @@ class NewtonianCurve:
 
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        # self.id=-1
+                        break
+
+            if abs(case) == 2:
+                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+            if abs(case) == 4:
+                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+            return
         else:
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
                     if (np.array(sGN==eGN).any()):
                         
-                        NeighGraph = self.neighbour_graph.loc[sGN]               
+                        NeighGraph = self.neighbour_graph.loc[sGN]            
                         
                         
                         try:
@@ -976,7 +982,14 @@ class NewtonianCurve:
                         
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        # self.id=-1
+                        break
+
+            if abs(case) == 2:
+                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+            if abs(case) == 4:
+                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+            return
+                
 
     def _reverseCase(self):
         '''
