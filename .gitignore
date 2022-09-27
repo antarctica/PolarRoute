@@ -14,5 +14,5 @@ TestingNotebook.ipynb
 /venv/
 /data/
 /resources/
-*.output.json
+*.output.*json
 *.png
