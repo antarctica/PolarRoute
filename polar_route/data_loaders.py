@@ -11,12 +11,16 @@
         long and lat values must be in a EPSG:4326 projection
 """
 
+import glob
+import logging
+
 from datetime import timedelta, datetime
 
 import xarray as xr
 import pandas as pd
 import numpy as np
-import glob
+import dask.array as da
+import dask.dataframe as ddf
 
 from pyproj import Transformer
 from pyproj import CRS
@@ -238,7 +242,73 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
 
                 lat | long | time | thickness
     """
+    thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
+                   'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
+                   'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
+                   'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
+                   'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
+                   'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79},
+                   'None': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07}}
 
+    def icethickness(d, long):
+        """
+            Returns ice thickness. Data taken from Table 3 in: doi:10.1029/2007JC004254
+        """
+        # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, may require further thought
+        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+                   12: 'su'}
+        month = d.month
+        season = seasons[month]
+        sea = None
+
+        if -130 <= long < -60:
+            sea = 'Bellinghausen'
+        elif -60 <= long < -45:
+            sea = 'Weddell W'
+        elif -45 <= long < 20:
+            sea = 'Weddell E'
+        elif 20 <= long < 90:
+            sea = 'Indian'
+        elif 90 <= long < 160:
+            sea = 'West Pacific'
+        elif (160 <= long < 180) or (-180 <= long < -130):
+            sea = 'Ross'
+        else:
+            sea = 'None'
+
+        return thicknesses[sea][season]
+
+    start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
+    end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
+
+    lats = [lat for lat in np.arange(lat_min, lat_max, 0.05)]
+    lons = [lon for lon in np.arange(long_min, long_max, 0.05)]
+    dates = [single_date for single_date in date_range(start_date, end_date)]
+
+    thick_data = xr.DataArray(
+        data=[[[icethickness(dt, lng)
+                for lng in lons]
+               for _ in lats]
+              for dt in dates],
+        coords=dict(
+            lat=lats,
+            long=lons,
+            time=[dt.strftime("%Y-%m-%d") for dt in dates],
+        ),
+        dims=("time", "lat", "long"),
+        name="thickness",
+    )
+
+    thick_df = thick_data.\
+        to_dataframe().\
+        reset_index().\
+        set_index(['lat', 'long', 'time']).reset_index()
+
+    return thick_df
+
+
+@timed_call
+def load_thickness_old(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     def icethickness(d, long):
         """
             Returns ice thickness. Data taken from Table 3 in: doi:10.1029/2007JC004254

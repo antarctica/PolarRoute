@@ -37,8 +37,8 @@ def timed_call(func):
         start = time.perf_counter()
         res = func(*args, **kwargs)
         end = time.perf_counter()
-        logging.warning("Timed call to {} took {:02f} seconds".
-                        format(func.__name__, end - start))
+        logging.info("Timed call to {} took {:02f} seconds".
+                     format(func.__name__, end - start))
         return res
     return wrapper
 
