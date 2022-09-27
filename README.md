@@ -9,14 +9,6 @@ A long-distance polar route planner for marine navigation. This work is a refact
 
 The PolarRoute software can be installed by running the following commands:
 ```
-<<<<<<< HEAD
-  conda create -n PolarRoute python=3.9
-  conda activate PolarRoute
-  pip install geopandas ipykernel
-  pip install sphinx tqdm rinohtype numpy==1.22 pandas==1.4.3
-  pip install jupyter jupyterlab
-  python setup.py install
-=======
 python3 -m venv venv
 source venv/bin/activate
 pip install -e .
@@ -29,7 +21,6 @@ To build and deploy this project, it's as simple as:
 source venv/bin/activate
 pip install --upgrade pip setuptools wheel
 python setup.py build bdist_wheel
->>>>>>> a5316d0d4304a1588b2616fe71d4fdf9a79a53ae
 ```
 ---
 
