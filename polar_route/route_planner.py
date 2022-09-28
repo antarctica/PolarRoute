@@ -223,12 +223,17 @@ class RoutePlanner:
         wpts['index'] = np.nan
         for idx,wpt in wpts.iterrows():
             indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long','Lat']]))].index
+            # Waypoint is not within a mesh cell, but could still be on the edge of one. So perturbing the position slightly to the north-east and checking again. 
+            #If this is not the case then the waypoint is not within the navitagatable domain and will continue
+            if len(indices) == 0:
+                indices = mesh[(mesh['geometry'].contains(Point(wpt[['Long','Lat']]+1e-5)))].index
+            if len(indices) == 0:
+                continue
             if len(indices) > 1:
                 raise Exception('Wapoint lies in multiple cell boxes. Please check mesh ! ')
-            elif len(indices) == 0:
-                continue
             else:
                 wpts['index'].loc[idx] = int(indices[0])
+
         self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
         self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
         self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
