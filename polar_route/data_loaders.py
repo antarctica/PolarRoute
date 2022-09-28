@@ -233,56 +233,6 @@ def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_
 
 
 @timed_call
-def load_density_old(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
-    """
-        Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
-        Data taken from Table 3 in: doi:10.1029/2007JC004254
-
-        Args:
-            long_min (float): The minimum longitude of the data to be retrieved
-            long_max (float): The maximum longitude of the data to be retrieved
-            lat_min (float): The minimum latitude of the data to be retrieved
-            lat_max (float): The maximum latitude of the data to be retrieved
-            time_start (string): The start time of the data to be retrieved,
-                must be given in the format "YYYY-MM-DD"
-            time_end (string): The end time of the data to be retrieved,
-                must be given in the format "YYYY-MM-DD"
-
-        Returns:
-            density_df (Dataframe): A dataframe containing ice density
-                data. The dataframe is of the format -
-
-                lat | long | time | density
-    """
-
-    def ice_density(d):
-        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
-                   12: 'su'}
-        densities = {'su': 875.0, 'sp': 900.0, 'a': 900.0, 'w': 920.0}
-
-        month = int(d[5:7])
-        season = seasons[month]
-        den = densities[season]
-        return den
-
-    dense_data = []
-
-    start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
-    end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
-
-    for single_date in date_range(start_date, end_date):
-        dt = single_date.strftime("%Y-%m-%d")
-        for lat in np.arange(lat_min, lat_max, 0.05):  #0.16):
-            for long in np.arange(long_min, long_max, 0.05):  # 0.16):
-                dense_data.append({'time': dt, 'lat': lat, 'long': long, 'density': ice_density(dt)})
-
-    dense_df = pd.DataFrame(dense_data).set_index(['lat', 'long', 'time'])
-    dense_df = dense_df.reset_index()
-
-    return dense_df
-
-
-@timed_call
 def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice thickness dataframe for given time and region and put it into a format ingestable by PolarRoute.
