@@ -733,7 +733,11 @@ class NewtonianCurve:
         while id < len(self.CrossingDF)-3:
             triplet = self.CrossingDF.iloc[id:id+3]
             if PtDist(triplet.iloc[0],triplet.iloc[1]) < 1e-2:
-                neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
+                try:
+                    neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
+                except:
+                    id+=1
+                    continue
                 case           = triplet['cellStart'].iloc[0]['case'][neighbourIndex]
                 crossingPoint  = triplet['cellStart'].iloc[0]['neighbourCrossingPoints'][neighbourIndex]
                 triplet['cx'].iloc[0]      = crossingPoint[0]
@@ -742,7 +746,11 @@ class NewtonianCurve:
                 triplet['case'].iloc[0]    = copy.deepcopy(case)
                 self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
             if PtDist(triplet.iloc[1],triplet.iloc[2]) < 1e-2:
-                neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
+                try:
+                    neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
+                except:
+                    id+=1
+                    continue
                 case           = triplet['cellStart'].iloc[1]['case'][neighbourIndex]
                 crossingPoint  = triplet['cellStart'].iloc[1]['neighbourCrossingPoints'][neighbourIndex]
                 triplet['cx'].iloc[1]      = crossingPoint[0]
@@ -921,13 +929,19 @@ class NewtonianCurve:
 
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        # self.id=-1
+                        break
+
+            if abs(case) == 2:
+                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+            if abs(case) == 4:
+                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+            return
         else:
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
                     if (np.array(sGN==eGN).any()):
                         
-                        NeighGraph = self.neighbour_graph.loc[sGN]               
+                        NeighGraph = self.neighbour_graph.loc[sGN]            
                         
                         
                         try:
@@ -968,7 +982,14 @@ class NewtonianCurve:
                         
                         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
-                        # self.id=-1
+                        break
+
+            if abs(case) == 2:
+                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+            if abs(case) == 4:
+                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+            return
+                
 
     def _reverseCase(self):
         '''
