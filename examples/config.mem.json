@@ -1,9 +1,9 @@
 {
   "Mesh_info":{
     "Region": {
-      "latMin": -77.5,
-      "latMax": -45,
-      "longMin": -120,
+      "latMin": -80,
+      "latMax": -20,
+      "longMin": -150,
       "longMax": -10,
       "startTime": "2017-01-01",
       "endTime": "2017-01-14",
