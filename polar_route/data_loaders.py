@@ -193,7 +193,69 @@ def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_
                 lat | long | time | density
     """
 
-    def icedensity(d):
+    seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+               12: 'su'}
+    densities = {'su': 875.0, 'sp': 900.0, 'a': 900.0, 'w': 920.0}
+
+    def ice_density(d):
+        month = d.month
+        season = seasons[month]
+        den = densities[season]
+        return den
+
+    start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
+    end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
+
+    lats = [lat for lat in np.arange(lat_min, lat_max, 0.05)]
+    lons = [lon for lon in np.arange(long_min, long_max, 0.05)]
+    dates = [single_date for single_date in date_range(start_date, end_date)]
+
+    density_data = xr.DataArray(
+        data=[[[ice_density(dt)
+                for _ in lons]
+               for _ in lats]
+              for dt in dates],
+        coords=dict(
+            lat=lats,
+            long=lons,
+            time=[dt.strftime("%Y-%m-%d") for dt in dates],
+        ),
+        dims=("time", "lat", "long"),
+        name="density",
+    )
+
+    density_df = density_data.\
+        to_dataframe().\
+        reset_index().\
+        set_index(['lat', 'long', 'time']).reset_index()
+
+    return density_df
+
+
+@timed_call
+def load_density_old(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
+        Data taken from Table 3 in: doi:10.1029/2007JC004254
+
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retrieved
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+        Returns:
+            density_df (Dataframe): A dataframe containing ice density
+                data. The dataframe is of the format -
+
+                lat | long | time | density
+    """
+
+    def ice_density(d):
         seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
                    12: 'su'}
         densities = {'su': 875.0, 'sp': 900.0, 'a': 900.0, 'w': 920.0}
@@ -212,7 +274,7 @@ def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_
         dt = single_date.strftime("%Y-%m-%d")
         for lat in np.arange(lat_min, lat_max, 0.05):  #0.16):
             for long in np.arange(long_min, long_max, 0.05):  # 0.16):
-                dense_data.append({'time': dt, 'lat': lat, 'long': long, 'density': icedensity(dt)})
+                dense_data.append({'time': dt, 'lat': lat, 'long': long, 'density': ice_density(dt)})
 
     dense_df = pd.DataFrame(dense_data).set_index(['lat', 'long', 'time'])
     dense_df = dense_df.reset_index()
@@ -249,14 +311,14 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
                    'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
                    'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79},
                    'None': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07}}
+    seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+               12: 'su'}
 
-    def icethickness(d, long):
+    def ice_thickness(d, long):
         """
             Returns ice thickness. Data taken from Table 3 in: doi:10.1029/2007JC004254
         """
         # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, may require further thought
-        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
-                   12: 'su'}
         month = d.month
         season = seasons[month]
         sea = None
@@ -286,7 +348,7 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
     dates = [single_date for single_date in date_range(start_date, end_date)]
 
     thick_data = xr.DataArray(
-        data=[[[icethickness(dt, lng)
+        data=[[[ice_thickness(dt, lng)
                 for lng in lons]
                for _ in lats]
               for dt in dates],
