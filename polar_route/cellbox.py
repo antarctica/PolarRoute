@@ -18,11 +18,10 @@ Note:
     contained within a Mesh.
 """
 
-from matplotlib.patches import Polygon as MatplotPolygon
 from shapely.geometry import Polygon
-import math
 import numpy as np
 import pandas as pd
+
 
 class CellBox:
     """

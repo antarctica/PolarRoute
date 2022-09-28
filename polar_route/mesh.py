@@ -18,15 +18,11 @@ Example:
 import logging
 import math
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import xarray as xr
-import geopandas as gpd
 
 # FIXME: This is weird
 import json as JSON
 
-from shapely.geometry import Polygon
 from matplotlib.patches import Polygon as MatplotPolygon
 from polar_route.cellbox import CellBox
 import polar_route.data_loaders as data_loader
