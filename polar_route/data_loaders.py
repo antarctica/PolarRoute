@@ -11,15 +11,21 @@
         long and lat values must be in a EPSG:4326 projection
 """
 
+import glob
+
+from datetime import datetime
+
 import xarray as xr
 import pandas as pd
 import numpy as np
+
 from pyproj import Transformer
 from pyproj import CRS
-from datetime import timedelta, datetime
-import glob
+
+from polar_route.utils import date_range, timed_call
 
 
+@timed_call
 def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load AMSR2 data from a folder containing separate
@@ -108,6 +114,7 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
     return amsr_df
 
 
+@timed_call
 def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load AMSR2 data from a netCDF file and transform
@@ -160,11 +167,7 @@ def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end
     return amsr_df
 
 
-def daterange(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + timedelta(n)
-
-
+@timed_call
 def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
@@ -187,33 +190,46 @@ def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_
                 lat | long | time | density
     """
 
-    def icedensity(d):
-        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
-                   12: 'su'}
-        densities = {'su': 875.0, 'sp': 900.0, 'a': 900.0, 'w': 920.0}
+    seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+               12: 'su'}
+    densities = {'su': 875.0, 'sp': 900.0, 'a': 900.0, 'w': 920.0}
 
-        month = int(d[5:7])
+    def ice_density(d):
+        month = d.month
         season = seasons[month]
         den = densities[season]
         return den
 
-    dense_data = []
-
     start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
     end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
 
-    for single_date in daterange(start_date, end_date):
-        dt = single_date.strftime("%Y-%m-%d")
-        for lat in np.arange(lat_min, lat_max, 0.05):  #0.16):
-            for long in np.arange(long_min, long_max, 0.05):  # 0.16):
-                dense_data.append({'time': dt, 'lat': lat, 'long': long, 'density': icedensity(dt)})
+    lats = [lat for lat in np.arange(lat_min, lat_max, 0.05)]
+    lons = [lon for lon in np.arange(long_min, long_max, 0.05)]
+    dates = [single_date for single_date in date_range(start_date, end_date)]
 
-    dense_df = pd.DataFrame(dense_data).set_index(['lat', 'long', 'time'])
-    dense_df = dense_df.reset_index()
+    density_data = xr.DataArray(
+        data=[[[ice_density(dt)
+                for _ in lons]
+               for _ in lats]
+              for dt in dates],
+        coords=dict(
+            lat=lats,
+            long=lons,
+            time=[dt.strftime("%Y-%m-%d") for dt in dates],
+        ),
+        dims=("time", "lat", "long"),
+        name="density",
+    )
 
-    return dense_df
+    density_df = density_data.\
+        to_dataframe().\
+        reset_index().\
+        set_index(['lat', 'long', 'time']).reset_index()
+
+    return density_df
 
 
+@timed_call
 def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice thickness dataframe for given time and region and put it into a format ingestable by PolarRoute.
@@ -235,22 +251,22 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
 
                 lat | long | time | thickness
     """
+    thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
+                   'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
+                   'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
+                   'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
+                   'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
+                   'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79},
+                   'None': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07}}
+    seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
+               12: 'su'}
 
-    def icethickness(d, long):
+    def ice_thickness(d, long):
         """
             Returns ice thickness. Data taken from Table 3 in: doi:10.1029/2007JC004254
         """
         # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, may require further thought
-        thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
-                       'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
-                       'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
-                       'Weddell W': {'w': 1.33, 'sp': 1.33, 'su': 1.20, 'a': 1.38, 'y': 1.33},
-                       'Indian': {'w': 0.59, 'sp': 0.78, 'su': 1.05, 'a': 0.45, 'y': 0.68},
-                       'West Pacific': {'w': 0.72, 'sp': 0.68, 'su': 1.17, 'a': 0.75, 'y': 0.79},
-                       'None': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07}}
-        seasons = {1: 'su', 2: 'su', 3: 'a', 4: 'a', 5: 'a', 6: 'w', 7: 'w', 8: 'w', 9: 'sp', 10: 'sp', 11: 'sp',
-                   12: 'su'}
-        month = int(d[5:7])
+        month = d.month
         season = seasons[month]
         sea = None
 
@@ -271,22 +287,36 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
 
         return thicknesses[sea][season]
 
-    thick_data = []
     start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
     end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
 
-    for single_date in daterange(start_date, end_date):
-        dt = single_date.strftime("%Y-%m-%d")
-        for lat in np.arange(lat_min, lat_max, 0.05):
-            for lng in np.arange(long_min, long_max, 0.05):
-                thick_data.append({'time': dt, 'lat': lat, 'long': lng, 'thickness': icethickness(dt, lng)})
+    lats = [lat for lat in np.arange(lat_min, lat_max, 0.05)]
+    lons = [lon for lon in np.arange(long_min, long_max, 0.05)]
+    dates = [single_date for single_date in date_range(start_date, end_date)]
 
-    thick_df = pd.DataFrame(thick_data).set_index(['lat', 'long', 'time'])
-    thick_df = thick_df.reset_index()
+    thick_data = xr.DataArray(
+        data=[[[ice_thickness(dt, lng)
+                for lng in lons]
+               for _ in lats]
+              for dt in dates],
+        coords=dict(
+            lat=lats,
+            long=lons,
+            time=[dt.strftime("%Y-%m-%d") for dt in dates],
+        ),
+        dims=("time", "lat", "long"),
+        name="thickness",
+    )
+
+    thick_df = thick_data.\
+        to_dataframe().\
+        reset_index().\
+        set_index(['lat', 'long', 'time']).reset_index()
 
     return thick_df
 
 
+@timed_call
 def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Create ice thickness and density dataframe for baltic route
@@ -312,7 +342,7 @@ def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, 
     start_date = datetime.strptime(time_start, "%Y-%m-%d").date()
     end_date = datetime.strptime(time_end, "%Y-%m-%d").date()
 
-    for single_date in daterange(start_date, end_date):
+    for single_date in date_range(start_date, end_date):
         dt = single_date.strftime("%Y-%m-%d")
         for lat in np.arange(lat_min, lat_max, 0.1):
             for lng in np.arange(long_min, long_max, 0.1):
@@ -324,6 +354,7 @@ def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, 
     return baltic_thick_df
 
 
+@timed_call
 def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
@@ -381,6 +412,7 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     return bsose_df
 
 
+@timed_call
 def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load Sea ice data for the baltic sea from a netCDF file and transform it
@@ -427,6 +459,7 @@ def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start
     return baltic_df
 
 
+@timed_call
 def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load BSOSE data from a netCDF file and transform it
@@ -474,6 +507,7 @@ def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, t
     return bsose_df
 
 
+@timed_call
 def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load GEBCO data from a netCDF file and transform it
@@ -519,6 +553,7 @@ def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     return gebco_df
 
 
+@timed_call
 def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load SOSE current data from a netCDF file and#
@@ -572,6 +607,7 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
     return sose_df
 
 
+@timed_call
 def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load Baltic Sea current data from a netCDF file and
@@ -615,6 +651,7 @@ def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_star
     return bc_df
 
 
+@timed_call
 def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load MODIS data from a netCDF file and transform it
@@ -659,6 +696,7 @@ def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     return modis_df
 
 
+@timed_call
 def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Load era5 wind data from a netCDF file and transform it

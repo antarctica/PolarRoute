@@ -15,17 +15,14 @@ Example:
         mesh = Mesh(config)
 """
 
+import logging
 import math
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import xarray as xr
-import geopandas as gpd
 
 # FIXME: This is weird
 import json as JSON
 
-from shapely.geometry import Polygon
 from matplotlib.patches import Polygon as MatplotPolygon
 from polar_route.cellbox import CellBox
 import polar_route.data_loaders as data_loader
@@ -109,7 +106,7 @@ class Mesh:
                 j_grid (bool): True if the Mesh to be constructed should be of the same
                     format as the original Java CellGrid, to be used for regression testing.
         """
-        self.config = config
+        self._config = config
 
         self._long_min = config['Mesh_info']['Region']['longMin']
         self._long_max = config['Mesh_info']['Region']['longMax']
@@ -127,17 +124,25 @@ class Mesh:
             f"""The defined longitude region <{self._lat_min} :{self._lat_max}>
             is not divisable by the initial cell width <{self._cell_height}>"""
 
-
         self._start_time = config['Mesh_info']['Region']['startTime']
         self._end_time = config['Mesh_info']['Region']['endTime']
 
+        # TODO: we should be using the inheritance hierarchy to achieve this
         self._j_grid = j_grid
         if 'j_grid' in config['Mesh_info'].keys():
+            logging.warning("We're using the legacy Java style cell grid")
             self._j_grid = True
 
+        # TODO: getters / setters (look at config)
         self.cellboxes = []
+        self.neighbour_graph = {}
+#        self.__init()
 
-        # Initialise cellBoxes.
+
+#    def __init(self):
+        logging.info("Initialising mesh...")
+
+        logging.debug("Initialise cellBoxes")
         for lat in np.arange(self._lat_min, self._lat_max, self._cell_height):
             for long in np.arange(self._long_min, self._long_max, self._cell_width):
                 cellbox = CellBox(lat, long, self._cell_width, self._cell_height,
@@ -147,8 +152,7 @@ class Mesh:
         grid_width = (self._long_max - self._long_min) / self._cell_width
         grid_height = (self._lat_max - self._lat_min) / self._cell_height
 
-        # Calculate initial neighbours graph.
-        self.neighbour_graph = {}
+        logging.debug("Calculate initial neighbours graph")
         for cellbox in self.cellboxes:
             cellbox_indx = self.cellboxes.index(cellbox)
             neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
@@ -184,8 +188,8 @@ class Mesh:
             self.neighbour_graph[cellbox_indx] = neighbour_map
 
             # set value output types of a cellbox
-            if 'value_output_types' in config['Mesh_info'].keys():
-                cellbox.add_value_output_type(config['Mesh_info']['value_output_types'])
+            if 'value_output_types' in self.config['Mesh_info'].keys():
+                cellbox.add_value_output_type(self.config['Mesh_info']['value_output_types'])
 
             # set gridCoord of cellBox
             x_coord = cellbox_indx % grid_width
@@ -195,36 +199,44 @@ class Mesh:
             # set focus of cellBox
             cellbox.set_focus([])
 
-        # Add data points to CellGrid from config
+        logging.debug("Add data points to CellGrid from config")
         # j_grids represent currents differently from other data sources, so a bispoke
         # function 'add_current_points' must be called
         if self._j_grid:
-            loader = getattr(data_loader, config['Mesh_info']['j_grid']['Currents']['loader'])
-            data_points = loader(config['Mesh_info']['j_grid']['Currents']['params'],
+            loader_name = self.config['Mesh_info']['j_grid']['Currents']['loader']
+            loader = getattr(data_loader, loader_name)
+            logging.debug("J_grid using loader {}".format(loader_name))
+
+            data_points = loader(self.config['Mesh_info']['j_grid']['Currents']['params'],
                 self._long_min, self._long_max, self._lat_min, self._lat_max,
                 self._start_time, self._end_time)
 
             self.add_current_points(data_points)
-        if 'Data_sources' in config['Mesh_info'].keys():
-            for data_source in config['Mesh_info']['Data_sources']:
+
+        if 'Data_sources' in self.config['Mesh_info'].keys():
+            for data_source in self.config['Mesh_info']['Data_sources']:
                 loader = getattr(data_loader, data_source['loader'])
+                logging.debug("Using data loader {}".format(data_source['loader']))
+
                 data_points = loader(data_source['params'],
                                      self._long_min, self._long_max, self._lat_min, self._lat_max,
                                      self._start_time, self._end_time)
 
                 self.add_data_points(data_points)
 
-        # Add splitting conditions from config and split Mesh.
+        logging.debug("Add splitting conditions from config and split Mesh.")
         self.splitting_conditions = []
-        if 'splitting' in config['Mesh_info'].keys():
-            for splitting_condition in config['Mesh_info']['splitting']['splitting_conditions']:
+        if 'splitting' in self.config['Mesh_info'].keys():
+            for splitting_condition in self.config['Mesh_info']['splitting']['splitting_conditions']:
+                logging.debug("Adding conditions to {} cellboxes".format(len(self.cellboxes)))
                 for cellbox in self.cellboxes:
                     if isinstance(cellbox, CellBox):
                         cellbox.add_splitting_condition(splitting_condition)
-                        cellbox.set_minimum_datapoints(config['Mesh_info']['splitting']['minimum_datapoints'])
-                        cellbox.set_value_fill_types(config['Mesh_info']['splitting']['value_fill_types'])
+                        cellbox.set_minimum_datapoints(self.config['Mesh_info']['splitting']['minimum_datapoints'])
+                        cellbox.set_value_fill_types(self.config['Mesh_info']['splitting']['value_fill_types'])
 
-                self.split_to_depth(config['Mesh_info']['splitting']['split_depth'])
+                logging.debug("Splitting to depth {}".format(self.config['Mesh_info']['splitting']['split_depth']))
+                self.split_to_depth(self.config['Mesh_info']['splitting']['split_depth'])
 
     # Functions for adding data to the Mesh
 
@@ -810,3 +822,7 @@ class Mesh:
             if isinstance(cellbox, CellBox):
                 if cellbox.node_string() == node_string:
                     return cellbox
+
+    @property
+    def config(self):
+        return self._config

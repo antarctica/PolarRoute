@@ -18,11 +18,10 @@ Note:
     contained within a Mesh.
 """
 
-from matplotlib.patches import Polygon as MatplotPolygon
 from shapely.geometry import Polygon
-import math
 import numpy as np
 import pandas as pd
+
 
 class CellBox:
     """
@@ -150,6 +149,7 @@ class CellBox:
 
         return data_names
 
+    # TODO: getter / setter
     def get_data_points(self, values=[]):
         """
             Returns a dataframe of containing values specified in parameter 'values'.
@@ -170,6 +170,8 @@ class CellBox:
             return self._data_points
         else:
             data_points = pd.DataFrame()
+
+            # TODO: review, this looks rather inefficient through recursions
             for value in values:
                 data_points = pd.concat(
                     [data_points, self.get_data_points().dropna(subset=[value])], axis=0)
@@ -177,6 +179,8 @@ class CellBox:
             columns = ['lat', 'long', 'time'] + values
             return data_points[columns]
 
+    # TODO: getter / setter
+    # TODO: caller can aggregate, this looks like an anti-pattern
     def get_value(self, value_name, value_type="MEAN"):
         """
             returns the mean value of the datapoints within this cellbox
