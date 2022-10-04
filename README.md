@@ -1,6 +1,4 @@
 ![](logo.jpg)
-![Version][version] ![Downloads][downloads]
-
 >PolarRoute is a long-distance polar route planner for marine navigation...
 ---
 
