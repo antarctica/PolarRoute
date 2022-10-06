@@ -56,6 +56,8 @@ def create_mesh_cli():
 
     # Discrete Meshing
     cg = Mesh(config)
+
+    logging.info("Saving mesh to {}".format(args.output))
     info = cg.to_json()
     json.dump(info, open(args.output, "w"))
 
@@ -73,6 +75,8 @@ def add_vehicle_cli():
     mesh = json.load(args.info)
 
     vp = VesselPerformance(mesh)
+
+    logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
     json.dump(info, open(args.output, "w"))
 
