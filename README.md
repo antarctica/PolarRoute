@@ -1,5 +1,6 @@
 ![](logo.jpg)
->PolarRoute is a long-distance polar route planner for marine navigation...
+#PolarRoute
+> PolarRoute is a long-distance maritime polar route planning, taking into account complex changing environmental conditions. The codebase allows the construction of optimised routes through three main stages: discrete modelling of the environmental conditions using a non-uniform mesh, the construction of mesh-optimal paths, and physics informed path smoothing. In order to account for different vehicle properties we construct a series of data driven functions that can be applied to the environmental mesh to determine the speed limitations and fuel requirements for a given vessel and mesh cell, representing these quantities graphically and geospatially.
 ---
 
 ## Installation
@@ -31,7 +32,7 @@ the html manual can then be found at ./docs/build.
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
 
 ## License
-This software is licensed under a MIT license. For more information please see the attached license file.
+This software is licensed under a MIT license. For more information please see the attached  ``LICENSE`` file.
 
 [version]: https://img.shields.io/PolarRoute/v/datadog-metrics.svg?style=flat-square
 [downloads]: https://img.shields.io/PolarRoute/dm/datadog-metrics.svg?style=flat-square
