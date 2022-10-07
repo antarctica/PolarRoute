@@ -2,6 +2,7 @@ import argparse
 import json
 import inspect
 import logging
+from multiprocessing.connection import wait
 
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call
@@ -11,7 +12,8 @@ from polar_route.utils import setup_logging, timed_call
 def get_args(
         default_output: str,
         config_arg: bool = True,
-        info_arg: bool = False):
+        info_arg: bool = False,
+        waypoints_arg: bool = False):
     """
 
     Parameters
@@ -34,10 +36,19 @@ def get_args(
                     help="Turn on DEBUG level logging")
 
     if config_arg:
-        ap.add_argument("config", type=argparse.FileType("r"))
+        ap.add_argument("config", type=argparse.FileType("r"), 
+                    help="File location of configuration file used to build the mesh")
 
     if info_arg:
-        ap.add_argument("info", type=argparse.FileType("r"))
+        ap.add_argument("info", type=argparse.FileType("r"),
+                    help="File location of the enviromental mesh")
+
+    if waypoints_arg:
+        ap.add_argument("waypoints", type=argparse.FileType("r"))
+        ap.add_argument("-p", "--path_only",
+                        default=False,
+                        action = "store_true",
+                        help="output only the calculated paths")
 
     return ap.parse_args()
 
@@ -89,15 +100,24 @@ def optimise_routes_cli():
     from polar_route.route_planner import RoutePlanner
 
     args = get_args("optimise_routes.output.json",
-                    config_arg=False, info_arg=True)
+                    config_arg=False, info_arg=True, waypoints_arg= True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
+    if args.path_only:
+        logging.info("outputting only path to {}".format(args.output))
+    else: 
+        logging.info("outputting full mesh to {}".format(args.output))
+
     vehicle_mesh = json.load(args.info)
-    rp = RoutePlanner(vehicle_mesh)
+    rp = RoutePlanner(vehicle_mesh, args.waypoints)
     rp.compute_routes()
     rp.compute_smoothed_routes()
     info = rp.to_json()
-    json.dump(info, open(args.output, "w"))
+
+    if args.path_only:
+        json.dump(info['paths'], open(args.output, 'w'))
+    else:
+        json.dump(info, open(args.output, "w"))
 
 
 @timed_call
