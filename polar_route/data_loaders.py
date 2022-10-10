@@ -12,6 +12,7 @@
 """
 
 import glob
+import logging
 
 from datetime import datetime
 
@@ -55,6 +56,7 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
 
                 lat | long | time | SIC
     """
+    logging.debug("opening folder {}".format(params['folder']))
 
     # strip year/month/day from time_start and end_start strings.
     start_year = float(time_start.split('-')[0])
@@ -82,6 +84,7 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
                 if start_day <= day <= end_day:
 
                     amsr = xr.open_dataset(file)
+                    logging.debug("found file {}".format(file))
                     amsr_array.append(amsr)
 
                     time = str(year) + '-' + str(month) + '-' + str(day)
@@ -99,6 +102,7 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
         in_proj = CRS('EPSG:3412')
     out_proj = CRS('EPSG:4326')
 
+    logging.debug("reprojecting to EPSG:4326")
     x, y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
         amsr_df['x'].to_numpy(), amsr_df['y'].to_numpy())
 
@@ -110,6 +114,8 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
 
     amsr_df = amsr_df[amsr_df['long'].between(long_min, long_max)]
     amsr_df = amsr_df[amsr_df['lat'].between(lat_min, lat_max)]
+
+    logging.debug("returned {} datapoints".format(len(amsr_df.index)))
 
     return amsr_df
 
@@ -141,7 +147,7 @@ def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end
 
                 lat | long | time | SIC
     """
-
+    logging.debug("opening file {}".format(params['file']))
     amsr = xr.open_dataset(params['file'])
     amsr = amsr.sel(time=slice(time_start, time_end))
     amsr_df = amsr.to_dataframe()
@@ -149,6 +155,8 @@ def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end
 
     # AMSR data is in a EPSG:3412 projection and must be reprojected into
     # EPSG:4326
+
+    logging.debug("reprojecting to EPSG:4326")
     in_proj = CRS('EPSG:3412')
     out_proj = CRS('EPSG:4326')
 
@@ -164,6 +172,7 @@ def load_amsr(params, long_min, long_max, lat_min, lat_max, time_start, time_end
     amsr_df = amsr_df[amsr_df['long'].between(long_min, long_max)]
     amsr_df = amsr_df[amsr_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returned {} datapoints".format(len(amsr_df.index)))
     return amsr_df
 
 
@@ -226,6 +235,7 @@ def load_density(params, long_min, long_max, lat_min, lat_max, time_start, time_
         reset_index().\
         set_index(['lat', 'long', 'time']).reset_index()
 
+    logging.debug("returned {} datapoints".format(len(density_df.index)))
     return density_df
 
 
@@ -313,6 +323,7 @@ def load_thickness(params, long_min, long_max, lat_min, lat_max, time_start, tim
         reset_index().\
         set_index(['lat', 'long', 'time']).reset_index()
 
+    logging.debug("returning {} datapoints".format(len(thick_df.index)))
     return thick_df
 
 
@@ -351,6 +362,7 @@ def load_baltic_thickness_density(params, long_min, long_max, lat_min, lat_max, 
     baltic_thick_df = pd.DataFrame(baltic_thick_data).set_index(['lat', 'long', 'time'])
     baltic_thick_df = baltic_thick_df.reset_index()
 
+    logging.debug("returned {} datapoints".format(len(baltic_thick_df.index)))
     return baltic_thick_df
 
 
@@ -384,7 +396,7 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
 
                 lat | long | time | SIC
     """
-
+    logging.debug("opening file {} ".format(params['file']))
     bsose = xr.open_dataset(params['file'])
     bsose = bsose.sel(time=slice(time_start, time_end))
     bsose_df = bsose.to_dataframe()
@@ -409,6 +421,7 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     bsose_df = bsose_df[bsose_df['long'].between(long_min, long_max)]
     bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returned {} datapoints".format(len(bsose_df.index)))
     return bsose_df
 
 
@@ -486,7 +499,7 @@ def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, t
 
                 lat | long | time | elevation
     """
-
+    logging.debug("opening file {} ".format(params['file']))
     bsose = xr.open_dataset(params['file'])
     bsose = bsose.sel(time=slice(time_start, time_end))
     bsose_df = bsose.to_dataframe()
@@ -504,6 +517,7 @@ def load_bsose_depth(params, long_min, long_max, lat_min, lat_max, time_start, t
     bsose_df = bsose_df[bsose_df['long'].between(long_min, long_max)]
     bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returning {} datapoints".format(len(bsose_df.index)))
     return bsose_df
 
 
@@ -584,7 +598,7 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
 
                 lat | long | time | uC | vC
     """
-
+    logging.debug("opening file {}".format(params['file']))
     sose = xr.open_dataset(params['file'])
     sose_df = sose.to_dataframe()
     sose_df = sose_df.reset_index()
@@ -604,6 +618,7 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
         if params['units'] == 'm/s':
             """""" # SOSE source data is in m/s, no transformation required
 
+    logging.debug("returning {} datapoints".format(len(sose_df.index)))
     return sose_df
 
 

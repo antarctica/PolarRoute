@@ -106,7 +106,7 @@ class RoutePlanner:
 
     """
 
-    def __init__(self, mesh, cost_func=NewtonianDistance, verbose=False):
+    def __init__(self, mesh, waypoints, cost_func=NewtonianDistance, verbose=False):
 
         """
             Constructs the routes from information given in the config file.
@@ -145,8 +145,13 @@ class RoutePlanner:
         # self.mesh    = copy.copy(mesh)
         self.mesh = mesh
         self.config  = self.mesh['config']
-        self.source_waypoints = self.config['Route_Info']['source_waypoints']
-        self.end_waypoints    = self.config['Route_Info']['end_waypoints']
+
+        waypoints_df = pd.read_csv(waypoints)
+        source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
+        des_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
+
+        self.source_waypoints = list(source_waypoints_df['Name'])
+        self.end_waypoints    = list(des_waypoints_df['Name'])
 
         # Creating a blank path construct
         self.paths          = None
@@ -209,7 +214,7 @@ class RoutePlanner:
             self.neighbour_graph['Speed'] = self.config["Vessel"]["Speed"]
 
         # ====== Waypoints ======
-        self.mesh['waypoints'] = pd.read_csv(self.config['Route_Info']['waypoints_path'])
+        self.mesh['waypoints'] = waypoints_df
 
         # Dropping waypoints outside domain
         self.mesh['waypoints'] = self.mesh['waypoints'][\

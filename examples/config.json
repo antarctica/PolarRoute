@@ -42,7 +42,7 @@
       }
     ],
     "splitting": {
-      "split_depth":5,
+      "split_depth":4,
       "minimum_datapoints":5,
       "splitting_conditions":[
         {"elevation":{
@@ -86,9 +86,6 @@
       "fuel",
       "traveltime"
     ],
-    "waypoints_path": "./examples/waypoints.csv",
-    "source_waypoints": ["Halley"],
-    "end_waypoints": ["Rothera"],
     "vector_names": ["uC","vC"],
     "zero_currents": false,
     "variable_speed": true,

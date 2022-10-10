@@ -2,6 +2,7 @@ import argparse
 import json
 import inspect
 import logging
+from multiprocessing.connection import wait
 
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call
@@ -11,7 +12,8 @@ from polar_route.utils import setup_logging, timed_call
 def get_args(
         default_output: str,
         config_arg: bool = True,
-        info_arg: bool = False):
+        info_arg: bool = False,
+        waypoints_arg: bool = False):
     """
 
     Parameters
@@ -34,10 +36,19 @@ def get_args(
                     help="Turn on DEBUG level logging")
 
     if config_arg:
-        ap.add_argument("config", type=argparse.FileType("r"))
+        ap.add_argument("config", type=argparse.FileType("r"), 
+                    help="File location of configuration file used to build the mesh")
 
     if info_arg:
-        ap.add_argument("info", type=argparse.FileType("r"))
+        ap.add_argument("info", type=argparse.FileType("r"),
+                    help="File location of the enviromental mesh")
+
+    if waypoints_arg:
+        ap.add_argument("waypoints", type=argparse.FileType("r"))
+        ap.add_argument("-p", "--path_only",
+                        default=False,
+                        action = "store_true",
+                        help="output only the calculated paths")
 
     return ap.parse_args()
 
@@ -56,6 +67,8 @@ def create_mesh_cli():
 
     # Discrete Meshing
     cg = Mesh(config)
+
+    logging.info("Saving mesh to {}".format(args.output))
     info = cg.to_json()
     json.dump(info, open(args.output, "w"))
 
@@ -70,7 +83,11 @@ def add_vehicle_cli():
     args = get_args("add_vehicle.output.json", config_arg=False, info_arg=True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    vp = VesselPerformance(args.info)
+    mesh = json.load(args.info)
+
+    vp = VesselPerformance(mesh)
+
+    logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
     json.dump(info, open(args.output, "w"))
 
@@ -83,14 +100,24 @@ def optimise_routes_cli():
     from polar_route.route_planner import RoutePlanner
 
     args = get_args("optimise_routes.output.json",
-                    config_arg=False, info_arg=True)
+                    config_arg=False, info_arg=True, waypoints_arg= True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    rp = RoutePlanner(args.info)
+    if args.path_only:
+        logging.info("outputting only path to {}".format(args.output))
+    else: 
+        logging.info("outputting full mesh to {}".format(args.output))
+
+    vehicle_mesh = json.load(args.info)
+    rp = RoutePlanner(vehicle_mesh, args.waypoints)
     rp.compute_routes()
     rp.compute_smoothed_routes()
     info = rp.to_json()
-    json.dump(info, open(args.output, "w"))
+
+    if args.path_only:
+        json.dump(info['paths'], open(args.output, 'w'))
+    else:
+        json.dump(info, open(args.output, "w"))
 
 
 @timed_call
@@ -101,16 +128,21 @@ def route_plotting_cli():
     args = get_args("routes.png", config_arg=False, info_arg=True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    config = args.info['config']
-    mesh = pd.DataFrame(args.info['cellboxes'])
-    paths = args.info['paths']
-    waypoints = pd.DataFrame(args.info['waypoints'])
+    info = json.load(args.info)
 
-    mp = Map(config, title='Example Test 1')
-    mp.Maps(mesh, 'SIC', predefined='SIC')
-    mp.Maps(mesh, 'Extreme Ice', predefined='Extreme Sea Ice Conc')
-    mp.Maps(mesh, 'Land Mask', predefined='Land Mask')
-    mp.Paths(paths, 'Routes', predefined='Route Traveltime Paths')
-    mp.Points(waypoints, 'Waypoints', names={"font_size": 10.0})
-    mp.MeshInfo(mesh, 'Mesh Info', show=False)
+    config    = info['config']
+    mesh      = pd.DataFrame(info['cellboxes'])
+    paths     = info['paths']
+    waypoints = pd.DataFrame(info['waypoints'])
+
+    mp = Map(title='Example Test 1')
+    mp.Maps(mesh,'SIC',predefined='SIC')
+    mp.Maps(mesh,'Extreme Ice',predefined='Extreme Sea Ice Conc')
+    mp.Maps(mesh,'Land Mask',predefined='Land Mask')
+    mp.Maps(mesh,'Fuel',predefined='Fuel',show=False)
+    mp.Maps(mesh, 'speed', predefined = 'Speed', show = False)
+
+    mp.Paths(paths,'Routes',predefined='Route Traveltime Paths')
+    mp.Points(waypoints,'Waypoints',names={"font_size":10.0})
+    mp.MeshInfo(mesh,'Mesh Info',show=False)
     mp.save(args.output)
