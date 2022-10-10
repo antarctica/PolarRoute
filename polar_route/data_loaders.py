@@ -791,3 +791,18 @@ def load_north_sea_currents(params, long_min, long_max, lat_min, lat_max, time_s
     bc_df = bc_df.rename(columns={'lon': 'long', 'lat': 'lat', 'U': 'uC', 'V': 'vC'})
 
     return bc_df
+
+
+
+def load_oras5(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    logging.debug("opening file {}".format(params['file']))
+    oras5 = xr.open_dataset(params['file'])
+    oras5 = oras5.sel(time=slice(time_start, time_end))
+    oras5_df = oras5.to_dataframe()
+    oras5_df = oras5_df.reset_index()
+
+    oras5_df = oras5_df.rename(columns={'uo': 'uC','vo': 'vC','longitude':'long','latitude':'lat'})
+    oras5_df = oras5_df[oras5_df['long'].between(long_min, long_max)]
+    oras5_df = oras5_df[oras5_df['lat'].between(lat_min, lat_max)]
+    logging.debug("returned {} datapoints".format(len(oras5_df.index)))
+    return oras5_df
