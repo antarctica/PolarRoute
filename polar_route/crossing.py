@@ -732,7 +732,7 @@ class NewtonianCurve:
         id=0
         while id < len(self.CrossingDF)-3:
             triplet = self.CrossingDF.iloc[id:id+3]
-            if PtDist(triplet.iloc[0],triplet.iloc[1]) < 1e-2:
+            if PtDist(triplet.iloc[0],triplet.iloc[1]) < 2e-3:
                 try:
                     neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
                 except:
@@ -745,7 +745,7 @@ class NewtonianCurve:
                 triplet['cellEnd'].iloc[0] = copy.deepcopy(triplet.iloc[1]['cellEnd'])
                 triplet['case'].iloc[0]    = copy.deepcopy(case)
                 self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
-            if PtDist(triplet.iloc[1],triplet.iloc[2]) < 1e-2:
+            if PtDist(triplet.iloc[1],triplet.iloc[2]) < 2e-3:
                 try:
                     neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
                 except:
@@ -794,7 +794,7 @@ class NewtonianCurve:
             vmax = np.min([smax,emax])
 
             # Point crossingpoint on boundary between the two origional cells
-            if (Cp[1] >= vmin) and (Cp[1] <= vmax):
+            if (Cp[1] > vmin) and (Cp[1] < vmax):
                 return
 
             # If Start and end cells share a edge for the horesshoe 
@@ -1002,7 +1002,7 @@ class NewtonianCurve:
         if boolReverseEdge.any():
             indxReverseEdge = np.where(boolReverseEdge)[0]+1
             for id in indxReverseEdge:
-                self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
+                self.CrossingDF = self.CrossingDF.drop([self.CrossingDF.iloc[id].name]).sort_index().reset_index(drop=True)
 
 
         # Removing Reverse Edge Type 2

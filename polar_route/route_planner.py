@@ -552,22 +552,22 @@ class RoutePlanner:
                         if self.verbose:
                             pbar.set_description("Mean Difference = {}".format(Dist))
 
-                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 25:
+                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 500:
                             if self.verbose:
-                                print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path'.format(iter,Dist))
+                                print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 1'.format(iter,Dist))
                             
                             break
                         if (Dist < minimumDiff) and (Dist != 0.0):
                             if self.verbose:
                                 print('{} iterations - dDist={}'.format(iter, Dist))
                             break
-                    else:
-                        if 'Dist' in locals():
-                            self.allDist2.append(Dist)
-                            if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>25:
-                                if self.verbose:
-                                    print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path'.format(iter,Dist))
-                                break
+                    # else:
+                    #     if 'Dist' in locals():
+                    #         self.allDist2.append(Dist)
+                    #         if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>50:
+                    #             if self.verbose:
+                    #                 print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 2'.format(iter,Dist))
+                    #             break
 
 
 
