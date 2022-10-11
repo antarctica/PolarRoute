@@ -29,6 +29,8 @@ import json
 import numpy as np
 import pandas as pd
 
+from polar_route.utils import timed_call
+
 
 class VesselPerformance:
     """
@@ -58,14 +60,14 @@ class VesselPerformance:
         self.vessel_params = self.config['Vessel']
 
         # Identifying land and extreme ice cells then removing them from the neighbour graph
-
         self.land()
         self.extreme_ice()
         self.inaccessible_nodes()
 
         # Checking if the speed is defined in the input mesh
         if 'speed' not in self.mesh_df:
-            logging.debug("No speed in mesh, assigning default value from config")
+            logging.debug(f'No speed in mesh, assigning default value of {self.vessel_params["Speed"]} '
+                          f'{self.vessel_params["Unit"]} from config')
             self.mesh_df['speed'] = self.vessel_params["Speed"]
 
         # Modify speed based on ice resistance
@@ -97,6 +99,7 @@ class VesselPerformance:
             self.mesh_df['land'] = False
         else:
             self.mesh_df['land'] = self.mesh_df['elevation'] > self.vessel_params['MinDepth']
+            logging.debug(f"{self.mesh_df['land'].sum()} cells inaccessible due to land")
 
     def extreme_ice(self):
         """
@@ -107,7 +110,9 @@ class VesselPerformance:
             self.mesh_df['ext_ice'] = False
         else:
             self.mesh_df['ext_ice'] = self.mesh_df['SIC'] > self.vessel_params['MaxIceExtent']
+            logging.debug(f"{self.mesh_df['ext_ice'].sum()} cells inaccessible due to extreme ice")
 
+    @timed_call
     def inaccessible_nodes(self):
         """
             Method to determine which nodes are inaccessible and remove them from the neighbour graph.
@@ -176,6 +181,7 @@ class VesselPerformance:
 
         return speed
 
+    @timed_call
     def speed(self):
         """
             Method to compile the new speeds calculated based on the ice resistance into the mesh.
@@ -212,6 +218,7 @@ class VesselPerformance:
         self.mesh_df['speed'] = (1 - np.sqrt(self.mesh_df['SIC'] / 100)) * \
                                         self.vessel_params['Speed']
 
+    @timed_call
     def fuel(self):
         """
             Method to calculate the fuel usage in tons per day based on speed in km/h and ice resistance in N.
@@ -254,7 +261,7 @@ class VesselPerformance:
             Returns:
                 accessibility_graph (dict): A new neighbour graph with the inaccessible nodes removed
         """
-        logging.debug("Removing {} nodes from the neighbour graph".format(len(inaccessible_nodes)))
+        logging.debug(f"Removing {len(inaccessible_nodes)} nodes from the neighbour graph")
         accessibility_graph = neighbour_graph.copy()
 
         for node in accessibility_graph.keys():
