@@ -76,6 +76,11 @@ class VesselPerformance:
         # Calculate fuel usage based on speed and ice resistance
         self.fuel()
 
+        # Check for NaNs and zero them then warn if present
+        if self.mesh_df.isnull().values.any():
+            logging.warning("NaNs present in mesh, setting all NaN values to zero!")
+            self.mesh_df.fillna(0.)
+
         # Updating the mesh indexing and cellboxes
         self.mesh_df['id'] = self.mesh_df.index
         self.mesh['cellboxes'] = self.mesh_df.to_dict('records')
