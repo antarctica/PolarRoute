@@ -24,9 +24,12 @@ Example:
 
         vehicle_mesh = vp.to_json()
 """
+import logging
 import json
 import numpy as np
 import pandas as pd
+
+from polar_route.utils import timed_call
 
 
 class VesselPerformance:
@@ -50,16 +53,11 @@ class VesselPerformance:
                 mesh_json (dict): The input mesh containing the cellboxes and neighbour graph as well as the config used
                 to generate the mesh.
         """
-
+        logging.info("Initialising vessel performance...")
         self.mesh = mesh_json
         self.config = self.mesh['config']
         self.mesh_df = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.vessel_params = self.config['Vessel']
-
-        # CHANGE !!! THIS IS WRONG BUT noNaNs !! 
-        # Setting NaN currents to 0.0
-        self.mesh_df['uC'][np.isnan(self.mesh_df['uC'])] = 0.0
-        self.mesh_df['vC'][np.isnan(self.mesh_df['vC'])] = 0.0
 
         # Identifying land and extreme ice cells then removing them from the neighbour graph
         self.land()
@@ -68,6 +66,8 @@ class VesselPerformance:
 
         # Checking if the speed is defined in the input mesh
         if 'speed' not in self.mesh_df:
+            logging.debug(f'No speed in mesh, assigning default value of {self.vessel_params["Speed"]} '
+                          f'{self.vessel_params["Unit"]} from config')
             self.mesh_df['speed'] = self.vessel_params["Speed"]
 
         # Modify speed based on ice resistance
@@ -75,6 +75,11 @@ class VesselPerformance:
 
         # Calculate fuel usage based on speed and ice resistance
         self.fuel()
+
+        # Check for NaNs and zero them then warn if present
+        if self.mesh_df.isnull().values.any():
+            logging.warning("NaNs present in mesh, setting all NaN values to zero!")
+            self.mesh_df.fillna(0.)
 
         # Updating the mesh indexing and cellboxes
         self.mesh_df['id'] = self.mesh_df.index
@@ -94,19 +99,30 @@ class VesselPerformance:
         """
             Method to determine which cells are land based on configured minimum depth.
         """
-        self.mesh_df['land'] = self.mesh_df['elevation'] > self.vessel_params['MinDepth']
+        if 'elevation' not in self.mesh_df:
+            logging.warning("No elevation data in mesh, no cells will be marked as land!")
+            self.mesh_df['land'] = False
+        else:
+            self.mesh_df['land'] = self.mesh_df['elevation'] > self.vessel_params['MinDepth']
+            logging.debug(f"{self.mesh_df['land'].sum()} cells inaccessible due to land")
 
     def extreme_ice(self):
         """
             Method to determine which cells are inaccessible based on configured max ice concentration.
         """
-        self.mesh_df['ext_ice'] = self.mesh_df['SIC'] > self.vessel_params['MaxIceExtent']
+        if 'SIC' not in self.mesh_df:
+            logging.info("No sea ice concentration data in mesh")
+            self.mesh_df['ext_ice'] = False
+        else:
+            self.mesh_df['ext_ice'] = self.mesh_df['SIC'] > self.vessel_params['MaxIceExtent']
+            logging.debug(f"{self.mesh_df['ext_ice'].sum()} cells inaccessible due to extreme ice")
 
+    @timed_call
     def inaccessible_nodes(self):
         """
             Method to determine which nodes are inaccessible and remove them from the neighbour graph.
         """
-
+        logging.info("Determining which nodes are inaccessible due to land and ice")
         inaccessible = self.mesh_df[(self.mesh_df['land']) | (self.mesh_df['ext_ice'])]
         inaccessible_idx = list(inaccessible.index)
 
@@ -170,29 +186,35 @@ class VesselPerformance:
 
         return speed
 
+    @timed_call
     def speed(self):
         """
             Method to compile the new speeds calculated based on the ice resistance into the mesh.
         """
+        logging.info("Calculating new speeds based on resistance models")
 
-        self.mesh_df['ice resistance'] = np.nan
-        for idx, row in self.mesh_df.iterrows():
-            if row['SIC'] == 0.0:
-                self.mesh_df.loc[idx, 'speed'] = self.vessel_params['Speed']
-                self.mesh_df.loc[idx, 'ice resistance'] = 0.0
-            elif row['SIC'] > self.vessel_params['MaxIceExtent']:
-                self.mesh_df.loc[idx, 'speed'] = 0.0
-                self.mesh_df.loc[idx, 'ice resistance'] = np.inf
-            else:
-                rp = self.ice_resistance(self.vessel_params['Speed'], row['SIC'], row['thickness'], row['density'])
-                if rp > self.vessel_params['ForceLimit']:
-                    new_speed = self.inverse_resistance(row['SIC'], row['thickness'], row['density'])
-                    rp = self.ice_resistance(new_speed, row['SIC'], row['thickness'], row['density'])
-                    self.mesh_df.loc[idx, 'speed'] = new_speed
-                    self.mesh_df.loc[idx, 'ice resistance'] = rp
-                else:
+        if all(k in self.mesh_df for k in ("SIC", "thickness", "density")):
+            logging.info("Adjusting speed according to ice resistance model")
+            self.mesh_df['ice resistance'] = np.nan
+            for idx, row in self.mesh_df.iterrows():
+                if row['SIC'] == 0.0:
                     self.mesh_df.loc[idx, 'speed'] = self.vessel_params['Speed']
-                    self.mesh_df.loc[idx, 'ice resistance'] = rp
+                    self.mesh_df.loc[idx, 'ice resistance'] = 0.0
+                elif row['SIC'] > self.vessel_params['MaxIceExtent']:
+                    self.mesh_df.loc[idx, 'speed'] = 0.0
+                    self.mesh_df.loc[idx, 'ice resistance'] = np.inf
+                else:
+                    rp = self.ice_resistance(self.vessel_params['Speed'], row['SIC'], row['thickness'], row['density'])
+                    if rp > self.vessel_params['ForceLimit']:
+                        new_speed = self.inverse_resistance(row['SIC'], row['thickness'], row['density'])
+                        rp = self.ice_resistance(new_speed, row['SIC'], row['thickness'], row['density'])
+                        self.mesh_df.loc[idx, 'speed'] = new_speed
+                        self.mesh_df.loc[idx, 'ice resistance'] = rp
+                    else:
+                        self.mesh_df.loc[idx, 'speed'] = self.vessel_params['Speed']
+                        self.mesh_df.loc[idx, 'ice resistance'] = rp
+        else:
+            logging.info("No resistance data available, no speed adjustment necessary")
 
     def speed_simple(self):
         """
@@ -201,15 +223,21 @@ class VesselPerformance:
         self.mesh_df['speed'] = (1 - np.sqrt(self.mesh_df['SIC'] / 100)) * \
                                         self.vessel_params['Speed']
 
+    @timed_call
     def fuel(self):
         """
             Method to calculate the fuel usage in tons per day based on speed in km/h and ice resistance in N.
         """
+        logging.info("Calculating fuel requirements in each cell")
 
-        self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
-                                self.mesh_df['speed'] + 0.25290433
-                                + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2
-                                + 6.48113363e-06 * self.mesh_df['ice resistance']) * 24.0
+        if 'ice resistance' in self.mesh_df:
+            self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
+                                    self.mesh_df['speed'] + 0.25290433
+                                    + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2
+                                    + 6.48113363e-06 * self.mesh_df['ice resistance']) * 24.0
+        else:
+            self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
+                                    self.mesh_df['speed'] + 0.25290433) * 24.0
 
     def remove_nodes(self, neighbour_graph, inaccessible_nodes):
         """
@@ -238,6 +266,7 @@ class VesselPerformance:
             Returns:
                 accessibility_graph (dict): A new neighbour graph with the inaccessible nodes removed
         """
+        logging.debug(f"Removing {len(inaccessible_nodes)} nodes from the neighbour graph")
         accessibility_graph = neighbour_graph.copy()
 
         for node in accessibility_graph.keys():
