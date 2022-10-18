@@ -453,7 +453,7 @@ def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start
 
                 lat | long | time | SIC
     """
-
+    logging.debug("opening file {}".format(params['file']))
     baltic = xr.open_dataset(params['file'])
     baltic = baltic.sel(time=slice(time_start, time_end))
     baltic_df = baltic.to_dataframe()
@@ -469,6 +469,7 @@ def load_baltic_sea_ice(params, long_min, long_max, lat_min, lat_max, time_start
     baltic_df = baltic_df[baltic_df['long'].between(long_min, long_max)]
     baltic_df = baltic_df[baltic_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returning {} datapoints".format(len(baltic_df.index)))
     return baltic_df
 
 
@@ -549,7 +550,7 @@ def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_en
 
                 lat | long | time | elevation 
     """
-
+    logging.debug("opening file {}".format(params['file']))
     gebco = xr.open_dataset(params['file'])
 
     if 'downsample_factors' in params.keys():
@@ -564,6 +565,7 @@ def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     gebco_df = gebco_df[gebco_df['long'].between(long_min, long_max)]
     gebco_df = gebco_df[gebco_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returned {} datapoints".format(len(gebco_df.index)))
     return gebco_df
 
 
@@ -651,7 +653,7 @@ def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_star
 
                 lat | long | time | uC | vC
     """
-
+    logging.debug("opening file {}".format(params['file']))
     bc = xr.open_dataset(params['file'])
     bc_df = bc.to_dataframe()
     bc_df = bc_df.reset_index()
@@ -663,6 +665,7 @@ def load_baltic_currents(params, long_min, long_max, lat_min, lat_max, time_star
     bc_df = bc_df[bc_df['long'].between(long_min, long_max)]
     bc_df = bc_df[bc_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returned {} datapoints".format(len(bc_df.index)))
     return bc_df
 
 
@@ -693,7 +696,7 @@ def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_en
 
                 lat | long | time | SIC | cloud
     """
-
+    logging.debug("opening file {}".format(params['file']))
     modis = xr.open_dataset(params['file'])
     modis_df = modis.to_dataframe()
     modis_df = modis_df.reset_index()
@@ -708,6 +711,7 @@ def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     modis_df = modis_df[modis_df['long'].between(long_min, long_max)]
     modis_df = modis_df[modis_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returned {} datapoints".format(len(modis_df.index)))
     return modis_df
 
 
@@ -738,7 +742,7 @@ def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, tim
 
                 lat | long | time | u10 | v10
     """
-
+    logging.debug("opening file {}".format(params['file']))
     era5_wind = xr.open_dataset(params['file'])
 
     # era5_wind data is available in monthly slices, not daily. 
@@ -755,10 +759,11 @@ def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, tim
     era5_wind_df = era5_wind_df[era5_wind_df['long'].between(long_min, long_max)]
     era5_wind_df = era5_wind_df[era5_wind_df['lat'].between(lat_min, lat_max)]
 
+    logging.debug("returned {} datapoints".format(len(era5_wind.index)))
     return era5_wind_df
 
 
-
+@timed_call
 def load_north_sea_currents(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     """
         Args:
@@ -782,18 +787,18 @@ def load_north_sea_currents(params, long_min, long_max, lat_min, lat_max, time_s
 
                 lat | long | time | uC | vC
     """
-
+    logging.debug("opening file {}".format(params['file']))
     bc = xr.open_dataset(params['file'])
     bc_df = bc.to_dataframe()
 
     bc_df = bc_df.reset_index()
     bc_df = bc_df[['lat', 'lon', 'U', 'V']]
     bc_df = bc_df.rename(columns={'lon': 'long', 'lat': 'lat', 'U': 'uC', 'V': 'vC'})
-
+    logging.debug("returned {} datapoints".format(len(bc_df.index)))
     return bc_df
 
 
-
+@timed_call
 def load_oras5(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
     logging.debug("opening file {}".format(params['file']))
     oras5 = xr.open_dataset(params['file'])
