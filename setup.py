@@ -1,15 +1,10 @@
 from setuptools import setup, find_packages
-
 import polar_route
-
+import pathlib
 
 def get_content(filename):
-    with open(filename, "r") as fh:
+    with pathlib.Path(filename).open() as fh:
         return fh.read()
-
-
-requirements = get_content("requirements.txt")
-
 setup(
     name=polar_route.__name__,
     version=polar_route.__version__,
@@ -47,14 +42,11 @@ setup(
     },
     keywords=[],
     packages=find_packages(),
-    install_requires=requirements,
+    install_requires=get_content("requirements.txt"),
     tests_require=["pytest"],
     extras_require={
-        "docs": get_content("docs/requirements.txt"),
-        "plotting": [
-            "GeoPlot @ git+ssh://git@github.com/antarctica/GeoPlot.git",
-        ],
-        "tests": get_content("tests/requirements.txt"),
+        "docs": get_content("./docs/requirements.txt"),
+        "tests": get_content("./tests/requirements.txt"),
     },
     python_requires='>=3.8, <4',
     zip_safe=False,
