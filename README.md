@@ -60,7 +60,7 @@ optional arguments are
 
 Optimal routes through a mesh can be calculated using the command:
 ```
-optimise_routes <vessel_mesh.json>
+optimise_routes <vessel_mesh.json> <waypoints.csv>
 ```
 optional arguments are
 ```
