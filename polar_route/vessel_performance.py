@@ -79,7 +79,7 @@ class VesselPerformance:
         # Check for NaNs and zero them then warn if present
         if self.mesh_df.isnull().values.any():
             logging.warning("NaNs present in mesh, setting all NaN values to zero!")
-            self.mesh_df.fillna(0.)
+            self.mesh_df = self.mesh_df.fillna(0.)
 
         # Updating the mesh indexing and cellboxes
         self.mesh_df['id'] = self.mesh_df.index
