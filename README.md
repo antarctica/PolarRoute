@@ -4,20 +4,37 @@
 ---
 
 ## Installation
-### Development
-The PolarRoute software can be installed by running the following commands:
-```
-python3 -m venv venv
-source venv/bin/activate
-pip install -e .
-```
-### Production
-To build and deploy this project, it's as simple as:
-```commandline
-source venv/bin/activate
-pip install --upgrade pip setuptools wheel
-python setup.py build bdist_wheel
-```
+### Linux/MacOS
+ The PolarRoute software can be installed on Linux/MacOS by running one of the two following commands.
+
+ Github:
+ ```
+ python setup.py install
+ ```
+
+ Pip: 
+ ```
+ pip install polar-route
+ ```
+
+ ### Windows
+ The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running one of the two following commands.
+
+ Github:
+ ```
+ pip install pipwin
+ pipwin install gdal
+ pipwin install fiona
+ python setup.py install
+ ```
+
+ Pip: 
+ ```
+ pip install pipwin
+ pipwin install gdal
+ pipwin install fiona
+ pip install polar-route
+ ```
 
 ## Manual
 The manual for this software can be installed by running:
