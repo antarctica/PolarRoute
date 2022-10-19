@@ -1,6 +1,9 @@
 ![](logo.jpg)
 # PolarRoute
 > PolarRoute is a long-distance maritime polar route planning, taking into account complex changing environmental conditions. The codebase allows the construction of optimised routes through three main stages: discrete modelling of the environmental conditions using a non-uniform mesh, the construction of mesh-optimal paths, and physics informed path smoothing. In order to account for different vehicle properties we construct a series of data driven functions that can be applied to the environmental mesh to determine the speed limitations and fuel requirements for a given vessel and mesh cell, representing these quantities graphically and geospatially.
+
+Additional documentation can be found at the Github page https://antarctica.github.io/PolarRoute/
+
 ---
 
 ## Installation
