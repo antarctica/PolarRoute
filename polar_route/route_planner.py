@@ -231,7 +231,10 @@ class RoutePlanner:
             # Waypoint is not within a mesh cell, but could still be on the edge of one. So perturbing the position slightly to the north-east and checking again. 
             #If this is not the case then the waypoint is not within the navitagatable domain and will continue
             if len(indices) == 0:
-                indices = mesh[(mesh['geometry'].contains(Point(wpt[['Long','Lat']]+1e-5)))].index
+                try:
+                    indices = mesh[(mesh['geometry'].contains(Point(wpt[['Long','Lat']]+1e-5)))].index
+                except:
+                    continue
             if len(indices) == 0:
                 continue
             if len(indices) > 1:

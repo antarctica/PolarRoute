@@ -36,7 +36,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'rinoh.frontend.sphinx',
     'sphinx.ext.todo',
-    'sphinx.ext.autosectionlabel']
+    'sphinx.ext.autosectionlabel',
+    'sphinx_markdown_builder']
 
 
 # Add any paths that contain templates here, relative to this directory.

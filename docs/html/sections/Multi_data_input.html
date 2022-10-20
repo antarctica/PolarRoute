@@ -1,0 +1,686 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Data Loaders &#8212; polar_route 0.0.10 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Mesh Construction" href="Discrete_meshing.html" />
+    <link rel="prev" title="Installation" href="Installation.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Discrete_meshing.html" title="Mesh Construction"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="Installation.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data Loaders</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="data-loaders">
+<h1>Data Loaders<a class="headerlink" href="#data-loaders" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>In this section we discuss functions for loading data into the PolarRoute Mesh.
+Data can be added to the Mesh using the <em>.add_data_points()</em> function of the Mesh.
+This function takes a single argument, a dataframe containing datapoints in a
+EPSG:4326 projection. The format in which dataframe must be given is:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Lat</p></th>
+<th class="head"><p>Long</p></th>
+<th class="head"><p>Time</p></th>
+<th class="head"><p>value_1</p></th>
+<th class="head"><p>…</p></th>
+<th class="head"><p>value_n</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+<td><p>…</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>The data loaders provided collect or create data from heterogeneous data sources
+and transform them into the correct format for use by the <em>.add_data_points()</em>
+function of the Mesh.</p>
+<p>Data loader functions located in the file <strong>./polar_route/data_loaders.py</strong> can
+be referenced in a configuration file and called in the initialisation of the Mesh.
+See the <a class="reference internal" href="Configuration.html#configuration"><span class="std std-ref">Configuration</span></a> section of this document for further details.</p>
+<span class="target" id="module-polar_route.data_loaders"></span><p>functions for loading datasets into PolarRoute.
+PolarRoute requires data as a pandas dataframe
+in the following format:</p>
+<p>long | lat | (time)* | value_1 | … | value_n</p>
+<p><a href="#id1"><span class="problematic" id="id2">*</span></a>time is optional</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>long and lat values must be in a EPSG:4326 projection</p>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_amsr">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_amsr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_amsr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load AMSR2 data from a netCDF file and transform
+it into a format ingestable by PolarRoute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the AMSR2 dataset</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing AMSR2 Sea Ice Concentration</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | SIC</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>amsr_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_amsr_folder">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_amsr_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_amsr_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load AMSR2 data from a folder containing separate
+days of AMSR2 data in netCDF files and transform
+it into a format ingestable by PolarRoute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<dl class="simple">
+<dt>params[‘folder’] (string): folder location of the AMSR2 dataset.</dt><dd><p>Files within the folder must be named in the form
+<em>asi-AMSR2-s6250-&lt;year&gt;&lt;month&gt;&lt;day&gt;-v.5.4.nc</em></p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing AMSR2 Sea Ice Concentration</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | SIC</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>amsr_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_baltic_currents">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_baltic_currents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_baltic_currents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load Baltic Sea current data from a netCDF file and
+transform it into a format that is ingestable
+by the pyRoutePlanner
+Data source: <a class="reference external" href="https://doi.org/10.48670/moi-00013">https://doi.org/10.48670/moi-00013</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the Baltic current dataset</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing Baltic Sea current</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | uC | vC</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bc_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_baltic_sea_ice">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_baltic_sea_ice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_baltic_sea_ice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load Sea ice data for the baltic sea from a netCDF file and transform it
+into a format ingestable by PolarRoute
+Data Source: <a class="reference external" href="https://doi.org/10.48670/moi-00131">https://doi.org/10.48670/moi-00131</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the Baltic ice dataset</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing Baltic Sea Ice Concentration</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | SIC</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>baltic_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_baltic_thickness_density">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_baltic_thickness_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_baltic_thickness_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create ice thickness and density dataframe for baltic route</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing ice thickness and density</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | thickness | density</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>thickness_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_bsose">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_bsose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_bsose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load BSOSE data from a netCDF file and transform it
+into a format ingestable by PolarRoute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the BSOSE dataset</p>
+<dl class="simple">
+<dt>params[‘units’] (string)(optional): The units SIC will be measured</dt><dd><p>in. &lt;percentage&gt; | &lt;fraction&gt;. Default is percentage</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing BSOSE Sea Ice Concentration</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | SIC</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bsose_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_bsose_depth">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_bsose_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_bsose_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load BSOSE data from a netCDF file and transform it
+into a format ingestable by PolarRoute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the BSOSE dataset</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing BSOSE bathymetry</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | elevation</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bsose_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_density">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_density</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create ice density dataframe for given time and region and put it into a format ingestable by the pyRoutePlanner.
+Data taken from Table 3 in: doi:10.1029/2007JC004254</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing ice density</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | density</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>density_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_era5_wind">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_era5_wind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_era5_wind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load era5 wind data from a netCDF file and transform it
+into a format that is ingestable by the pyRoutePlanner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the era5 dataset</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing era5 wind</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | u10 | v10</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>era5_wind_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_gebco">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_gebco</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_gebco" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load GEBCO data from a netCDF file and transform it
+into a format ingestable by the pyRoutePlanner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the GEBCO dataset
+params[‘downsample_factors’] ([int,int]): Downsample factors in horizontal and vertical respectively.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing GEBCO elevation</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | elevation</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>gebco_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_modis">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_modis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_modis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load MODIS data from a netCDF file and transform it
+into a format that is ingestable by the pyRoutePlanner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the MODIS dataset</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing MODIS Sea Ice Concentration</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | SIC | cloud</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>modis_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_north_sea_currents">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_north_sea_currents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_north_sea_currents" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the Baltic current dataset</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing Baltic Sea current</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | uC | vC</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bc_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_sose_currents">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_sose_currents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_sose_currents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load SOSE current data from a netCDF file and#
+transform it into a format that is ingestable
+by the pyRoutePlanner</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – <p>A dictionary containing optional parameters. This
+function requires -</p>
+<p>params[‘file’] (string): file location of the SOSE dataset</p>
+<dl class="simple">
+<dt>params[‘units’] (string)(optional)<span class="classifier">The units of measurements</span></dt><dd><p>uC and vC will be given in - &lt;km/h&gt; | &lt;m/s&gt;. Default is m/s</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing SOSE current</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | uC | vC</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sose_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.data_loaders.load_thickness">
+<span class="sig-prename descclassname"><span class="pre">polar_route.data_loaders.</span></span><span class="sig-name descname"><span class="pre">load_thickness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_min</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.data_loaders.load_thickness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create ice thickness dataframe for given time and region and put it into a format ingestable by PolarRoute.
+Data taken from Table 3 in: doi:10.1029/2007JC004254</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long_min</strong> (<em>float</em>) – The minimum longitude of the data to be retrieved</p></li>
+<li><p><strong>long_max</strong> (<em>float</em>) – The maximum longitude of the data to be retrieved</p></li>
+<li><p><strong>lat_min</strong> (<em>float</em>) – The minimum latitude of the data to be retrieved</p></li>
+<li><p><strong>lat_max</strong> (<em>float</em>) – The maximum latitude of the data to be retrieved</p></li>
+<li><p><strong>time_start</strong> (<em>string</em>) – The start time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+<li><p><strong>time_end</strong> (<em>string</em>) – The end time of the data to be retrieved,
+must be given in the format “YYYY-MM-DD”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>A dataframe containing ice thickness</dt><dd><p>data. The dataframe is of the format -</p>
+<p>lat | long | time | thickness</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>thickness_df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Data Loaders</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="Installation.html"
+                          title="previous chapter">Installation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Discrete_meshing.html"
+                          title="next chapter">Mesh Construction</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/sections/Multi_data_input.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Discrete_meshing.html" title="Mesh Construction"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="Installation.html" title="Installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Data Loaders</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, BAS AI Lab.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
+    </div>
+  </body>
+</html>

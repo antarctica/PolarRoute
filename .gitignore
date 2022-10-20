@@ -15,6 +15,5 @@ TestingNotebook.ipynb
 /data/
 /resources/
 *.output.*json
-*.png
 setup.cfg
 pip.sh
