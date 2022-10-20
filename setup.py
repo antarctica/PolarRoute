@@ -33,8 +33,7 @@ setup(
         Operating System :: OS Independent
         Programming Language :: Python
         Programming Language :: Python :: 3
-        Programming Language :: Python :: 3.8
-        Programming Language :: Python :: 3.9
+        Programming Language :: Python :: 3.7
         Topic :: Scientific/Engineering
     """.split('\n')],
     entry_points={
@@ -51,11 +50,7 @@ setup(
     tests_require=["pytest"],
     extras_require={
         "docs": get_content("docs/requirements.txt"),
-        "plotting": [
-            "GeoPlot @ git+ssh://git@github.com/antarctica/GeoPlot.git",
-        ],
         "tests": get_content("tests/requirements.txt"),
     },
-    python_requires='>=3.8, <4',
     zip_safe=False,
     include_package_data=True)
