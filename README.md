@@ -36,6 +36,11 @@
  pip install polar-route
  ```
 
+## Required Data sources
+Polar-route has been built to work with a variety of open-source climactic data sources. 
+A list of supported data sources and there associated data-loaders is given in the 
+'Data Loaders' section of the manual
+
 ## Command-line Interface
 Once installed, a mesh can be created from a config file using the command:
 ```
