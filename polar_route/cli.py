@@ -118,31 +118,3 @@ def optimise_routes_cli():
         json.dump(info['paths'], open(args.output, 'w'))
     else:
         json.dump(info, open(args.output, "w"))
-
-
-@timed_call
-def route_plotting_cli():
-    from geoplot.interactive import Map
-    import pandas as pd
-
-    args = get_args("routes.png", config_arg=False, info_arg=True)
-    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
-
-    info = json.load(args.info)
-
-    config    = info['config']
-    mesh      = pd.DataFrame(info['cellboxes'])
-    paths     = info['paths']
-    waypoints = pd.DataFrame(info['waypoints'])
-
-    mp = Map(title='Example Test 1')
-    mp.Maps(mesh,'SIC',predefined='SIC')
-    mp.Maps(mesh,'Extreme Ice',predefined='Extreme Sea Ice Conc')
-    mp.Maps(mesh,'Land Mask',predefined='Land Mask')
-    mp.Maps(mesh,'Fuel',predefined='Fuel',show=False)
-    mp.Maps(mesh, 'speed', predefined = 'Speed', show = False)
-
-    mp.Paths(paths,'Routes',predefined='Route Traveltime Paths')
-    mp.Points(waypoints,'Waypoints',names={"font_size":10.0})
-    mp.MeshInfo(mesh,'Mesh Info',show=False)
-    mp.save(args.output)
