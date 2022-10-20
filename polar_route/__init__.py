@@ -1,6 +1,6 @@
 __version__ = "0.0.11"
 __description__ = "RoutePlanner: Optimal Route Planner for SDA"
 __license__ = "MIT"
-__author__ = "Maria Fox, James Byrne, Jonathan Smith, Samuel Hall, George Coombs"
+__author__ = "Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox"
 __email__ = "jonsmi@bas.ac.uk"
 __copyright__ = "2022, BAS AI Lab"
