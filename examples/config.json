@@ -5,23 +5,24 @@
       "latMax": -45,
       "longMin": -120,
       "longMax": -10,
-      "startTime": "2017-01-01",
-      "endTime": "2017-01-14",
+      "startTime": "2019-01-01",
+      "endTime": "2019-01-14",
       "cellWidth":5,
       "cellHeight":2.5
     },
     "Data_sources": [
       {
-        "loader":"load_bsose_depth",
+        "loader":"load_gebco",
         "params":{
-          "file":"./data/bsose_i122_2013to2017_1day_SeaIceArea.nc",
-          "data_name": "elevation"
+          "file":"./data/GEBCO/gebco_2022_n-45.0_s-90.0_w-120.0_e0.0.nc",
+          "data_name": "elevation",
+          "downsample_factors": [5,5]
         }
       }, 
       {
-        "loader":"load_amsr",
+        "loader":"load_amsr_folder",
         "params":{
-          "file":"./data/asi-AMSR-2017.nc"
+          "folder":"./data/AMSR/asi-AMSR2-s6250-2019"
         }
       },
       {
