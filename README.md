@@ -50,43 +50,6 @@ Polar-route has been built to work with a variety of open-source climactic data 
 A list of supported data sources and there associated data-loaders is given in the 
 'Data Loaders' section of the manual
 
-
-
-## Command-line Interface
-Once installed, a mesh can be created from a config file using the command:
-```
-create_mesh <config.json>
-```
-optional arguments are
-```
--v (verbose logging)
--o <output location> (set output location for mesh)
-```
-
-Vehicle specific information can be encoded into the mesh using
-the command:
-```
-add_vehicle <mesh.json>
-```
-optional arguments are
-```
--v (verbose logging)
--o <output location> (set output location for mesh)
-```
-
-Optimal routes through a mesh can be calculated using the command:
-```
-optimise_routes <vessel_mesh.json> <waypoints.csv>
-```
-optional arguments are
-```
--v (verbose logging)
--o <output location> (set output location for mesh)
--p (output only the caculated path, not the entire mesh)
-```
-
-Meshes produced at any stage in the route planning process can be visualised using the GeoPlot library.
-
 ## Developers
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
 
