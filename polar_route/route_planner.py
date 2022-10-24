@@ -305,8 +305,8 @@ class RoutePlanner:
                                                       neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
                                                       unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents)
                         tt_end = cost_func.waypoint_correction(path_points[-1, :], path_points[-2, :])
-                        path['properties']['traveltime'] = np.array(graph['path_traveltime'].loc[wpt_b_index])
-                        path['properties']['traveltime'] = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
+                        path['properties']['traveltime']     = np.array(graph['path_traveltime'].loc[wpt_b_index])
+                        path['properties']['traveltime']     = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
                         path['properties']['traveltime'][-1] = (path['properties']['traveltime'][-2] + tt_end)
 
                         for vrbl in self.config['Route_Info']['path_variables']:
@@ -558,8 +558,9 @@ class RoutePlanner:
 
 
                 # Determining the traveltime 
-                TravelTimeLegs,pathIndex = nc.objective_function()
-                FuelLegs = TravelTimeLegs*self.neighbour_graph['fuel'].loc[pathIndex]
+                TravelTimeLegs,DistanceLegs,pathIndex = nc.objective_function()
+                FuelLegs  = TravelTimeLegs*self.neighbour_graph['fuel'].loc[pathIndex]
+                SpeedLegs = self.neighbour_graph['speed'].loc[pathIndex]
 
                 SmoothedPath ={}
                 SmoothedPath['type'] = 'Feature'
@@ -570,9 +571,10 @@ class RoutePlanner:
                 SmoothedPath['properties']['from'] = Path['properties']['from']
                 SmoothedPath['properties']['to']   = Path['properties']['to']
                 SmoothedPath['properties']['traveltime'] = np.cumsum(TravelTimeLegs).tolist() 
-                SmoothedPath['properties']['fuel'] = np.cumsum(FuelLegs).tolist()
+                SmoothedPath['properties']['fuel']  = np.cumsum(FuelLegs).tolist()
+                SmoothedPath['properties']['distance'] = np.cumsum(DistanceLegs).tolist()
+                SmoothedPath['properties']['speed'] = SpeedLegs.tolist()
                 SmoothedPaths.append(SmoothedPath)
-
                 geojson['features'] = SmoothedPaths
                 self.smoothed_paths = geojson
                 self.mesh['paths'] = self.smoothed_paths

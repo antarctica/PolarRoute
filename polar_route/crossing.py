@@ -1079,7 +1079,7 @@ class NewtonianCurve:
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
         if traveltime < 0:
             traveltime = np.inf
-        return traveltime
+        return traveltime, dist
 
     def _waypoint_correction(self,source_graph,Wp,Cp):
         '''
@@ -1093,26 +1093,28 @@ class NewtonianCurve:
         Su  = source_graph['Vector_x']*self.zc
         Sv  = source_graph['Vector_y']*self.zc
         Ssp = self._unit_speed(source_graph['Speed'])
-        traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
-        return traveltime
+        traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+        return traveltime, distance
 
     def objective_function(self):
         '''
             FILL
         '''
         TravelTime = np.zeros(len(self.CrossingDF))
+        Distance   = np.zeros(len(self.CrossingDF))
         index      = np.zeros(len(self.CrossingDF))
         for ii in range(len(self.CrossingDF)-1):
             soruce_graph = self.CrossingDF.iloc[ii]['cellEnd']
             Wp = self.CrossingDF.iloc[ii][['cx','cy']].to_numpy()
             Cp = self.CrossingDF.iloc[ii+1][['cx','cy']].to_numpy()
-            traveltime = self._waypoint_correction(soruce_graph,Wp,Cp)
-            TravelTime[ii+1]= self._unit_time(traveltime)
+            traveltime, distance = self._waypoint_correction(soruce_graph,Wp,Cp)
+            TravelTime[ii+1] = self._unit_time(traveltime)
+            Distance[ii+1]   = distance
 
             if ii ==0:
                 index[ii] = soruce_graph.name
                 index[ii+1] = soruce_graph.name
             else:
                 index[ii+1] = soruce_graph.name
-        return TravelTime,index
+        return TravelTime,Distance,index
 
