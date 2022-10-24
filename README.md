@@ -32,7 +32,7 @@ A list of supported data sources and there associated data-loaders is given in t
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
 
 ## License
-This software is licensed under a MIT license. For more information please see the attached  ``LICENSE`` file.
+This software is licensed under a MIT license. For more information please see the attached ``LICENSE`` file.
 
 [version]: https://img.shields.io/PolarRoute/v/datadog-metrics.svg?style=flat-square
 [downloads]: https://img.shields.io/PolarRoute/dm/datadog-metrics.svg?style=flat-square
