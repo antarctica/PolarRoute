@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Data Loaders &#8212; polar_route 0.0.10 documentation</title>
+    <title>5. Input - Data Loaders &#8212; polar_route 0.0.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
     
@@ -19,8 +19,8 @@
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Mesh Construction" href="Discrete_meshing.html" />
-    <link rel="prev" title="Installation" href="Installation.html" />
+    <link rel="next" title="6. Outputs - Data Types" href="Outputs.html" />
+    <link rel="prev" title="4. Input - Configuration" href="Configuration.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
     <script src="_static/css3-mediaqueries.js"></script>
@@ -36,13 +36,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Discrete_meshing.html" title="Mesh Construction"
+          <a href="Outputs.html" title="6. Outputs - Data Types"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Installation.html" title="Installation"
+          <a href="Configuration.html" title="4. Input - Configuration"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Data Loaders</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">5. </span>Input - Data Loaders</a></li> 
       </ul>
     </div>  
 
@@ -51,10 +51,58 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="data-loaders">
-<h1>Data Loaders<a class="headerlink" href="#data-loaders" title="Permalink to this heading">¶</a></h1>
+  <section id="input-data-loaders">
+<h1><span class="section-number">5. </span>Input - Data Loaders<a class="headerlink" href="#input-data-loaders" title="Permalink to this heading">¶</a></h1>
+<section id="data-sources">
+<h2><span class="section-number">5.1. </span>Data sources<a class="headerlink" href="#data-sources" title="Permalink to this heading">¶</a></h2>
+<p>The polar_route implements a variety of data-loaders to enable working with a
+number of open-source datasets. Links to download some of these datasets and
+there implemented data-loaders are provided in the table below.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Data Type</p></th>
+<th class="head"><p>Data Name</p></th>
+<th class="head"><p>Source</p></th>
+<th class="head"><p>Download</p></th>
+<th class="head"><p>Data_loader</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Sea Ice Concentration</p></td>
+<td><p>SIC</p></td>
+<td><p>AMSR2</p></td>
+<td><p><a class="reference external" href="https://seaice.uni-bremen.de/data/amsr2/asi_daygrid_swath/s6250/netcdf/">https://seaice.uni-bremen.de/data/amsr2/asi_daygrid_swath/s6250/netcdf/</a></p></td>
+<td><p>load_amsr_folder</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bathymetry</p></td>
+<td><p>Elevation</p></td>
+<td><p>GEBCO</p></td>
+<td><p><a class="reference external" href="https://download.gebco.net/">https://download.gebco.net/</a></p></td>
+<td><p>load_gebco</p></td>
+</tr>
+<tr class="row-even"><td><p>Currents</p></td>
+<td><p>uC, vC</p></td>
+<td><p>SOSE</p></td>
+<td><p>…</p></td>
+<td><p>load_sose_currents</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="row-even"><td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">5.2. </span>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>In this section we discuss functions for loading data into the PolarRoute Mesh.
 Data can be added to the Mesh using the <em>.add_data_points()</em> function of the Mesh.
 This function takes a single argument, a dataframe containing datapoints in a
@@ -91,7 +139,7 @@ and transform them into the correct format for use by the <em>.add_data_points()
 function of the Mesh.</p>
 <p>Data loader functions located in the file <strong>./polar_route/data_loaders.py</strong> can
 be referenced in a configuration file and called in the initialisation of the Mesh.
-See the <a class="reference internal" href="Configuration.html#configuration"><span class="std std-ref">Configuration</span></a> section of this document for further details.</p>
+See the <span class="xref std std-ref">Configuration</span> section of this document for further details.</p>
 <span class="target" id="module-polar_route.data_loaders"></span><p>functions for loading datasets into PolarRoute.
 PolarRoute requires data as a pandas dataframe
 in the following format:</p>
@@ -621,8 +669,9 @@ must be given in the format “YYYY-MM-DD”</p></li>
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Data Loaders</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#">5. Input - Data Loaders</a><ul>
+<li><a class="reference internal" href="#data-sources">5.1. Data sources</a></li>
+<li><a class="reference internal" href="#overview">5.2. Overview</a></li>
 </ul>
 </li>
 </ul>
@@ -630,13 +679,13 @@ must be given in the format “YYYY-MM-DD”</p></li>
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="Installation.html"
-                          title="previous chapter">Installation</a></p>
+    <p class="topless"><a href="Configuration.html"
+                          title="previous chapter"><span class="section-number">4. </span>Input - Configuration</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="Discrete_meshing.html"
-                          title="next chapter">Mesh Construction</a></p>
+    <p class="topless"><a href="Outputs.html"
+                          title="next chapter"><span class="section-number">6. </span>Outputs - Data Types</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -669,13 +718,13 @@ must be given in the format “YYYY-MM-DD”</p></li>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Discrete_meshing.html" title="Mesh Construction"
+          <a href="Outputs.html" title="6. Outputs - Data Types"
              >next</a> |</li>
         <li class="right" >
-          <a href="Installation.html" title="Installation"
+          <a href="Configuration.html" title="4. Input - Configuration"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Data Loaders</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">5. </span>Input - Data Loaders</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
