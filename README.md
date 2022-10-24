@@ -10,40 +10,18 @@
 # PolarRoute
 > PolarRoute is a long-distance maritime polar route planning, taking into account complex changing environmental conditions. The codebase allows the construction of optimised routes through three main stages: discrete modelling of the environmental conditions using a non-uniform mesh, the construction of mesh-optimal paths, and physics informed path smoothing. In order to account for different vehicle properties we construct a series of data driven functions that can be applied to the environmental mesh to determine the speed limitations and fuel requirements for a given vessel and mesh cell, representing these quantities graphically and geospatially.
 
-
-
 ## Installation
-### Linux/MacOS
- The PolarRoute software can be installed on Linux/MacOS by running one of the two following commands.
+The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running the required wheels for GDAL and FIONA. MOre information can be found in the manual pages linked above. Once these requirements are met then the software can be installed by:
 
- Github:
- ```
- python setup.py install
- ```
-
- Pip: 
- ```
- pip install polar-route
- ```
-
- ### Windows
- The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running one of the two following commands.
-
- Github:
- ```
- pip install pipwin
- pipwin install gdal
- pipwin install fiona
- python setup.py install
- ```
+Github:
+```
+python setup.py install
+```
 
  Pip: 
- ```
- pip install pipwin
- pipwin install gdal
- pipwin install fiona
- pip install polar-route
- ```
+```
+pip install polar-route
+```
 
 ## Required Data sources
 Polar-route has been built to work with a variety of open-source climactic data sources. 
