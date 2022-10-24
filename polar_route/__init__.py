@@ -1,4 +1,4 @@
-__version__ = "0.0.11"
+__version__ = "0.0.12"
 __description__ = "RoutePlanner: Optimal Route Planner for SDA"
 __license__ = "MIT"
 __author__ = "Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox"
