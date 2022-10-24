@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Mesh Construction &#8212; polar_route 0.0.10 documentation</title>
+    <title>8. Methods - Mesh Construction &#8212; polar_route 0.0.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
     
@@ -19,8 +19,8 @@
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Vessel Specifics" href="Vehicle_specifics.html" />
-    <link rel="prev" title="Data Loaders" href="Multi_data_input.html" />
+    <link rel="next" title="9. Methods - Vessel Specifics" href="Vehicle_specifics.html" />
+    <link rel="prev" title="7. Examples" href="Examples.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
     <script src="_static/css3-mediaqueries.js"></script>
@@ -36,13 +36,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Vehicle_specifics.html" title="Vessel Specifics"
+          <a href="Vehicle_specifics.html" title="9. Methods - Vessel Specifics"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Multi_data_input.html" title="Data Loaders"
+          <a href="Examples.html" title="7. Examples"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Mesh Construction</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">8. </span>Methods - Mesh Construction</a></li> 
       </ul>
     </div>  
 
@@ -51,10 +51,10 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="mesh-construction">
-<h1>Mesh Construction<a class="headerlink" href="#mesh-construction" title="Permalink to this heading">¶</a></h1>
+  <section id="methods-mesh-construction">
+<h1><span class="section-number">8. </span>Methods - Mesh Construction<a class="headerlink" href="#methods-mesh-construction" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">8.1. </span>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>Throughout this section we will outline the use case for the Discrete Meshing of the environment. The two main classes used are <cite>Mesh</cite> and <cite>CellBox</cite>, with a Mesh being composed of a series of CellBox objects.</p>
 <p>A general overview of the method can be seen below:</p>
 <figure class="align-center" id="id1">
@@ -65,7 +65,7 @@
 </figure>
 </section>
 <section id="module-polar_route.cellbox">
-<span id="cellbox"></span><h2>CellBox<a class="headerlink" href="#module-polar_route.cellbox" title="Permalink to this heading">¶</a></h2>
+<span id="cellbox"></span><h2><span class="section-number">8.2. </span>CellBox<a class="headerlink" href="#module-polar_route.cellbox" title="Permalink to this heading">¶</a></h2>
 <p>Outlined in this section we will discuss the usage of the CellBox functionality
 of the PolarRoute package. In this series of class distributions we house our discrete
 representation of input data. In each CellBox we determine the mean and variance of
@@ -556,7 +556,7 @@ type value within this CellBox that are above ‘threshold’.</p></li>
 
 </section>
 <section id="mesh">
-<h2>Mesh<a class="headerlink" href="#mesh" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">8.3. </span>Mesh<a class="headerlink" href="#mesh" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.mesh.Mesh">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh.</span></span><span class="sig-name descname"><span class="pre">Mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh" title="Permalink to this definition">¶</a></dt>
@@ -873,10 +873,10 @@ within this Mesh after splitting.</p>
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Mesh Construction</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#module-polar_route.cellbox">CellBox</a></li>
-<li><a class="reference internal" href="#mesh">Mesh</a></li>
+<li><a class="reference internal" href="#">8. Methods - Mesh Construction</a><ul>
+<li><a class="reference internal" href="#overview">8.1. Overview</a></li>
+<li><a class="reference internal" href="#module-polar_route.cellbox">8.2. CellBox</a></li>
+<li><a class="reference internal" href="#mesh">8.3. Mesh</a></li>
 </ul>
 </li>
 </ul>
@@ -884,13 +884,13 @@ within this Mesh after splitting.</p>
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="Multi_data_input.html"
-                          title="previous chapter">Data Loaders</a></p>
+    <p class="topless"><a href="Examples.html"
+                          title="previous chapter"><span class="section-number">7. </span>Examples</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
     <p class="topless"><a href="Vehicle_specifics.html"
-                          title="next chapter">Vessel Specifics</a></p>
+                          title="next chapter"><span class="section-number">9. </span>Methods - Vessel Specifics</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -923,13 +923,13 @@ within this Mesh after splitting.</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Vehicle_specifics.html" title="Vessel Specifics"
+          <a href="Vehicle_specifics.html" title="9. Methods - Vessel Specifics"
              >next</a> |</li>
         <li class="right" >
-          <a href="Multi_data_input.html" title="Data Loaders"
+          <a href="Examples.html" title="7. Examples"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Mesh Construction</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">8. </span>Methods - Mesh Construction</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

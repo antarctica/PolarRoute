@@ -1,5 +1,5 @@
 ********
-Configuration
+Input - Configuration
 ********
 
 In this section we will outline the standard structure for a configuration file used in all portions of the PolarRoute software package.

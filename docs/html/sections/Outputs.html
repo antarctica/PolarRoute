@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Outputs &#8212; polar_route 0.0.10 documentation</title>
+    <title>6. Outputs - Data Types &#8212; polar_route 0.0.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
     
@@ -19,8 +19,8 @@
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Examples" href="Examples.html" />
-    <link rel="prev" title="Configuration" href="Configuration.html" />
+    <link rel="next" title="7. Examples" href="Examples.html" />
+    <link rel="prev" title="5. Input - Data Loaders" href="Multi_data_input.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
     <script src="_static/css3-mediaqueries.js"></script>
@@ -36,13 +36,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Examples.html" title="Examples"
+          <a href="Examples.html" title="7. Examples"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Configuration.html" title="Configuration"
+          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Outputs</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">6. </span>Outputs - Data Types</a></li> 
       </ul>
     </div>  
 
@@ -51,10 +51,10 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="outputs">
-<h1>Outputs<a class="headerlink" href="#outputs" title="Permalink to this heading">¶</a></h1>
+  <section id="outputs-data-types">
+<h1><span class="section-number">6. </span>Outputs - Data Types<a class="headerlink" href="#outputs-data-types" title="Permalink to this heading">¶</a></h1>
 <section id="mesh-construction">
-<h2>Mesh construction<a class="headerlink" href="#mesh-construction" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">6.1. </span>Mesh construction<a class="headerlink" href="#mesh-construction" title="Permalink to this heading">¶</a></h2>
 <p>The first stage in the route planning pipeline is constructing a discrete
 mesh of the environment in which the route planner can operate. Once this
 mesh is constructed, it can then be exported as a json object and passed
@@ -72,7 +72,7 @@ of mesh construction and json object generation are as follows:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Examples and a description of the configuration files can be found in
-the <a class="reference internal" href="Configuration.html#configuration"><span class="std std-ref">Configuration</span></a> section of this document.</p>
+the <span class="xref std std-ref">Configuration</span> section of this document.</p>
 </div>
 <p>The json object outputted by the Mesh consists of 3 sections: <strong>config</strong>,
 <strong>cellboxes</strong> and <strong>neighbour_graph</strong>.</p>
@@ -104,7 +104,7 @@ the <a class="reference internal" href="Configuration.html#configuration"><span 
 <li><p><strong>neighbour_graph</strong> : A graphical representation of the adjacency of CellBoxes within the Mesh.</p></li>
 </ul>
 <section id="cellboxes">
-<h3>cellboxes<a class="headerlink" href="#cellboxes" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.1.1. </span>cellboxes<a class="headerlink" href="#cellboxes" title="Permalink to this heading">¶</a></h3>
 <p>Each CellBox object within <em>cellboxes</em> in the outputted json object is of
 the following form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -134,7 +134,7 @@ the following form:</p>
 </figure>
 </section>
 <section id="neighbour-graph">
-<h3>neighbour_graph<a class="headerlink" href="#neighbour-graph" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.1.2. </span>neighbour_graph<a class="headerlink" href="#neighbour-graph" title="Permalink to this heading">¶</a></h3>
 <p>For each CellBox in the <em>cellboxes</em> section of the outputted json object, there will be a
 corresponding entry in the <em>neighbour_graph</em>.</p>
 <div class="admonition note">
@@ -178,7 +178,7 @@ as inaccessible CellBoxes will be removed from <em>neighbour_graph</em> but will
 </section>
 </section>
 <section id="vehicle-specifics">
-<h2>Vehicle specifics<a class="headerlink" href="#vehicle-specifics" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">6.2. </span>Vehicle specifics<a class="headerlink" href="#vehicle-specifics" title="Permalink to this heading">¶</a></h2>
 <p>Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
 which applies transformations which are specific to a given vehicle.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.mesh</span> <span class="kn">import</span> <span class="n">Mesh</span>
@@ -208,10 +208,10 @@ the following attributes:</p>
 </section>
 <hr class="docutils" />
 <section id="route-planning">
-<h2>Route planning<a class="headerlink" href="#route-planning" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">6.3. </span>Route planning<a class="headerlink" href="#route-planning" title="Permalink to this heading">¶</a></h2>
 <p>During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:</p>
 <section id="waypoints">
-<h3>waypoints<a class="headerlink" href="#waypoints" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.3.1. </span>waypoints<a class="headerlink" href="#waypoints" title="Permalink to this heading">¶</a></h3>
 <p>An entry in the json including all the information of the waypoints defined by the user from the <cite>waypoints_path</cite> file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints are returned to this entry. The structure of the entry follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>\<span class="n">n</span>
     <span class="s2">&quot;Name&quot;</span><span class="p">:{</span>\<span class="n">n</span>
@@ -275,7 +275,7 @@ the following attributes:</p>
 </div>
 </section>
 <section id="paths">
-<h3>paths<a class="headerlink" href="#paths" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.3.2. </span>paths<a class="headerlink" href="#paths" title="Permalink to this heading">¶</a></h3>
 <p>An entry in the json, in a geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>\<span class="n">n</span>
     <span class="s1">&#39;types&#39;</span><span class="p">:</span><span class="s1">&#39;FeatureCollection&#39;</span><span class="p">,</span>\<span class="n">n</span>
@@ -350,16 +350,16 @@ the following attributes:</p>
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Outputs</a><ul>
-<li><a class="reference internal" href="#mesh-construction">Mesh construction</a><ul>
-<li><a class="reference internal" href="#cellboxes">cellboxes</a></li>
-<li><a class="reference internal" href="#neighbour-graph">neighbour_graph</a></li>
+<li><a class="reference internal" href="#">6. Outputs - Data Types</a><ul>
+<li><a class="reference internal" href="#mesh-construction">6.1. Mesh construction</a><ul>
+<li><a class="reference internal" href="#cellboxes">6.1.1. cellboxes</a></li>
+<li><a class="reference internal" href="#neighbour-graph">6.1.2. neighbour_graph</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#vehicle-specifics">Vehicle specifics</a></li>
-<li><a class="reference internal" href="#route-planning">Route planning</a><ul>
-<li><a class="reference internal" href="#waypoints">waypoints</a></li>
-<li><a class="reference internal" href="#paths">paths</a></li>
+<li><a class="reference internal" href="#vehicle-specifics">6.2. Vehicle specifics</a></li>
+<li><a class="reference internal" href="#route-planning">6.3. Route planning</a><ul>
+<li><a class="reference internal" href="#waypoints">6.3.1. waypoints</a></li>
+<li><a class="reference internal" href="#paths">6.3.2. paths</a></li>
 </ul>
 </li>
 </ul>
@@ -369,13 +369,13 @@ the following attributes:</p>
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="Configuration.html"
-                          title="previous chapter">Configuration</a></p>
+    <p class="topless"><a href="Multi_data_input.html"
+                          title="previous chapter"><span class="section-number">5. </span>Input - Data Loaders</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
     <p class="topless"><a href="Examples.html"
-                          title="next chapter">Examples</a></p>
+                          title="next chapter"><span class="section-number">7. </span>Examples</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -408,13 +408,13 @@ the following attributes:</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Examples.html" title="Examples"
+          <a href="Examples.html" title="7. Examples"
              >next</a> |</li>
         <li class="right" >
-          <a href="Configuration.html" title="Configuration"
+          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Outputs</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">6. </span>Outputs - Data Types</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -1,5 +1,5 @@
 ********
-Configuration
+Input - Configuration
 ********
 
 In this section we will outline the standard structure for a configuration file used in all portions of the PolarRoute software package.
@@ -204,6 +204,18 @@ splitting
 The splitting section of the Configuration file determines how the CellBoxes that form the
 Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
 of non-uniform spatial resolution.
+
+Non-uniform mesh refinement is done by selectively sub-dividing cells. Cell sub-division is performed 
+whenever a cell (of any size) is determined to be inhomogeneous with respect to a specific characteristic 
+of interest such as SIC or ocean depth. For example, considering SIC, we define a range, from a lower bound 
+*lb* to an upper bound *ub*, and a threshold, *t*. Then, a cell is considered inhomogeneous if between *lb* and *ub* 
+of the ice measurements in that cell are at *t%* or higher.  If the proportion of ice in the cell above the 
+*t%* concentration is below *lb%*, we consider the cell to be homogeneous open water: such a cell can be navigated 
+through so does not require splitting based on this homogeneity condition (though may still be split based on others).
+ At the other end of the range, if the proportion is greater than *ub%*, then the cell is considered 
+homogeneous ice: such a cell cannot be navigated through all will not be split on this or any subsequent splitting conditions. 
+If the proportion is between these bounds, then the cell is inhomogeneous and must be split so that the homogeneous sub-cells
+ can be found.
 
 ::
 
