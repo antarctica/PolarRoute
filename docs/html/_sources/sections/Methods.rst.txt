@@ -1,5 +1,5 @@
 ********
-Input - Data Loaders
+Data Loaders
 ********
 
 Data sources
@@ -53,3 +53,103 @@ See the :ref:`Configuration` section of this document for further details.
 
 .. automodule:: polar_route.data_loaders
     :members:
+
+
+********
+Mesh Construction
+********
+
+Overview
+##############
+
+Throughout this section we will outline the use case for the Discrete Meshing of the environment. The two main classes used are `Mesh` and `CellBox`, with a Mesh being composed of a series of CellBox objects.
+
+A general overview of the method can be seen below:
+
+.. figure:: ./Figures/FlowDiagram_MeshGraph.png
+    :align: center
+    :width: 700
+
+    Overview figure of the Discrete Meshing from the multi-data input.
+
+
+CellBox
+##############
+
+.. automodule:: polar_route.cellbox
+
+.. autoclass:: polar_route.cellbox.CellBox
+   :special-members: __init__
+   :members: getcx, getcy, getdcx, getdcy, get_data_points, get_value, get_bounds, add_data_points, add_splitting_condition, value_should_be_split, value_hom_condition, hom_condition, should_split, split, contains_point, to_json
+
+Mesh
+##############
+
+.. automodule:: polar_route.Mesh
+
+.. autoclass:: polar_route.mesh.Mesh 
+   :special-members: __init__  
+   :members: add_data_points, get_cellbox, get_cellboxes, get_neighbour_case, split_and_replace, split_to_depth, to_json
+
+
+
+********
+Vessel Specifics
+********
+
+Overview
+##############
+
+All of the functionality that relates to the specific vehicle traversing our meshed environment model is contained within the vessel_performance module.
+This module contains a `VesselPerformance` class that determines which cells in the mesh are inaccessible for that particular vessel and what its performance will be in each of the accessible cells.
+
+.. figure:: ./Figures/Mesh_Fuel_Speed.jpg
+    :align: center
+    :width: 700
+
+    Maps of the sea ice concentration (a), speed (b) and fuel consumption (c) across the Weddell Sea.
+    The latter two quantities are derived from the former.
+
+
+
+
+Vessel Performance
+##############
+
+.. automodule:: polar_route.vessel_performance
+
+.. autoclass:: polar_route.vessel_performance.VesselPerformance
+   :special-members: __init__
+   :members: to_json
+
+
+********
+Route Planner
+********
+
+Overview
+##############
+
+In this section we will outline the construction of the route paths using the Mesh construction corrected to include the objective functions define and generated in the earlier section.
+
+
+RoutePlanner
+##############
+
+.. automodule:: polar_route.route_planner
+   :members: 
+
+
+.. Crossing Points
+.. ##############
+
+.. .. automodule:: polar_route.crossing
+..    :members:
+
+.. .. autoclass:: polar_route.crossing.NewtonianDistance
+..    :members:
+   
+.. .. autoclass:: polar_route.crossing.NewtonianCurve
+..    :members:
+
+

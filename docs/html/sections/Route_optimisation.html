@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Route Planner &#8212; polar_route 0.0.10 documentation</title>
+    <title>10. Methods - Route Planner &#8212; polar_route 0.0.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
     
@@ -19,8 +19,7 @@
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Configuration" href="Configuration.html" />
-    <link rel="prev" title="Vessel Specifics" href="Vehicle_specifics.html" />
+    <link rel="prev" title="9. Methods - Vessel Specifics" href="Vehicle_specifics.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
     <script src="_static/css3-mediaqueries.js"></script>
@@ -36,13 +35,10 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Configuration.html" title="Configuration"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Vehicle_specifics.html" title="Vessel Specifics"
+          <a href="Vehicle_specifics.html" title="9. Methods - Vessel Specifics"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Route Planner</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">10. </span>Methods - Route Planner</a></li> 
       </ul>
     </div>  
 
@@ -51,19 +47,19 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="route-planner">
-<h1>Route Planner<a class="headerlink" href="#route-planner" title="Permalink to this heading">¶</a></h1>
+  <section id="methods-route-planner">
+<h1><span class="section-number">10. </span>Methods - Route Planner<a class="headerlink" href="#methods-route-planner" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">10.1. </span>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>In this section we will outline the construction of the route paths using the Mesh construction corrected to include the objective functions define and generated in the earlier section.</p>
 </section>
 <section id="module-polar_route.route_planner">
-<span id="routeplanner"></span><h2>RoutePlanner<a class="headerlink" href="#module-polar_route.route_planner" title="Permalink to this heading">¶</a></h2>
+<span id="routeplanner"></span><h2><span class="section-number">10.2. </span>RoutePlanner<a class="headerlink" href="#module-polar_route.route_planner" title="Permalink to this heading">¶</a></h2>
 <p>This section of the codebase is used for construction of route paths using the
 environmental mesh between a series of user defined waypoints</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.</span></span><span class="sig-name descname"><span class="pre">RoutePlanner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waypoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_func=&lt;class</span> <span class="pre">'polar_route.crossing.NewtonianDistance'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose=False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.</span></span><span class="sig-name descname"><span class="pre">RoutePlanner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waypoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cost_func=&lt;class</span> <span class="pre">'polar_route.crossing.NewtonianDistance'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner" title="Permalink to this definition">¶</a></dt>
 <dd><p>—</p>
 <p>RoutePlanner optimises the route paths between a series of waypoints.
 The routes are constructed in a two stage process:</p>
@@ -208,9 +204,9 @@ The routes are constructed in a two stage process:</p>
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Route Planner</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#module-polar_route.route_planner">RoutePlanner</a></li>
+<li><a class="reference internal" href="#">10. Methods - Route Planner</a><ul>
+<li><a class="reference internal" href="#overview">10.1. Overview</a></li>
+<li><a class="reference internal" href="#module-polar_route.route_planner">10.2. RoutePlanner</a></li>
 </ul>
 </li>
 </ul>
@@ -219,12 +215,7 @@ The routes are constructed in a two stage process:</p>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="Vehicle_specifics.html"
-                          title="previous chapter">Vessel Specifics</a></p>
-  </div>
-  <div>
-    <h4>Next topic</h4>
-    <p class="topless"><a href="Configuration.html"
-                          title="next chapter">Configuration</a></p>
+                          title="previous chapter"><span class="section-number">9. </span>Methods - Vessel Specifics</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -257,13 +248,10 @@ The routes are constructed in a two stage process:</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Configuration.html" title="Configuration"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Vehicle_specifics.html" title="Vessel Specifics"
+          <a href="Vehicle_specifics.html" title="9. Methods - Vessel Specifics"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Route Planner</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">10. </span>Methods - Route Planner</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
