@@ -379,7 +379,7 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True,verbose=True):
+    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
         '''
             FILL
         '''
@@ -896,7 +896,7 @@ class NewtonianCurve:
                             return
 
                         # Trimminng back if the cell is worse off
-                        if (sGNGraph['SIC'] - cellStartGraph['SIC'])>=20:
+                        if ('SIC' in sGNGraph) and ('SIC' not in cellStartGraph) and (sGNGraph['SIC'] - cellStartGraph['SIC'])>=20:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
@@ -957,7 +957,7 @@ class NewtonianCurve:
 
 
                         # Trimminng back if the cell is worse off
-                        if (NeighGraph['SIC'] - cellStartGraph['SIC'])>=20:
+                        if ('SIC' in NeighGraph) and ('SIC' not in cellStartGraph) and (NeighGraph['SIC'] - cellStartGraph['SIC'])>=20:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:

@@ -10,6 +10,7 @@ from tqdm import tqdm
 from shapely import wkt
 from shapely.geometry.polygon import Point
 import geopandas as gpd
+import logging
 
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
@@ -106,7 +107,7 @@ class RoutePlanner:
 
     """
 
-    def __init__(self, mesh, waypoints, cost_func=NewtonianDistance, verbose=False):
+    def __init__(self, mesh, waypoints, cost_func=NewtonianDistance):
 
         """
             Constructs the routes from information given in the config file.
@@ -138,7 +139,6 @@ class RoutePlanner:
                     }\n
 
                 cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only !
-                verbose (bool): True if print information for route path construction.
         """
 
         # Load in the current cell structure & Optimisation Info̦
@@ -147,8 +147,8 @@ class RoutePlanner:
         self.config  = self.mesh['config']
 
         waypoints_df = pd.read_csv(waypoints)
-        source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
-        des_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
+        source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
+        des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
 
         self.source_waypoints = list(source_waypoints_df['Name'])
         self.end_waypoints    = list(des_waypoints_df['Name'])
@@ -157,8 +157,6 @@ class RoutePlanner:
         self.paths          = None
         self.smoothed_paths = None
         self.dijkstra_info = {}
-
-        self.verbose = verbose
 
         # ====== Loading Mesh & Neighbour Graph ======
         # Formatting the Mesh and Neighbour Graph to the right form
@@ -319,7 +317,7 @@ class RoutePlanner:
                         paths.append(path)
 
                     except:
-                        print('Failure to construct path from Dijkstra information - Issues with Mesh containing cellBoxes with no information.')
+                        logging.warning('{} to {} - Failured to construct path direct in the dijkstra information'.format(wpt_a_name,wpt_b_name))
 
         geojson['features'] = paths
         return geojson
@@ -414,45 +412,32 @@ class RoutePlanner:
 
         # Subsetting the waypoints
         if len(self.source_waypoints) == 0:
-            self.source_waypoints = list(self.mesh['waypoints']['Name'])
+            raise Exception('No source waypoints defined that are accessible')
         if len(self.end_waypoints) == 0:
-            self.end_waypoints = list(self.mesh['waypoints']['Name'])
-
-        # Removing end and source
+            raise Exception('No destination waypoints defined that are accessible')
 
         # Initialising the Dijkstra Info Dictionary
         for wpt in self.source_waypoints:
             self.dijkstra_info[wpt] = copy.copy(self.neighbour_graph)
 
         # 
-        if self.verbose:
-            print('============= Dijkstr Path Creation ============\n')
+        logging.info('============= Dijkstr Path Creation ============\n')
 
         for wpt in self.source_waypoints:
-
-            if self.verbose:
-                print('--- Processing Waypoint = {} ---'.format(wpt))
-
-            # Continue if the waypoint is not in the accessible list
+            logging.info('--- Processing Waypoint = {} ---'.format(wpt))
             if len(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt]) == 0:
-                if self.verbose:
-                    print('{} not in accessible waypoints, continuing'.format(wpt))
+                logging.warning('{} not in accessible waypoints, continuing'.format(wpt))
                 continue
+            elif (len(self.mesh['waypoints']['Name'] == wpt) > 0) and (len(self.mesh['waypoints']['Name'] != wpt) == 0):
+                logging.warning('{} is accessible but has no destination waypoints, continuing'.format(wpt))
+                continue
+            else:
+                self._dijkstra(wpt)
 
-            # try:
-            self._dijkstra(wpt)
-            # except:
-            #     continue
 
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         self.paths = self._dijkstra_paths(self.source_waypoints, self.end_waypoints)
-
-        # if self.config['Route_Info']['save_dijkstra_graphs']:
-        #     print('Currently not operational - Come back soon :) ')
-        #     #JDS - Add in saving option for the full dijkstra graphs.
-        # self._save_paths(self.config['Route_Info']['Paths_Filename'])
         self.mesh['paths'] = self.paths
-
         for ii in range(len(self.mesh['paths']['features'])):
             self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
 
@@ -469,19 +454,18 @@ class RoutePlanner:
         geojson = {}
         geojson['type'] = "FeatureCollection"
 
-        if type(self.paths) == type(None):
-            raise Exception('Paths not constructed, please re-run path construction')
+        if len(self.paths['features']) == 0:
+            logging.warning('Paths not constructed as there was no dijkstra paths created')
+            return
         Pths = copy.deepcopy(self.paths)['features']  
 
-        if self.verbose:
-            print('========= Determining Smoothed Paths ===========\n')
+        logging.info('========= Determining Smoothed Paths ===========\n')
 
         for ii in range(len(Pths)):
                 Path = Pths[ii]
                 counter = 0 
 
-                if self.verbose:
-                    print('---Smoothing {}'.format(Path['properties']['name']))
+                logging.info('---Smoothing {}'.format(Path['properties']['name']))
 
                 nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']], self.config, maxiter=1,
                                              zerocurrents=self.zero_currents)
@@ -511,10 +495,7 @@ class RoutePlanner:
                 # try:
 
                 # while iter < nc.pathIter:
-                if self.verbose:
-                    pbar = tqdm(np.arange(nc.pathIter))
-                else:
-                    pbar = np.arange(nc.pathIter)
+                pbar = tqdm(np.arange(nc.pathIter))
 
                 # Determining the computational time averaged across all pairs
                 self.allDist = []
@@ -557,17 +538,13 @@ class RoutePlanner:
                     if len(nc.previousDF) == len(nc.CrossingDF):
                         Dist = np.mean(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
                         self.allDist.append(Dist)
-                        if self.verbose:
-                            pbar.set_description("Mean Difference = {}".format(Dist))
+                        pbar.set_description("Mean Difference = {}".format(Dist))
 
                         if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 500:
-                            if self.verbose:
-                                print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 1'.format(iter,Dist))
-                            
+                            logging.info('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 1'.format(iter,Dist))
                             break
                         if (Dist < minimumDiff) and (Dist != 0.0):
-                            if self.verbose:
-                                print('{} iterations - dDist={}'.format(iter, Dist))
+                            logging.info('{} iterations - dDist={}'.format(iter, Dist))
                             break
                     # else:
                     #     if 'Dist' in locals():
