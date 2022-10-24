@@ -379,7 +379,7 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True,verbose=True):
+    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
         '''
             FILL
         '''
@@ -896,7 +896,7 @@ class NewtonianCurve:
                             return
 
                         # Trimminng back if the cell is worse off
-                        if (sGNGraph['SIC'] - cellStartGraph['SIC'])>=20:
+                        if ('SIC' in sGNGraph) and ('SIC' not in cellStartGraph) and (sGNGraph['SIC'] - cellStartGraph['SIC'])>=20:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
@@ -957,7 +957,7 @@ class NewtonianCurve:
 
 
                         # Trimminng back if the cell is worse off
-                        if (NeighGraph['SIC'] - cellStartGraph['SIC'])>=20:
+                        if ('SIC' in NeighGraph) and ('SIC' not in cellStartGraph) and (NeighGraph['SIC'] - cellStartGraph['SIC'])>=20:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
@@ -1079,7 +1079,7 @@ class NewtonianCurve:
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
         if traveltime < 0:
             traveltime = np.inf
-        return traveltime
+        return traveltime, dist
 
     def _waypoint_correction(self,source_graph,Wp,Cp):
         '''
@@ -1093,26 +1093,28 @@ class NewtonianCurve:
         Su  = source_graph['Vector_x']*self.zc
         Sv  = source_graph['Vector_y']*self.zc
         Ssp = self._unit_speed(source_graph['Speed'])
-        traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
-        return traveltime
+        traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+        return traveltime, distance
 
     def objective_function(self):
         '''
             FILL
         '''
         TravelTime = np.zeros(len(self.CrossingDF))
+        Distance   = np.zeros(len(self.CrossingDF))
         index      = np.zeros(len(self.CrossingDF))
         for ii in range(len(self.CrossingDF)-1):
             soruce_graph = self.CrossingDF.iloc[ii]['cellEnd']
             Wp = self.CrossingDF.iloc[ii][['cx','cy']].to_numpy()
             Cp = self.CrossingDF.iloc[ii+1][['cx','cy']].to_numpy()
-            traveltime = self._waypoint_correction(soruce_graph,Wp,Cp)
-            TravelTime[ii+1]= self._unit_time(traveltime)
+            traveltime, distance = self._waypoint_correction(soruce_graph,Wp,Cp)
+            TravelTime[ii+1] = self._unit_time(traveltime)
+            Distance[ii+1]   = distance
 
             if ii ==0:
                 index[ii] = soruce_graph.name
                 index[ii+1] = soruce_graph.name
             else:
                 index[ii+1] = soruce_graph.name
-        return TravelTime,index
+        return TravelTime,Distance,index
 

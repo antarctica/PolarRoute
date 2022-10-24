@@ -553,7 +553,10 @@ def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     logging.debug("opening file {}".format(params['file']))
     gebco = xr.open_dataset(params['file'])
 
+    
     if 'downsample_factors' in params.keys():
+        logging.debug("downsampling dataset by a factor of [{},{}]".format(params['downsample_factors'][0],
+            params['downsample_factors'][1] ))
         elev = gebco['elevation'][::params['downsample_factors'][0],::params['downsample_factors'][1]]
         gebco = xr.Dataset()
         gebco['elevation'] = elev

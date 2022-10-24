@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Installation &#8212; polar_route 0.0.10 documentation</title>
+    <title>2. Installation &#8212; polar_route 0.0.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
     
@@ -19,8 +19,8 @@
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Data Loaders" href="Multi_data_input.html" />
-    <link rel="prev" title="Background" href="Code_structure.html" />
+    <link rel="next" title="3. Data Loaders" href="Multi_data_input.html" />
+    <link rel="prev" title="1. Background" href="Code_structure.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
     <script src="_static/css3-mediaqueries.js"></script>
@@ -36,13 +36,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Multi_data_input.html" title="Data Loaders"
+          <a href="Multi_data_input.html" title="3. Data Loaders"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Code_structure.html" title="Background"
+          <a href="Code_structure.html" title="1. Background"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Installation</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">2. </span>Installation</a></li> 
       </ul>
     </div>  
 
@@ -52,21 +52,38 @@
           <div class="body" role="main">
             
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
-<p>In this section we will outline the stages required to install the codebase depending on the users operating system. Please jump to the section of your corresponding OS.</p>
-<section id="windows">
-<h2>Windows<a class="headerlink" href="#windows" title="Permalink to this heading">¶</a></h2>
-<p>FILL</p>
-</section>
-<section id="linux">
-<h2>Linux<a class="headerlink" href="#linux" title="Permalink to this heading">¶</a></h2>
-<p>FILL</p>
-</section>
-<section id="macos-intel-arm">
-<h2>MacOS Intel/ARM<a class="headerlink" href="#macos-intel-arm" title="Permalink to this heading">¶</a></h2>
-<p>In this section we will outline the installation steps for installing the software package on a MacOS device. The software package works on both Intel and ARM, with the installation stages being identical.</p>
+<h1><span class="section-number">2. </span>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<p>In this section we will outline the installation steps for installing the software package on a corresponding OS.</p>
 <p>The first stage is installing a version of Python 3.9, if you don’t have a working version. We suggest installing a working Anaconda distribution from <a class="reference external" href="https://www.anaconda.com/products/distribution#macos">https://www.anaconda.com/products/distribution#macos</a> following the instructions on that page.</p>
-<p>FILL</p>
+<section id="windows">
+<h2><span class="section-number">2.1. </span>Windows<a class="headerlink" href="#windows" title="Permalink to this heading">¶</a></h2>
+<p>The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running one of the two following commands.</p>
+<p>Github:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pipwin</span>
+<span class="n">pipwin</span> <span class="n">install</span> <span class="n">gdal</span>
+<span class="n">pipwin</span> <span class="n">install</span> <span class="n">fiona</span>
+<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>Pip:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pipwin</span>
+<span class="n">pipwin</span> <span class="n">install</span> <span class="n">gdal</span>
+<span class="n">pipwin</span> <span class="n">install</span> <span class="n">fiona</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">polar</span><span class="o">-</span><span class="n">route</span>
+</pre></div>
+</div>
+</section>
+<section id="linux-macos">
+<h2><span class="section-number">2.2. </span>Linux/MacOS<a class="headerlink" href="#linux-macos" title="Permalink to this heading">¶</a></h2>
+<p>The PolarRoute software can be installed on Linux/MacOS by running one of the two following commands.</p>
+<p>Github:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>Pip:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">polar</span><span class="o">-</span><span class="n">route</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -80,10 +97,9 @@
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Installation</a><ul>
-<li><a class="reference internal" href="#windows">Windows</a></li>
-<li><a class="reference internal" href="#linux">Linux</a></li>
-<li><a class="reference internal" href="#macos-intel-arm">MacOS Intel/ARM</a></li>
+<li><a class="reference internal" href="#">2. Installation</a><ul>
+<li><a class="reference internal" href="#windows">2.1. Windows</a></li>
+<li><a class="reference internal" href="#linux-macos">2.2. Linux/MacOS</a></li>
 </ul>
 </li>
 </ul>
@@ -92,12 +108,12 @@
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="Code_structure.html"
-                          title="previous chapter">Background</a></p>
+                          title="previous chapter"><span class="section-number">1. </span>Background</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
     <p class="topless"><a href="Multi_data_input.html"
-                          title="next chapter">Data Loaders</a></p>
+                          title="next chapter"><span class="section-number">3. </span>Data Loaders</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -130,13 +146,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Multi_data_input.html" title="Data Loaders"
+          <a href="Multi_data_input.html" title="3. Data Loaders"
              >next</a> |</li>
         <li class="right" >
-          <a href="Code_structure.html" title="Background"
+          <a href="Code_structure.html" title="1. Background"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Installation</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">2. </span>Installation</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Configuration &#8212; polar_route 0.0.10 documentation</title>
+    <title>4. Input - Configuration &#8212; polar_route 0.0.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
     
@@ -19,8 +19,8 @@
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Outputs" href="Outputs.html" />
-    <link rel="prev" title="Route Planner" href="Route_optimisation.html" />
+    <link rel="next" title="5. Input - Data Loaders" href="Multi_data_input.html" />
+    <link rel="prev" title="3. Runnning Codebase" href="running.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
     <script src="_static/css3-mediaqueries.js"></script>
@@ -36,13 +36,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Outputs.html" title="Outputs"
+          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="Route_optimisation.html" title="Route Planner"
+          <a href="running.html" title="3. Runnning Codebase"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Configuration</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>Input - Configuration</a></li> 
       </ul>
     </div>  
 
@@ -51,8 +51,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="configuration">
-<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h1>
+  <section id="input-configuration">
+<h1><span class="section-number">4. </span>Input - Configuration<a class="headerlink" href="#input-configuration" title="Permalink to this heading">¶</a></h1>
 <p>In this section we will outline the standard structure for a configuration file used in all portions of the PolarRoute software package.</p>
 <p>Outlined below is an example configuration file for running PolarRoute. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -158,13 +158,13 @@
 <p>The Configuration file is composed of three distinct sections ‘Mesh_info’, ‘Vessel’, and ‘Route_Info’.
 Each of these contain configuration information for the various stages of the route planning pipeline.</p>
 <section id="mesh-info">
-<h2>Mesh_info<a class="headerlink" href="#mesh-info" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">4.1. </span>Mesh_info<a class="headerlink" href="#mesh-info" title="Permalink to this heading">¶</a></h2>
 <p>Mesh_info contains information required to build the discretised environment in which the route planner
 operates. Information here dictates the region in which the mesh is constructed, the data contained within
 the mesh and how the mesh is split to a non-uniform resolution.</p>
 <p>The ‘Mesh_info’ section of the configuration file contains three primary sections:</p>
 <section id="region">
-<h3>Region<a class="headerlink" href="#region" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">4.1.1. </span>Region<a class="headerlink" href="#region" title="Permalink to this heading">¶</a></h3>
 <p>The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (<cite>longMin</cite>, <cite>latMin</cite>, <cite>longMax</cite>, <cite>latMax</cite>, <cite>startTime</cite>, <cite>endTime</cite>), but also the starting shape of the spatial grid cell boxes (<cite>cellWidth</cite>, <cite>cellHeight</cite>) is defined before splitting is applied . Further detail on each parameter is given below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Region&quot;</span><span class="p">:</span> <span class="p">{</span>
    <span class="s2">&quot;latMin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">77.5</span><span class="p">,</span>
@@ -191,7 +191,7 @@ the mesh and how the mesh is split to a non-uniform resolution.</p>
 </ul>
 </section>
 <section id="data-sources">
-<h3>Data_sources<a class="headerlink" href="#data-sources" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">4.1.2. </span>Data_sources<a class="headerlink" href="#data-sources" title="Permalink to this heading">¶</a></h3>
 <p>The ‘Data_sources’ section of the configuration file dictates which information will be added to the
 mesh when constructed. Each item in the list of data sources represents a single data set to be added
 to the mesh.</p>
@@ -243,10 +243,25 @@ to the mesh.</p>
 </ul>
 </section>
 <section id="splitting">
-<h3>splitting<a class="headerlink" href="#splitting" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">4.1.3. </span>splitting<a class="headerlink" href="#splitting" title="Permalink to this heading">¶</a></h3>
 <p>The splitting section of the Configuration file determines how the CellBoxes that form the
 Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
 of non-uniform spatial resolution.</p>
+<p>Non-uniform mesh refinement is done by selectively sub-dividing cells. Cell sub-division is performed
+whenever a cell (of any size) is determined to be inhomogeneous with respect to a specific characteristic
+of interest such as SIC or ocean depth. For example, considering SIC, we define a range, from a lower bound
+<em>lb</em> to an upper bound <em>ub</em>, and a threshold, <em>t</em>. Then, a cell is considered inhomogeneous if between <em>lb</em> and <em>ub</em>
+of the ice measurements in that cell are at <em>t%</em> or higher.  If the proportion of ice in the cell above the
+<em>t%</em> concentration is below <em>lb%</em>, we consider the cell to be homogeneous open water: such a cell can be navigated
+through so does not require splitting based on this homogeneity condition (though may still be split based on others).</p>
+<blockquote>
+<div><p>At the other end of the range, if the proportion is greater than <em>ub%</em>, then the cell is considered</p>
+</div></blockquote>
+<p>homogeneous ice: such a cell cannot be navigated through all will not be split on this or any subsequent splitting conditions.
+If the proportion is between these bounds, then the cell is inhomogeneous and must be split so that the homogeneous sub-cells</p>
+<blockquote>
+<div><p>can be found.</p>
+</div></blockquote>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;splitting&quot;</span><span class="p">:</span> <span class="p">{</span>
    <span class="s2">&quot;split_depth&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
    <span class="s2">&quot;minimum_datapoints&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
@@ -299,7 +314,7 @@ of non-uniform spatial resolution.</p>
 </div>
 </section>
 <section id="value-output-types-optional">
-<h3>value_output_types (optional)<a class="headerlink" href="#value-output-types-optional" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">4.1.4. </span>value_output_types (optional)<a class="headerlink" href="#value-output-types-optional" title="Permalink to this heading">¶</a></h3>
 <p>The value_output_types section is an optional section which may be added to Mesh_info. This dictates how data
 of each value of a cellbox is returned when outputting the (CellBox) or (Mesh). By default values associated
 with a (CellBox) are calculated by taking the mean of all data points of a given value within the CellBoxes bounds.
@@ -315,7 +330,7 @@ with a (CellBox) are calculated by taking the mean of all data points of a given
 </section>
 </section>
 <section id="vessel">
-<h2>Vessel<a class="headerlink" href="#vessel" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">4.2. </span>Vessel<a class="headerlink" href="#vessel" title="Permalink to this heading">¶</a></h2>
 <p>The Vessel section of the configuration file provides all the necessary information about the vessel that will execute
 the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the <cite>VesselPerformance</cite>
 class for this vessel.</p>
@@ -342,7 +357,7 @@ class for this vessel.</p>
 </ul>
 </section>
 <section id="route-info">
-<h2>Route_Info<a class="headerlink" href="#route-info" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">4.3. </span>Route_Info<a class="headerlink" href="#route-info" title="Permalink to this heading">¶</a></h2>
 <p>TODO intro to route info</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Route_Info&quot;</span><span class="p">:</span> <span class="p">{</span>
       <span class="s2">&quot;objective_function&quot;</span><span class="p">:</span> <span class="s2">&quot;traveltime&quot;</span><span class="p">,</span>
@@ -401,16 +416,16 @@ class for this vessel.</p>
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Configuration</a><ul>
-<li><a class="reference internal" href="#mesh-info">Mesh_info</a><ul>
-<li><a class="reference internal" href="#region">Region</a></li>
-<li><a class="reference internal" href="#data-sources">Data_sources</a></li>
-<li><a class="reference internal" href="#splitting">splitting</a></li>
-<li><a class="reference internal" href="#value-output-types-optional">value_output_types (optional)</a></li>
+<li><a class="reference internal" href="#">4. Input - Configuration</a><ul>
+<li><a class="reference internal" href="#mesh-info">4.1. Mesh_info</a><ul>
+<li><a class="reference internal" href="#region">4.1.1. Region</a></li>
+<li><a class="reference internal" href="#data-sources">4.1.2. Data_sources</a></li>
+<li><a class="reference internal" href="#splitting">4.1.3. splitting</a></li>
+<li><a class="reference internal" href="#value-output-types-optional">4.1.4. value_output_types (optional)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#vessel">Vessel</a></li>
-<li><a class="reference internal" href="#route-info">Route_Info</a></li>
+<li><a class="reference internal" href="#vessel">4.2. Vessel</a></li>
+<li><a class="reference internal" href="#route-info">4.3. Route_Info</a></li>
 </ul>
 </li>
 </ul>
@@ -418,13 +433,13 @@ class for this vessel.</p>
   </div>
   <div>
     <h4>Previous topic</h4>
-    <p class="topless"><a href="Route_optimisation.html"
-                          title="previous chapter">Route Planner</a></p>
+    <p class="topless"><a href="running.html"
+                          title="previous chapter"><span class="section-number">3. </span>Runnning Codebase</a></p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="Outputs.html"
-                          title="next chapter">Outputs</a></p>
+    <p class="topless"><a href="Multi_data_input.html"
+                          title="next chapter"><span class="section-number">5. </span>Input - Data Loaders</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -457,13 +472,13 @@ class for this vessel.</p>
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Outputs.html" title="Outputs"
+          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
              >next</a> |</li>
         <li class="right" >
-          <a href="Route_optimisation.html" title="Route Planner"
+          <a href="running.html" title="3. Runnning Codebase"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Configuration</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>Input - Configuration</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

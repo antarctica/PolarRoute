@@ -47,7 +47,6 @@ setup(
     install_requires=requirements,
     tests_require=["pytest"],
     extras_require={
-        "docs": get_content("docs/requirements.txt"),
         "tests": get_content("tests/requirements.txt"),
     },
     zip_safe=False,

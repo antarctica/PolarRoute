@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Background &#8212; polar_route 0.0.10 documentation</title>
+    <title>1. Background &#8212; polar_route 0.0.12 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
     
@@ -19,7 +19,7 @@
     <script src="../_static/bizstyle.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Installation" href="Installation.html" />
+    <link rel="next" title="2. Installation" href="Installation.html" />
     <link rel="prev" title="Welcome RoutePlanner Manual Pages" href="../index.html" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <!--[if lt IE 9]>
@@ -36,13 +36,13 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Installation.html" title="Installation"
+          <a href="Installation.html" title="2. Installation"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="../index.html" title="Welcome RoutePlanner Manual Pages"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Background</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span>Background</a></li> 
       </ul>
     </div>  
 
@@ -52,13 +52,13 @@
           <div class="body" role="main">
             
   <section id="background">
-<h1>Background<a class="headerlink" href="#background" title="Permalink to this heading">¶</a></h1>
+<h1><span class="section-number">1. </span>Background<a class="headerlink" href="#background" title="Permalink to this heading">¶</a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">1.1. </span>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
 <p>We present an automated route-planning method for use by an ice-strengthened vessel operating in polar regions. We build on the method developed for underwater vehicle long-distance route planning reported in Fox et al (2021). We start with the same grid-based route construction approach to obtain routes that satisfy constraints on the performance of the ship in ice. We then apply a novel route-smoothing method to the resulting routes, shortening the grid-based routes and ensure that routes follow great circle arcs where possible. This two-stage process efficiently generates routes that follow standard navigation solutions in open water and optimise vessel performance in and around areas dominated by sea ice.  While we have focussed on navigation in and around polar ice, our methods are also applicable to shipping in a broader context (e.g.: commercial shipping) where route-planning must be responsive to changing local and weather conditions.</p>
 </section>
 <section id="code-structure">
-<h2>Code Structure<a class="headerlink" href="#code-structure" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">1.2. </span>Code Structure<a class="headerlink" href="#code-structure" title="Permalink to this heading">¶</a></h2>
 <p>The outline of this manual is to provide the user with all the tools that they need to run the software for a set of examples. We also hope that the background information supplied for each section allows the user to understand the methods used throughout this toolkit.</p>
 <p>The outline of the toolkit can be separated into the four main sections shown in the Figure below</p>
 <figure class="align-center" id="id3">
@@ -69,10 +69,10 @@
 </figure>
 <p>The separate stages can be broken down into:</p>
 <ol class="arabic simple">
-<li><p><a class="reference internal" href="Multi_data_input.html#data-loaders"><span class="std std-ref">Data Loaders</span></a> - Reading in different datasets of differing types. Throughout this section we will outline the form that the input datasets should take and useful tips for pre-processing your data.</p></li>
-<li><p><a class="reference internal" href="Outputs.html#mesh-construction"><span class="std std-ref">Mesh construction</span></a> - Generating a Digital Twin of the environmental conditions. In this section we outline the different Python classes that are used to construct a discretised representation across the user defined datasets, giving a coding background to the dynamic splitting of the mesh to finer resolution in regions of datasets that are spatially varying.</p></li>
-<li><p><a class="reference internal" href="Vehicle_specifics.html#vessel-performance"><span class="std std-ref">Vessel Performance</span></a> - Application of vehicle specific features applied to the discrete mesh. In this section we will supply the user with the knowledge of how vehicle specific features are applied to the discrete mesh or with variables applied to the computational graph of the mesh.</p></li>
-<li><p><a class="reference internal" href="Route_optimisation.html#route-planner"><span class="std std-ref">Route Planner</span></a> - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (e.g. travel time, fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths.</p></li>
+<li><p><a class="reference internal" href="Methods.html#data-loaders"><span class="std std-ref">Data Loaders</span></a> - Reading in different datasets of differing types. Throughout this section we will outline the form that the input datasets should take and useful tips for pre-processing your data.</p></li>
+<li><p><a class="reference internal" href="Methods.html#mesh-construction"><span class="std std-ref">Mesh Construction</span></a> - Generating a Digital Twin of the environmental conditions. In this section we outline the different Python classes that are used to construct a discretised representation across the user defined datasets, giving a coding background to the dynamic splitting of the mesh to finer resolution in regions of datasets that are spatially varying.</p></li>
+<li><p><a class="reference internal" href="Methods.html#vessel-performance"><span class="std std-ref">Vessel Performance</span></a> - Application of vehicle specific features applied to the discrete mesh. In this section we will supply the user with the knowledge of how vehicle specific features are applied to the discrete mesh or with variables applied to the computational graph of the mesh.</p></li>
+<li><p><a class="reference internal" href="Methods.html#route-planner"><span class="std std-ref">Route Planner</span></a> - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (e.g. travel time, fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths.</p></li>
 </ol>
 <figure class="align-center" id="id4">
 <a class="reference internal image-reference" href="../_images/PolarRoute_CodeFlowDiagram.png"><img alt="../_images/PolarRoute_CodeFlowDiagram.png" src="../_images/PolarRoute_CodeFlowDiagram.png" style="width: 700px;" /></a>
@@ -98,9 +98,9 @@ and produces an output file, the form of which can be found in the <a class="ref
   <div>
     <h3><a href="../index.html">Table of Contents</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Background</a><ul>
-<li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#code-structure">Code Structure</a></li>
+<li><a class="reference internal" href="#">1. Background</a><ul>
+<li><a class="reference internal" href="#overview">1.1. Overview</a></li>
+<li><a class="reference internal" href="#code-structure">1.2. Code Structure</a></li>
 </ul>
 </li>
 </ul>
@@ -114,7 +114,7 @@ and produces an output file, the form of which can be found in the <a class="ref
   <div>
     <h4>Next topic</h4>
     <p class="topless"><a href="Installation.html"
-                          title="next chapter">Installation</a></p>
+                          title="next chapter"><span class="section-number">2. </span>Installation</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -147,13 +147,13 @@ and produces an output file, the form of which can be found in the <a class="ref
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="Installation.html" title="Installation"
+          <a href="Installation.html" title="2. Installation"
              >next</a> |</li>
         <li class="right" >
           <a href="../index.html" title="Welcome RoutePlanner Manual Pages"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.10 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Background</a></li> 
+        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span>Background</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
