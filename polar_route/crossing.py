@@ -896,12 +896,22 @@ class NewtonianCurve:
                             return
 
                         # Trimminng back if the cell is worse off
-                        if ('SIC' in sGNGraph) and ('SIC' not in cellStartGraph) and (sGNGraph['SIC'] - cellStartGraph['SIC'])>=20:
+                        if ('SIC' in sGNGraph) and ('SIC' in cellStartGraph) and (sGNGraph['SIC'] - cellStartGraph['SIC'])>=2:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
                                 self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
                             return
+
+
+                        # Trimminng back if the cell is worse off fuel
+                        if ('fuel' in sGNGraph) and ('fuel' in cellStartGraph) and (sGNGraph['fuel'] - cellStartGraph['fuel'])>=2:
+                            if abs(case) == 2:
+                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                            if abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                            return
+
 
                         # Updating the origional crossing point
                         self.triplet['cx'].iloc[1]      = Crp1[0]
@@ -957,12 +967,21 @@ class NewtonianCurve:
 
 
                         # Trimminng back if the cell is worse off
-                        if ('SIC' in NeighGraph) and ('SIC' not in cellStartGraph) and (NeighGraph['SIC'] - cellStartGraph['SIC'])>=20:
+                        if ('SIC' in NeighGraph) and ('SIC' in cellStartGraph) and (NeighGraph['SIC'] - cellStartGraph['SIC'])>=2:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
                                 self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
                             return
+
+                        # Trimminng back if the cell is worse off fuel
+                        if ('fuel' in NeighGraph) and ('fuel' in cellStartGraph) and (NeighGraph['fuel'] - cellStartGraph['fuel'])>=2:
+                            if abs(case) == 2:
+                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                            if abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                            return
+
 
 
                         # Updating the origional crossing point

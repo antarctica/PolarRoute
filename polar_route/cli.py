@@ -50,6 +50,12 @@ def get_args(
                         action = "store_true",
                         help="output only the calculated paths")
 
+        ap.add_argument("-d", "--dijkstra",
+                        default=False,
+                        action = "store_true",
+                        help="output only the calculated paths")
+
+
     return ap.parse_args()
 
 
@@ -111,10 +117,15 @@ def optimise_routes_cli():
     vehicle_mesh = json.load(args.info)
     rp = RoutePlanner(vehicle_mesh, args.waypoints)
     rp.compute_routes()
+    info_dijkstra = rp.to_json()
     rp.compute_smoothed_routes()
     info = rp.to_json()
 
     if args.path_only:
+        if args.dijkstra:
+             json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
         json.dump(info['paths'], open(args.output, 'w'))
     else:
+        if args.dijkstra:
+             json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
         json.dump(info, open(args.output, "w"))
