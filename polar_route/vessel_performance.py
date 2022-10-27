@@ -59,6 +59,11 @@ class VesselPerformance:
         self.mesh_df = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.vessel_params = self.config['Vessel']
 
+        # Check for NaNs in input and zero them if present
+        if self.mesh_df.isnull().values.any():
+            logging.debug("NaNs present in input mesh, setting all NaN values to zero")
+            self.mesh_df = self.mesh_df.fillna(0.)
+
         # Identifying land and extreme ice cells then removing them from the neighbour graph
         self.land()
         self.extreme_ice()
@@ -76,9 +81,9 @@ class VesselPerformance:
         # Calculate fuel usage based on speed and ice resistance
         self.fuel()
 
-        # Check for NaNs and zero them then warn if present
+        # Check again for NaNs and zero them then warn if present
         if self.mesh_df.isnull().values.any():
-            logging.warning("NaNs present in mesh, setting all NaN values to zero!")
+            logging.warning("NaNs present in output mesh, setting all NaN values to zero!")
             self.mesh_df = self.mesh_df.fillna(0.)
 
         # Updating the mesh indexing and cellboxes
