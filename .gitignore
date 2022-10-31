@@ -17,3 +17,8 @@ TestingNotebook.ipynb
 *.output.*json
 setup.cfg
 pip.sh
+./datastore/*
+datastore/*
+configs/*
+waypoints/*
+outputs/*
