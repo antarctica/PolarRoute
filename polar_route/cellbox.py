@@ -520,7 +520,7 @@ class CellBox:
 
             for value in split_box.get_value_fill_types().keys():
                 if value in split_box.get_value_out_types().keys():
-                    value_output_type = split_box.get_value_out_types()['value']
+                    value_output_type = split_box.get_value_out_types()[value]
                 else:
                     value_output_type = "MEAN"
 
