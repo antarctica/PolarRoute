@@ -367,7 +367,7 @@ class NewtonianDistance:
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
 
-        return TravelTime, CrossPoints, CellPoints
+        return TravelTime, CrossPoints, CellPoints, self.case
 
 
 # ===================================================================================================

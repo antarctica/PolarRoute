@@ -331,6 +331,7 @@ class VesselPerformance:
                                     + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2
                                     + 6.48113363e-06 * self.mesh_df['ice resistance']) * 24.0
         else:
+            print(self.mesh_df['speed'])
             self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
                                     self.mesh_df['speed'] + 0.25290433) * 24.0
 

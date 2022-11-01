@@ -312,7 +312,7 @@ class RoutePlanner:
                         for vrbl in self.config['Route_Info']['path_variables']:
                             if vrbl == 'traveltime':
                                 continue
-                            path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]*self.dijkstra_info[wpt_a_name].loc[path_indices,'{}'.format(vrbl)].to_numpy()).tolist()
+                            # path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]*self.dijkstra_info[wpt_a_name].loc[path_indices,'{}'.format(vrbl)].to_numpy()).tolist()
                         path['properties']['traveltime'] = path['properties']['traveltime'].tolist()
                         paths.append(path)
 
@@ -322,18 +322,21 @@ class RoutePlanner:
         geojson['features'] = paths
         return geojson
 
-    def _objective_value(self, variable, source_graph, neighbour_graph, traveltime):
+    def _objective_value(self, variable, source_graph, neighbour_graph, traveltime,case):
         """
             FILL
         """
         if variable == 'traveltime':
             return np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
         else:
-            return np.array([source_graph['shortest_{}'.format(variable)] +\
-                    traveltime[0]*source_graph['{}'.format(variable)],
-                    source_graph['shortest_{}'.format(variable)] +\
-                    traveltime[0]*source_graph['{}'.format(variable)] +\
-                    traveltime[1]*neighbour_graph['{}'.format(variable)]])
+            if len(source_graph['{}'.format(variable)]) != 1:
+                indx_type = np.array([1,2,3,4,-1,-2,-3,-4])
+                idx = np.where(indx_type==case)[0][0]
+
+                objs = np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx],source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx] + traveltime[1]*neighbour_graph['{}'.format(variable)][idx]])
+                return objs
+            else:
+                return np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)], source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)] + traveltime[1]*neighbour_graph['{}'.format(variable)]])
 
     def _neighbour_cost(self, wpt_name, minimum_objective_index):
         """
@@ -354,17 +357,17 @@ class RoutePlanner:
                                           unit_shipspeed='km/hr', unit_time=self.unit_time,
                                           zerocurrents=self.zero_currents)
             # Updating the Dijkstra graph with the new information
-            traveltime, crossing_points,cell_points = cost_func.value()
+            traveltime, crossing_points,cell_points,case = cost_func.value()
 
             source_graph['neighbourTravelLegs'].append(traveltime)
             source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
 
             # Using neighbourhood cost determine objective function value
             value = self._objective_value(self.config['Route_Info']['objective_function'], source_graph,
-                                          neighbour_graph, traveltime)
+                                          neighbour_graph, traveltime, case)
             if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['objective_function'])]:
                 for vrbl in self.config['Route_Info']['path_variables']:
-                    value = self._objective_value(vrbl, source_graph, neighbour_graph,traveltime)
+                    value = self._objective_value(vrbl, source_graph, neighbour_graph,traveltime, case)
                     neighbour_graph['shortest_{}'.format(vrbl)] = value[1]
                     neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + list(value)
                 neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
