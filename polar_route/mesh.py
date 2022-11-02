@@ -208,8 +208,8 @@ class Mesh:
             logging.debug("J_grid using loader {}".format(loader_name))
 
             data_points = loader(self.config['Mesh_info']['j_grid']['Currents']['params'],
-                self._long_min, self._long_max, self._lat_min, self._lat_max,
-                self._start_time, self._end_time)
+                                 self._long_min, self._long_max, self._lat_min, self._lat_max,
+                                 self._start_time, self._end_time)
 
             self.add_current_points(data_points)
 
@@ -755,7 +755,7 @@ class Mesh:
                     n_neighbour_indx = self.neighbour_graph[cellbox_indx][-4]
                     for neighbour in n_neighbour_indx:
                         if (not self.cellboxes[neighbour].land_locked) and (
-                            self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
+                                self.cellboxes[neighbour].get_value('SIC') < max_ice_area):
                             graph_dump += "," + self.cellboxes[neighbour].node_string() + ":-4"
                     # case 4 neighbours
                     s_neighbours_indx = self.neighbour_graph[cellbox_indx][4]
@@ -811,7 +811,7 @@ class Mesh:
             if np.isnan(point['uC'].mean()) or np.isnan(point['vC'].mean()):
                 cellbox.land_locked = True
 
-            #cellbox.set_land()
+            # cellbox.set_land()
 
     def cellbox_by_node_string(self, node_string):
         """

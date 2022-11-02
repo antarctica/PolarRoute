@@ -26,7 +26,7 @@ import pandas as pd
 class CellBox:
     """
     A CellBox is a collection of data-points contained within a given geo-spatial/temporal
-    boundary. Information about any given value of a CellBox is calculated from 
+    boundary. Information about any given value of a CellBox is calculated from
     the mean of all data points of that type within those bounds. CellBoxes may
     be split into smaller CellBoxes and the data points within distributed
     between the newly created CellBoxes so as to construct a non-uniform mesh
@@ -101,7 +101,7 @@ class CellBox:
                 cx (float): the x-position of the top-left corner of the CellBox
                     given in degrees longitude.
         """
-        return self.long + self.width/2
+        return self.long + self.width / 2
 
     def getcy(self):
         """
@@ -111,17 +111,17 @@ class CellBox:
                 cy (float): the y-position of the top-left corner of the CellBox
                     given in degrees latitude.
         """
-        return self.lat + self.height/2
+        return self.lat + self.height / 2
 
     def getdcx(self):
         """
             returns x-distance from the edge to the centroid of the cellbox
 
             Returns:
-                dcx (float): the x-distance from the edge of the CellBox to the 
+                dcx (float): the x-distance from the edge of the CellBox to the
                     centroid of the CellBox. Given in degrees longitude
         """
-        return self.width/2
+        return self.width / 2
 
     def getdcy(self):
         """
@@ -131,7 +131,7 @@ class CellBox:
                 dxy (float): the y-distance from the edge of the CellBox to the
                     centroid of the CellBox. Given in degrees latitude
         """
-        return self.height/2
+        return self.height / 2
 
     def get_data_names(self):
         """
@@ -216,10 +216,10 @@ class CellBox:
                 bounds (list<tuples>): The geo-spatial boundaries of this CellBox.
         """
         bounds = [[self.long, self.lat],
-                    [self.long, self.lat + self.height],
-                    [self.long + self.width, self.lat + self.height],
-                    [self.long + self.width, self.lat],
-                    [self.long, self.lat]]
+                  [self.long, self.lat + self.height],
+                  [self.long + self.width, self.lat + self.height],
+                  [self.long + self.width, self.lat],
+                  [self.long, self.lat]]
         return bounds
 
     def get_value_out_types(self):
@@ -294,7 +294,6 @@ class CellBox:
             TODO
         """
         self._value_fill_types = value_fill_types
-
 
     # Functions used for splitting a cellbox
     def value_should_be_split(self, value, threshold, lowerbound, upperbound):
@@ -406,7 +405,7 @@ class CellBox:
             return "HOM"
         if "MIN" in hom_conditions:
             return "MIN"
-        if "HET" in hom_conditions: 
+        if "HET" in hom_conditions:
             return "HET"
         if hom_conditions.count("CLR") == len(hom_conditions):
             return "CLR"
@@ -466,7 +465,7 @@ class CellBox:
             upperbound = float(splitting_condition[value]['upperBound'])
             lowerbound = float(splitting_condition[value]['lowerBound'])
 
-            hom_conditions.append(self.value_hom_condition(value,threshold,lowerbound,upperbound))
+            hom_conditions.append(self.value_hom_condition(value, threshold, lowerbound, upperbound))
 
         if "HOM" in hom_conditions:
             return False
@@ -531,10 +530,10 @@ class CellBox:
                         fill_value = self.get_value(value, value_output_type)
                     else:
                         fill_value = np.nan
-              
+
                     if not np.isnan(fill_value):
                         datapoint = [[split_box.getcy(), split_box.getcx(), fill_value]]
-                        fill_df = pd.DataFrame(datapoint, columns=['lat','long',value])
+                        fill_df = pd.DataFrame(datapoint, columns=['lat', 'long', value])
 
                         split_box.add_data_points(fill_df)
 
@@ -620,8 +619,8 @@ class CellBox:
         else:
             for value in self.get_data_names():
                 if value in self.get_value_out_types().keys():
-                    cell_json[value] = float(self.get_value(value, 
-                        self.get_value_out_types()[value]))
+                    cell_json[value] = float(self.get_value(value,
+                                                            self.get_value_out_types()[value]))
                 else:
                     cell_json[value] = float(self.get_value(value))
 

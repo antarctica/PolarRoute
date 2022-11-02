@@ -44,6 +44,7 @@ class VesselPerformance:
             vessel_params (dict): The vessel specific information contained within the config
 
     """
+
     def __init__(self, mesh_json):
         """
             Constructs the VesselPerformance class from a given input mesh in json format which is then modified
@@ -158,7 +159,7 @@ class VesselPerformance:
 
         froude = speed / np.sqrt(gravity * area / 100 * thickness)
         resistance = 0.5 * kparam * (froude ** bparam) * density * beam * thickness * (speed ** 2) * (
-                    (area / 100) ** nparam)
+            (area / 100) ** nparam)
         return resistance
 
     def inverse_resistance(self, area, thickness, density):
@@ -184,7 +185,7 @@ class VesselPerformance:
         gravity = 9.81  # m/s-2
 
         vexp = 2 * force_limit / (kparam * density * beam * thickness * ((area / 100) ** nparam) * (
-                    gravity * thickness * area / 100) ** -(bparam / 2))
+            gravity * thickness * area / 100) ** -(bparam / 2))
 
         vms = vexp ** (1 / (2.0 + bparam))
         speed = vms * (18. / 5.)  # convert from m/s to km/h
@@ -226,7 +227,7 @@ class VesselPerformance:
             Method to calculate the speed based on the sea ice concentration using a simple toy model.
         """
         self.mesh_df['speed'] = (1 - np.sqrt(self.mesh_df['SIC'] / 100)) * \
-                                        self.vessel_params['Speed']
+            self.vessel_params['Speed']
 
     @timed_call
     def fuel(self):

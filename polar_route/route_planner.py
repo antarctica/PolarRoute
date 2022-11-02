@@ -1,9 +1,13 @@
 '''
-    This section of the codebase is used for construction of route paths using the 
+    This section of the codebase is used for construction of route paths using the
     environmental mesh between a series of user defined waypoints
 '''
 
-import copy, json, ast, warnings
+from polar_route.crossing import NewtonianDistance, NewtonianCurve
+import copy
+import json
+import ast
+import warnings
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -15,10 +19,8 @@ import logging
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from polar_route.crossing import NewtonianDistance, NewtonianCurve
 
-
-def _flattenCases(id,mesh):
+def _flattenCases(id, mesh):
     neighbour_case = []
     neighbour_indx = []
     neighbours = mesh['neighbour_graph'][id]
@@ -33,10 +35,10 @@ class RoutePlanner:
     """
         ---
 
-        RoutePlanner optimises the route paths between a series of waypoints. 
+        RoutePlanner optimises the route paths between a series of waypoints.
         The routes are constructed in a two stage process:
 
-        compute_routes: uses a mesh based Dijkstra method to determine the optimal routes 
+        compute_routes: uses a mesh based Dijkstra method to determine the optimal routes
                         between a series of waypoint.
 
         compute_smoothed_routes: smooths the compute_routes using information from the environmental mesh
@@ -108,12 +110,11 @@ class RoutePlanner:
     """
 
     def __init__(self, mesh, waypoints, cost_func=NewtonianDistance):
-
         """
             Constructs the routes from information given in the config file.
 
             Args:
-                config (dict): config file which defines the attributes required for the route construction. 
+                config (dict): config file which defines the attributes required for the route construction.
                     Sections required for the route construction are as follows\n
                     \n
                     {\n
@@ -144,17 +145,17 @@ class RoutePlanner:
         # Load in the current cell structure & Optimisation Info̦
         # self.mesh    = copy.copy(mesh)
         self.mesh = mesh
-        self.config  = self.mesh['config']
+        self.config = self.mesh['config']
 
         waypoints_df = pd.read_csv(waypoints)
-        source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
-        des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
+        source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
+        des_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
 
         self.source_waypoints = list(source_waypoints_df['Name'])
-        self.end_waypoints    = list(des_waypoints_df['Name'])
+        self.end_waypoints = list(des_waypoints_df['Name'])
 
         # Creating a blank path construct
-        self.paths          = None
+        self.paths = None
         self.smoothed_paths = None
         self.dijkstra_info = {}
 
@@ -173,7 +174,7 @@ class RoutePlanner:
         self.neighbour_graph.index = self.neighbour_graph.index.astype(int)
 
         # Renaming the vector columns
-        self.neighbour_graph = self.neighbour_graph.rename(columns={self.config['Route_Info']['vector_names'][0]: "Vector_x", 
+        self.neighbour_graph = self.neighbour_graph.rename(columns={self.config['Route_Info']['vector_names'][0]: "Vector_x",
                                                                     self.config['Route_Info']['vector_names'][1]: "Vector_y"})
 
         # ====== Speed Function Checking ======
@@ -182,31 +183,31 @@ class RoutePlanner:
             self.neighbour_graph['Speed'] = self.config["Vessel"]["Speed"]
 
         # ====== Objective Function Information ======
-        #  Checking if objective function is in the cellgrid            
+        #  Checking if objective function is in the cellgrid
         if self.config['Route_Info']['objective_function'] != 'traveltime':
             if self.config['Route_Info']['objective_function'] not in self.neighbour_graph:
                 raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['Route_Info']['objective_function']))
 
         # ===== Dijkstra Graph =====
         # Adding the required columns needed for the dijkstra graph
-        self.neighbour_graph['positionLocked']          = False
+        self.neighbour_graph['positionLocked'] = False
         for vrbl in self.config['Route_Info']['path_variables']:
-            self.neighbour_graph['shortest_{}'.format(vrbl)]    = np.inf
-        self.neighbour_graph['neighbourTravelLegs']     = [list() for x in range(len(self.neighbour_graph.index))]
+            self.neighbour_graph['shortest_{}'.format(vrbl)] = np.inf
+        self.neighbour_graph['neighbourTravelLegs'] = [list() for x in range(len(self.neighbour_graph.index))]
         self.neighbour_graph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathIndex']               = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathIndex'] = [list() for x in range(len(self.neighbour_graph.index))]
         for vrbl in self.config['Route_Info']['path_variables']:
             self.neighbour_graph['path_{}'.format(vrbl)] = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathPoints']               = [list() for x in range(len(self.neighbour_graph.index))]
+        self.neighbour_graph['pathPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
 
         # ====== Defining the cost function ======
-        self.cost_func       = cost_func
+        self.cost_func = cost_func
 
         # ====== Outlining some constant values ======
         self.unit_shipspeed = self.config['Vessel']['Unit']
-        self.unit_time      = self.config['Route_Info']['time_unit']
-        self.zero_currents  = self.config['Route_Info']['zero_currents']
-        self.variable_speed  =self.config['Route_Info']['variable_speed']
+        self.unit_time = self.config['Route_Info']['time_unit']
+        self.zero_currents = self.config['Route_Info']['zero_currents']
+        self.variable_speed = self.config['Route_Info']['variable_speed']
 
         if not self.variable_speed:
             self.neighbour_graph['Speed'] = self.config["Vessel"]["Speed"]
@@ -215,22 +216,22 @@ class RoutePlanner:
         self.mesh['waypoints'] = waypoints_df
 
         # Dropping waypoints outside domain
-        self.mesh['waypoints'] = self.mesh['waypoints'][\
-                                                              (self.mesh['waypoints']['Long'] >= self.config['Mesh_info']['Region']['longMin']) &\
-                                                              (self.mesh['waypoints']['Long'] <=  self.config['Mesh_info']['Region']['longMax']) &\
-                                                              (self.mesh['waypoints']['Lat'] <=  self.config['Mesh_info']['Region']['latMax']) &\
-                                                              (self.mesh['waypoints']['Lat'] >=  self.config['Mesh_info']['Region']['latMin'])] 
+        self.mesh['waypoints'] = self.mesh['waypoints'][
+            (self.mesh['waypoints']['Long'] >= self.config['Mesh_info']['Region']['longMin']) &
+            (self.mesh['waypoints']['Long'] <= self.config['Mesh_info']['Region']['longMax']) &
+            (self.mesh['waypoints']['Lat'] <= self.config['Mesh_info']['Region']['latMax']) &
+            (self.mesh['waypoints']['Lat'] >= self.config['Mesh_info']['Region']['latMin'])]
 
         # # Initialising Waypoints positions and cell index
         wpts = self.mesh['waypoints']
         wpts['index'] = np.nan
-        for idx,wpt in wpts.iterrows():
-            indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long','Lat']]))].index
-            # Waypoint is not within a mesh cell, but could still be on the edge of one. So perturbing the position slightly to the north-east and checking again. 
-            #If this is not the case then the waypoint is not within the navitagatable domain and will continue
+        for idx, wpt in wpts.iterrows():
+            indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long', 'Lat']]))].index
+            # Waypoint is not within a mesh cell, but could still be on the edge of one. So perturbing the position slightly to the north-east and checking again.
+            # If this is not the case then the waypoint is not within the navitagatable domain and will continue
             if len(indices) == 0:
                 try:
-                    indices = mesh[(mesh['geometry'].contains(Point(wpt[['Long','Lat']]+1e-5)))].index
+                    indices = mesh[(mesh['geometry'].contains(Point(wpt[['Long', 'Lat']] + 1e-5)))].index
                 except:
                     continue
             if len(indices) == 0:
@@ -242,11 +243,10 @@ class RoutePlanner:
 
         self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
         self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
-        self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
+        self.mesh['waypoints'] = self.mesh['waypoints'].to_json()
 
         # ==== Printing Configuration and Information
-        self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
-
+        self.mesh['waypoints'] = pd.read_json(self.mesh['waypoints'])
 
     def to_json(self):
         '''
@@ -270,13 +270,13 @@ class RoutePlanner:
         wpts_s = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(start_waypoints)]
         wpts_e = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(end_waypoints)]
         for _, wpt_a in wpts_s.iterrows():
-            wpt_a_name  = wpt_a['Name']
+            wpt_a_name = wpt_a['Name']
             wpt_a_index = int(wpt_a['index'])
-            wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
+            wpt_a_loc = [[wpt_a['Long'], wpt_a['Lat']]]
             for _, wpt_b in wpts_e.iterrows():
-                wpt_b_name  = wpt_b['Name']
+                wpt_b_name = wpt_b['Name']
                 wpt_b_index = int(wpt_b['index'])
-                wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
+                wpt_b_loc = [[wpt_b['Long'], wpt_b['Lat']]]
                 if not wpt_a_name == wpt_b_name:
                     try:
                         graph = self.dijkstra_info[wpt_a_name]
@@ -284,7 +284,7 @@ class RoutePlanner:
                         path['type'] = "Feature"
                         path['geometry'] = {}
                         path['geometry']['type'] = "LineString"
-                        path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1, :])+wpt_b_loc))
+                        path_points = (np.array(wpt_a_loc + list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1, :]) + wpt_b_loc))
                         path['geometry']['coordinates'] = path_points.tolist()
 
                         path['properties'] = {}
@@ -292,32 +292,32 @@ class RoutePlanner:
                         path['properties']['from'] = '{}'.format(wpt_a_name)
                         path['properties']['to'] = '{}'.format(wpt_b_name)
 
-                        cellIndices  = np.array(graph['pathIndex'].loc[wpt_b_index])
+                        cellIndices = np.array(graph['pathIndex'].loc[wpt_b_index])
                         path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]])
                         path['properties']['CellIndices'] = path_indices.tolist()
 
                         # Applying in-cell correction for travel-time
-                        cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents)
+                        cost_func = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
+                                                   neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
+                                                   unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents)
                         tt_start = cost_func.waypoint_correction(path_points[0, :], path_points[1, :])
-                        cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[-1]],
-                                                      neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents)
+                        cost_func = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[-1]],
+                                                   neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
+                                                   unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents)
                         tt_end = cost_func.waypoint_correction(path_points[-1, :], path_points[-2, :])
-                        path['properties']['traveltime']     = np.array(graph['path_traveltime'].loc[wpt_b_index])
-                        path['properties']['traveltime']     = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
+                        path['properties']['traveltime'] = np.array(graph['path_traveltime'].loc[wpt_b_index])
+                        path['properties']['traveltime'] = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
                         path['properties']['traveltime'][-1] = (path['properties']['traveltime'][-2] + tt_end)
 
                         for vrbl in self.config['Route_Info']['path_variables']:
                             if vrbl == 'traveltime':
                                 continue
-                            path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]*self.dijkstra_info[wpt_a_name].loc[path_indices,'{}'.format(vrbl)].to_numpy()).tolist()
+                            path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])] * self.dijkstra_info[wpt_a_name].loc[path_indices, '{}'.format(vrbl)].to_numpy()).tolist()
                         path['properties']['traveltime'] = path['properties']['traveltime'].tolist()
                         paths.append(path)
 
                     except:
-                        logging.warning('{} to {} - Failured to construct path direct in the dijkstra information'.format(wpt_a_name,wpt_b_name))
+                        logging.warning('{} to {} - Failured to construct path direct in the dijkstra information'.format(wpt_a_name, wpt_b_name))
 
         geojson['features'] = paths
         return geojson
@@ -327,20 +327,20 @@ class RoutePlanner:
             FILL
         """
         if variable == 'traveltime':
-            return np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
+            return np.array([source_graph['shortest_traveltime'] + traveltime[0], source_graph['shortest_traveltime'] + np.sum(traveltime)])
         else:
-            return np.array([source_graph['shortest_{}'.format(variable)] +\
-                    traveltime[0]*source_graph['{}'.format(variable)],
-                    source_graph['shortest_{}'.format(variable)] +\
-                    traveltime[0]*source_graph['{}'.format(variable)] +\
-                    traveltime[1]*neighbour_graph['{}'.format(variable)]])
+            return np.array([source_graph['shortest_{}'.format(variable)] +
+                             traveltime[0] * source_graph['{}'.format(variable)],
+                             source_graph['shortest_{}'.format(variable)] +
+                             traveltime[0] * source_graph['{}'.format(variable)] +
+                             traveltime[1] * neighbour_graph['{}'.format(variable)]])
 
     def _neighbour_cost(self, wpt_name, minimum_objective_index):
         """
             FILL
         """
         # Determining the nearest neighbour index for the cell
-        source_graph   = self.dijkstra_info[wpt_name].loc[minimum_objective_index]
+        source_graph = self.dijkstra_info[wpt_name].loc[minimum_objective_index]
 
         # Looping over idx
         for idx in range(len(source_graph['case'])):
@@ -350,11 +350,11 @@ class RoutePlanner:
             case = source_graph['case'][idx]
 
             # Applying Newton curve to determine crossing point
-            cost_func    = self.cost_func(source_graph=source_graph, neighbour_graph=neighbour_graph, case=case,
-                                          unit_shipspeed='km/hr', unit_time=self.unit_time,
-                                          zerocurrents=self.zero_currents)
+            cost_func = self.cost_func(source_graph=source_graph, neighbour_graph=neighbour_graph, case=case,
+                                       unit_shipspeed='km/hr', unit_time=self.unit_time,
+                                       zerocurrents=self.zero_currents)
             # Updating the Dijkstra graph with the new information
-            traveltime, crossing_points,cell_points = cost_func.value()
+            traveltime, crossing_points, cell_points = cost_func.value()
 
             source_graph['neighbourTravelLegs'].append(traveltime)
             source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
@@ -364,10 +364,10 @@ class RoutePlanner:
                                           neighbour_graph, traveltime)
             if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['objective_function'])]:
                 for vrbl in self.config['Route_Info']['path_variables']:
-                    value = self._objective_value(vrbl, source_graph, neighbour_graph,traveltime)
+                    value = self._objective_value(vrbl, source_graph, neighbour_graph, traveltime)
                     neighbour_graph['shortest_{}'.format(vrbl)] = value[1]
-                    neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + list(value)
-                neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
+                    neighbour_graph['path_{}'.format(vrbl)] = source_graph['path_{}'.format(vrbl)] + list(value)
+                neighbour_graph['pathIndex'] = source_graph['pathIndex'] + [indx]
                 neighbour_graph['pathPoints'] = source_graph['pathPoints'] + [list(crossing_points)] + [list(cell_points)]
                 self.dijkstra_info[wpt_name].loc[indx] = neighbour_graph
 
@@ -379,14 +379,14 @@ class RoutePlanner:
         """
         # Including only the End Waypoints defined by the user
         wpts = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(self.end_waypoints)]
-        
+
         # Initialising zero traveltime at the source location
         source_index = int(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt_name]['index'])
 
         for vrbl in self.config['Route_Info']['path_variables']:
             self.dijkstra_info[wpt_name].loc[source_index, 'shortest_{}'.format(vrbl)] = 0.0
         self.dijkstra_info[wpt_name].loc[source_index, 'pathIndex'].append(source_index)
-        
+
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         if self.config['Route_Info']['early_stopping_criterion']:
             stopping_criterion_indices = wpts['index']
@@ -397,16 +397,16 @@ class RoutePlanner:
 
             # Determining the index of the minimum objective function that has not been visited
             minimum_objective_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked'] == False]['shortest_{}'.format(self.config['Route_Info']['objective_function'])].idxmin()
-  
+
             # Finding the cost of the nearest neighbours from the source cell (Sc)
-            self._neighbour_cost(wpt_name,minimum_objective_index)
+            self._neighbour_cost(wpt_name, minimum_objective_index)
 
             # Updating Position to be locked
             self.dijkstra_info[wpt_name].loc[minimum_objective_index, 'positionLocked'] = True
 
     def compute_routes(self):
         """
-            Computes the Dijkstra Paths between waypoints. 
+            Computes the Dijkstra Paths between waypoints.
             `waypoints` and `paths` are appended to output JSON
         """
 
@@ -420,7 +420,7 @@ class RoutePlanner:
         for wpt in self.source_waypoints:
             self.dijkstra_info[wpt] = copy.copy(self.neighbour_graph)
 
-        # 
+        #
         logging.info('============= Dijkstr Path Creation ============\n')
 
         for wpt in self.source_waypoints:
@@ -434,22 +434,21 @@ class RoutePlanner:
             else:
                 self._dijkstra(wpt)
 
-
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         self.paths = self._dijkstra_paths(self.source_waypoints, self.end_waypoints)
         self.mesh['paths'] = self.paths
         for ii in range(len(self.mesh['paths']['features'])):
-            self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
+            self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'], unit='days'))]
 
     def compute_smoothed_routes(self):
         """
-            Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
+            Using the previously constructed Dijkstra paths smooth the paths to remove mesh features
             `paths` will be updated in the output JSON
         """
-        maxiter     = self.config['Route_Info']['smooth_path']['max_iteration_number']
+        maxiter = self.config['Route_Info']['smooth_path']['max_iteration_number']
         minimumDiff = self.config['Route_Info']['smooth_path']['minimum_difference']
 
-        # 
+        #
         SmoothedPaths = []
         geojson = {}
         geojson['type'] = "FeatureCollection"
@@ -457,128 +456,122 @@ class RoutePlanner:
         if len(self.paths['features']) == 0:
             logging.warning('Paths not constructed as there was no dijkstra paths created')
             return
-        Pths = copy.deepcopy(self.paths)['features']  
+        Pths = copy.deepcopy(self.paths)['features']
 
         logging.info('========= Determining Smoothed Paths ===========\n')
 
         for ii in range(len(Pths)):
-                Path = Pths[ii]
-                counter = 0 
+            Path = Pths[ii]
+            counter = 0
 
-                logging.info('---Smoothing {}'.format(Path['properties']['name']))
+            logging.info('---Smoothing {}'.format(Path['properties']['name']))
 
-                nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']], self.config, maxiter=1,
-                                             zerocurrents=self.zero_currents)
-                nc.pathIter = maxiter
+            nc = NewtonianCurve(self.dijkstra_info[Path['properties']['from']], self.config, maxiter=1,
+                                zerocurrents=self.zero_currents)
+            nc.pathIter = maxiter
 
-                org_path_points = np.array(Path['geometry']['coordinates'])
-                org_cellindices = np.array(Path['properties']['CellIndices'])
+            org_path_points = np.array(Path['geometry']['coordinates'])
+            org_cellindices = np.array(Path['properties']['CellIndices'])
 
-                # -- Generating a dataframe of the case information -- 
-                Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
-                cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
-                cellDijk    = [nc.neighbour_graph.loc[ii] for ii in cellIndices]
-                nc.CrossingDF  = pd.DataFrame({'cx':Points[:,0],'cy':Points[:,1],'cellStart':cellDijk[:-1],'cellEnd':cellDijk[1:]})
+            # -- Generating a dataframe of the case information --
+            Points = np.concatenate([org_path_points[0, :][None, :], org_path_points[1:-1:2], org_path_points[-1, :][None, :]])
+            cellIndices = np.concatenate([[org_cellindices[0]], [org_cellindices[0]], org_cellindices[1:-1:2], [org_cellindices[-1]], [org_cellindices[-1]]])
+            cellDijk = [nc.neighbour_graph.loc[ii] for ii in cellIndices]
+            nc.CrossingDF = pd.DataFrame({'cx': Points[:, 0], 'cy': Points[:, 1], 'cellStart': cellDijk[:-1], 'cellEnd': cellDijk[1:]})
 
-                # -- Determining the cases from the cell information. If within cell then case 0 -- 
-                Cases = []
-                for idx, row in nc.CrossingDF.iterrows():
-                    try:
-                        Cases.append(row.cellStart['case'][np.where(np.array(row.cellStart['neighbourIndex']) == row.cellEnd.name)[0][0]])
-                    except:
-                        Cases.append(0)
-                nc.CrossingDF['case'] = Cases
-                nc.CrossingDF.index = np.arange(int(nc.CrossingDF.index.min()), int(nc.CrossingDF.index.max()*1e3 + 1e3), int(1e3))
+            # -- Determining the cases from the cell information. If within cell then case 0 --
+            Cases = []
+            for idx, row in nc.CrossingDF.iterrows():
+                try:
+                    Cases.append(row.cellStart['case'][np.where(np.array(row.cellStart['neighbourIndex']) == row.cellEnd.name)[0][0]])
+                except:
+                    Cases.append(0)
+            nc.CrossingDF['case'] = Cases
+            nc.CrossingDF.index = np.arange(int(nc.CrossingDF.index.min()), int(nc.CrossingDF.index.max() * 1e3 + 1e3), int(1e3))
 
-                nc.orgDF = copy.deepcopy(nc.CrossingDF)
-                iter = 0
-                # try:
+            nc.orgDF = copy.deepcopy(nc.CrossingDF)
+            iter = 0
+            # try:
 
-                # while iter < nc.pathIter:
-                pbar = tqdm(np.arange(nc.pathIter))
+            # while iter < nc.pathIter:
+            pbar = tqdm(np.arange(nc.pathIter))
 
-                # Determining the computational time averaged across all pairs
-                self.allDist = []
-                self.allDist2 = []
+            # Determining the computational time averaged across all pairs
+            self.allDist = []
+            self.allDist2 = []
+
+            self.nc = nc
+
+            for iter in pbar:
+                nc.previousDF = copy.deepcopy(nc.CrossingDF)
+                id = 0
+                while id <= (len(nc.CrossingDF) - 3):
+                    # try:
+                    nc.triplet = nc.CrossingDF.iloc[id:id + 3]
+
+                    nc._updateCrossingPoint()
+                    self.nc = nc
+
+                    # -- Horseshoe Case Detection --
+                    nc._horseshoe()
+
+                    # -- Removing reseverse cases
+                    nc._reverseCase()
+                    # except:
+                    #     break
+
+                    id += 1 + nc.id
+
+                if id <= (len(nc.CrossingDF) - 3):
+                    print('Path Smoothing Failed!')
+                    break
 
                 self.nc = nc
 
-                for iter in pbar:
-                    nc.previousDF = copy.deepcopy(nc.CrossingDF)
-                    id = 0
-                    while id <= (len(nc.CrossingDF) - 3):
-                        #try:
-                        nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                
-                        nc._updateCrossingPoint()
-                        self.nc = nc
+                nc._mergePoint()
+                self.nc = nc
+                iter += 1
 
-                        # -- Horseshoe Case Detection -- 
-                        nc._horseshoe()
+                # Stop optimisation if the points are within some minimum difference
+                if len(nc.previousDF) == len(nc.CrossingDF):
+                    Dist = np.mean(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
+                    self.allDist.append(Dist)
+                    pbar.set_description("Mean Difference = {}".format(Dist))
 
-                        # -- Removing reseverse cases                    
-                        nc._reverseCase()
-                        # except:
-                        #     break
-
-                        id += 1+nc.id
-
-                    if  id <= (len(nc.CrossingDF) - 3):
-                        print('Path Smoothing Failed!')
+                    if (Dist == np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 500:
+                        logging.info('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 1'.format(iter, Dist))
                         break
+                    if (Dist < minimumDiff) and (Dist != 0.0):
+                        logging.info('{} iterations - dDist={}'.format(iter, Dist))
+                        break
+                # else:
+                #     if 'Dist' in locals():
+                #         self.allDist2.append(Dist)
+                #         if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>50:
+                #             if self.verbose:
+                #                 print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 2'.format(iter,Dist))
+                #             break
 
+            # Determining the traveltime
+            TravelTimeLegs, DistanceLegs, pathIndex = nc.objective_function()
+            FuelLegs = TravelTimeLegs * self.neighbour_graph['fuel'].loc[pathIndex]
+            SpeedLegs = self.neighbour_graph['speed'].loc[pathIndex]
 
-                    self.nc = nc
-
-                    nc._mergePoint()
-                    self.nc = nc
-                    iter+=1
-                        
-                    # Stop optimisation if the points are within some minimum difference
-                    if len(nc.previousDF) == len(nc.CrossingDF):
-                        Dist = np.mean(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
-                        self.allDist.append(Dist)
-                        pbar.set_description("Mean Difference = {}".format(Dist))
-
-                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 500:
-                            logging.info('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 1'.format(iter,Dist))
-                            break
-                        if (Dist < minimumDiff) and (Dist != 0.0):
-                            logging.info('{} iterations - dDist={}'.format(iter, Dist))
-                            break
-                    # else:
-                    #     if 'Dist' in locals():
-                    #         self.allDist2.append(Dist)
-                    #         if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>50:
-                    #             if self.verbose:
-                    #                 print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 2'.format(iter,Dist))
-                    #             break
-
-
-
-
-                # Determining the traveltime 
-                TravelTimeLegs,DistanceLegs,pathIndex = nc.objective_function()
-                FuelLegs  = TravelTimeLegs*self.neighbour_graph['fuel'].loc[pathIndex]
-                SpeedLegs = self.neighbour_graph['speed'].loc[pathIndex]
-
-                SmoothedPath ={}
-                SmoothedPath['type'] = 'Feature'
-                SmoothedPath['geometry'] = {}
-                SmoothedPath['geometry']['type'] = "LineString"
-                SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cx','cy']].to_numpy().tolist()            
-                SmoothedPath['properties'] = {}
-                SmoothedPath['properties']['from'] = Path['properties']['from']
-                SmoothedPath['properties']['to']   = Path['properties']['to']
-                SmoothedPath['properties']['traveltime'] = np.cumsum(TravelTimeLegs).tolist() 
-                SmoothedPath['properties']['fuel']  = np.cumsum(FuelLegs).tolist()
-                SmoothedPath['properties']['distance'] = np.cumsum(DistanceLegs).tolist()
-                SmoothedPath['properties']['speed'] = SpeedLegs.tolist()
-                SmoothedPaths.append(SmoothedPath)
-                geojson['features'] = SmoothedPaths
-                self.smoothed_paths = geojson
-                self.mesh['paths'] = self.smoothed_paths
+            SmoothedPath = {}
+            SmoothedPath['type'] = 'Feature'
+            SmoothedPath['geometry'] = {}
+            SmoothedPath['geometry']['type'] = "LineString"
+            SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cx', 'cy']].to_numpy().tolist()
+            SmoothedPath['properties'] = {}
+            SmoothedPath['properties']['from'] = Path['properties']['from']
+            SmoothedPath['properties']['to'] = Path['properties']['to']
+            SmoothedPath['properties']['traveltime'] = np.cumsum(TravelTimeLegs).tolist()
+            SmoothedPath['properties']['fuel'] = np.cumsum(FuelLegs).tolist()
+            SmoothedPath['properties']['distance'] = np.cumsum(DistanceLegs).tolist()
+            SmoothedPath['properties']['speed'] = SpeedLegs.tolist()
+            SmoothedPaths.append(SmoothedPath)
+            geojson['features'] = SmoothedPaths
+            self.smoothed_paths = geojson
+            self.mesh['paths'] = self.smoothed_paths
         for ii in range(len(self.mesh['paths']['features'])):
-            self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'],unit='days'))]
-
-                    
+            self.mesh['paths']['features'][ii]['properties']['times'] = [str(ii) for ii in (pd.to_datetime(self.mesh['config']['Mesh_info']['Region']['startTime']) + pd.to_timedelta(self.mesh['paths']['features'][ii]['properties']['traveltime'], unit='days'))]

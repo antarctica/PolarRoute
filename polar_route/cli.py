@@ -36,25 +36,24 @@ def get_args(
                     help="Turn on DEBUG level logging")
 
     if config_arg:
-        ap.add_argument("config", type=argparse.FileType("r"), 
-                    help="File location of configuration file used to build the mesh")
+        ap.add_argument("config", type=argparse.FileType("r"),
+                        help="File location of configuration file used to build the mesh")
 
     if info_arg:
         ap.add_argument("info", type=argparse.FileType("r"),
-                    help="File location of the enviromental mesh")
+                        help="File location of the enviromental mesh")
 
     if waypoints_arg:
         ap.add_argument("waypoints", type=argparse.FileType("r"))
         ap.add_argument("-p", "--path_only",
                         default=False,
-                        action = "store_true",
+                        action="store_true",
                         help="output only the calculated paths")
 
         ap.add_argument("-d", "--dijkstra",
                         default=False,
-                        action = "store_true",
+                        action="store_true",
                         help="output only the calculated paths")
-
 
     return ap.parse_args()
 
@@ -106,12 +105,12 @@ def optimise_routes_cli():
     from polar_route.route_planner import RoutePlanner
 
     args = get_args("optimise_routes.output.json",
-                    config_arg=False, info_arg=True, waypoints_arg= True)
+                    config_arg=False, info_arg=True, waypoints_arg=True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
     if args.path_only:
         logging.info("outputting only path to {}".format(args.output))
-    else: 
+    else:
         logging.info("outputting full mesh to {}".format(args.output))
 
     vehicle_mesh = json.load(args.info)
@@ -123,9 +122,9 @@ def optimise_routes_cli():
 
     if args.path_only:
         if args.dijkstra:
-             json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
+            json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
         json.dump(info['paths'], open(args.output, 'w'))
     else:
         if args.dijkstra:
-             json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
+            json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
         json.dump(info, open(args.output, "w"))

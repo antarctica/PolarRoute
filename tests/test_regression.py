@@ -10,6 +10,7 @@ import json
 from polar_route.mesh import Mesh
 from polar_route.vessel_performance import VesselPerformance
 
+
 def test_cellbox_count(mesh_a, mesh_b):
     """
         Test if two provided meshes contain the same number of cellboxes
@@ -28,6 +29,7 @@ def test_cellbox_count(mesh_a, mesh_b):
 
     assert(cellbox_count_a == cellbox_count_b), \
         f"Incorrect number of cellboxes in new mesh. Expected :{cellbox_count_a}, got: {cellbox_count_b}"
+
 
 def test_cellbox_ids(mesh_a, mesh_b):
     """
@@ -56,8 +58,9 @@ def test_cellbox_ids(mesh_a, mesh_b):
     missing_a_ids = list(mesh_b_ids - mesh_a_ids)
     missing_b_ids = list(mesh_a_ids - mesh_b_ids)
 
-    assert(indxed_a.keys()  == indxed_b.keys()), \
+    assert(indxed_a.keys() == indxed_b.keys()), \
         f"Mismatch in cellbox IDs. ID's {missing_a_ids} have appeared in the new mesh. ID's {missing_b_ids} are missing from the new mesh"
+
 
 def test_cellbox_values(mesh_a, mesh_b):
     """
@@ -100,8 +103,9 @@ def test_cellbox_values(mesh_a, mesh_b):
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
 
-    assert(len(mismatch_cellboxes) == 0) , \
+    assert(len(mismatch_cellboxes) == 0), \
         f"Values in <{len(mismatch_cellboxes.keys())}> cellboxes in the new mesh have changed. The changes cellboxes are: {mismatch_cellboxes}"
+
 
 def test_cellbox_attributes(mesh_a, mesh_b):
     """
@@ -131,6 +135,7 @@ def test_cellbox_attributes(mesh_a, mesh_b):
     assert(mesh_a_attributes == mesh_b_attributes), \
         f"Mismatch in cellbox attributes. Attributes {missing_a_attributes} have appeared in the new mesh. Attributes {missing_b_attributes} are missing in the new mesh"
 
+
 def test_neighbour_graph_count(graph_a, graph_b):
     """
 
@@ -145,6 +150,7 @@ def test_neighbour_graph_count(graph_a, graph_b):
 
     assert(graph_a_count == graph_b_count), \
         f"Incorrect number of nodes in neighbour graph. Expected: <{graph_a_count}> nodes, got: <{graph_b_count}> nodes."
+
 
 def test_neighbour_graph_ids(graph_a, graph_b):
     """
@@ -161,8 +167,9 @@ def test_neighbour_graph_ids(graph_a, graph_b):
     missing_a_keys = list(graph_b_ids - graph_a_ids)
     missing_b_keys = list(graph_a_ids - graph_b_ids)
 
-    assert(graph_a_ids == graph_b_ids) , \
+    assert(graph_a_ids == graph_b_ids), \
         f"Mismatch in neighbour graph nodes. <{len(missing_a_keys)}> nodes  have appeared in the new neighbour graph. <{len(missing_b_keys)}> nodes  are missing from the new neighbour graph."
+
 
 def test_neighbour_graph_values(graph_a, graph_b):
     """
@@ -176,7 +183,7 @@ def test_neighbour_graph_values(graph_a, graph_b):
     mismatch_neighbors = dict()
 
     for node in graph_a.keys():
-        # Prevent crashing if node not found. 
+        # Prevent crashing if node not found.
         # This will be detected by 'test_neighbour_graph_ids'.
         if node in graph_b.keys():
             neighbours_a = graph_a[node]
@@ -187,6 +194,7 @@ def test_neighbour_graph_values(graph_a, graph_b):
 
     assert(len(mismatch_neighbors) == 0), \
         f"Mismatch in neighbour graph neighbours. <{len(mismatch_neighbors.keys())}> nodes have changed in new mesh."
+
 
 def main():
     """
@@ -265,8 +273,7 @@ def main():
         print("test_neighbour_graph_values : failed")
         print("    " + str(warning))
     print("tests complete!")
-  
+
 
 if __name__ == "__main__":
     main()
-    

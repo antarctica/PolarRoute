@@ -80,5 +80,3 @@ def setup_logging(func,
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         return parsed_args
     return wrapper
-
-

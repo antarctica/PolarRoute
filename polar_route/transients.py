@@ -10,8 +10,9 @@ class Icebergs:
         Simple module for processing and updating the iceberg locations through time determining the location on the
         same time interval asvthe PolarRoute Mesh, and returning the indices of the iceberg locations.
     """
-    def __init__(self,cellGrid,object_locations):
-        self.cellGrid         = cellGrid
+
+    def __init__(self, cellGrid, object_locations):
+        self.cellGrid = cellGrid
         self.object_locations = object_locations
 
     def _cellGridResample(self):
@@ -19,7 +20,7 @@ class Icebergs:
             Function that takes the super resolution of the iceberg tracking and resamples on the temporal sampling of
             the PolarRoute Mesh structure
         """
-    
+
     def _physicsModel(self):
         """
             The physics based model describing the updating of the iceberg locations.
@@ -36,8 +37,3 @@ class Icebergs:
             Given the Mesh and the iceberg locations forward propagate to determine the expected locations given a
             physics model describing the dynamics of the icebergs.
         '''
-
-        
-
-
-

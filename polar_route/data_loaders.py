@@ -73,7 +73,7 @@ def load_amsr_folder(params, long_min, long_max, lat_min, lat_max, time_start, t
     # iterate through all files in folder passed as a parameter
     for file in sorted(glob.glob(params['folder'] + '/*.nc')):
         # string year/month/day out of file name.
-        # files in the folder must be named in the form 
+        # files in the folder must be named in the form
         # asi-AMSR2-s6250-<year><month><day>-v.5.4.nc
         year = int(file.split('-')[-2][0:4])
         month = int(file.split('-')[-2][4:6])
@@ -412,11 +412,11 @@ def load_bsose(params, long_min, long_max, lat_min, lat_max, time_start, time_en
 
     if 'units' in params.keys():
         if params['units'] == "percentage":
-            bsose_df['SIC'] = bsose_df['SIC']*100
+            bsose_df['SIC'] = bsose_df['SIC'] * 100
         if params['units'] == 'fraction':
-            """""" #BSOSE source data is fractional, no transformation required
+            """"""  # BSOSE source data is fractional, no transformation required
     else:
-        bsose_df['SIC'] = bsose_df['SIC']*100
+        bsose_df['SIC'] = bsose_df['SIC'] * 100
 
     bsose_df = bsose_df[bsose_df['long'].between(long_min, long_max)]
     bsose_df = bsose_df[bsose_df['lat'].between(lat_min, lat_max)]
@@ -548,16 +548,15 @@ def load_gebco(params, long_min, long_max, lat_min, lat_max, time_start, time_en
             gebco_df (Dataframe): A dataframe containing GEBCO elevation
                 data. The dataframe is of the format -
 
-                lat | long | time | elevation 
+                lat | long | time | elevation
     """
     logging.debug("opening file {}".format(params['file']))
     gebco = xr.open_dataset(params['file'])
 
-    
     if 'downsample_factors' in params.keys():
         logging.debug("downsampling dataset by a factor of [{},{}]".format(params['downsample_factors'][0],
-            params['downsample_factors'][1] ))
-        elev = gebco['elevation'][::params['downsample_factors'][0],::params['downsample_factors'][1]]
+                                                                           params['downsample_factors'][1]))
+        elev = gebco['elevation'][::params['downsample_factors'][0], ::params['downsample_factors'][1]]
         gebco = xr.Dataset()
         gebco['elevation'] = elev
 
@@ -621,7 +620,7 @@ def load_sose_currents(params, long_min, long_max, lat_min, lat_max, time_start,
             sose_df['uC'] = sose_df['uC'] * 3.6
             sose_df['vC'] = sose_df['vC'] * 3.6
         if params['units'] == 'm/s':
-            """""" # SOSE source data is in m/s, no transformation required
+            """"""  # SOSE source data is in m/s, no transformation required
 
     logging.debug("returning {} datapoints".format(len(sose_df.index)))
     return sose_df
@@ -690,7 +689,7 @@ def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_en
 
             params (dict): A dictionary containing optional parameters. This
                 function requires -
-  
+
                 params['file'] (string): file location of the MODIS dataset
 
         Returns:
@@ -709,7 +708,7 @@ def load_modis(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     # set the SIC of that datapoint to NaN
     modis_df['iceArea'] = np.where(modis_df['cloud'] == 1, np.NaN, modis_df['iceArea'])
     modis_df = modis_df.rename(columns={'iceArea': 'SIC'})
-    modis_df['SIC'] = modis_df['SIC']*10.
+    modis_df['SIC'] = modis_df['SIC'] * 10.
 
     modis_df = modis_df[modis_df['long'].between(long_min, long_max)]
     modis_df = modis_df[modis_df['lat'].between(lat_min, lat_max)]
@@ -748,7 +747,7 @@ def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, tim
     logging.debug("opening file {}".format(params['file']))
     era5_wind = xr.open_dataset(params['file'])
 
-    # era5_wind data is available in monthly slices, not daily. 
+    # era5_wind data is available in monthly slices, not daily.
     # time_start is set to the start of the given month to ensure that data is loaded.
     time_start_split = time_start.split('-')
     time_start = time_start_split[0] + "-" + time_start_split[1] + "-01"
@@ -809,7 +808,7 @@ def load_oras5(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     oras5_df = oras5.to_dataframe()
     oras5_df = oras5_df.reset_index()
 
-    oras5_df = oras5_df.rename(columns={'uo': 'uC','vo': 'vC','longitude':'long','latitude':'lat'})
+    oras5_df = oras5_df.rename(columns={'uo': 'uC', 'vo': 'vC', 'longitude': 'long', 'latitude': 'lat'})
     oras5_df = oras5_df[oras5_df['long'].between(long_min, long_max)]
     oras5_df = oras5_df[oras5_df['lat'].between(lat_min, lat_max)]
     logging.debug("returned {} datapoints".format(len(oras5_df.index)))
