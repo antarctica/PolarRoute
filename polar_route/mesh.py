@@ -20,13 +20,11 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-# FIXME: This is weird
-import json as JSON
+import json
 
 from matplotlib.patches import Polygon as MatplotPolygon
 from polar_route.cellbox import CellBox
 import polar_route.data_loaders as data_loader
-
 
 class Mesh:
     """
@@ -298,12 +296,31 @@ class Mesh:
                 return_cellboxes.append(cell)
         return return_cellboxes
 
-    def to_json(self):
+    def get_cellbox(self, long, lat):
         """
-            Returns this Mesh converted to string parsable as a JSON object.
+            Returns the CellBox which contains a point, given by parameters lat, long
+
+            Args:
+                long (long): longitude of a given point
+                lat (float): latitude of given point
 
             Returns:
-                json (string): a string representation of the CellGird parseable as a
+                cellbox (CellBox): the cellbox which contains the point given my parameters
+                (long, lat)
+        """
+        selected_cell = []
+        for cellbox in self.cellboxes:
+            if isinstance(cellbox, CellBox):
+                if cellbox.contains_point(lat, long):
+                    selected_cell.append(cellbox)
+        return selected_cell[0]
+
+    def to_json(self):
+        """
+            Returns this Mesh converted to a JSON object.
+
+            Returns:
+                json (json): a string representation of the CellGird parseable as a
                     JSON object. The JSON object is of the form -
 
                     {
@@ -313,13 +330,13 @@ class Mesh:
                             within the Mesh
                     }
         """
-        json = dict()
-        json['config'] = self.config
-        json["cellboxes"] = self.get_cellboxes()
-        json['neighbour_graph'] = self.neighbour_graph
+        output = dict()
+        output['config'] = self.config
+        output["cellboxes"] = self.get_cellboxes()
+        output['neighbour_graph'] = self.neighbour_graph
 
         # FIXME: Eh?
-        return JSON.loads(JSON.dumps(json))
+        return json.loads(json.dumps(output))
 
     # Functions for splitting cellboxes within the Mesh
 
@@ -595,25 +612,6 @@ class Mesh:
                 cellbox_b.long < (cellbox_a.long + cellbox_a.width)):
             return -4  # North
         return 0  # Cells are not neighbours.
-
-    def get_cellbox(self, long, lat):
-        """
-            Returns the CellBox which contains a point, given by parameters lat, long
-
-            Args:
-                long (long): longitude of a given point
-                lat (float): latitude of given point
-
-            Returns:
-                cellbox (CellBox): the cellbox which contains the point given my parameters
-                (long, lat)
-        """
-        selected_cell = []
-        for cellbox in self.cellboxes:
-            if isinstance(cellbox, CellBox):
-                if cellbox.contains_point(lat, long):
-                    selected_cell.append(cellbox)
-        return selected_cell[0]
 
     # Functions used for j_grid regression testing
     def dump_mesh(self, file_location):
