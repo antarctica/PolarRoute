@@ -20,13 +20,11 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-# FIXME: This is weird
-import json as JSON
+import json
 
 from matplotlib.patches import Polygon as MatplotPolygon
 from polar_route.cellbox import CellBox
 import polar_route.data_loaders as data_loader
-
 
 class Mesh:
     """
@@ -298,12 +296,31 @@ class Mesh:
                 return_cellboxes.append(cell)
         return return_cellboxes
 
-    def to_json(self):
+    def get_cellbox(self, long, lat):
         """
-            Returns this Mesh converted to string parsable as a JSON object.
+            Returns the CellBox which contains a point, given by parameters lat, long
+
+            Args:
+                long (long): longitude of a given point
+                lat (float): latitude of given point
 
             Returns:
-                json (string): a string representation of the CellGird parseable as a
+                cellbox (CellBox): the cellbox which contains the point given my parameters
+                (long, lat)
+        """
+        selected_cell = []
+        for cellbox in self.cellboxes:
+            if isinstance(cellbox, CellBox):
+                if cellbox.contains_point(lat, long):
+                    selected_cell.append(cellbox)
+        return selected_cell[0]
+
+    def to_json(self):
+        """
+            Returns this Mesh converted to a JSON object.
+
+            Returns:
+                json (json): a string representation of the CellGird parseable as a
                     JSON object. The JSON object is of the form -
 
                     {
@@ -313,13 +330,13 @@ class Mesh:
                             within the Mesh
                     }
         """
-        json = dict()
-        json['config'] = self.config
-        json["cellboxes"] = self.get_cellboxes()
-        json['neighbour_graph'] = self.neighbour_graph
+        output = dict()
+        output['config'] = self.config
+        output["cellboxes"] = self.get_cellboxes()
+        output['neighbour_graph'] = self.neighbour_graph
 
         # FIXME: Eh?
-        return JSON.loads(JSON.dumps(json))
+        return json.loads(json.dumps(output))
 
     # Functions for splitting cellboxes within the Mesh
 
@@ -540,87 +557,6 @@ class Mesh:
                 if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
                     self.split_and_replace(cellbox)
 
-    # Functions for debugging
-    def plot(self, highlight_cellboxes={}, plot_ice=True, plot_currents=False,
-             plot_borders=True, paths=None, routepoints=False, waypoints=None):
-        """
-            creates and displays a plot for this Mesh
-
-            To be used for debugging purposes only.
-        """
-        # Create plot figure
-        fig, axis = plt.subplots(1, 1, figsize=(25, 11))
-
-        fig.patch.set_facecolor('white')
-        axis.set_facecolor('lightblue')
-
-        for cellbox in self.cellboxes:
-            if isinstance(cellbox, CellBox):
-                # plot ice
-                if plot_ice and not np.isnan(cellbox.get_value('iceArea')):
-                    if self._j_grid:
-                        if cellbox.get_value('iceArea') >= 0.04:
-                            axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                                           closed=True, fill=True, color='white', alpha=1))
-                            if cellbox.get_value('iceArea') < 0.8:
-                                axis.add_patch(
-                                    MatplotPolygon(cellbox.get_bounds(),
-                                                   closed=True, fill=True, color='grey',
-                                                   alpha=(1 - cellbox.get_value('iceArea'))))
-                    else:
-                        axis.add_patch(MatplotPolygon(cellbox.get_bounds(), closed=True,
-                                       fill=True, color='white', alpha=cellbox.get_value('iceArea')))
-
-                # plot land
-                if self._j_grid:
-                    if cellbox.land_locked:
-                        axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                                                      closed=True, fill=True, facecolor='lime'))
-                else:
-                    if cellbox.contains_land():
-                        axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                                                      closed=True, fill=True, facecolor='mediumseagreen'))
-
-                # plot currents
-                if plot_currents:
-                    axis.quiver((cellbox.long + cellbox.width / 2),
-                                (cellbox.lat + cellbox.height / 2),
-                                cellbox.get_value('uC'), cellbox.get_value('vC'),
-                                scale=1, width=0.002, color='gray')
-
-                # plot borders
-                if plot_borders:
-                    axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                                                  closed=True, fill=False, edgecolor='black'))
-
-        # plot highlighted cells
-        for colour in highlight_cellboxes:
-            for cellbox in highlight_cellboxes[colour]:
-                axis.add_patch(MatplotPolygon(cellbox.get_bounds(),
-                                              closed=True,
-                                              fill=False,
-                                              edgecolor=colour,
-                                              linewidth=0.5 + len(list(highlight_cellboxes.keys())) -
-                                              list(highlight_cellboxes.keys()).index(colour)))
-
-        # plot paths if supplied
-        if paths is not None:
-            for path in paths:
-                if path['Time'] == np.inf:
-                    continue
-                points = np.array(path['Path']['Points'])
-                if routepoints:
-                    axis.plot(points[:, 0], points[:, 1], linewidth=3.0, color='b')
-                    axis.scatter(points[:, 0], points[:, 1], 30, zorder=99, color='b')
-                else:
-                    axis.plot(points[:, 0], points[:, 1], linewidth=3.0, color='b')
-
-        if waypoints is not None:
-            axis.scatter(waypoints['Long'], waypoints['Lat'], 150, marker='^', color='r')
-
-        axis.set_xlim(self._long_min, self._long_max)
-        axis.set_ylim(self._lat_min, self._lat_max)
-
     def get_neighbour_case(self, cellbox_a, cellbox_b):
         """
             Given two cellBoxes (cellbox_a, cellbox_b) returns a case number
@@ -676,25 +612,6 @@ class Mesh:
                 cellbox_b.long < (cellbox_a.long + cellbox_a.width)):
             return -4  # North
         return 0  # Cells are not neighbours.
-
-    def get_cellbox(self, long, lat):
-        """
-            Returns the CellBox which contains a point, given by parameters lat, long
-
-            Args:
-                long (long): longitude of a given point
-                lat (float): latitude of given point
-
-            Returns:
-                cellbox (CellBox): the cellbox which contains the point given my parameters
-                (long, lat)
-        """
-        selected_cell = []
-        for cellbox in self.cellboxes:
-            if isinstance(cellbox, CellBox):
-                if cellbox.contains_point(lat, long):
-                    selected_cell.append(cellbox)
-        return selected_cell[0]
 
     # Functions used for j_grid regression testing
     def dump_mesh(self, file_location):

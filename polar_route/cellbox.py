@@ -191,7 +191,7 @@ class CellBox:
 
                 value_type (string): The output type of a value requested.
                     value_type may be < MEAN | MIN | MAX >. If none is given
-                    a default of MIN is used.
+                    a default of MEAN is used.
 
             Returns:
                 value (float): The mean of all data_points of type 'value'
@@ -520,7 +520,7 @@ class CellBox:
 
             for value in split_box.get_value_fill_types().keys():
                 if value in split_box.get_value_out_types().keys():
-                    value_output_type = split_box.get_value_out_types()['value']
+                    value_output_type = split_box.get_value_out_types()[value]
                 else:
                     value_output_type = "MEAN"
 
