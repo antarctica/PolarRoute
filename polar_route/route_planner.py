@@ -327,16 +327,17 @@ class RoutePlanner:
             FILL
         """
         if variable == 'traveltime':
-            return np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
+            objs = np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
+            return objs
         else:
-            if len(source_graph['{}'.format(variable)]) != 1:
+            if type('{}'.format(variable)) == list and len(source_graph['{}'.format(variable)]) != 1:
                 indx_type = np.array([1,2,3,4,-1,-2,-3,-4])
                 idx = np.where(indx_type==case)[0][0]
-
                 objs = np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx],source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx] + traveltime[1]*neighbour_graph['{}'.format(variable)][idx]])
                 return objs
             else:
-                return np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)], source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)] + traveltime[1]*neighbour_graph['{}'.format(variable)]])
+                objs = np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)], source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)] + traveltime[1]*neighbour_graph['{}'.format(variable)]])
+                return objs
 
     def _neighbour_cost(self, wpt_name, minimum_objective_index):
         """
@@ -363,8 +364,7 @@ class RoutePlanner:
             source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
 
             # Using neighbourhood cost determine objective function value
-            value = self._objective_value(self.config['Route_Info']['objective_function'], source_graph,
-                                          neighbour_graph, traveltime, case)
+            value = self._objective_value(self.config['Route_Info']['objective_function'], source_graph,neighbour_graph, traveltime, case)
             if value[1] < neighbour_graph['shortest_{}'.format(self.config['Route_Info']['objective_function'])]:
                 for vrbl in self.config['Route_Info']['path_variables']:
                     value = self._objective_value(vrbl, source_graph, neighbour_graph,traveltime, case)
@@ -562,7 +562,7 @@ class RoutePlanner:
 
                 # Determining the traveltime 
                 TravelTimeLegs,DistanceLegs,pathIndex = nc.objective_function()
-                FuelLegs  = TravelTimeLegs*self.neighbour_graph['fuel'].loc[pathIndex]
+                #FuelLegs  = TravelTimeLegs*self.neighbour_graph['fuel'].loc[pathIndex]
                 SpeedLegs = self.neighbour_graph['speed'].loc[pathIndex]
 
                 SmoothedPath ={}
@@ -574,7 +574,7 @@ class RoutePlanner:
                 SmoothedPath['properties']['from'] = Path['properties']['from']
                 SmoothedPath['properties']['to']   = Path['properties']['to']
                 SmoothedPath['properties']['traveltime'] = np.cumsum(TravelTimeLegs).tolist() 
-                SmoothedPath['properties']['fuel']  = np.cumsum(FuelLegs).tolist()
+                #SmoothedPath['properties']['fuel']  = np.cumsum(FuelLegs).tolist()
                 SmoothedPath['properties']['distance'] = np.cumsum(DistanceLegs).tolist()
                 SmoothedPath['properties']['speed'] = SpeedLegs.tolist()
                 SmoothedPaths.append(SmoothedPath)
