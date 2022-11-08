@@ -11,9 +11,9 @@ from polar_route.vessel_performance import VesselPerformance
 
 #File locations of all meshes to be recaculated for regression testing.
 TEST_MESHES = [
-    './example_meshes/smallmesh_sl5.json',
-    './example_meshes/smallmesh_sl2.json',
-    './example_meshes/WeddellSea.json'
+    './example_meshes/add_vehicle.output2013_4_80.json',
+    './example_meshes/add_vehicle.output2017_6_80.json',
+    './example_meshes/add_vehicle.output2019_6_80.json'
 ]
 
 @pytest.fixture(scope='session', autouse=True, params=TEST_MESHES)
