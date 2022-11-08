@@ -905,12 +905,23 @@ class NewtonianCurve:
 
 
                         # Trimminng back if the cell is worse off fuel
-                        if ('fuel' in sGNGraph) and ('fuel' in cellStartGraph) and (sGNGraph['fuel'] - cellStartGraph['fuel'])>=2:
-                            if abs(case) == 2:
+                        if ('fuel' in sGNGraph) and ('fuel' in cellStartGraph) and len(sGNGraph['fuel'])>1 and len(cellStartGraph['fuel'])>1:
+                            indx_type = np.array([1,2,3,4,-1,-2,-3,-4])
+                            idx = np.where(indx_type==hrshCaseStart)[0][0]
+                            if (sGNGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                            if abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                                return
+                            if (sGNGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)
+                                return        
                             return
+                        else:
+                            if (sGNGraph['fuel'] - cellStartGraph['fuel'])>=2:
+                                if abs(case) == 2:
+                                    self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                                if abs(case) == 4:
+                                    self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                                return
 
 
                         # Updating the origional crossing point
@@ -957,7 +968,6 @@ class NewtonianCurve:
                         try:
                             Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                             Crp2 = np.array(NeighGraph['neighbourCrossingPoints'])[np.where(np.array(NeighGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
-
                         except:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
@@ -974,14 +984,26 @@ class NewtonianCurve:
                                 self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
                             return
 
-                        # Trimminng back if the cell is worse off fuel
-                        if ('fuel' in NeighGraph) and ('fuel' in cellStartGraph) and (NeighGraph['fuel'] - cellStartGraph['fuel'])>=2:
+                        # # Trimminng back if the cell is worse off fuel
+                        # if ('fuel' in NeighGraph) and ('fuel' in cellStartGraph) and len(NeighGraph['fuel'])>1 and len(cellStartGraph['fuel'])>1:
+                        #     indx_type = np.array([1,2,3,4,-1,-2,-3,-4])
+                        #     idx = np.where(indx_type==hrshCaseStart)[0][0]
+                        #     if (NeighGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 2:
+                        #         self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                        #         return
+                        #     if (NeighGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 4:
+                        #         self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)
+                        #         return        
+                        #     return
+                        # else:
+
+                        # JDS - This is wrong, need to consider both reistance edges.
+                        if (np.max(NeighGraph['fuel']) - np.max(cellStartGraph['fuel']))>=2:
                             if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
                             if abs(case) == 4:
                                 self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
                             return
-
 
 
                         # Updating the origional crossing point
