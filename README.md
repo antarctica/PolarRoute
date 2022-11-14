@@ -32,7 +32,7 @@ A list of supported data sources and there associated data-loaders is given in t
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
 
 ## Collaboration
-We are currently assessing the best pratice for collaboration on the codebase, until then please contact [jonsmi@bas.ac.uk](jonsmi@bas.ac.uk) for further info.
+We are currently assessing the best pratice for collaboration on the codebase, until then please contact [marfox@bas.ac.uk](marfox@bas.ac.uk) or [jonsmi@bas.ac.uk](jonsmi@bas.ac.uk) for further info.
 
 
 ## License
