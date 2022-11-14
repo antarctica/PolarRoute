@@ -31,8 +31,16 @@ A list of supported data sources and there associated data-loaders is given in t
 ## Developers
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
 
+## Collaboration
+We are currently assessing the best pratice for collaboration on the codebase, until then please contact [jonsmi@bas.ac.uk](jonsmi@bas.ac.uk) for further info.
+
+
 ## License
-This software is licensed under a MIT license. For more information please see the attached ``LICENSE`` file.
+This software is licensed under a MIT license, but request users cite our publication.  
+
+Jonathan D. Smith, Samuel Hall, George Coombs, James Byrne, Michael A. S. Thorne,  J. Alexander Brearley, Derek Long, Michael Meredith, Maria Fox,  (2022), Autonomous Passage Planning for a Polar Vessel, arXiv, https://arxiv.org/abs/2209.02389
+
+For more information please see the attached ``LICENSE`` file. 
 
 [version]: https://img.shields.io/PolarRoute/v/datadog-metrics.svg?style=flat-square
 [downloads]: https://img.shields.io/PolarRoute/dm/datadog-metrics.svg?style=flat-square
