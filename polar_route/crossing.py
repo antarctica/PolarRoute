@@ -55,8 +55,8 @@ class NewtonianDistance:
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed  = unit_shipspeed
         self.unit_time       = unit_time
-        self.source_speed    = self._unit_speed(self.source_graph['Speed'])
-        self.neighbour_speed = self._unit_speed(self.neighbour_graph['Speed'])
+        self.source_speed    = self._unit_speed(self.source_graph['speed'])
+        self.neighbour_speed = self._unit_speed(self.neighbour_graph['speed'])
         self.case            = case
 
         if zerocurrents:
@@ -904,24 +904,24 @@ class NewtonianCurve:
                             return
 
 
-                        # Trimminng back if the cell is worse off fuel
-                        if ('fuel' in sGNGraph) and ('fuel' in cellStartGraph) and len(sGNGraph['fuel'])>1 and len(cellStartGraph['fuel'])>1:
-                            indx_type = np.array([1,2,3,4,-1,-2,-3,-4])
-                            idx = np.where(indx_type==hrshCaseStart)[0][0]
-                            if (sGNGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 2:
+                        # # Trimminng back if the cell is worse off fuel
+                        # if ('fuel' in sGNGraph) and ('fuel' in cellStartGraph) and  len(sGNGraph['fuel'])>1 and len(cellStartGraph['fuel'])>1:
+                        #     indx_type = np.array([1,2,3,4,-1,-2,-3,-4])
+                        #     idx = np.where(indx_type==hrshCaseStart)[0][0]
+                        #     if (sGNGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 2:
+                        #         self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
+                        #         return
+                        #     if (sGNGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 4:
+                        #         self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)
+                        #         return        
+                        #     return
+                        # else:
+                        if (sGNGraph['fuel'] - cellStartGraph['fuel'])>=2:
+                            if abs(case) == 2:
                                 self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                                return
-                            if (sGNGraph['fuel'][idx] - cellStartGraph['fuel'][idx])>=2 and abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)
-                                return        
+                            if abs(case) == 4:
+                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
                             return
-                        else:
-                            if (sGNGraph['fuel'] - cellStartGraph['fuel'])>=2:
-                                if abs(case) == 2:
-                                    self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                                if abs(case) == 4:
-                                    self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-                                return
 
 
                         # Updating the origional crossing point
@@ -1075,8 +1075,8 @@ class NewtonianCurve:
         '''
 
         self.org_triplet = copy.deepcopy(self.triplet) 
-        self.speed_s = self._unit_speed(self.triplet.iloc[1]['cellStart']['Speed'])
-        self.speed_e = self._unit_speed(self.triplet.iloc[1]['cellEnd']['Speed'])
+        self.speed_s = self._unit_speed(self.triplet.iloc[1]['cellStart']['speed'])
+        self.speed_e = self._unit_speed(self.triplet.iloc[1]['cellEnd']['speed'])
 
         # ------ Case Deginitions & Dealing
         if self.debugging:
@@ -1122,40 +1122,88 @@ class NewtonianCurve:
             traveltime = np.inf
         return traveltime, dist
 
-    def _waypoint_correction(self,source_graph,Wp,Cp):
+    def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
         '''
             FILL
         '''
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
-
         x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*m_lat
         Su  = source_graph['Vector_x']*self.zc
         Sv  = source_graph['Vector_y']*self.zc
-        Ssp = self._unit_speed(source_graph['Speed'])
+        Ssp = self._unit_speed(source_graph['speed'])
         traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
-        return traveltime, distance
+
+
+        segment_values = {}
+        for var in path_requested_variables.keys():
+            if var=='distance':
+                segment_values[var] = distance
+            elif var=='traveltime':
+                segment_values[var] = traveltime
+            elif var=='cell_index':
+                segment_values[var] = int(source_graph.name)
+            else:
+                if 'var' in source_graph.keys():
+                    # Determining the objective value information
+                    objective_rate_value = source_graph[var]
+                    # -- Correction needed for when there is case dependent values
+
+                    if path_requested_variables[var]['processing']==None:
+                        segment_values[var] = objective_rate_value
+                    else:
+                        segment_values[var] = traveltime*objective_rate_value
+
+        return segment_values
 
     def objective_function(self):
         '''
-            FILL
+            BUGS:
+            - Currently this only returns the traveltime, distance and index. Expand to include all objective values; in addtion add in the DT.
+            - This stage can also be used to do waypoint correction as well, as its called after
+
+
         '''
-        TravelTime = np.zeros(len(self.CrossingDF))
-        Distance   = np.zeros(len(self.CrossingDF))
-        index      = np.zeros(len(self.CrossingDF))
+
+        # Determining the important variables to return for the paths
+        required_path_variables = {'distance':{'processing':'cumsum'},
+                                   'traveltime':{'processing':'cumsum'},
+                                   'datetime':{'processing':'cumsum'},
+                                   'cell_index':{'processing':None},
+                                   'speed':{'processing':None},
+                                   'fuel':{'processing':'cumsum'}}
+        path_requested_variables = {}#self.config['Route_Info']['path_variables']
+        path_requested_variables.update(required_path_variables)
+
+
+
+        # Initialising zero arrays for the path variables 
+        variables =  {}    
+        for var in path_requested_variables:
+            variables[var] ={}
+            variables[var]['path_values'] = np.zeros(len(self.CrossingDF))
+
+
+
+        # Looping over the path and determining the variable information
         for ii in range(len(self.CrossingDF)-1):
-            soruce_graph = self.CrossingDF.iloc[ii]['cellEnd']
+
+            # Determining the cellbox to determinine path values from
+            cellbox = self.CrossingDF.iloc[ii]['cellEnd']
             Wp = self.CrossingDF.iloc[ii][['cx','cy']].to_numpy()
             Cp = self.CrossingDF.iloc[ii+1][['cx','cy']].to_numpy()
-            traveltime, distance = self._waypoint_correction(soruce_graph,Wp,Cp)
-            TravelTime[ii+1] = self._unit_time(traveltime)
-            Distance[ii+1]   = distance
+            
+            # Determining the value for the variable for the segment of the path
+            segment_variable = self._waypoint_correction(path_requested_variables,cellbox,Wp,Cp)
 
-            if ii ==0:
-                index[ii] = soruce_graph.name
-                index[ii+1] = soruce_graph.name
-            else:
-                index[ii+1] = soruce_graph.name
-        return TravelTime,Distance,index
+            # Adding that value for the segment along the paths
+            for var in segment_variable:
+                variables[var]['path_values'][ii+1] = segment_variable[var]
+
+
+        # Applying processing to all path values
+
+
+        return variables
 
