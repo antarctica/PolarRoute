@@ -9,24 +9,94 @@ import pytest
 from polar_route.mesh import Mesh
 from polar_route.vessel_performance import VesselPerformance
 
-#File locations of all meshes to be recaculated for regression testing.
-TEST_MESHES = [
-    './example_meshes/add_vehicle.output2013_4_80.json',
-    './example_meshes/add_vehicle.output2017_6_80.json',
-    './example_meshes/add_vehicle.output2019_6_80.json'
+#File locations of all vessel performance meshes to be recaculated for regression testing.
+TEST_VESSEL_MESHES = [
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80.json',
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80.json',
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80.json'
 ]
 
-@pytest.fixture(scope='session', autouse=True, params=TEST_MESHES)
-def mesh_pair(request):
-    """
-        Reconstructs all meshes listed TEST_MESHES.
+#File locations of all enviromental meshes to be recaculated for regression testing.
+TEST_ENV_MESHES = [
+    './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json',
+    './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80.json',
+    './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80.json'
+]
 
-        Returns: 
-            mesh_pair (list):
-                mesh_pair[0] -> Regression mesh
-                mesh_pair[1] -> Newly calculated mesh.
+@pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES)
+def env_mesh_pair(request):
     """
-    with open(request.param, 'r') as f:
+        creates a mesh pair for all meshes listed in array TEST_ENV_MESHES
+    """
+    return calculate_env_mesh(request.param)
+
+@pytest.fixture(scope='session', autouse=False, params=TEST_VESSEL_MESHES)
+def vessel_mesh_pair(request):
+    """
+        creates a mesh pair for all vessel performance meshes listed 
+        in array TEST_VESSEL_MESHES
+    """
+    return calculate_vessel_mesh(request.param)
+
+# Testing Enviromental Meshes
+def test_env_mesh_cellbox_count(env_mesh_pair):
+    compare_cellbox_count(env_mesh_pair[0], env_mesh_pair[1])
+
+def test_env_mesh_cellbox_ids(env_mesh_pair):
+    compare_cellbox_ids(env_mesh_pair[0], env_mesh_pair[1])
+
+def test_env_mesh_cellbox_values(env_mesh_pair):
+    compare_cellbox_values(env_mesh_pair[0], env_mesh_pair[1])
+
+def test_env_mesh_cellbox_attributes(env_mesh_pair):
+    compare_cellbox_attributes(env_mesh_pair[0], env_mesh_pair[1])
+
+def test_env_mesh_neighbour_graph_count(env_mesh_pair):
+    compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
+
+def test_env_mesh_neighbour_graph_ids(env_mesh_pair):
+    compare_neighbour_graph_ids(env_mesh_pair[0], env_mesh_pair[1])
+
+def test_env_mesh_neighbour_graph_values(env_mesh_pair):
+    compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
+
+# Testing Vessel Performances Meshes
+def test_vp_mesh_cellbox_count(vessel_mesh_pair):
+    compare_cellbox_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_cellbox_ids(vessel_mesh_pair):
+    compare_cellbox_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_cellbox_values(vessel_mesh_pair):
+    compare_cellbox_values(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_cellbox_attributes(vessel_mesh_pair):
+    compare_cellbox_attributes(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_neighbour_graph_count(vessel_mesh_pair):
+    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_neighbour_graph_ids(vessel_mesh_pair):
+    compare_neighbour_graph_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_neighbour_graph_values(vessel_mesh_pair):
+    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+
+# Utility functions
+def calculate_env_mesh(mesh_location):
+    """
+        recreates an enviromental mesh from the config of a pre-computed mesh.
+
+        params:
+            mesh_location (string): File location of the mesh to be recomputed
+
+        returns:
+            mesh_pair (list):
+                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
+                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+    """
+    with open(mesh_location, 'r') as f:
         regression_mesh = json.load(f)
 
     config = regression_mesh['config']
@@ -34,28 +104,43 @@ def mesh_pair(request):
 
     new_mesh = new_mesh.to_json()
 
-    vp = VesselPerformance(new_mesh)
-    new_mesh = vp.to_json()
+    return [regression_mesh, new_mesh]
+
+def calculate_vessel_mesh(mesh_location):
+    """
+        recreates an vessel performance mesh from the config of a pre-computed mesh.
+
+        params:
+            mesh_location (string): File location of the mesh to be recomputed
+
+        returns:
+            mesh_pair (list):
+                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
+                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+    """
+    env_meshes = calculate_env_mesh(mesh_location)
+
+    regression_mesh = env_meshes[0]
+
+    new_mesh = VesselPerformance(env_meshes[1])
+    new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
 
-
-def test_cellbox_count(mesh_pair):
+def compare_cellbox_count(mesh_a, mesh_b):
     """
         Test if two provided meshes contain the same number of cellboxes
 
         Args:
-            mesh_pair (list): A pair of meshes to compare in regression testing:
-                mesh_pair[0] -> regression_mesh (dict): A verfided correct mesh for use in regression
-                testing
-                mesh_pair[1] -> new_mesh (dict): The currently calculated mesh from PolarRoute
+            mesh_a (json)
+            mesh_b (json)
 
         Throws:
             Fails if the number of cellboxes in regression_mesh and new_mesh are
             not equal
     """
-    regression_mesh = mesh_pair[0]['cellboxes']
-    new_mesh = mesh_pair[1]['cellboxes']
+    regression_mesh = mesh_a['cellboxes']
+    new_mesh = mesh_b['cellboxes']
 
     cellbox_count_a = len(regression_mesh)
     cellbox_count_b = len(new_mesh)
@@ -63,22 +148,20 @@ def test_cellbox_count(mesh_pair):
     assert(cellbox_count_a == cellbox_count_b), \
         f"Incorrect number of cellboxes in new mesh. Expected :{cellbox_count_a}, got: {cellbox_count_b}"
 
-def test_cellbox_ids(mesh_pair):
+def compare_cellbox_ids(mesh_a, mesh_b):
     """
         Test if two provided meshes contain cellboxes with the same IDs
 
-        Args:
-            mesh_pair (list): A pair of meshes to compare in regression testing:
-                mesh_pair[0] -> regression_mesh (dict): A verfided correct mesh for use in regression
-                testing
-                mesh_pair[1] -> new_mesh (dict): The currently calculated mesh from PolarRoute
+       Args:
+            mesh_a (json)
+            mesh_b (json)
 
         Throws:
             Fails if any cellbox exists in regression_mesh that or not in new_mesh,
             or any cellbox exsits in new_mesh that is not in regression_mesh
     """
-    regression_mesh = mesh_pair[0]['cellboxes']
-    new_mesh = mesh_pair[1]['cellboxes']
+    regression_mesh = mesh_a['cellboxes']
+    new_mesh = mesh_b['cellboxes']
 
     indxed_a = dict()
     for cellbox in regression_mesh:
@@ -97,23 +180,21 @@ def test_cellbox_ids(mesh_pair):
     assert(indxed_a.keys()  == indxed_b.keys()), \
         f"Mismatch in cellbox IDs. ID's {missing_a_ids} have appeared in the new mesh. ID's {missing_b_ids} are missing from the new mesh"
 
-def test_cellbox_values(mesh_pair):
+def compare_cellbox_values(mesh_a, mesh_b):
     """
         Tests if the values in of all attributes in each cellbox and the
         same in both provided meshes.
 
-       Args:
-            mesh_pair (list): A pair of meshes to compare in regression testing:
-                mesh_pair[0] -> regression_mesh (dict): A verfided correct mesh for use in regression
-                testing
-                mesh_pair[1] -> new_mesh (dict): The currently calculated mesh from PolarRoute
+        Args:
+            mesh_a (json)
+            mesh_b (json)
 
         Throws:
             Fails if any values of any attributes differ between regression_mesh
             and new_mesh
     """
-    regression_mesh = mesh_pair[0]['cellboxes']
-    new_mesh = mesh_pair[1]['cellboxes']
+    regression_mesh = mesh_a['cellboxes']
+    new_mesh = mesh_b['cellboxes']
 
     indxed_a = dict()
     for cellbox in regression_mesh:
@@ -145,7 +226,7 @@ def test_cellbox_values(mesh_pair):
     assert(len(mismatch_cellboxes) == 0) , \
         f"Values in <{len(mismatch_cellboxes.keys())}> cellboxes in the new mesh have changed. The changes cellboxes are: {mismatch_cellboxes}"
 
-def test_cellbox_attributes(mesh_pair):
+def compare_cellbox_attributes(mesh_a, mesh_b):
     """
         Tests if the attributes of cellboxes in regression_mesh and the same as
         attributes of cellboxes in new_mesh
@@ -156,17 +237,15 @@ def test_cellbox_attributes(mesh_pair):
             two cellboxes in the mesh
 
         Args:
-            mesh_pair (list): A pair of meshes to compare in regression testing:
-                mesh_pair[0] -> regression_mesh (dict): A verfided correct mesh for use in regression
-                testing
-                mesh_pair[1] -> new_mesh (dict): The currently calculated mesh from PolarRoute
+            mesh_a (json)
+            mesh_b (json)
 
         Throws:
             Fails if the cellboxes in the provided meshes contain different
             attributes
     """
-    regression_mesh = mesh_pair[0]['cellboxes']
-    new_mesh = mesh_pair[1]['cellboxes']
+    regression_mesh = mesh_a['cellboxes']
+    new_mesh = mesh_b['cellboxes']
 
     regression_regression_meshttributes = set(regression_mesh[0].keys())
     new_mesh_attributes = set(new_mesh[0].keys())
@@ -177,20 +256,18 @@ def test_cellbox_attributes(mesh_pair):
     assert(regression_regression_meshttributes == new_mesh_attributes), \
         f"Mismatch in cellbox attributes. Attributes {missing_a_attributes} have appeared in the new mesh. Attributes {missing_b_attributes} are missing in the new mesh"
 
-def test_neighbour_graph_count(mesh_pair):
+def compare_neighbour_graph_count(mesh_a, mesh_b):
     """
         Tests that the neighbour_graph in the regression mesh and the newly calculated mesh have the 
         same number of nodes.
 
-        Args:
-            mesh_pair (list): A pair of meshes to compare in regression testing:
-                mesh_pair[0] -> regression_mesh (dict): A verfided correct mesh for use in regression
-                testing
-                mesh_pair[1] -> new_mesh (dict): The currently calculated mesh from PolarRoute
+         Args:
+            mesh_a (json)
+            mesh_b (json)
 
     """
-    regression_graph = mesh_pair[0]['neighbour_graph']
-    new_graph = mesh_pair[1]['neighbour_graph']
+    regression_graph = mesh_a['neighbour_graph']
+    new_graph = mesh_b['neighbour_graph']
 
     regression_graph_count = len(regression_graph.keys())
     new_graph_count = len(new_graph.keys())
@@ -198,19 +275,17 @@ def test_neighbour_graph_count(mesh_pair):
     assert(regression_graph_count == new_graph_count), \
         f"Incorrect number of nodes in neighbour graph. Expected: <{regression_graph_count}> nodes, got: <{new_graph_count}> nodes."
 
-def test_neighbour_graph_ids(mesh_pair):
+def compare_neighbour_graph_ids(mesh_a, mesh_b):
     """
         Tests that the neighbour_graph in the regression mesh and the newly calculated mesh contain
         all the same node IDs.
 
         Args:
-            mesh_pair (list): A pair of meshes to compare in regression testing:
-                mesh_pair[0] -> regression_mesh (dict): A verfided correct mesh for use in regression
-                testing
-                mesh_pair[1] -> new_mesh (dict): The currently calculated mesh from PolarRoute
+            mesh_a (json)
+            mesh_b (json)
     """
-    regression_graph = mesh_pair[0]['neighbour_graph']
-    new_graph = mesh_pair[1]['neighbour_graph']
+    regression_graph = mesh_a['neighbour_graph']
+    new_graph = mesh_b['neighbour_graph']
 
     regression_graph_ids = set(regression_graph.keys())
     new_graph_ids = set(new_graph.keys())
@@ -221,20 +296,18 @@ def test_neighbour_graph_ids(mesh_pair):
     assert(regression_graph_ids == new_graph_ids) , \
         f"Mismatch in neighbour graph nodes. <{len(missing_a_keys)}> nodes  have appeared in the new neighbour graph. <{len(missing_b_keys)}> nodes  are missing from the new neighbour graph."
 
-def test_neighbour_graph_values(mesh_pair):
+def compare_neighbour_graph_values(mesh_a, mesh_b):
     """
         Tests that each node in the neighbour_graph of the regression mesh and the newly calculated
         mesh have the same neighbours.
 
         Args:
-            mesh_pair (list): A pair of meshes to compare in regression testing:
-                mesh_pair[0] -> regression_mesh (dict): A verfided correct mesh for use in regression
-                testing
-                mesh_pair[1] -> new_mesh (dict): The currently calculated mesh from PolarRoute
+            mesh_a (json)
+            mesh_b (json)
 
     """
-    regression_graph = mesh_pair[0]['neighbour_graph']
-    new_graph = mesh_pair[1]['neighbour_graph']
+    regression_graph = mesh_a['neighbour_graph']
+    new_graph = mesh_b['neighbour_graph']
 
     mismatch_neighbors = dict()
 
