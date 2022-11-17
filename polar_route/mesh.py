@@ -197,6 +197,9 @@ class Mesh:
             # set focus of cellBox
             cellbox.set_focus([])
 
+        # Default is no datapoints to add
+        data_points = None
+
         logging.debug("calling data_loaders:")
         # j_grids represent currents differently from other data sources, so a bispoke
         # function 'add_current_points' must be called
@@ -233,10 +236,11 @@ class Mesh:
                         cellbox.add_splitting_condition(splitting_condition)
                         cellbox.set_minimum_datapoints(self.config['Mesh_info']['splitting']['minimum_datapoints'])
                         cellbox.set_value_fill_types(self.config['Mesh_info']['splitting']['value_fill_types'])
-
-                logging.debug("Splitting to depth {}".format(self.config['Mesh_info']['splitting']['split_depth']))
-                self.split_to_depth(self.config['Mesh_info']['splitting']['split_depth'])
-                logging.debug("Number of cellboxes after splitting: {}".format(len(self.cellboxes)))
+                # If there are datapoints to split
+                if data_points is not None:  
+                    logging.debug("Splitting to depth {}".format(self.config['Mesh_info']['splitting']['split_depth']))
+                    self.split_to_depth(self.config['Mesh_info']['splitting']['split_depth'])
+                    logging.debug("Number of cellboxes after splitting: {}".format(len(self.cellboxes)))
 
     # Functions for adding data to the Mesh
 

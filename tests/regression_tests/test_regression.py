@@ -24,16 +24,16 @@ TEST_ENV_MESHES = [
     './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80.json'
 ]
 
-TEST_V_GRAD_MESHES = [
+TEST_V_GRAD_MESHES = [2.5
     './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh.json'
 ]
 TEST_H_GRAD_MESHES = [
     './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json'
 ]
 TEST_CHECKERBOARD_MESHES = [
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy1.25_gx1.25_mesh.json'
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy1_gx1_mesh.json'
     './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy2.5_gx2.5_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy5_gx2.5_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy6_gx3_mesh.json'
 ]
 TEST_CIRCLE_MESHES = [
     './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json'
@@ -108,27 +108,30 @@ def circle_mesh_pair(request):
 
 # Testing Abstract Meshes
 #Circle
-# def test_env_mesh_cellbox_count(circle_mesh_pair):
-#     compare_cellbox_count(circle_mesh_pair[0], circle_mesh_pair[1])
+def test_env_mesh_cellbox_count(circle_mesh_pair):
+    compare_cellbox_count(circle_mesh_pair[0], circle_mesh_pair[1])
 
-# def test_env_mesh_cellbox_ids(circle_mesh_pair):
-#     compare_cellbox_ids(circle_mesh_pair[0], circle_mesh_pair[1])
+def test_env_mesh_cellbox_ids(circle_mesh_pair):
+    compare_cellbox_ids(circle_mesh_pair[0], circle_mesh_pair[1])
 
 def test_env_mesh_cellbox_values(circle_mesh_pair):
     compare_cellbox_values(circle_mesh_pair[0], circle_mesh_pair[1])
 
-# def test_env_mesh_cellbox_attributes(circle_mesh_pair):
-#     compare_cellbox_attributes(circle_mesh_pair[0], circle_mesh_pair[1])
+def test_env_mesh_cellbox_attributes(circle_mesh_pair):
+    compare_cellbox_attributes(circle_mesh_pair[0], circle_mesh_pair[1])
 
-# def test_env_mesh_neighbour_graph_count(circle_mesh_pair):
-#     compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
+def test_env_mesh_neighbour_graph_count(circle_mesh_pair):
+    compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
 
-# def test_env_mesh_neighbour_graph_ids(circle_mesh_pair):
-#     compare_neighbour_graph_ids(circle_mesh_pair[0], circle_mesh_pair[1])
+def test_env_mesh_neighbour_graph_ids(circle_mesh_pair):
+    compare_neighbour_graph_ids(circle_mesh_pair[0], circle_mesh_pair[1])
 
-# def test_env_mesh_neighbour_graph_values(circle_mesh_pair):
-#     compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
+def test_env_mesh_neighbour_graph_values(circle_mesh_pair):
+    compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
 
+#TODO test_v_grad_mesh
+#TODO test_h_grad_mesh
+#TODO test_checkerboard_mesh
 
 # Utility functions
 def calculate_env_mesh(mesh_location):
@@ -226,6 +229,10 @@ def calculate_circle_mesh(mesh_location):
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
+
+#TODO calculate_v_grad_mesh
+#TODO calculate_h_grad_mesh
+#TODO calculate_checkerboard_mesh
 
 def compare_cellbox_count(mesh_a, mesh_b):
     """
@@ -471,3 +478,67 @@ def gen_circle(latMin, latMax, longMin, longMax, time='1970-01-01', radius=1, ce
     dummy_df['time'] = time
 
     return dummy_df
+
+def gen_gradient(latMin, latMax, longMin, longMax, time='1970-01-01', vertical=True, n=100, **kwargs):
+    """
+        Generates a gradient across the map
+
+        Args:
+            latMin (float)       : Minimum latitude of mesh
+            latMax (float)       : Maximum latitude of mesh
+            longMin (float)      : Minimum longitude of mesh
+            longMax (float)      : Maximum longitude of mesh
+            vertical (bool)      : Vertical gradient (true) or horizontal gradient (false)
+            n (int)              : Intervals to divide lat and long range into
+    """
+    lat  = np.linspace(latMin, latMax, n)    # Generate rows
+    long = np.linspace(longMin, longMax, n)  # Generate cols
+    #Create 1D gradient
+    gradient = np.linspace(0,1,n)
+    
+    dummy_df = pd.DataFrame(columns = ['lat', 'long', 'dummy_data'])
+    # For each combination of lat/long
+    for i in range(n):
+        for j in range(n):
+            # Change dummy data depending on which axis to gradient
+            datum = gradient[i] if vertical else gradient[j]
+            # Create a new row, adding datum value
+            row = pd.DataFrame(data={'lat':lat[i], 'long':long[j], 'dummy_data':datum}, index=[0])
+            dummy_df = pd.concat([dummy_df, row], ignore_index=True)  
+    
+    # Fill dummy time values
+    dummy_df['time'] = time
+    
+    return dummy_df
+
+def gen_checkerboard(latMin, latMax, longMin, longMax, time='1970-01-01', n=100, gridsize=(1,1), **kwargs):
+    """
+        Generates a checkerboard pattern across map
+
+        Args:
+            latMin (float)       : Minimum latitude of mesh
+            latMax (float)       : Maximum latitude of mesh
+            longMin (float)      : Minimum longitude of mesh
+            longMax (float)      : Maximum longitude of mesh
+            n (int)              : Intervals to divide lat and long range into
+            gridsize (int, int)  : Tuple of size of boxes in checkerboard pattern, in form (lat(deg), long(deg))
+    """
+    lat  = np.linspace(latMin, latMax, n, endpoint=False)    # Generate rows
+    long = np.linspace(longMin, longMax, n, endpoint=False)  # Generate cols
+    # Create checkerboard pattern
+    horizontal = np.floor((lat - latMin)   / gridsize[1]) % 2   # Create horizontal stripes of 0's and 1's, stripe size defined by gridsize
+    vertical   = np.floor((long - longMin) / gridsize[0]) % 2   # Create vertical stripes of 0's and 1's, stripe size defined by gridsize
+    dummy_df = pd.DataFrame(columns = ['lat', 'long', 'dummy_data'])
+    # For each combination of lat/long
+    for i in range(n):
+        for j in range(n):
+            # Horizontal XOR Vertical should create boxes
+            datum = (horizontal[i] + vertical[j]) % 2
+            # Create a new row, adding datum value
+            row = pd.DataFrame(data={'lat':lat[i], 'long':long[j], 'dummy_data':datum}, index=[0])
+            dummy_df = pd.concat([dummy_df, row], ignore_index=True)  
+    
+    # Fill dummy time values
+    dummy_df['time'] = time
+    
+    return dummy_df    

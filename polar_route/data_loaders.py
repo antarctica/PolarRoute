@@ -814,3 +814,40 @@ def load_oras5(params, long_min, long_max, lat_min, lat_max, time_start, time_en
     oras5_df = oras5_df[oras5_df['lat'].between(lat_min, lat_max)]
     logging.debug("returned {} datapoints".format(len(oras5_df.index)))
     return oras5_df
+
+@timed_call
+def load_dummy_data(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retrieved
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+            params (dict): A dictionary containing optional parameters. This
+                function requires -
+
+                params['file'] (string): file location of the Baltic current dataset
+
+        Returns:
+            bc_df (Dataframe): A dataframe containing dummy datapoints
+                used for unit testing
+                The dataframe is of the format -
+
+                lat | long | time | dummy_data
+    """
+    pass
+    # logging.debug("opening file {}".format(params['file']))
+    # # Read in dummy data from csv
+    # dummy_df = pd.read_csv(params["file"])
+    # # Limit to geospacial and temporal limits
+    # dummy_df = dummy_df[dummy_df['long'].between(long_min, long_max)]
+    # dummy_df = dummy_df[dummy_df['lat'].between(lat_min, lat_max)]
+    # dummy_df = dummy_df[dummy_df['time'].between(time_start, time_end, inclusive='both')]
+
+    # logging.debug("returned {} datapoints".format(len(dummy_df.index)))
+    # return dummy_df
