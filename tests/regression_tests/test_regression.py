@@ -3,6 +3,7 @@
     of the PolarRoute python package.
 """
 import numpy as np
+import pandas as pd
 import json
 import pytest
 
@@ -23,6 +24,21 @@ TEST_ENV_MESHES = [
     './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80.json'
 ]
 
+TEST_V_GRAD_MESHES = [
+    './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh.json'
+]
+TEST_H_GRAD_MESHES = [
+    './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json'
+]
+TEST_CHECKERBOARD_MESHES = [
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy1.25_gx1.25_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy1_gx1_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy2.5_gx2.5_mesh.json'
+]
+TEST_CIRCLE_MESHES = [
+    './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json'
+]
+
 @pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES)
 def env_mesh_pair(request):
     """
@@ -38,49 +54,80 @@ def vessel_mesh_pair(request):
     """
     return calculate_vessel_mesh(request.param)
 
-# Testing Enviromental Meshes
-def test_env_mesh_cellbox_count(env_mesh_pair):
-    compare_cellbox_count(env_mesh_pair[0], env_mesh_pair[1])
+@pytest.fixture(scope='session', autouse=False, params=TEST_CIRCLE_MESHES)
+def circle_mesh_pair(request):
+    """
+        creates a mesh pair for circle meshes listed in TEST_ABSTRACT_MESHES
+    """
+    return calculate_circle_mesh(request.param)
 
-def test_env_mesh_cellbox_ids(env_mesh_pair):
-    compare_cellbox_ids(env_mesh_pair[0], env_mesh_pair[1])
 
-def test_env_mesh_cellbox_values(env_mesh_pair):
-    compare_cellbox_values(env_mesh_pair[0], env_mesh_pair[1])
+# # Testing Enviromental Meshes
+# def test_env_mesh_cellbox_count(env_mesh_pair):
+#     compare_cellbox_count(env_mesh_pair[0], env_mesh_pair[1])
 
-def test_env_mesh_cellbox_attributes(env_mesh_pair):
-    compare_cellbox_attributes(env_mesh_pair[0], env_mesh_pair[1])
+# def test_env_mesh_cellbox_ids(env_mesh_pair):
+#     compare_cellbox_ids(env_mesh_pair[0], env_mesh_pair[1])
 
-def test_env_mesh_neighbour_graph_count(env_mesh_pair):
-    compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
+# def test_env_mesh_cellbox_values(env_mesh_pair):
+#     compare_cellbox_values(env_mesh_pair[0], env_mesh_pair[1])
 
-def test_env_mesh_neighbour_graph_ids(env_mesh_pair):
-    compare_neighbour_graph_ids(env_mesh_pair[0], env_mesh_pair[1])
+# def test_env_mesh_cellbox_attributes(env_mesh_pair):
+#     compare_cellbox_attributes(env_mesh_pair[0], env_mesh_pair[1])
 
-def test_env_mesh_neighbour_graph_values(env_mesh_pair):
-    compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
+# def test_env_mesh_neighbour_graph_count(env_mesh_pair):
+#     compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
 
-# Testing Vessel Performances Meshes
-def test_vp_mesh_cellbox_count(vessel_mesh_pair):
-    compare_cellbox_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# def test_env_mesh_neighbour_graph_ids(env_mesh_pair):
+#     compare_neighbour_graph_ids(env_mesh_pair[0], env_mesh_pair[1])
 
-def test_vp_mesh_cellbox_ids(vessel_mesh_pair):
-    compare_cellbox_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# def test_env_mesh_neighbour_graph_values(env_mesh_pair):
+#     compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
 
-def test_vp_mesh_cellbox_values(vessel_mesh_pair):
-    compare_cellbox_values(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# # Testing Vessel Performances Meshes
+# def test_vp_mesh_cellbox_count(vessel_mesh_pair):
+#     compare_cellbox_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-def test_vp_mesh_cellbox_attributes(vessel_mesh_pair):
-    compare_cellbox_attributes(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# def test_vp_mesh_cellbox_ids(vessel_mesh_pair):
+#     compare_cellbox_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-def test_vp_mesh_neighbour_graph_count(vessel_mesh_pair):
-    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# def test_vp_mesh_cellbox_values(vessel_mesh_pair):
+#     compare_cellbox_values(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-def test_vp_mesh_neighbour_graph_ids(vessel_mesh_pair):
-    compare_neighbour_graph_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# def test_vp_mesh_cellbox_attributes(vessel_mesh_pair):
+#     compare_cellbox_attributes(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-def test_vp_mesh_neighbour_graph_values(vessel_mesh_pair):
-    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# def test_vp_mesh_neighbour_graph_count(vessel_mesh_pair):
+#     compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+# def test_vp_mesh_neighbour_graph_ids(vessel_mesh_pair):
+#     compare_neighbour_graph_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+# def test_vp_mesh_neighbour_graph_values(vessel_mesh_pair):
+#     compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+# Testing Abstract Meshes
+#Circle
+# def test_env_mesh_cellbox_count(circle_mesh_pair):
+#     compare_cellbox_count(circle_mesh_pair[0], circle_mesh_pair[1])
+
+# def test_env_mesh_cellbox_ids(circle_mesh_pair):
+#     compare_cellbox_ids(circle_mesh_pair[0], circle_mesh_pair[1])
+
+def test_env_mesh_cellbox_values(circle_mesh_pair):
+    compare_cellbox_values(circle_mesh_pair[0], circle_mesh_pair[1])
+
+# def test_env_mesh_cellbox_attributes(circle_mesh_pair):
+#     compare_cellbox_attributes(circle_mesh_pair[0], circle_mesh_pair[1])
+
+# def test_env_mesh_neighbour_graph_count(circle_mesh_pair):
+#     compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
+
+# def test_env_mesh_neighbour_graph_ids(circle_mesh_pair):
+#     compare_neighbour_graph_ids(circle_mesh_pair[0], circle_mesh_pair[1])
+
+# def test_env_mesh_neighbour_graph_values(circle_mesh_pair):
+#     compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
 
 
 # Utility functions
@@ -108,7 +155,7 @@ def calculate_env_mesh(mesh_location):
 
 def calculate_vessel_mesh(mesh_location):
     """
-        recreates an vessel performance mesh from the config of a pre-computed mesh.
+        recreates a vessel performance mesh from the config of a pre-computed mesh.
 
         params:
             mesh_location (string): File location of the mesh to be recomputed
@@ -123,6 +170,59 @@ def calculate_vessel_mesh(mesh_location):
     regression_mesh = env_meshes[0]
 
     new_mesh = VesselPerformance(env_meshes[1])
+    new_mesh = new_mesh.to_json()
+
+    return [regression_mesh, new_mesh]
+
+def calculate_circle_mesh(mesh_location):
+    """
+        recreates a circular environment mesh from the config of a pre-computed mesh.
+
+        params:
+            mesh_location (string): File location of the mesh to be recomputed
+
+        returns:
+            mesh_pair (list):
+                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
+                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+    """ 
+    with open(mesh_location, 'r') as f:
+        regression_mesh = json.load(f)
+    # Retrieve config info
+    config = regression_mesh['config']
+    latMin      = config['Mesh_info']['Region']['latMin'] 
+    latMax      = config['Mesh_info']['Region']['latMax'] 
+    longMin     = config['Mesh_info']['Region']['longMin'] 
+    longMax     = config['Mesh_info']['Region']['longMax'] 
+    startTime   = config['Mesh_info']['Region']['startTime']
+    split_depth = config['Mesh_info']['splitting']['split_depth']
+    
+    # Remove path from mesh_location
+    filename = mesh_location.split('/')[-1]
+    # Retrieve parameters and remove 'circle' and 'mesh.json' from list
+    parameters = filename.split('_')[1:-1]
+    # Loop through parameters to set variables for circle generation
+    for parameter in parameters:
+        if parameter[0] == 'n':         # Resolution of datapoint grid
+            n = int(parameter[1:])
+        elif parameter[0] == 'r':       # Radius of circle (deg)
+            r = float(parameter[1:])
+        elif parameter[0:2] == 'cy':    # Centre lat (deg)
+            cy = float(parameter[2:])
+        elif parameter[0:2] == 'cx':    # Centre long (deg)
+            cx = float(parameter[2:])
+    centre = (cy, cx)
+
+    # Create circle data for mesh generation
+    circle_datapoints = gen_circle(latMin, latMax, longMin, longMax, 
+                                   time=startTime, n=n,
+                                   radius=r, centre=centre)
+    # Create new mesh to compare against
+    new_mesh = Mesh(config)
+    new_mesh.add_data_points(circle_datapoints)
+    new_mesh.split_to_depth(split_depth)
+
+    # Set to JSON to make it comparable to regression_mesh
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
@@ -218,7 +318,8 @@ def compare_cellbox_values(mesh_a, mesh_b):
                 if key in cellbox_b.keys():
                     value_a = cellbox_a[key]
                     value_b = cellbox_b[key]
-
+                    print(key, value_a, type(value_a))
+                    print(key, value_b, type(value_b))
                     if not(value_a == value_b) and not(np.isnan(value_a) or np.isnan(value_b)):
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
@@ -323,3 +424,50 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
 
     assert(len(mismatch_neighbors) == 0), \
         f"Mismatch in neighbour graph neighbours. <{len(mismatch_neighbors.keys())}> nodes have changed in new mesh."
+
+def gen_circle(latMin, latMax, longMin, longMax, time='1970-01-01', radius=1, centre=None, n=100, **kwargs):
+    """
+        Generates a circle within bounds of lat/long min/max.
+
+        Args:
+            latMin (float)       : Minimum latitude of mesh
+            latMax (float)       : Maximum latitude of mesh
+            longMin (float)      : Minimum longitude of mesh
+            longMax (float)      : Maximum longitude of mesh
+            radius (float)       : Radius of circle to generate, in degrees
+            centre (float, float): Tuple of central coordinates of circle in form (lat(deg), long(deg)).
+                                   If None, then centre of mesh is chosen
+            n (int)              : Intervals to divide lat and long range into
+    """
+
+    lat  = np.linspace(latMin, latMax, n)    # Generate rows
+    long = np.linspace(longMin, longMax, n)  # Generate cols
+    
+    # Set centre as centre of data_grid if none specified
+    if centre is None:
+        centre = (lat[int(n/2)], long[int(n/2)])
+    
+    # Create vectors for row and col idx's
+    y = np.vstack(np.linspace(latMin, latMax, n))
+    x = np.linspace(longMin, longMax, n)
+   
+    # y, x = np.ogrid[:n, :n]              
+    dist_from_centre = np.sqrt((x-centre[1])**2 + (y-centre[0])**2)     # Create a 2D-array with distance from defined centre
+    mask = dist_from_centre <= radius    # Create mask
+    # Set up empty dataframe to populate with dummy data
+    dummy_df = pd.DataFrame(columns = ['lat', 'long', 'dummy_data'])
+    # For each combination of lat/long
+    for i in range(n):
+        for j in range(n):
+            # Create a new row, adding mask value
+            row = pd.DataFrame(data={'lat':lat[i], 'long':long[j], 'dummy_data':mask[i][j]}, index=[0])
+            dummy_df = pd.concat([dummy_df, row], ignore_index=True)
+            
+    # Change boolean values to int
+    dummy_df = dummy_df.replace(False, 0)
+    dummy_df = dummy_df.replace(True, 1)
+    
+    # Fill dummy time values
+    dummy_df['time'] = time
+
+    return dummy_df
