@@ -24,17 +24,17 @@ TEST_ENV_MESHES = [
     './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80.json'
 ]
 
-TEST_V_GRAD_MESHES = [2.5
-    './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh.json'
-]
-TEST_H_GRAD_MESHES = [
+TEST_GRADIENT_MESHES = [
+    './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh.json',
     './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json'
 ]
+
 TEST_CHECKERBOARD_MESHES = [
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy2.5_gx2.5_mesh.json'
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy5_gx2.5_mesh.json'
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gy6_gx3_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw2.5_gh2.5_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw5_gh2.5_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw6_gh3_mesh.json'
 ]
+
 TEST_CIRCLE_MESHES = [
     './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json'
 ]
@@ -61,77 +61,129 @@ def circle_mesh_pair(request):
     """
     return calculate_circle_mesh(request.param)
 
+@pytest.fixture(scope='session', autouse=False, params=TEST_GRADIENT_MESHES)
+def gradient_mesh_pair(request):
+    """
+        creates a mesh pair for gradient meshes listed in TEST_ABSTRACT_MESHES
+    """
+    return calculate_gradient_mesh(request.param)
 
-# # Testing Enviromental Meshes
-# def test_env_mesh_cellbox_count(env_mesh_pair):
-#     compare_cellbox_count(env_mesh_pair[0], env_mesh_pair[1])
+@pytest.fixture(scope='session', autouse=False, params=TEST_CHECKERBOARD_MESHES)
+def checkerboard_mesh_pair(request):
+    """
+        creates a mesh pair for checkerboard meshes listed in TEST_ABSTRACT_MESHES
+    """
+    return calculate_checkerboard_mesh(request.param)
 
-# def test_env_mesh_cellbox_ids(env_mesh_pair):
-#     compare_cellbox_ids(env_mesh_pair[0], env_mesh_pair[1])
+# Testing Enviromental Meshes
+def test_env_mesh_cellbox_count(env_mesh_pair):
+    compare_cellbox_count(env_mesh_pair[0], env_mesh_pair[1])
 
-# def test_env_mesh_cellbox_values(env_mesh_pair):
-#     compare_cellbox_values(env_mesh_pair[0], env_mesh_pair[1])
+def test_env_mesh_cellbox_ids(env_mesh_pair):
+    compare_cellbox_ids(env_mesh_pair[0], env_mesh_pair[1])
 
-# def test_env_mesh_cellbox_attributes(env_mesh_pair):
-#     compare_cellbox_attributes(env_mesh_pair[0], env_mesh_pair[1])
+def test_env_mesh_cellbox_values(env_mesh_pair):
+    compare_cellbox_values(env_mesh_pair[0], env_mesh_pair[1])
 
-# def test_env_mesh_neighbour_graph_count(env_mesh_pair):
-#     compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
+def test_env_mesh_cellbox_attributes(env_mesh_pair):
+    compare_cellbox_attributes(env_mesh_pair[0], env_mesh_pair[1])
 
-# def test_env_mesh_neighbour_graph_ids(env_mesh_pair):
-#     compare_neighbour_graph_ids(env_mesh_pair[0], env_mesh_pair[1])
+def test_env_mesh_neighbour_graph_count(env_mesh_pair):
+    compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
 
-# def test_env_mesh_neighbour_graph_values(env_mesh_pair):
-#     compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
+def test_env_mesh_neighbour_graph_ids(env_mesh_pair):
+    compare_neighbour_graph_ids(env_mesh_pair[0], env_mesh_pair[1])
 
-# # Testing Vessel Performances Meshes
-# def test_vp_mesh_cellbox_count(vessel_mesh_pair):
-#     compare_cellbox_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+def test_env_mesh_neighbour_graph_values(env_mesh_pair):
+    compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
 
-# def test_vp_mesh_cellbox_ids(vessel_mesh_pair):
-#     compare_cellbox_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+# Testing Vessel Performances Meshes
+def test_vp_mesh_cellbox_count(vessel_mesh_pair):
+    compare_cellbox_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-# def test_vp_mesh_cellbox_values(vessel_mesh_pair):
-#     compare_cellbox_values(vessel_mesh_pair[0], vessel_mesh_pair[1])
+def test_vp_mesh_cellbox_ids(vessel_mesh_pair):
+    compare_cellbox_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-# def test_vp_mesh_cellbox_attributes(vessel_mesh_pair):
-#     compare_cellbox_attributes(vessel_mesh_pair[0], vessel_mesh_pair[1])
+def test_vp_mesh_cellbox_values(vessel_mesh_pair):
+    compare_cellbox_values(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-# def test_vp_mesh_neighbour_graph_count(vessel_mesh_pair):
-#     compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+def test_vp_mesh_cellbox_attributes(vessel_mesh_pair):
+    compare_cellbox_attributes(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-# def test_vp_mesh_neighbour_graph_ids(vessel_mesh_pair):
-#     compare_neighbour_graph_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+def test_vp_mesh_neighbour_graph_count(vessel_mesh_pair):
+    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
-# def test_vp_mesh_neighbour_graph_values(vessel_mesh_pair):
-#     compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+def test_vp_mesh_neighbour_graph_ids(vessel_mesh_pair):
+    compare_neighbour_graph_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_neighbour_graph_values(vessel_mesh_pair):
+    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
 # Testing Abstract Meshes
-#Circle
-def test_env_mesh_cellbox_count(circle_mesh_pair):
+# Circle
+def test_circle_mesh_cellbox_count(circle_mesh_pair):
     compare_cellbox_count(circle_mesh_pair[0], circle_mesh_pair[1])
 
-def test_env_mesh_cellbox_ids(circle_mesh_pair):
+def test_circle_mesh_cellbox_ids(circle_mesh_pair):
     compare_cellbox_ids(circle_mesh_pair[0], circle_mesh_pair[1])
 
-def test_env_mesh_cellbox_values(circle_mesh_pair):
+def test_circle_mesh_cellbox_values(circle_mesh_pair):
     compare_cellbox_values(circle_mesh_pair[0], circle_mesh_pair[1])
 
-def test_env_mesh_cellbox_attributes(circle_mesh_pair):
+def test_circle_mesh_cellbox_attributes(circle_mesh_pair):
     compare_cellbox_attributes(circle_mesh_pair[0], circle_mesh_pair[1])
 
-def test_env_mesh_neighbour_graph_count(circle_mesh_pair):
+def test_circle_mesh_neighbour_graph_count(circle_mesh_pair):
     compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
 
-def test_env_mesh_neighbour_graph_ids(circle_mesh_pair):
+def test_circle_mesh_neighbour_graph_ids(circle_mesh_pair):
     compare_neighbour_graph_ids(circle_mesh_pair[0], circle_mesh_pair[1])
 
-def test_env_mesh_neighbour_graph_values(circle_mesh_pair):
+def test_circle_mesh_neighbour_graph_values(circle_mesh_pair):
     compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
+# Gradient
+def test_gradient_mesh_cellbox_count(gradient_mesh_pair):
+    compare_cellbox_count(gradient_mesh_pair[0], gradient_mesh_pair[1])
 
-#TODO test_v_grad_mesh
-#TODO test_h_grad_mesh
-#TODO test_checkerboard_mesh
+def test_gradient_mesh_cellbox_ids(gradient_mesh_pair):
+    compare_cellbox_ids(gradient_mesh_pair[0], gradient_mesh_pair[1])
+
+def test_gradient_mesh_cellbox_values(gradient_mesh_pair):
+    compare_cellbox_values(gradient_mesh_pair[0], gradient_mesh_pair[1])
+
+def test_gradient_mesh_cellbox_attributes(gradient_mesh_pair):
+    compare_cellbox_attributes(gradient_mesh_pair[0], gradient_mesh_pair[1])
+
+def test_gradient_mesh_neighbour_graph_count(gradient_mesh_pair):
+    compare_neighbour_graph_count(gradient_mesh_pair[0], gradient_mesh_pair[1])
+
+def test_gradient_mesh_neighbour_graph_ids(gradient_mesh_pair):
+    compare_neighbour_graph_ids(gradient_mesh_pair[0], gradient_mesh_pair[1])
+
+def test_gradient_mesh_neighbour_graph_values(gradient_mesh_pair):
+    compare_neighbour_graph_count(gradient_mesh_pair[0], gradient_mesh_pair[1])
+# Checkerboard
+def test_checkerboard_mesh_cellbox_count(checkerboard_mesh_pair):
+    compare_cellbox_count(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
+
+def test_checkerboard_mesh_cellbox_ids(checkerboard_mesh_pair):
+    compare_cellbox_ids(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
+
+def test_checkerboard_mesh_cellbox_values(checkerboard_mesh_pair):
+    compare_cellbox_values(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
+
+def test_checkerboard_mesh_cellbox_attributes(checkerboard_mesh_pair):
+    compare_cellbox_attributes(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
+
+def test_checkerboard_mesh_neighbour_graph_count(checkerboard_mesh_pair):
+    compare_neighbour_graph_count(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
+
+def test_checkerboard_mesh_neighbour_graph_ids(checkerboard_mesh_pair):
+    compare_neighbour_graph_ids(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
+
+def test_checkerboard_mesh_neighbour_graph_values(checkerboard_mesh_pair):
+    compare_neighbour_graph_count(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
+
 
 # Utility functions
 def calculate_env_mesh(mesh_location):
@@ -193,46 +245,101 @@ def calculate_circle_mesh(mesh_location):
         regression_mesh = json.load(f)
     # Retrieve config info
     config = regression_mesh['config']
-    latMin      = config['Mesh_info']['Region']['latMin'] 
-    latMax      = config['Mesh_info']['Region']['latMax'] 
-    longMin     = config['Mesh_info']['Region']['longMin'] 
-    longMax     = config['Mesh_info']['Region']['longMax'] 
-    startTime   = config['Mesh_info']['Region']['startTime']
-    split_depth = config['Mesh_info']['splitting']['split_depth']
-    
-    # Remove path from mesh_location
-    filename = mesh_location.split('/')[-1]
-    # Retrieve parameters and remove 'circle' and 'mesh.json' from list
-    parameters = filename.split('_')[1:-1]
-    # Loop through parameters to set variables for circle generation
-    for parameter in parameters:
-        if parameter[0] == 'n':         # Resolution of datapoint grid
-            n = int(parameter[1:])
-        elif parameter[0] == 'r':       # Radius of circle (deg)
-            r = float(parameter[1:])
-        elif parameter[0:2] == 'cy':    # Centre lat (deg)
-            cy = float(parameter[2:])
-        elif parameter[0:2] == 'cx':    # Centre long (deg)
-            cx = float(parameter[2:])
-    centre = (cy, cx)
+
+    parameters = retrieve_gen_parameters(mesh_location, config)
 
     # Create circle data for mesh generation
-    circle_datapoints = gen_circle(latMin, latMax, longMin, longMax, 
-                                   time=startTime, n=n,
-                                   radius=r, centre=centre)
+    circle_datapoints = gen_circle(parameters['latMin'], 
+                                   parameters['latMax'],
+                                   parameters['longMin'], 
+                                   parameters['longMax'],
+                                   time   = parameters['startTime'],
+                                   n      = parameters['n'],
+                                   radius = parameters['radius'],
+                                   centre = parameters['centre'])
     # Create new mesh to compare against
     new_mesh = Mesh(config)
     new_mesh.add_data_points(circle_datapoints)
-    new_mesh.split_to_depth(split_depth)
+    new_mesh.split_to_depth(parameters['split_depth'])
 
     # Set to JSON to make it comparable to regression_mesh
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
 
-#TODO calculate_v_grad_mesh
-#TODO calculate_h_grad_mesh
-#TODO calculate_checkerboard_mesh
+def calculate_gradient_mesh(mesh_location):
+    """
+        recreates a gradient environment mesh from the config of a pre-computed mesh.
+
+        params:
+            mesh_location (string): File location of the mesh to be recomputed
+
+        returns:
+            mesh_pair (list):
+                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
+                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+    """ 
+    with open(mesh_location, 'r') as f:
+        regression_mesh = json.load(f)
+    # Retrieve config info
+    config = regression_mesh['config']
+
+    parameters = retrieve_gen_parameters(mesh_location, config)
+
+    # Create circle data for mesh generation
+    gradient_datapoints = gen_gradient(parameters['latMin'], 
+                                       parameters['latMax'],
+                                       parameters['longMin'], 
+                                       parameters['longMax'],
+                                       time     = parameters['startTime'],
+                                       n        = parameters['n'],
+                                       vertical = parameters['vertical'])
+    # Create new mesh to compare against
+    new_mesh = Mesh(config)
+    new_mesh.add_data_points(gradient_datapoints)
+    new_mesh.split_to_depth(parameters['split_depth'])
+
+    # Set to JSON to make it comparable to regression_mesh
+    new_mesh = new_mesh.to_json()
+
+    return [regression_mesh, new_mesh]
+
+def calculate_checkerboard_mesh(mesh_location):
+    """
+        recreates a checkerboard environment mesh from the config of a pre-computed mesh.
+
+        params:
+            mesh_location (string): File location of the mesh to be recomputed
+
+        returns:
+            mesh_pair (list):
+                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
+                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+    """ 
+    with open(mesh_location, 'r') as f:
+        regression_mesh = json.load(f)
+    # Retrieve config info
+    config = regression_mesh['config']
+
+    parameters = retrieve_gen_parameters(mesh_location, config)
+
+    # Create circle data for mesh generation
+    checkerboard_datapoints = gen_checkerboard(parameters['latMin'], 
+                                               parameters['latMax'],
+                                               parameters['longMin'], 
+                                               parameters['longMax'],
+                                               time     = parameters['startTime'],
+                                               n        = parameters['n'],
+                                               gridsize = parameters['gridsize'])
+    # Create new mesh to compare against
+    new_mesh = Mesh(config)
+    new_mesh.add_data_points(checkerboard_datapoints)
+    new_mesh.split_to_depth(parameters['split_depth'])
+
+    # Set to JSON to make it comparable to regression_mesh
+    new_mesh = new_mesh.to_json()
+
+    return [regression_mesh, new_mesh]
 
 def compare_cellbox_count(mesh_a, mesh_b):
     """
@@ -325,8 +432,6 @@ def compare_cellbox_values(mesh_a, mesh_b):
                 if key in cellbox_b.keys():
                     value_a = cellbox_a[key]
                     value_b = cellbox_b[key]
-                    print(key, value_a, type(value_a))
-                    print(key, value_b, type(value_b))
                     if not(value_a == value_b) and not(np.isnan(value_a) or np.isnan(value_b)):
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
@@ -542,3 +647,48 @@ def gen_checkerboard(latMin, latMax, longMin, longMax, time='1970-01-01', n=100,
     dummy_df['time'] = time
     
     return dummy_df    
+
+def retrieve_gen_parameters(mesh_location, config):
+    parameters  = {}
+    parameters['latMin']      = config['Mesh_info']['Region']['latMin'] 
+    parameters['latMax']      = config['Mesh_info']['Region']['latMax'] 
+    parameters['longMin']     = config['Mesh_info']['Region']['longMin'] 
+    parameters['longMax']     = config['Mesh_info']['Region']['longMax'] 
+    parameters['startTime']   = config['Mesh_info']['Region']['startTime']
+    parameters['split_depth'] = config['Mesh_info']['splitting']['split_depth']
+    
+    # Remove path from mesh_location
+    filename = mesh_location.split('/')[-1]
+    # Retrieve parameters and remove type and 'mesh.json' from list
+    generation_params = filename.split('_')[1:-1]
+    # Loop through generation_params to set variables for generation
+    for generation_param in generation_params:
+        # General
+        if generation_param[0] == 'n':         # Resolution of datapoint grid
+            parameters['n'] = int(generation_param[1:])
+        # Circle
+        elif generation_param[0] == 'r':       # Radius of circle (deg)
+            parameters['radius'] = float(generation_param[1:])
+        elif generation_param[0:2] == 'cy':    # Centre lat (deg)
+            cy = float(generation_param[2:])
+        elif generation_param[0:2] == 'cx':    # Centre long (deg)
+            cx = float(generation_param[2:])
+        # Gradient
+        elif generation_param[0] == 'v':
+            parameters['vertical'] = True if generation_param[1] == 'T' \
+                                          else False
+        # Checkerboard
+        elif generation_param[0:2] == 'gw':    # Centre lat (deg)
+            gw = float(generation_param[2:])
+        elif generation_param[0:2] == 'gh':    # Centre long (deg)
+            gh = float(generation_param[2:])
+        # Otherwise, unknown parameter / incorrect filename format
+        else:
+            raise ValueError(f"'{generation_param}' not in known parameters")
+    # Set parameter pairs as tuples
+    if 'circle' in filename:
+        parameters['centre'] = (cy, cx)
+    if 'checkerboard' in filename:
+        parameters['gridsize'] = (gw, gh)
+    
+    return parameters
