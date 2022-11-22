@@ -216,9 +216,17 @@ def compare_cellbox_values(mesh_a, mesh_b):
                 # To prevent crashing if cellboxes have different attributes
                 # This error will be detected by the 'test_cellbox_attributes' test
                 if key in cellbox_b.keys():
-                    value_a = cellbox_a[key]
-                    value_b = cellbox_b[key]
 
+                    # Round to 5 dec. pl if value is a float, high precision can be issue between OS's
+                    if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):
+                        value_b = np.round(float(cellbox_b[key]), decimals=5)
+                        value_a = np.round(float(cellbox_a[key]), decimals=5)
+                    # Otherwise just extract values
+                    else:
+                        value_b = cellbox_b[key]  
+                        value_a = cellbox_a[key]
+
+                    # Compare values
                     if not(value_a == value_b) and not(np.isnan(value_a) or np.isnan(value_b)):
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
