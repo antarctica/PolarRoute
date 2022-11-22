@@ -36,7 +36,9 @@ TEST_CHECKERBOARD_MESHES = [
 ]
 
 TEST_CIRCLE_MESHES = [
-    './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/cornercirclesplit_n201_r3_cy-65_cx-70_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/cornercirclenosplit_n201_r3_cy-65_cx-70_mesh.json'
 ]
 
 @pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES)
