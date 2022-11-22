@@ -142,8 +142,12 @@ class CellBox:
                     have been added to this CellBox
         """
         data_names = list(self._data_points.columns)
+        
+        to_remove = ['lat', 'long']
+        # Process time seperately in case it is not in dataframe
+        if 'time' in data_names:
+            to_remove += ['time']
 
-        to_remove = ['lat', 'long', 'time']
         for item in to_remove:
             data_names.remove(item)
 
@@ -170,14 +174,20 @@ class CellBox:
             return self._data_points
         else:
             data_points = pd.DataFrame()
-
             # TODO: review, this looks rather inefficient through recursions
             for value in values:
                 data_points = pd.concat(
                     [data_points, self.get_data_points().dropna(subset=[value])], axis=0)
-
-            columns = ['lat', 'long', 'time'] + values
+            # Add geospatial / temporal data to df
+            columns = values + ['lat', 'long']
+            # Process time seperately in case it is not in dataframe
+            if 'time' in self._data_points:
+                columns += ['time']
+            # columns = ['lat', 'long', 'time'] + values
+            # return data_points[columns]
             return data_points[columns]
+
+
 
     # TODO: getter / setter
     # TODO: caller can aggregate, this looks like an anti-pattern
