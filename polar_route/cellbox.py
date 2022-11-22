@@ -168,7 +168,7 @@ class CellBox:
                 data_points (Dataframe): a dataframe of datapoints within the CellBox.
                 The dataframe is of the form -
 
-                    long | lat | time | value_1 | ... | value_n
+                    long | lat | (time)* | value_1 | ... | value_n
         """
         if len(values) == 0:
             return self._data_points

@@ -831,23 +831,29 @@ def load_dummy_data(params, long_min, long_max, lat_min, lat_max, time_start, ti
             params (dict): A dictionary containing optional parameters. This
                 function requires -
 
-                params['file'] (string): file location of the Baltic current dataset
+                params['file'] (string): file location of the dummy data set (requires .csv)
 
         Returns:
             bc_df (Dataframe): A dataframe containing dummy datapoints
                 used for unit testing
                 The dataframe is of the format -
 
-                lat | long | time | dummy_data
+                lat | long | (time)* | dummy_data
     """
-    pass
-    # logging.debug("opening file {}".format(params['file']))
-    # # Read in dummy data from csv
-    # dummy_df = pd.read_csv(params["file"])
-    # # Limit to geospacial and temporal limits
-    # dummy_df = dummy_df[dummy_df['long'].between(long_min, long_max)]
-    # dummy_df = dummy_df[dummy_df['lat'].between(lat_min, lat_max)]
-    # dummy_df = dummy_df[dummy_df['time'].between(time_start, time_end, inclusive='both')]
+    # pass
+    logging.debug("opening file {}".format(params['file']))
+    # Read in dummy data from csv
+    dummy_df = pd.read_csv(params["file"])
+    # Limit to geospatial limits
+    dummy_df = dummy_df[dummy_df['long'].between(long_min, long_max)]
+    dummy_df = dummy_df[dummy_df['lat'].between(lat_min, lat_max)]
+    # Limit time range if time specified in cols
+    if 'time' in dummy_df.columns:
+        dummy_df = dummy_df[dummy_df['time'].between(time_start, time_end, inclusive='both')]
 
-    # logging.debug("returned {} datapoints".format(len(dummy_df.index)))
-    # return dummy_df
+    # Change "True" and "False" to 1 and 0 respectively
+    dummy_df = dummy_df.replace("True", 1)
+    dummy_df = dummy_df.replace("False", 0)
+    
+    logging.debug("returned {} datapoints".format(len(dummy_df.index)))
+    return dummy_df
