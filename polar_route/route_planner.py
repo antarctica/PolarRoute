@@ -264,21 +264,21 @@ class RoutePlanner:
         # ==== Printing Configuration and Information
         self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
 
-        # ===== Running the route planner for the given information
-        if ("dijkstra_only" in self.config) and self.config['dijkstra_only']:
-            self.compute_routes()
-        else:
-            self.compute_routes()
-            self.compute_smoothed_routes()
+        # # ===== Running the route planner for the given information
+        # if ("dijkstra_only" in self.config) and self.config['dijkstra_only']:
+        #     self.compute_routes()
+        # else:
+        #     self.compute_routes()
+        #     self.compute_smoothed_routes()
 
 
-        # === Saving file to output or saving it to variable output
-        output = self.to_json()
-        if ('output' in self.config) and (type(self.config['output']) == str):
-            with open(self.config['output'], 'w') as f:
-                json.dump(output,f)
-        else:
-            self.output = output
+        # # === Saving file to output or saving it to variable output
+        # output = self.to_json()
+        # if ('output' in self.config) and (type(self.config['output']) == str):
+        #     with open(self.config['output'], 'w') as f:
+        #         json.dump(output,f)
+        # else:
+        #     self.output = output
 
 
 
@@ -498,7 +498,8 @@ class RoutePlanner:
             self.dijkstra_info[wpt] = copy.copy(self.neighbour_graph)
 
         # 
-        logging.info('============= Dijkstr Path Creation ============\n')
+        logging.info('============= Dijkstr Path Creation ============')
+        logging.info(' - Objective = {} '.format(self.config['objective_function']))
 
         for wpt in self.source_waypoints:
             logging.info('--- Processing Waypoint = {} ---'.format(wpt))
@@ -577,64 +578,46 @@ class RoutePlanner:
                 self.allDist2 = []
 
                 self.nc = nc
+                self.all_crossing_points = []
 
                 for iter in pbar:
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0
                     while id <= (len(nc.CrossingDF) - 3):
-                        #try:
+                        
+                        previous_horeshoes = []
+                        # -- Updating the crossing point
                         nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                
-                        nc._updateCrossingPoint()
+                        nc._updateCrossingPoint(previous_horeshoes)
                         self.nc = nc
-
-                        # -- Horseshoe Case Detection -- 
-                        nc._horseshoe()
-
-                        # -- Removing reseverse cases                    
-                        nc._reverseCase()
-                        # except:
-                        #     break
-
-                        id += 1+nc.id
+                        id += 1
 
                     if  id <= (len(nc.CrossingDF) - 3):
                         print('Path Smoothing Failed!')
                         break
 
-
                     self.nc = nc
-
                     nc._mergePoint()
                     self.nc = nc
                     iter+=1
+
+                    # self.all_crossing_points += [nc.CrossingDF]
                         
                     # Stop optimisation if the points are within some minimum difference
                     if len(nc.previousDF) == len(nc.CrossingDF):
-                        Dist = np.mean(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
+                        Dist = np.max(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
                         self.allDist.append(Dist)
                         pbar.set_description("Mean Difference = {}".format(Dist))
-
-                        if (Dist==np.min(self.allDist)) and len(np.where(abs(self.allDist - np.min(self.allDist)) < 1e-3)[0]) > 500:
-                            logging.info('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 1'.format(iter,Dist))
-                            break
                         if (Dist < minimumDiff) and (Dist != 0.0):
                             logging.info('{} iterations - dDist={}'.format(iter, Dist))
                             break
-                    # else:
-                    #     if 'Dist' in locals():
-                    #         self.allDist2.append(Dist)
-                    #         if (np.sum((np.array(self.allDist2) - Dist)[-5:]) < 1e-6) and (iter>50) and len(self.allDist2)>50:
-                    #             if self.verbose:
-                    #                 print('{} iterations - dDist={}  - early stopping terminated oscilation, returning lowest misfit path - Type 2'.format(iter,Dist))
-                    #             break
 
 
 
 
                 # ------ Smooth Path Values -----
                 # Given a smoothed route path now determine the along path parameters.
-                variables = nc.objective_function()
+                variables      = nc.objective_function(nc.CrossingDF)
                 TravelTimeLegs = variables['traveltime']['path_values']
                 DistanceLegs   = variables['distance']['path_values'] 
                 pathIndex      = variables['cell_index']['path_values'] 
@@ -651,10 +634,10 @@ class RoutePlanner:
                 SmoothedPath['properties'] = {}
                 SmoothedPath['properties']['from'] = Path['properties']['from']
                 SmoothedPath['properties']['to']   = Path['properties']['to']
-                SmoothedPath['properties']['traveltime'] = np.cumsum(TravelTimeLegs).tolist() 
-                SmoothedPath['properties']['fuel']       = np.cumsum(FuelLegs).tolist()
-                SmoothedPath['properties']['distance']   = np.cumsum(DistanceLegs).tolist()
-                SmoothedPath['properties']['speed']      = SpeedLegs.tolist()
+                SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
+                SmoothedPath['properties']['fuel']       = list(FuelLegs)
+                SmoothedPath['properties']['distance']   = list(DistanceLegs)
+                SmoothedPath['properties']['speed']      = list(SpeedLegs)
                 SmoothedPaths.append(SmoothedPath)
                 geojson['features'] = SmoothedPaths
                 self.smoothed_paths = geojson
