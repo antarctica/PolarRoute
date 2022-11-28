@@ -140,29 +140,27 @@ class RoutePlanner:
             Constructs the routes from information given in the config file.
 
             Args:
-                config (dict): config file which defines the attributes required for the route construction. 
+
+                mesh(dict or string of filepath): mesh based JSON containing the cellbox information and neighbourhood graph
+
+                config (dict or string of filepath): config JSON which defines the attributes required for the route construction. 
                     Sections required for the route construction are as follows\n
                     \n
                     {\n
-                        "config": {...\n
-                            "Route_Info":{\n
-                                    "objective_function": (string) currently either 'traveltime' or 'fuel',\n
-                                    "path_variables": list of (string),\n
-                                    "waypoints_path": (string),\n
-                                    "source_waypoints": list of (string),\n
-                                    "end_waypoints": list of (string),\n
-                                    "vector_names": (list of (string),\n
-                                    "zero_currents": (boolean),\n
-                                    "variable_speed" (boolean),\n
-                                    "time_unit" (string),\n
-                                    "early_stopping_criterion" (boolean),\n
-                                    "save_dijkstra_graphs": (boolean),\n
-                                    "smooth_path":{\n
-                                        "max_iteration_number":(int),\n
-                                        "minimum_difference":(float),\n
-                                    }\n
-                                },\n
-                        }\n
+                        "objective_function": (string) currently either 'traveltime' or 'fuel',\n
+                        "path_variables": list of (string),\n
+                        "waypoints_path": (string),\n
+                        "source_waypoints": list of (string),\n
+                        "end_waypoints": list of (string),\n
+                        "vector_names": (list of (string),\n
+                        "zero_currents": (boolean),\n
+                        "variable_speed" (boolean),\n
+                        "time_unit" (string),\n
+                        "early_stopping_criterion" (boolean),\n
+                        "save_dijkstra_graphs": (boolean),\n
+                        "smooth_path":{\n
+                            "max_iteration_number":(int),\n
+                            "minimum_difference":(float),\n
                     }\n
 
                 cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only !
@@ -294,7 +292,12 @@ class RoutePlanner:
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
-            FILL
+            Hidden function. Given internal variables and start and end waypoints this function
+            returns a GEOJSON formated path dict object
+
+            INPUTS:
+                start_waypoints: Start waypoint names (list)
+                end_waypoints: End waypoint names (list)
         """
 
         geojson = dict()
@@ -357,48 +360,10 @@ class RoutePlanner:
         return geojson
 
 
-    # def _dijkstra_paths(self, start_waypoints, end_waypoints):
-    #     """
-    #         FILL
-    #     """
-
-    #     # Determining the start and end waypoints
-    #     wpts_s = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(start_waypoints)]
-    #     wpts_e = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(end_waypoints)]
-
-
-    #     paths = []
-
-    #     # Iterating over all start waypoints
-    #     for _, wpt_a in wpts_s.iterrows():
-    #         wpt_a_name  = wpt_a['Name']; wpt_a_index = int(wpt_a['index']); wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
-    #          # Iterating over all end waypoints
-    #         for _, wpt_b in wpts_e.iterrows():
-    #             wpt_b_name  = wpt_b['Name']; wpt_b_index = int(wpt_b['index']); wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
-    #             if not wpt_a_name == wpt_b_name:
-    #                 # Determining the graph from the source waypoint
-    #                 graph = self.dijkstra_info[wpt_a_name]
-
-    #                 # Determining the points along the path, removing the initial and end cellbox centres
-    #                 path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1, :])+wpt_b_loc))
-
-
-    #                 # Using the cost-function determine the path-values along the path
-    #                 # ....
-
-
-    #                 # Create object variable for the path 
-    #                 # path ... 
-    #                 paths += [path]
-                     
-    #     return paths
-
-
-
 
     def _objective_value(self, variable, source_graph, neighbour_graph, traveltime,case):
         """
-            FILL
+            Hidden variable. Returns the objective value between two cellboxes.
         """
         if variable == 'traveltime':
             objs = np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
@@ -415,7 +380,8 @@ class RoutePlanner:
 
     def _neighbour_cost(self, wpt_name, minimum_objective_index):
         """
-            FILL
+            Determines the neighbour cost from a source cellbox to all of its neighbouts.
+            These are then used to update the edge values in the dijkstra graph.
         """
         # Determining the nearest neighbour index for the cell
         source_graph   = self.dijkstra_info[wpt_name].loc[minimum_objective_index]
@@ -452,7 +418,7 @@ class RoutePlanner:
 
     def _dijkstra(self, wpt_name):
         """
-            FILL
+            Runs dijkstra across the whole of the domain.
         """
         # Including only the End Waypoints defined by the user
         wpts = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(self.end_waypoints)]

@@ -379,9 +379,24 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days', objective_func='traveltime',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
+    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days', objective_func='traveltime',debugging=False,maxiter=1000,minimumDiff=1e-3,zerocurrents=False):
         '''
-            FILL
+            Applys path smoothing to input neighbourhood graph constructed during the dijkstra run.
+
+            Args:
+                neigbour_graph: Dijkstra based neighbourhood graph (Pandas DataFrame)
+                config: Input path configuration
+            
+            Opt Args:
+                unit_speed: Input unit speed type from mesh (Default:'km/hr')
+                unit_time: Input unit time to output (Default:'km/hr')
+                objective_func: Objective function to apply path smoothing relative. 
+                    This should be the same as used in Dijkstra. (Default:'traveltime')
+                
+                maxiter: Maximum number of iterations for the path smoothing (Default:1000)
+                minimumDiff: Tolerence for the path smoothing for the maximum deg distance between two points (Default:1e-3)
+                zerocurrents: Boolean to Zero currents for path smoothing. Used for debugging cases only (Default:False)
+
         '''
         # Passing the Dijkstra Graph
         self.neighbour_graph = copy.copy(neighbour_graph)
@@ -402,8 +417,6 @@ class NewtonianCurve:
 
         # Optimisation Information
         self.maxiter       = maxiter
-        self.pathIter      = pathIter
-        self.optimizer_tol = optimizer_tol
         self.minimumDiff   = minimumDiff
         self._epsilon      = 1e-3
 
@@ -423,7 +436,7 @@ class NewtonianCurve:
 
     def _unit_speed(self,Val):
         '''
-            FILL
+            Applying unit speed for an input type.
         '''
         if self.unit_shipspeed == 'km/hr':
             Val = Val*(1000/(60*60))
@@ -433,7 +446,7 @@ class NewtonianCurve:
 
     def _unit_time(self,Val):
         '''
-            FILL
+            Applying Unit time for a specific input type
         '''
         if self.unit_time == 'days':
             Val = Val/(60*60*24)
@@ -448,19 +461,19 @@ class NewtonianCurve:
 
     def _calXDist(self,start_long,end_long):
         '''
-            FILL
+            Calculate the X Distance
         '''
         return (end_long - start_long)*self.m_long#*np.cos(centralLat)
     def _calYDist(self,start_lat,end_lat):
         '''
-            FILL
+            Calculate the Y Distance
         '''
         return (end_lat-start_lat)*self.m_lat
 
     
     def _traveltime_in_cell(self,xdist,ydist,U,V,S):
         '''
-            FILL
+            Determine the traveltime within cell
         '''
         dist  = np.sqrt(xdist**2 + ydist**2)
         cval  = np.sqrt(U**2 + V**2)
@@ -488,7 +501,7 @@ class NewtonianCurve:
 
     def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
         '''
-            FILL
+            Determine within cell parmeters for a source and end point on the edge
         '''
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
@@ -522,11 +535,7 @@ class NewtonianCurve:
 
     def objective_function(self,Points):
         '''
-            BUGS:
-            - Currently this only returns the traveltime, distance and index. Expand to include all objective values; in addtion add in the DT.
-            - This stage can also be used to do waypoint correction as well, as its called after
-
-
+            Given a series of points determine the path based values along the path.
         '''
 
         # Determining the important variables to return for the paths
@@ -576,7 +585,7 @@ class NewtonianCurve:
 
     def _long_case(self):
         '''
-            FILL
+            Longitude based smoothing
         '''
         def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
                 tryNum=1
@@ -680,7 +689,7 @@ class NewtonianCurve:
 
     def _lat_case(self):
         '''
-            FILL
+            Latitutde based smoothing
         '''
         def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
                 tryNum=1
@@ -779,7 +788,7 @@ class NewtonianCurve:
 
     def _corner_case(self):
         '''
-            FILL
+            If a point lies on the corner of a cell how to introduce new corner edges.
         '''
         # Separting out the Long/Lat of each of the points
         Xs,Ys = tuple(self.triplet.iloc[0][['cx','cy']])
@@ -836,7 +845,7 @@ class NewtonianCurve:
 
     def _mergePoint(self):
         '''
-            FILL
+            Merging two points into a corner case if their distance is small enough.
         '''
         def PtDist(Ser1,Ser2):
             #return np.sqrt(self._calXDist(Ser2['cx'],Ser1['cx'])**2 + self._calXDist(Ser2['cy'],Ser1['cy'])**2)
@@ -880,6 +889,10 @@ class NewtonianCurve:
 
 
     def _checking_crossing(self):
+        '''
+            Checks to determine if the crossing point has moved outside the domain.
+        '''
+
         self._trigger_horeshoe = False
         Cp             = tuple(self.triplet[['cx','cy']].iloc[1])
         cellStartGraph = self.triplet.iloc[1]['cellStart']
@@ -976,7 +989,7 @@ class NewtonianCurve:
 
     def _horseshoe(self):
         '''
-            FILL
+            Introduces a horeshoe type in the path smoothing updating inbuilt horeshoe values.
         '''
         # Defining the case information
         Cp             = tuple(self.triplet[['cx','cy']].iloc[1])
