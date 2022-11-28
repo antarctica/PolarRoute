@@ -119,7 +119,7 @@ def optimise_routes_cli():
     else: 
         logging.info("outputting full mesh to {}".format(args.output))
 
-    rp = RoutePlanner(args.info,args.route_arg,args.waypoints)
+    rp = RoutePlanner(args.info.name, args.route_info.name, args.waypoints.name)
     rp.compute_routes()
     info_dijkstra = rp.to_json()
     rp.compute_smoothed_routes()
