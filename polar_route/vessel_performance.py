@@ -75,10 +75,16 @@ class VesselPerformance:
                           f'{self.vessel_params["Unit"]} from config')
             self.mesh_df['speed'] = self.vessel_params["Speed"]
 
-        # Modify speed based on ice resistance
+        # Calculate wind resistance if wind data present:
+        if 'u10' in self.mesh_df and 'v10' in self.mesh_df:
+            self.calc_wind()
+        else:
+            logging.debug("No wind data present, wind resistance will not be calculated")
+
+        # Modify speed based on resistance forces
         self.speed()
 
-        # Calculate fuel usage based on speed and ice resistance
+        # Calculate fuel usage based on speed and resistance forces
         self.fuel()
 
         # Check again for NaNs and zero them then warn if present
@@ -132,6 +138,72 @@ class VesselPerformance:
         inaccessible_idx = list(inaccessible.index)
 
         self.mesh['neighbour_graph'] = self.remove_nodes(self.mesh['neighbour_graph'], inaccessible_idx)
+
+    def wind_mag_dir(self, vs, va, uw, vw):
+        """
+        Returns the relative wind speed and direction given the speed and heading of the vessel and the easterly
+        and northerly components of the true wind vector. Speeds in m/s.
+        """
+        # Define wind vector
+        w_vec = np.array([uw, vw])
+
+        # Find vessel vector in component form
+        uv, vv = vs * np.sin(va), vs * np.cos(va)
+        v_vec = np.array([uv, vv])
+
+        # Find apparent wind vector
+        aw_vec = w_vec - v_vec
+
+        # Find magnitude of apparent wind
+        ws = np.linalg.norm(aw_vec)
+
+        # Define unit vectors for dot product
+        unit_v = v_vec / vs
+        unit_aw = aw_vec / ws
+
+        # Calculate dot product and find angle
+        dp = np.dot(unit_v, unit_aw)
+        ang = np.arccos(-1 * dp)
+
+        return ws, ang
+
+    def c_wind(self, rel_ang):
+        """
+        Method to return the wind resistance coefficient for a given relative angle between wind and travel directions.
+        """
+        cs = -1 * np.array([-0.94, -0.77, -0.42, -0.48, -0.17, 0.30, 0.34])
+        angs = np.array([0., np.pi / 6., np.pi / 3., np.pi / 2., 2 * np.pi / 3., 5 * np.pi / 6., np.pi])
+        return np.interp(rel_ang, angs, cs)
+
+    @timed_call
+    def calc_wind(self):
+        logging.info("Calculating wind resistance")
+        self.mesh_df['wind resistance'] = self.mesh_df.apply(lambda x: [0, 0, 0, 0, 0, 0, 0, 0], axis=1)
+        self.mesh_df['relative wind speed'] = self.mesh_df.apply(lambda x: [0, 0, 0, 0, 0, 0, 0, 0], axis=1)
+        self.mesh_df['relative wind angle'] = self.mesh_df.apply(lambda x: [0, 0, 0, 0, 0, 0, 0, 0], axis=1)
+        heads = [np.pi/4, np.pi/2, 3*np.pi/4, np.pi, 5*np.pi/4, 3*np.pi/2, 7*np.pi/4, 0.]
+        for i, row in self.mesh_df.iterrows():
+            wind_arr = row['wind resistance']
+            sp_arr = row['relative wind speed']
+            ang_arr = row['relative wind angle']
+            for j, head in enumerate(heads):
+                sp_arr[j], ang_arr[j] = self.wind_mag_dir(row['speed'] * 0.277778, head, row['u10'], row['v10'])
+                wind_arr[j] = self.wind_resistance(row['speed']*0.277778, head, sp_arr[j], ang_arr[j])
+            self.mesh_df.at[i, 'wind resistance'] = wind_arr
+            self.mesh_df.at[i, 'relative wind speed'] = sp_arr
+            self.mesh_df.at[i, 'relative wind angle'] = ang_arr
+
+    def wind_resistance(self, v_speed, v_ang, w_speed, rel_ang):
+        """
+        Method to calculate the wind resistance given the wind speed and direction and vessel speed.
+
+        """
+        A = 750.
+        rho = 1.225
+
+        wind_res = 0.5 * rho * (w_speed**2) * A * self.c_wind(rel_ang) - 0.5 * rho * (v_speed ** 2) * A * self.c_wind(0)
+
+        return wind_res
 
     def ice_resistance(self, velocity, area, thickness, density):
         """
@@ -220,6 +292,9 @@ class VesselPerformance:
                         self.mesh_df.loc[idx, 'ice resistance'] = rp
         else:
             logging.info("No resistance data available, no speed adjustment necessary")
+        if 'wind resistance' in self.mesh_df:
+            logging.debug("Creating speed array")
+            self.mesh_df['speed'] = self.mesh_df.apply(lambda r: [r['speed'] for x in r['wind resistance']], axis=1)
 
     def speed_simple(self):
         """
@@ -228,14 +303,32 @@ class VesselPerformance:
         self.mesh_df['speed'] = (1 - np.sqrt(self.mesh_df['SIC'] / 100)) * \
                                         self.vessel_params['Speed']
 
+    def fuel_eq(self, sp, res):
+        # Assume no effect from "negative resistance" (e.g. tailwind stronger than ice resistance)
+        if res < 0:
+            res = 0.
+        fl = (0.00137247 * sp ** 2 - 0.0029601 * sp + 0.25290433
+              + 7.75218178e-11 * res ** 2 + 6.48113363e-06 * res) * 24.0
+        return fl
+
     @timed_call
     def fuel(self):
         """
             Method to calculate the fuel usage in tons per day based on speed in km/h and ice resistance in N.
         """
         logging.info("Calculating fuel requirements in each cell")
-
-        if 'ice resistance' in self.mesh_df:
+        if 'ice resistance' in self.mesh_df and 'wind resistance' in self.mesh_df:
+            logging.debug("Determining fuel requirements using ice and wind resistance")
+            self.mesh_df['resistance'] = self.mesh_df.apply(lambda row: [row['ice resistance'] + x
+                                                                         for x in row['wind resistance']], axis=1)
+            self.mesh_df['fuel'] = self.mesh_df.apply(lambda row: [self.fuel_eq(row['speed'][i], r)
+                                                                   for i, r in enumerate(row['resistance'])], axis=1)
+        elif 'wind resistance' in self.mesh_df:
+            logging.debug("Determining fuel requirements using wind resistance")
+            self.mesh_df['fuel'] = self.mesh_df.apply(lambda row: [self.fuel_eq(row['speed'][i], r)
+                                                                  for i, r in enumerate(row['wind resistance'])], axis=1)
+        elif 'ice resistance' in self.mesh_df:
+            logging.debug("Determining fuel requirements using ice resistance")
             self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
                                     self.mesh_df['speed'] + 0.25290433
                                     + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2

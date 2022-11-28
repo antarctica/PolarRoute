@@ -55,8 +55,8 @@ class NewtonianDistance:
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed  = unit_shipspeed
         self.unit_time       = unit_time
-        self.source_speed    = self._unit_speed(self.source_graph['Speed'])
-        self.neighbour_speed = self._unit_speed(self.neighbour_graph['Speed'])
+        self.source_speed    = self._unit_speed(self.source_graph['speed'])
+        self.neighbour_speed = self._unit_speed(self.neighbour_graph['speed'])
         self.case            = case
 
         if zerocurrents:
@@ -367,7 +367,7 @@ class NewtonianDistance:
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
 
-        return TravelTime, CrossPoints, CellPoints
+        return TravelTime, CrossPoints, CellPoints, self.case
 
 
 # ===================================================================================================
@@ -379,9 +379,24 @@ class NewtonianDistance:
 
 
 class NewtonianCurve:
-    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,pathIter=5,optimizer_tol=1e-3,minimumDiff=1e-3,zerocurrents=True):
+    def __init__(self,neighbour_graph,config,unit_shipspeed='km/hr',unit_time='days', objective_func='traveltime',debugging=False,maxiter=1000,minimumDiff=1e-3,zerocurrents=False):
         '''
-            FILL
+            Applys path smoothing to input neighbourhood graph constructed during the dijkstra run.
+
+            Args:
+                neigbour_graph: Dijkstra based neighbourhood graph (Pandas DataFrame)
+                config: Input path configuration
+            
+            Opt Args:
+                unit_speed: Input unit speed type from mesh (Default:'km/hr')
+                unit_time: Input unit time to output (Default:'km/hr')
+                objective_func: Objective function to apply path smoothing relative. 
+                    This should be the same as used in Dijkstra. (Default:'traveltime')
+                
+                maxiter: Maximum number of iterations for the path smoothing (Default:1000)
+                minimumDiff: Tolerence for the path smoothing for the maximum deg distance between two points (Default:1e-3)
+                zerocurrents: Boolean to Zero currents for path smoothing. Used for debugging cases only (Default:False)
+
         '''
         # Passing the Dijkstra Graph
         self.neighbour_graph = copy.copy(neighbour_graph)
@@ -394,14 +409,14 @@ class NewtonianCurve:
         self.unit_shipspeed = unit_shipspeed
         self.unit_time      = unit_time
 
+
+        self.objective_func = objective_func
         
         # Information for distance metrics
         self.R              = 6371.*1000
 
         # Optimisation Information
         self.maxiter       = maxiter
-        self.pathIter      = pathIter
-        self.optimizer_tol = optimizer_tol
         self.minimumDiff   = minimumDiff
         self._epsilon      = 1e-3
 
@@ -413,12 +428,6 @@ class NewtonianCurve:
         # For Debugging purposes 
         self.debugging     = debugging
 
-        if self.debugging:
-            self.debugFile1 = open("debugFil.txt", "w")  # append mode
-            self.debugFile1.write("Today \n")
-
-        self.id = 0
-
         # zeroing currents if flagged
         if zerocurrents:
             self.zc = 0.0
@@ -427,7 +436,7 @@ class NewtonianCurve:
 
     def _unit_speed(self,Val):
         '''
-            FILL
+            Applying unit speed for an input type.
         '''
         if self.unit_shipspeed == 'km/hr':
             Val = Val*(1000/(60*60))
@@ -437,7 +446,7 @@ class NewtonianCurve:
 
     def _unit_time(self,Val):
         '''
-            FILL
+            Applying Unit time for a specific input type
         '''
         if self.unit_time == 'days':
             Val = Val/(60*60*24)
@@ -452,18 +461,131 @@ class NewtonianCurve:
 
     def _calXDist(self,start_long,end_long):
         '''
-            FILL
+            Calculate the X Distance
         '''
         return (end_long - start_long)*self.m_long#*np.cos(centralLat)
     def _calYDist(self,start_lat,end_lat):
         '''
-            FILL
+            Calculate the Y Distance
         '''
         return (end_lat-start_lat)*self.m_lat
 
+    
+    def _traveltime_in_cell(self,xdist,ydist,U,V,S):
+        '''
+            Determine the traveltime within cell
+        '''
+        dist  = np.sqrt(xdist**2 + ydist**2)
+        cval  = np.sqrt(U**2 + V**2)
+
+        dotprod  = xdist*U + ydist*V
+        diffsqrs = S**2 - cval**2
+
+        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
+        if diffsqrs == 0.0:
+            if dotprod == 0.0:
+                return np.inf
+                #raise Exception(' ')
+            else:
+                if ((dist**2)/(2*dotprod))  <0:
+                    return np.inf
+                    #raise Exception(' ')
+                else:
+                    traveltime = dist * dist / (2 * dotprod)
+                    return traveltime
+
+        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
+        if traveltime < 0:
+            traveltime = np.inf
+        return self._unit_time(traveltime), dist
+
+    def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
+        '''
+            Determine within cell parmeters for a source and end point on the edge
+        '''
+        m_long  = 111.321*1000
+        m_lat   = 111.386*1000
+        x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
+        y = (Cp[1]-Wp[1])*m_lat
+        Su  = source_graph['Vector_x']*self.zc
+        Sv  = source_graph['Vector_y']*self.zc
+        Ssp = self._unit_speed(source_graph['speed'])
+        traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+
+
+        segment_values = {}
+        for var in path_requested_variables.keys():
+            if var=='distance':
+                segment_values[var] = distance
+            elif var=='traveltime':
+                segment_values[var] = traveltime
+            elif var=='cell_index':
+                segment_values[var] = int(source_graph.name)
+            else:
+                if var in source_graph.keys():
+                    # Determining the objective value information
+                    objective_rate_value = source_graph[var]
+                    # -- Correction needed for when there is case dependent values
+                    if path_requested_variables[var]['processing']==None:
+                        segment_values[var] = objective_rate_value
+                    else:
+                        segment_values[var] = traveltime*objective_rate_value
+
+        return segment_values
+
+    def objective_function(self,Points):
+        '''
+            Given a series of points determine the path based values along the path.
+        '''
+
+        # Determining the important variables to return for the paths
+        required_path_variables = {'distance':{'processing':'cumsum'},
+                                   'traveltime':{'processing':'cumsum'},
+                                   'datetime':{'processing':'cumsum'},
+                                   'cell_index':{'processing':None},
+                                   'speed':{'processing':None},
+                                   'fuel':{'processing':'cumsum'}}
+        path_requested_variables = {}#self.config['Route_Info']['path_variables']
+        path_requested_variables.update(required_path_variables)
+
+
+
+        # Initialising zero arrays for the path variables 
+        variables =  {}    
+        for var in path_requested_variables:
+            variables[var] ={}
+            variables[var]['path_values'] = np.zeros(len(Points))
+
+
+        # Looping over the path and determining the variable information
+        for ii in range(len(Points)-1):
+
+            # Determining the cellbox to determinine path values from
+            cellbox = Points.iloc[ii]['cellEnd']
+            Wp = Points.iloc[ii][['cx','cy']].to_numpy()
+            Cp = Points.iloc[ii+1][['cx','cy']].to_numpy()
+            
+            # Determining the value for the variable for the segment of the path
+            segment_variable = self._waypoint_correction(path_requested_variables,cellbox,Wp,Cp)
+
+            # Adding that value for the segment along the paths
+            for var in segment_variable:
+                variables[var]['path_values'][ii+1] = segment_variable[var]
+
+
+        # Applying processing to all path values
+        for var in variables.keys():
+            processing_type = path_requested_variables[var]['processing']
+            if type(processing_type) == type(None):
+                continue
+            elif processing_type == 'cumsum':
+                variables[var]['path_values'] = np.cumsum(variables[var]['path_values'])
+
+        return variables
+
     def _long_case(self):
         '''
-            FILL
+            Longitude based smoothing
         '''
         def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
                 tryNum=1
@@ -567,7 +689,7 @@ class NewtonianCurve:
 
     def _lat_case(self):
         '''
-            FILL
+            Latitutde based smoothing
         '''
         def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
                 tryNum=1
@@ -666,7 +788,7 @@ class NewtonianCurve:
 
     def _corner_case(self):
         '''
-            FILL
+            If a point lies on the corner of a cell how to introduce new corner edges.
         '''
         # Separting out the Long/Lat of each of the points
         Xs,Ys = tuple(self.triplet.iloc[0][['cx','cy']])
@@ -695,7 +817,7 @@ class NewtonianCurve:
             firstCrossingPoint  = np.array(sourceNeighbourIndices['neighbourCrossingPoints'])[np.where(np.array(sourceNeighbourIndices['neighbourIndex'])==newCell.name)[0][0],:]
             secondCrossingPoint = np.array(newCell['neighbourCrossingPoints'])[np.where(np.array(newCell['neighbourIndex'])==endNeighbourIndices.name)[0][0],:]
         except:
-            self.triplet = copy.deepcopy(self.org_triplet)
+            self.triplet = copy.deepcopy(self.org_points)
             return
 
         # Adding in the new crossing Point
@@ -723,7 +845,7 @@ class NewtonianCurve:
 
     def _mergePoint(self):
         '''
-            FILL
+            Merging two points into a corner case if their distance is small enough.
         '''
         def PtDist(Ser1,Ser2):
             #return np.sqrt(self._calXDist(Ser2['cx'],Ser1['cx'])**2 + self._calXDist(Ser2['cy'],Ser1['cy'])**2)
@@ -732,7 +854,7 @@ class NewtonianCurve:
         id=0
         while id < len(self.CrossingDF)-3:
             triplet = self.CrossingDF.iloc[id:id+3]
-            if PtDist(triplet.iloc[0],triplet.iloc[1]) < 2e-3:
+            if PtDist(triplet.iloc[0],triplet.iloc[1]) < 1e-10:
                 try:
                     neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
                 except:
@@ -745,7 +867,7 @@ class NewtonianCurve:
                 triplet['cellEnd'].iloc[0] = copy.deepcopy(triplet.iloc[1]['cellEnd'])
                 triplet['case'].iloc[0]    = copy.deepcopy(case)
                 self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
-            if PtDist(triplet.iloc[1],triplet.iloc[2]) < 2e-3:
+            if PtDist(triplet.iloc[1],triplet.iloc[2]) < 1e-10:
                 try:
                     neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
                 except:
@@ -766,22 +888,20 @@ class NewtonianCurve:
 
 
 
-    def _horseshoe(self):
+    def _checking_crossing(self):
         '''
-            FILL
+            Checks to determine if the crossing point has moved outside the domain.
         '''
-        # Defining the case information
+
+        self._trigger_horeshoe = False
         Cp             = tuple(self.triplet[['cx','cy']].iloc[1])
-        Sp             = tuple(self.triplet.iloc[0][['cx','cy']])
-        Np             = tuple(self.triplet.iloc[2][['cx','cy']])
-        
         cellStartGraph = self.triplet.iloc[1]['cellStart']
         cellEndGraph   = self.triplet.iloc[1]['cellEnd']        
-        case           = self.triplet['case'].iloc[1]
+        case           = self.triplet['case'].iloc[1]        
 
         # Returning if corner horseshoe case type
         if abs(case)==1 or abs(case)==3 or abs(case)==0: 
-            return
+            return None,None
         elif abs(case) == 2:
             # Defining the min and max of the start and end cells
             smin = cellStartGraph['cy']-cellStartGraph['dcy'] 
@@ -795,7 +915,7 @@ class NewtonianCurve:
 
             # Point crossingpoint on boundary between the two origional cells
             if (Cp[1] > vmin) and (Cp[1] < vmax):
-                return
+                return None,None
 
             # If Start and end cells share a edge for the horesshoe 
             if (Cp[1]<=smin) and (smin==emin):
@@ -819,7 +939,9 @@ class NewtonianCurve:
                 hrshCaseEnd   = -case
             if (Cp[1]<=smin) and (emin<smin):
                 hrshCaseStart = 4
-                hrshCaseEnd   = -case                    
+                hrshCaseEnd   = -case      
+
+            self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin+1e-9,vmax-1e-9)               
 
         elif abs(case) == 4:
             # Defining the min and max of the start and end cells
@@ -834,7 +956,7 @@ class NewtonianCurve:
 
             # Point crossingpoint on boundary between the two origional cells
             if (Cp[0] >= vmin) and (Cp[0] <= vmax):
-                return
+                return None,None
 
             # If Start and end cells share a edge for the horesshoe 
             if (Cp[0]<smin) and (smin==emin):
@@ -860,202 +982,203 @@ class NewtonianCurve:
                 hrshCaseStart = (-2)
                 hrshCaseEnd   = -case   
 
+            self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin+1e-9,vmax-1e-9)        
+            
+        return hrshCaseStart,hrshCaseEnd
+
+
+    def _horseshoe(self):
+        '''
+            Introduces a horeshoe type in the path smoothing updating inbuilt horeshoe values.
+        '''
+        # Defining the case information
+        Cp             = tuple(self.triplet[['cx','cy']].iloc[1])
+        cellStartGraph = self.triplet.iloc[1]['cellStart']
+        cellEndGraph   = self.triplet.iloc[1]['cellEnd']        
+        case           = self.triplet['case'].iloc[1]
+        self._horseshoe_created = False
+
+        # Defining if horseshoe is created
+        hrshCaseStart,hrshCaseEnd = self. _checking_crossing()
+
+        # If not creating a horeshoe return
+        if (type(hrshCaseStart) == type(None)) or (type(hrshCaseEnd) == type(None)):
+            return
 
         # Determining the neighbours of the start and end cells that are the horseshoe case
         startGraphNeighbours = [cellStartGraph['neighbourIndex'][ii] for ii in list(np.where(np.array(cellStartGraph['case'])==hrshCaseStart)[0])]
         endGraphNeighbours   = [cellEndGraph['neighbourIndex'][ii] for ii in list(np.where(np.array(cellEndGraph['case'])==hrshCaseEnd)[0])]
 
-        # If there is no neighbour trim back to the edge of the cell
-        if (len(startGraphNeighbours)==0) or (len(endGraphNeighbours)==0):
-            if abs(case) == 2:
-                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-            if abs(case) == 4:
-                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-            return
 
-        
+        # -- Addition of two cellboxes in horeshoe construction
         if abs(hrshCaseStart) == abs(hrshCaseEnd):
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
                     if (np.array(self.neighbour_graph.loc[sGN,'neighbourIndex'])==eGN).any() and (np.array(self.neighbour_graph.loc[eGN,'neighbourIndex'])==sGN).any():
+
+                        # Determining the additional cellbox information to add
                         sGNGraph = self.neighbour_graph.loc[sGN]
                         eGNGraph = self.neighbour_graph.loc[eGN]
-
-
                         try:
-
                             Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                             Crp2 = np.array(sGNGraph['neighbourCrossingPoints'])[np.where(np.array(sGNGraph['neighbourIndex']) == eGN)[0][0],:]
                             Crp3 = np.array(eGNGraph['neighbourCrossingPoints'])[np.where(np.array(eGNGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
-                        
-                        except:
-                            if abs(case) == 2:
-                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                            if abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                        except:      
                             return
 
-                        # Trimminng back if the cell is worse off
-                        if ('SIC' in sGNGraph) and ('SIC' in cellStartGraph) and (sGNGraph['SIC'] - cellStartGraph['SIC'])>=2:
-                            if abs(case) == 2:
-                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                            if abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-                            return
-
-
-                        # Trimminng back if the cell is worse off fuel
-                        if ('fuel' in sGNGraph) and ('fuel' in cellStartGraph) and (sGNGraph['fuel'] - cellStartGraph['fuel'])>=2:
-                            if abs(case) == 2:
-                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                            if abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-                            return
-
-
-                        # Updating the origional crossing point
-                        self.triplet['cx'].iloc[1]      = Crp1[0]
-                        self.triplet['cy'].iloc[1]      = Crp1[1]
-                        self.triplet['cellEnd'].iloc[1] = copy.deepcopy(sGNGraph)
-                        self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==sGNGraph.name)[0][0]]
+                        # Crossing Point 1
+                        Pcrp1 = copy.deepcopy(self.triplet.iloc[0])
 
                         # Crossing Point 2
                         Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+1,dtype='object')
-                        Pcrp2['cx']        = Crp2[0]
-                        Pcrp2['cy']        = Crp2[1]
-                        Pcrp2['cellStart'] = copy.deepcopy(sGNGraph)
-                        Pcrp2['cellEnd']   = copy.deepcopy(eGNGraph)
-                        Pcrp2['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
-
+                        Pcrp2['cx']        = Crp1[0]
+                        Pcrp2['cy']        = Crp1[1]
+                        Pcrp2['cellStart'] = copy.deepcopy(self.triplet['cellStart'].iloc[1])
+                        Pcrp2['cellEnd']   = copy.deepcopy(sGNGraph)
+                        Pcrp2['case']      = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==sGNGraph.name)[0][0]]
+                        # Crossing Point 3
                         Pcrp3 = pd.Series(name=self.triplet.iloc[1].name+2,dtype='object')
-                        Pcrp3['cx']        = Crp3[0]
-                        Pcrp3['cy']        = Crp3[1]
-                        Pcrp3['cellStart'] = copy.deepcopy(eGNGraph)
-                        Pcrp3['cellEnd']   = copy.deepcopy(cellEndGraph)
-                        Pcrp3['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
+                        Pcrp3['cx']        = Crp2[0]
+                        Pcrp3['cy']        = Crp2[1]
+                        Pcrp3['cellStart'] = copy.deepcopy(sGNGraph)
+                        Pcrp3['cellEnd']   = copy.deepcopy(eGNGraph)
+                        Pcrp3['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
+                        # Crossing Point 4
+                        Pcrp4 = pd.Series(name=self.triplet.iloc[1].name+3,dtype='object')
+                        Pcrp4['cx']        = Crp3[0]
+                        Pcrp4['cy']        = Crp3[1]
+                        Pcrp4['cellStart'] = copy.deepcopy(eGNGraph)
+                        Pcrp4['cellEnd']   = copy.deepcopy(cellEndGraph)
+                        Pcrp4['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
+
+                        Pcrp5 = copy.deepcopy(self.triplet.iloc[2])
+
+                        self.horshoe_points = pd.concat([Pcrp1.to_frame().transpose(),Pcrp2.to_frame().transpose(),Pcrp3.to_frame().transpose(),Pcrp4.to_frame().transpose(),Pcrp5.to_frame().transpose()], sort=True).sort_index()
+
+                        # Smoothing these points
+                        tmp_id=0
+                        self.org_triplet = copy.copy(self.triplet)
+                        while tmp_id <= (len(self.horshoe_points) - 3):
+                            self.triplet = self.horshoe_points.iloc[tmp_id:tmp_id+3]
+                            self._crossing_point_optimisation()
+                            _,_ = self._checking_crossing()
+                            if not self._trigger_horeshoe:
+                                self.horshoe_points.iloc[tmp_id:tmp_id+3] = self.triplet
+                            else:
+                                if abs(self.triplet.iloc[1]['case']) == 2:
+                                    self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],self._vmin+1e-9,self._vmax-1e-9)
+                                if abs(self.triplet.iloc[1]['case']) == 4:
+                                    self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],self._vmin+1e-9,self._vmax-1e-9)  
+                                self.horshoe_points.iloc[tmp_id:tmp_id+3] = self.triplet  
+                            tmp_id+=1
+                        self.triplet = copy.copy(self.org_triplet)
                         
-
-                        self.CrossingDF = pd.concat([self.CrossingDF,Pcrp2.to_frame().transpose(),Pcrp3.to_frame().transpose()], sort=True).sort_index().reset_index(drop=True) #self.CrossingDF.append([Pcrp2,Pcrp3],sort=True).sort_index().reset_index(drop=True)
-
-                        self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
-
-                        break
-
-            if abs(case) == 2:
-                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-            if abs(case) == 4:
-                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-            return
-        else:
+                        
+                        self._horseshoe_created = True
+                        break       
+        
+        # -- Addition of one cellboxes in horeshoe construction, corner adddition
+        if abs(hrshCaseStart) != abs(hrshCaseEnd):
             for sGN in startGraphNeighbours:
                 for eGN in endGraphNeighbours:
                     if (np.array(sGN==eGN).any()):
-                        
                         NeighGraph = self.neighbour_graph.loc[sGN]            
-                        
-                        
                         try:
                             Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                             Crp2 = np.array(NeighGraph['neighbourCrossingPoints'])[np.where(np.array(NeighGraph['neighbourIndex']) == cellEndGraph.name)[0][0],:]
-
-                        except:
-                            if abs(case) == 2:
-                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                            if abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
+                        except: 
                             return
 
 
-                        # Trimminng back if the cell is worse off
-                        if ('SIC' in NeighGraph) and ('SIC' in cellStartGraph) and (NeighGraph['SIC'] - cellStartGraph['SIC'])>=2:
-                            if abs(case) == 2:
-                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                            if abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-                            return
+                        # Crossing point 1
+                        Pcrp1 = copy.deepcopy(self.triplet.iloc[0])
+                        # Crossing point 2
+                        Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+1,dtype='object')
+                        Pcrp2['cx']        = Crp1[0]
+                        Pcrp2['cy']        = Crp1[1]
+                        Pcrp2['cellStart'] = copy.deepcopy(self.triplet['cellStart'].iloc[1])
+                        Pcrp2['cellEnd']   = copy.deepcopy(NeighGraph)
+                        Pcrp2['case']      = hrshCaseStart
+                        # Crossing point 3
+                        Pcrp3 = pd.Series(name=self.triplet.iloc[1].name+2,dtype='object')
+                        Pcrp3['cx']        = Crp2[0]
+                        Pcrp3['cy']        = Crp2[1]
+                        Pcrp3['cellStart'] = copy.deepcopy(NeighGraph)
+                        Pcrp3['cellEnd']   = copy.deepcopy(cellEndGraph)
+                        Pcrp3['case']      = -hrshCaseEnd
+                        # Crossing point 4
+                        Pcrp4 = copy.deepcopy(self.triplet.iloc[2])
+            
+                        self.horshoe_points = pd.concat([Pcrp1.to_frame().transpose(),Pcrp2.to_frame().transpose(),Pcrp3.to_frame().transpose(),Pcrp4.to_frame().transpose()], sort=True).sort_index()
 
-                        # Trimminng back if the cell is worse off fuel
-                        if ('fuel' in NeighGraph) and ('fuel' in cellStartGraph) and (NeighGraph['fuel'] - cellStartGraph['fuel'])>=2:
-                            if abs(case) == 2:
-                                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-                            if abs(case) == 4:
-                                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-                            return
+                        # Smoothing these points
+                        self.org_triplet = copy.copy(self.triplet)
+                        tmp_id=0
+                        while tmp_id <= (len(self.horshoe_points) - 3):
+                            self.triplet = self.horshoe_points.iloc[tmp_id:tmp_id+3]
+                            self._crossing_point_optimisation()
+                            _,_ = self._checking_crossing()
+                            if not self._trigger_horeshoe:
+                                self.horshoe_points.iloc[tmp_id:tmp_id+3] = self.triplet
+                            else:
+                                if abs(self.triplet.iloc[1]['case']) == 2:
+                                    self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],self._vmin+1e-9,self._vmax-1e-9)
+                                if abs(self.triplet.iloc[1]['case']) == 4:
+                                    self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],self._vmin+1e-9,self._vmax-1e-9)  
+                                self.horshoe_points.iloc[tmp_id:tmp_id+3] = self.triplet  
+                            tmp_id+=1    
 
+                        self.triplet = copy.copy(self.org_triplet)
 
-
-                        # Updating the origional crossing point
-                        self.triplet['cx'].iloc[1]      = Crp1[0]
-                        self.triplet['cy'].iloc[1]      = Crp1[1]
-                        self.triplet['cellEnd'].iloc[1] = copy.deepcopy(NeighGraph)
-                        self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==NeighGraph.name)[0][0]]
-
-                        Pcrp2 = pd.Series(name=self.triplet.iloc[1].name+2,dtype='object')
-                        Pcrp2['cx']        = Crp2[0]
-                        Pcrp2['cy']        = Crp2[1]
-                        Pcrp2['cellStart'] = copy.deepcopy(NeighGraph)
-                        Pcrp2['cellEnd']   = copy.deepcopy(cellEndGraph)
-                        Pcrp2['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
-                        
-                        self.CrossingDF = pd.concat([self.CrossingDF,Pcrp2.to_frame().transpose()], sort=True).sort_index().reset_index(drop=True)#self.CrossingDF.append([Pcrp2],sort=True).sort_index().reset_index(drop=True)
-                        
-                        self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
-
+                        self._horseshoe_created = True
                         break
 
-            if abs(case) == 2:
-                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin,vmax)
-            if abs(case) == 4:
-                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin,vmax)        
-            return
+        # if abs(case) == 2:
+        #     self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin+1e-9,vmax-1e-9)
+        # if abs(case) == 4:
+        #     self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin+1e-9,vmax-1e-9)        
+        # return
                 
 
-    def _reverseCase(self):
-        '''
-            FILL
-        '''
-        # Removing Reverse Edge Type 1
-        startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
-        endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
-        boolReverseEdge  = np.logical_and((startIndex[:-1] == endIndex[1:]),(startIndex[1:] == endIndex[:-1]))
-        if boolReverseEdge.any():
-            indxReverseEdge = np.where(boolReverseEdge)[0]+1
-            for id in indxReverseEdge:
-                self.CrossingDF = self.CrossingDF.drop([self.CrossingDF.iloc[id].name]).sort_index().reset_index(drop=True)
+    # def _reverseCase(self):
+    #     '''
+    #         FILL
+    #     '''
+    #     # Removing Reverse Edge Type 1
+    #     startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
+    #     endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
+    #     boolReverseEdge  = np.logical_and((startIndex[:-1] == endIndex[1:]),(startIndex[1:] == endIndex[:-1]))
+    #     if boolReverseEdge.any():
+    #         indxReverseEdge = np.where(boolReverseEdge)[0]+1
+    #         for id in indxReverseEdge:
+    #             self.CrossingDF = self.CrossingDF.drop([self.CrossingDF.iloc[id].name]).sort_index().reset_index(drop=True)
 
 
-        # Removing Reverse Edge Type 2
-        startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
-        endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
-        boolReverseEdge  = (endIndex[:-1] == endIndex[1:])
-        if boolReverseEdge.any():
-            indxReverseEdge = np.where(boolReverseEdge)[0]+2
-            for id in indxReverseEdge:
-                self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
+    #     # Removing Reverse Edge Type 2
+    #     startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
+    #     endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
+    #     boolReverseEdge  = (endIndex[:-1] == endIndex[1:])
+    #     if boolReverseEdge.any():
+    #         indxReverseEdge = np.where(boolReverseEdge)[0]+2
+    #         for id in indxReverseEdge:
+    #             self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
 
-        # Removing Reverse Edge Type 3
-        startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
-        endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
-        boolReverseEdge  = (startIndex[:-1] == startIndex[1:])
-        if boolReverseEdge.any():
-            indxReverseEdge = np.where(boolReverseEdge)[0]+1
-            for id in indxReverseEdge:
-                self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
-
-
-
-        self.CrossingDF.index = np.arange(0,int(len(self.CrossingDF)*1e3),int(1e3))
+    #     # Removing Reverse Edge Type 3
+    #     startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
+    #     endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
+    #     boolReverseEdge  = (startIndex[:-1] == startIndex[1:])
+    #     if boolReverseEdge.any():
+    #         indxReverseEdge = np.where(boolReverseEdge)[0]+1
+    #         for id in indxReverseEdge:
+    #             self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
 
 
-    def _updateCrossingPoint(self):
-        '''
-            FILL
-        '''
 
-        self.org_triplet = copy.deepcopy(self.triplet) 
-        self.speed_s = self._unit_speed(self.triplet.iloc[1]['cellStart']['Speed'])
-        self.speed_e = self._unit_speed(self.triplet.iloc[1]['cellEnd']['Speed'])
+    #     self.CrossingDF.index = np.arange(0,int(len(self.CrossingDF)*1e3),int(1e3))
 
+
+    def _crossing_point_optimisation(self):
+        
         # ------ Case Deginitions & Dealing
         if self.debugging:
             print('===========================================================')
@@ -1065,75 +1188,41 @@ class NewtonianCurve:
             self._lat_case()
         elif (abs(self.triplet.iloc[1].case)==1) or (abs(self.triplet.iloc[1].case)==3):
             self._corner_case()
+        # Determining if crossing point lies outside of interface between two cellboxes
+        
 
-        if len(self.triplet) < 3:
-            return
+    def _updateCrossingPoint(self,previous_horeshoes):
+        self.org_points = copy.deepcopy(self.triplet) 
+        self.speed_s = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellStart']['speed']))
+        self.speed_e = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellEnd']['speed']))
+
+        # --- Updating the crossing point
+        self._crossing_point_optimisation()
+
+        # --- Additional Cells & Reverse Edges
+        # self._horseshoe_created = False
+        # self._checking_crossing()
+        #if self._trigger_horeshoe:
+        self._horseshoe()
+
+        if self._horseshoe_created == True:
+            org_variables = self.objective_function(self.org_points)
+            new_variables = self.objective_function(self.horshoe_points)
+
+            if new_variables[self.objective_func]['path_values'][-1] <  org_variables[self.objective_func]['path_values'][-1]:
+                horeshoe_points     = self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy()
+                previous_horeshoes += [horeshoe_points]
+                same_horseshoes_num = len(np.where([(entry==horeshoe_points).all() for entry in previous_horeshoes])[0])
+                if same_horseshoes_num <=5:
+                    self.CrossingDF = self.CrossingDF.drop(self.triplet.index)
+                    self.CrossingDF = pd.concat([self.CrossingDF,self.horshoe_points], sort=True).sort_index().reset_index(drop=True)
 
 
+        self.CrossingDF = self.CrossingDF.reset_index(drop=True)
+        self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
+        # -- Removing reversing edges if horeshoes are introduced
+        #self._reverseCase()
 
-    def _traveltime_in_cell(self,xdist,ydist,U,V,S):
-        '''
-            FILL
-        '''
-        dist  = np.sqrt(xdist**2 + ydist**2)
-        cval  = np.sqrt(U**2 + V**2)
-
-        dotprod  = xdist*U + ydist*V
-        diffsqrs = S**2 - cval**2
-
-        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
-        if diffsqrs == 0.0:
-            if dotprod == 0.0:
-                return np.inf
-                #raise Exception(' ')
-            else:
-                if ((dist**2)/(2*dotprod))  <0:
-                    return np.inf
-                    #raise Exception(' ')
-                else:
-                    traveltime = dist * dist / (2 * dotprod)
-                    return traveltime
-
-        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
-        if traveltime < 0:
-            traveltime = np.inf
-        return traveltime, dist
-
-    def _waypoint_correction(self,source_graph,Wp,Cp):
-        '''
-            FILL
-        '''
-        m_long  = 111.321*1000
-        m_lat   = 111.386*1000
-
-        x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
-        y = (Cp[1]-Wp[1])*m_lat
-        Su  = source_graph['Vector_x']*self.zc
-        Sv  = source_graph['Vector_y']*self.zc
-        Ssp = self._unit_speed(source_graph['Speed'])
-        traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
-        return traveltime, distance
-
-    def objective_function(self):
-        '''
-            FILL
-        '''
-        TravelTime = np.zeros(len(self.CrossingDF))
-        Distance   = np.zeros(len(self.CrossingDF))
-        index      = np.zeros(len(self.CrossingDF))
-        for ii in range(len(self.CrossingDF)-1):
-            soruce_graph = self.CrossingDF.iloc[ii]['cellEnd']
-            Wp = self.CrossingDF.iloc[ii][['cx','cy']].to_numpy()
-            Cp = self.CrossingDF.iloc[ii+1][['cx','cy']].to_numpy()
-            traveltime, distance = self._waypoint_correction(soruce_graph,Wp,Cp)
-            TravelTime[ii+1] = self._unit_time(traveltime)
-            Distance[ii+1]   = distance
-
-            if ii ==0:
-                index[ii] = soruce_graph.name
-                index[ii+1] = soruce_graph.name
-            else:
-                index[ii+1] = soruce_graph.name
-        return TravelTime,Distance,index
+        # --- Resetting the crossing point index
 

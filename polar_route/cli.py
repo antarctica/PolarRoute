@@ -13,6 +13,7 @@ def get_args(
         default_output: str,
         config_arg: bool = True,
         info_arg: bool = False,
+        route_arg: bool = False,
         waypoints_arg: bool = False):
     """
 
@@ -42,6 +43,10 @@ def get_args(
     if info_arg:
         ap.add_argument("info", type=argparse.FileType("r"),
                     help="File location of the enviromental mesh")
+
+    if route_arg:
+        ap.add_argument("route_info", type=argparse.FileType("r"),
+                    help="File location of the route information")
 
     if waypoints_arg:
         ap.add_argument("waypoints", type=argparse.FileType("r"))
@@ -106,7 +111,7 @@ def optimise_routes_cli():
     from polar_route.route_planner import RoutePlanner
 
     args = get_args("optimise_routes.output.json",
-                    config_arg=False, info_arg=True, waypoints_arg= True)
+                    config_arg=False, info_arg=True,route_arg=True,waypoints_arg= True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
     if args.path_only:
@@ -114,8 +119,7 @@ def optimise_routes_cli():
     else: 
         logging.info("outputting full mesh to {}".format(args.output))
 
-    vehicle_mesh = json.load(args.info)
-    rp = RoutePlanner(vehicle_mesh, args.waypoints)
+    rp = RoutePlanner(args.info,args.route_arg,args.waypoints)
     rp.compute_routes()
     info_dijkstra = rp.to_json()
     rp.compute_smoothed_routes()

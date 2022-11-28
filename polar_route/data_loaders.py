@@ -752,7 +752,7 @@ def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, tim
     # time_start is set to the start of the given month to ensure that data is loaded.
     time_start_split = time_start.split('-')
     time_start = time_start_split[0] + "-" + time_start_split[1] + "-01"
-
+    era5_wind['time'] = era5_wind['time'] +pd.Timedelta(days=365*2)
     era5_wind = era5_wind.sel(time=slice(time_start, time_end))
 
     era5_wind_df = era5_wind.to_dataframe()
@@ -761,8 +761,11 @@ def load_era5_wind(params, long_min, long_max, lat_min, lat_max, time_start, tim
     era5_wind_df = era5_wind_df.rename(columns={'longitude': 'long', 'latitude': 'lat'})
     era5_wind_df = era5_wind_df[era5_wind_df['long'].between(long_min, long_max)]
     era5_wind_df = era5_wind_df[era5_wind_df['lat'].between(lat_min, lat_max)]
+    #logging.debug("returned {} datapoints".format(len(era5_wind.index)))
 
-    logging.debug("returned {} datapoints".format(len(era5_wind.index)))
+
+    era5_wind_df
+
     return era5_wind_df
 
 
