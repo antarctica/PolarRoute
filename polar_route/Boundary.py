@@ -3,7 +3,7 @@
 
 
 
-class Boudary:
+class Boundary:
     """
     A Boundary is a class that defines the geo-spatial/temporal
     boundaries (longtitude, latitude and time).
@@ -45,11 +45,8 @@ class Boudary:
                     given in degrees longitude.
         """
         
-        return self.long + self.get_width()/2
+        return self.long_range[0] + self.get_width()/2
 
-    def get_width(self):
-        width = self.long_range[1] - self.long_range[0]
-        return width
 
     def getcy(self):
         """
@@ -60,10 +57,14 @@ class Boudary:
                     given in degrees latitude.
         """
         
-        return self.lat + self.get_height()/2
+        return self.lat_range[0] + self.get_height()/2
 
     def get_height(self):
         height = self.lat_range[1] - self.lat_range[0]
+
+    def get_width(self):
+        width = self.long_range[1] - self.long_range[0]
+        return width
 
     def getdcx(self):
         """
@@ -85,7 +86,17 @@ class Boudary:
         """
         return self.get_height()/2
 
-    
+    def get_lat_min(self):
+        return self.lat_range[0]
+
+    def get_lat_max(self):
+        return self.lat_range[1]   
+
+    def get_long_min(self):
+        return self.long_range[0]
+
+    def get_long_max(self):
+        return self.long_range[1]  
 
     def get_bounds(self):
         """
@@ -94,10 +105,10 @@ class Boudary:
             Returns:
                 bounds (list<tuples>): The geo-spatial boundaries of this CellBox.
         """
-        bounds = [[self.long_range[0], self.lat_range[0]],
-                    [self.long_range[0], self.lat_range[1]],
-                    [self.long_range[1], self.lat_range[1]],
-                    [self.long_range[1], self.lat_range[0]],
-                    [self.long_range[0], self.lat_range[0]]]
+        bounds = [[self.lat_range[0] , self.long_range[0]],
+                   [self.lat_range[1], self.long_range[0]],
+                    [self.lat_range[1], self.long_range[1]],
+                    [self.lat_range[0], self.long_range[1]],
+                    [self.lat_range[0], self.long_range[0]]]
         return bounds
 
