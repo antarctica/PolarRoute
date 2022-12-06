@@ -843,48 +843,71 @@ class NewtonianCurve:
         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
 
-    def _mergePoint(self):
+    def _mergePoint(self,merge_distance = 1e-8):
         '''
             Merging two points into a corner case if their distance is small enough.
         '''
-        def PtDist(Ser1,Ser2):
-            #return np.sqrt(self._calXDist(Ser2['cx'],Ser1['cx'])**2 + self._calXDist(Ser2['cy'],Ser1['cy'])**2)
-            return np.sqrt((Ser1['cx'] - Ser2['cx'])**2 + (Ser1['cy'] - Ser2['cy'])**2)
 
-        id=0
-        while id < len(self.CrossingDF)-3:
-            triplet = self.CrossingDF.iloc[id:id+3]
-            if PtDist(triplet.iloc[0],triplet.iloc[1]) < 1e-10:
-                try:
-                    neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
-                except:
-                    id+=1
-                    continue
-                case           = triplet['cellStart'].iloc[0]['case'][neighbourIndex]
-                crossingPoint  = triplet['cellStart'].iloc[0]['neighbourCrossingPoints'][neighbourIndex]
-                triplet['cx'].iloc[0]      = crossingPoint[0]
-                triplet['cy'].iloc[0]      = crossingPoint[1]
-                triplet['cellEnd'].iloc[0] = copy.deepcopy(triplet.iloc[1]['cellEnd'])
-                triplet['case'].iloc[0]    = copy.deepcopy(case)
-                self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
-            if PtDist(triplet.iloc[1],triplet.iloc[2]) < 1e-10:
-                try:
-                    neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
-                except:
-                    id+=1
-                    continue
-                case           = triplet['cellStart'].iloc[1]['case'][neighbourIndex]
-                crossingPoint  = triplet['cellStart'].iloc[1]['neighbourCrossingPoints'][neighbourIndex]
-                triplet['cx'].iloc[1]      = crossingPoint[0]
-                triplet['cy'].iloc[1]      = crossingPoint[1]
-                triplet['cellEnd'].iloc[1] = copy.deepcopy(triplet.iloc[2]['cellEnd'])
-                triplet['case'].iloc[1]    = copy.deepcopy(case)
-                self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[2].name)
+        
 
-            id+=1
+        # def PtDist(Ser1,Ser2):
+        #     return np.sqrt(self._calXDist(Ser2['cx'],Ser1['cx'])**2 + self._calXDist(Ser2['cy'],Ser1['cy'])**2)
+        #     #return np.sqrt((Ser1['cx'] - Ser2['cx'])**2 + (Ser1['cy'] - Ser2['cy'])**2)
 
-        self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
-        self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
+        # id=0
+        # while id < len(self.CrossingDF)-3:
+        #     triplet = self.CrossingDF.iloc[id:id+3]
+        #     if PtDist(triplet.iloc[0],triplet.iloc[1]) < distance:
+        #         try:
+        #             neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
+        #         except:
+        #             id+=1
+        #             continue
+        #         case           = triplet['cellStart'].iloc[0]['case'][neighbourIndex]
+        #         crossingPoint  = triplet['cellStart'].iloc[0]['neighbourCrossingPoints'][neighbourIndex]
+        #         triplet['cx'].iloc[0]      = crossingPoint[0]
+        #         triplet['cy'].iloc[0]      = crossingPoint[1]
+        #         triplet['cellEnd'].iloc[0] = copy.deepcopy(triplet.iloc[1]['cellEnd'])
+        #         triplet['case'].iloc[0]    = copy.deepcopy(case)
+        #         self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
+        #     if PtDist(triplet.iloc[1],triplet.iloc[2]) < distance:
+        #         try:
+        #             neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
+        #         except:
+        #             id+=1
+        #             continue
+        #         case           = triplet['cellStart'].iloc[1]['case'][neighbourIndex]
+        #         crossingPoint  = triplet['cellStart'].iloc[1]['neighbourCrossingPoints'][neighbourIndex]
+        #         triplet['cx'].iloc[1]      = crossingPoint[0]
+        #         triplet['cy'].iloc[1]      = crossingPoint[1]
+        #         triplet['cellEnd'].iloc[1] = copy.deepcopy(triplet.iloc[2]['cellEnd'])
+        #         triplet['case'].iloc[1]    = copy.deepcopy(case)
+        #         self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[2].name)
+
+        #     id+=1
+
+        # self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
+
+
+        def PointDistance(CrossingDF):
+            dist = (np.array(CrossingDF['cx'])[1:]-np.array(CrossingDF['cx'])[:-1]) +(np.array(CrossingDF['cy'])[1:]-np.array(CrossingDF['cy'])[:-1])
+            return dist
+        idx_merg_points = (PointDistance(self.CrossingDF) < merge_distance)
+        while idx_merg_points.any():
+            idx = np.where(idx_merg_points)[0][0]
+            cellStart = self.CrossingDF.iloc[idx]['cellStart']
+            cellEnd   = self.CrossingDF.iloc[idx+1]['cellEnd']
+            neighbour_indx = np.where(cellStart['neighbourIndex']==cellEnd.name)[0][0]
+            self.CrossingDF.iloc[idx]['cellEnd'] = cellEnd
+            self.CrossingDF.iloc[idx]['case'] = cellStart['case'][neighbour_indx]
+            self.CrossingDF.iloc[idx]['cx']   = cellStart['neighbourCrossingPoints'][neighbour_indx][0]
+            self.CrossingDF.iloc[idx]['cy']   = cellStart['neighbourCrossingPoints'][neighbour_indx][1]
+            self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.index[idx+1])
+            self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
+            self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
+            idx_merg_points = (PointDistance(self.CrossingDF) < merge_distance)
+
+        
 
 
 
@@ -900,7 +923,9 @@ class NewtonianCurve:
         case           = self.triplet['case'].iloc[1]        
 
         # Returning if corner horseshoe case type
-        if abs(case)==1 or abs(case)==3 or abs(case)==0: 
+        if abs(case)==1 or abs(case)==3 or abs(case)==0:
+            self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin+1e-9,vmax-1e-9) 
+            self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin+1e-9,vmax-1e-9) 
             return None,None
         elif abs(case) == 2:
             # Defining the min and max of the start and end cells
@@ -914,30 +939,31 @@ class NewtonianCurve:
             vmax = np.min([smax,emax])
 
             # Point crossingpoint on boundary between the two origional cells
-            if (Cp[1] > vmin) and (Cp[1] < vmax):
+            if (Cp[1] >= vmin) and (Cp[1] <= vmax):
+                self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin+1e-9,vmax-1e-9)       
                 return None,None
 
             # If Start and end cells share a edge for the horesshoe 
-            if (Cp[1]<=smin) and (smin==emin):
+            if (Cp[1]<smin) and (smin==emin):
                 hrshCaseStart = 4
                 hrshCaseEnd   = 4
-            if (Cp[1]>=smax) and (smax==emax):
+            if (Cp[1]>smax) and (smax==emax):
                 hrshCaseStart = -4
                 hrshCaseEnd   = -4
 
             # --- Cases where StartCell is Larger than end Cell ---
-            if (Cp[1]>=emax) and (smax>emax):
+            if (Cp[1]>emax) and (smax>emax):
                 hrshCaseStart = case
                 hrshCaseEnd   = (-4)                
-            if (Cp[1]<=emin) and (smin<emin):
+            if (Cp[1]<emin) and (smin<emin):
                 hrshCaseStart = case
                 hrshCaseEnd   = (4)                   
 
             # --- Cases where StartCell is smaller than end Cell ---
-            if (Cp[1]>=smax) and (smax<emax):
+            if (Cp[1]>smax) and (smax<emax):
                 hrshCaseStart = -4
                 hrshCaseEnd   = -case
-            if (Cp[1]<=smin) and (emin<smin):
+            if (Cp[1]<smin) and (emin<smin):
                 hrshCaseStart = 4
                 hrshCaseEnd   = -case      
 
@@ -956,6 +982,7 @@ class NewtonianCurve:
 
             # Point crossingpoint on boundary between the two origional cells
             if (Cp[0] >= vmin) and (Cp[0] <= vmax):
+                self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin+1e-9,vmax-1e-9)  
                 return None,None
 
             # If Start and end cells share a edge for the horesshoe 
@@ -1035,21 +1062,21 @@ class NewtonianCurve:
                         Pcrp2['cy']        = Crp1[1]
                         Pcrp2['cellStart'] = copy.deepcopy(self.triplet['cellStart'].iloc[1])
                         Pcrp2['cellEnd']   = copy.deepcopy(sGNGraph)
-                        Pcrp2['case']      = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==sGNGraph.name)[0][0]]
+                        Pcrp2['case']      = hrshCaseStart
                         # Crossing Point 3
                         Pcrp3 = pd.Series(name=self.triplet.iloc[1].name+2,dtype='object')
                         Pcrp3['cx']        = Crp2[0]
                         Pcrp3['cy']        = Crp2[1]
                         Pcrp3['cellStart'] = copy.deepcopy(sGNGraph)
                         Pcrp3['cellEnd']   = copy.deepcopy(eGNGraph)
-                        Pcrp3['case']      = Pcrp2['cellStart']['case'][np.where(np.array(Pcrp2['cellStart']['neighbourIndex'])==Pcrp2['cellEnd'].name)[0][0]]
+                        Pcrp3['case']      = case
                         # Crossing Point 4
                         Pcrp4 = pd.Series(name=self.triplet.iloc[1].name+3,dtype='object')
                         Pcrp4['cx']        = Crp3[0]
                         Pcrp4['cy']        = Crp3[1]
                         Pcrp4['cellStart'] = copy.deepcopy(eGNGraph)
                         Pcrp4['cellEnd']   = copy.deepcopy(cellEndGraph)
-                        Pcrp4['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
+                        Pcrp4['case']      = -hrshCaseEnd
 
                         Pcrp5 = copy.deepcopy(self.triplet.iloc[2])
 
@@ -1140,41 +1167,50 @@ class NewtonianCurve:
         # return
                 
 
-    # def _reverseCase(self):
-    #     '''
-    #         FILL
-    #     '''
-    #     # Removing Reverse Edge Type 1
-    #     startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
-    #     endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
-    #     boolReverseEdge  = np.logical_and((startIndex[:-1] == endIndex[1:]),(startIndex[1:] == endIndex[:-1]))
-    #     if boolReverseEdge.any():
-    #         indxReverseEdge = np.where(boolReverseEdge)[0]+1
-    #         for id in indxReverseEdge:
-    #             self.CrossingDF = self.CrossingDF.drop([self.CrossingDF.iloc[id].name]).sort_index().reset_index(drop=True)
+    def _reverseCase(self):
+        '''
+            FILL
+        '''
 
-
-    #     # Removing Reverse Edge Type 2
-    #     startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
-    #     endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
-    #     boolReverseEdge  = (endIndex[:-1] == endIndex[1:])
-    #     if boolReverseEdge.any():
-    #         indxReverseEdge = np.where(boolReverseEdge)[0]+2
-    #         for id in indxReverseEdge:
-    #             self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
-
-    #     # Removing Reverse Edge Type 3
-    #     startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
-    #     endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
-    #     boolReverseEdge  = (startIndex[:-1] == startIndex[1:])
-    #     if boolReverseEdge.any():
-    #         indxReverseEdge = np.where(boolReverseEdge)[0]+1
-    #         for id in indxReverseEdge:
-    #             self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
+        # ====== Finding Reverse Edges ======
 
 
 
-    #     self.CrossingDF.index = np.arange(0,int(len(self.CrossingDF)*1e3),int(1e3))
+
+        # ====== Correcting Cases Over Points =====
+
+
+        # Removing Reverse Edge Type 1
+        startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
+        endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
+        boolReverseEdge  = np.logical_and((startIndex[:-1] == endIndex[1:]),(startIndex[1:] == endIndex[:-1]))
+        if boolReverseEdge.any():
+            indxReverseEdge = np.where(boolReverseEdge)[0]+1
+            for id in indxReverseEdge:
+                self.CrossingDF = self.CrossingDF.drop([self.CrossingDF.iloc[id].name]).sort_index().reset_index(drop=True)
+
+
+        # Removing Reverse Edge Type 2
+        startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
+        endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
+        boolReverseEdge  = (endIndex[:-1] == endIndex[1:])
+        if boolReverseEdge.any():
+            indxReverseEdge = np.where(boolReverseEdge)[0]+2
+            for id in indxReverseEdge:
+                self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
+
+        # Removing Reverse Edge Type 3
+        startIndex = np.array([row['cellStart'].name for idx,row in self.CrossingDF.iterrows()][1:-1])
+        endIndex   = np.array([row['cellEnd'].name for idx,row in self.CrossingDF.iterrows()][1:-1] )
+        boolReverseEdge  = (startIndex[:-1] == startIndex[1:])
+        if boolReverseEdge.any():
+            indxReverseEdge = np.where(boolReverseEdge)[0]+1
+            for id in indxReverseEdge:
+                self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.iloc[id].name).sort_index().reset_index(drop=True)
+
+
+
+        self.CrossingDF.index = np.arange(0,int(len(self.CrossingDF)*1e3),int(1e3))
 
 
     def _crossing_point_optimisation(self):
@@ -1200,29 +1236,20 @@ class NewtonianCurve:
         self._crossing_point_optimisation()
 
         # --- Additional Cells & Reverse Edges
-        # self._horseshoe_created = False
-        # self._checking_crossing()
-        #if self._trigger_horeshoe:
         self._horseshoe()
 
         if self._horseshoe_created == True:
             org_variables = self.objective_function(self.org_points)
             new_variables = self.objective_function(self.horshoe_points)
-
-            if new_variables[self.objective_func]['path_values'][-1] <  org_variables[self.objective_func]['path_values'][-1]:
+            if ((new_variables[self.objective_func]['path_values'][-1] - org_variables[self.objective_func]['path_values'][-1])/org_variables[self.objective_func]['path_values'][-1])*100 > -5:
                 horeshoe_points     = self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy()
                 previous_horeshoes += [horeshoe_points]
                 same_horseshoes_num = len(np.where([(entry==horeshoe_points).all() for entry in previous_horeshoes])[0])
                 if same_horseshoes_num <=5:
                     self.CrossingDF = self.CrossingDF.drop(self.triplet.index)
-                    self.CrossingDF = pd.concat([self.CrossingDF,self.horshoe_points], sort=True).sort_index().reset_index(drop=True)
+                    self.CrossingDF = self.CrossingDF.append(self.horshoe_points).sort_index().reset_index(drop=True)
 
-
+        self._reverseCase()
         self.CrossingDF = self.CrossingDF.reset_index(drop=True)
         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
-
-        # -- Removing reversing edges if horeshoes are introduced
-        #self._reverseCase()
-
-        # --- Resetting the crossing point index
 

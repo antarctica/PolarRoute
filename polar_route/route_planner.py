@@ -567,7 +567,7 @@ class RoutePlanner:
                     self.nc = nc
                     iter+=1
 
-                    # self.all_crossing_points += [nc.CrossingDF]
+                    self.all_crossing_points += [nc.CrossingDF]
                         
                     # Stop optimisation if the points are within some minimum difference
                     if len(nc.previousDF) == len(nc.CrossingDF):
@@ -578,6 +578,9 @@ class RoutePlanner:
                             logging.info('{} iterations - dDist={}'.format(iter, Dist))
                             break
 
+                if iter == nc.pathIter:
+                    logging.info('Maximum Iteration Met - Returning Last Path'.format(iter, Dist))
+                    nc.CrossingDF = self.all_crossing_points[-1]
 
 
 
