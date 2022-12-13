@@ -24,7 +24,7 @@ import json
 
 from matplotlib.patches import Polygon as MatplotPolygon
 from polar_route.cellbox import CellBox
-import polar_route.data_loaders as data_loader
+
 
 from PolarRoute.polar_route.Boundary import Boundary
 from PolarRoute.polar_route.Direction import Direction
