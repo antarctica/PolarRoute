@@ -145,7 +145,8 @@ class CellBox:
         hom_conditions = []
         for current_data_source in self.data_source:
             data_loader = current_data_source.get_data_loader()
-            hom_conditions.append(data_loader.get_hom_cond(current_data_source.get_splitting_conditions()))
+            hom_cond = data_loader.get_hom_cond(self.bounds, current_data_source.get_splitting_conditions())
+            hom_conditions.append(hom_cond )
 
         if "HOM" in hom_conditions:
             return False
