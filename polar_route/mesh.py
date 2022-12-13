@@ -71,10 +71,6 @@ class Mesh:
         self.max_split_depth = max_split_depth
         self.config = {}
 
-        
-
-
-
     # Functions for adding data to the Mesh
 
     def add_data_points(self, data_points):
@@ -166,5 +162,7 @@ class Mesh:
 
     def get_bounds(self): 
         return self.boundary
-
+  
+    def get_max_split_depth (self):
+        return self.max_split_depth
     

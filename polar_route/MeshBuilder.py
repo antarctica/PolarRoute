@@ -436,9 +436,10 @@ class MeshBuilder:
 #################################################################################################
     def build_environmental_mesh(self):
         """
-            goes through the mesh cellboxes and builds and evironmental mesh that contains the cellboxes aggregates
+            splits the mesh then goes through the mesh cellboxes and builds an evironmental mesh that contains the cellboxes aggregated data
 
         """
+        self.split_to_depth(self.mesh.get_max_split_depth())
         agg_cellboxes = []
         for cellbox in self.mesh.get_cellboxes():
             if isinstance(cellbox, CellBox):
