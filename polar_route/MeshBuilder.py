@@ -15,6 +15,14 @@ Example:
         mesh = Mesh(config)
 """
 
+import os, sys
+#'/home/user/example/parent/child'
+current_path = os.path.abspath('.')
+ 
+#'/home/user/example/parent'
+parent_path = os.path.dirname(current_path)
+sys.path.append(parent_path)
+sys.path.insert(1, os.getcwd())
 import logging
 import math
 import numpy as np
@@ -23,15 +31,14 @@ import matplotlib.pyplot as plt
 import json
 
 from matplotlib.patches import Polygon as MatplotPolygon
+from polar_route.Boundary import Boundary
 from polar_route.cellbox import CellBox
-
-
-from PolarRoute.polar_route.Boundary import Boundary
-from PolarRoute.polar_route.Direction import Direction
-from PolarRoute.polar_route.EnvironmentMesh import EnvironmentMesh
-from PolarRoute.polar_route.Metadata import Metadata
-from PolarRoute.polar_route.NeighbourGraph import NeighbourGraph
-from PolarRoute.polar_route.mesh import Mesh
+from polar_route.Direction import Direction
+from polar_route.EnvironmentMesh import EnvironmentMesh
+from polar_route.Metadata import Metadata
+from polar_route.NeighbourGraph import NeighbourGraph
+from polar_route.mesh import Mesh
+from polar_route.DataLoader import DataLoaderFactory
 
 class MeshBuilder:
     """
@@ -164,12 +171,12 @@ class MeshBuilder:
                 cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
 
-        grid_width = (long_max - long_min) / self._cell_width
-        grid_height = (lat_max - lat_min) / self._cell_height
+        grid_width = (long_max - long_min) / cell_width
+        grid_height = (lat_max - lat_min) / cell_height
 
         ###########################################
         logging.debug("Initialise neighbours graph...")
-        self.initialise_neoghbour_graph(cellboxes , grid_width) 
+        self.initialise_neighbour_graph(cellboxes , grid_width) 
         ##########################################
 
         logging.debug("creating data_loaders...")
@@ -179,13 +186,15 @@ class MeshBuilder:
         if 'Data_sources' in self.config['Mesh_info'].keys():
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
-            # loader = DataLoaderFactory.get_data_loader( loader_name, data_source['params'] , min_datapoints)
-            loader = None # to uncomment the previous line and use instead after itegrating wz Harry
+            print("creating data loader {}".format(data_source['loader']))
+            loader = DataLoaderFactory.get_dataloader( loader_name, data_source['params'] , min_datapoints)
+            # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
-           
-            for split_cond in loader['splitting_conditions']:
-                agg_type = loader["value_output_types"]
-                value_fill_type = loader['value_fill_types']
+            splitting_conds = data_source['params']['splitting_conditions']
+            print (splitting_conds)
+            for split_cond in splitting_conds:
+                agg_type = data_source['params']["value_output_types"]
+                value_fill_type = data_source['params']['value_fill_types']
                 if (agg_type == ""):
                    agg_type = "MEAN"
                 splitting_conds.append(split_cond)
@@ -451,4 +460,12 @@ class MeshBuilder:
     @property
     def get_config(self):
         return self._config
+
+if __name__=='__main__':
+    config = None
+    with open ("smallmesh_test.json" , "r") as config_file:
+        config = json.load(config_file)
+        print (config)
+    mesh_builder = MeshBuilder (config)
+    mesh_builder.build_environmental_mesh()
 
