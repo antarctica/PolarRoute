@@ -1,11 +1,11 @@
 {
   "Mesh_info":{
     "Region": {
-      "latMin": -65,
+      "latMin": -65, 
       "latMax": -60,
       "longMin": -70,
       "longMax": -50,
-      "startTime": "2019-01-01",
+      "startTime":  "2019-01-01",
       "endTime": "2019-01-14",
       "cellWidth":5,
       "cellHeight":2.5
@@ -22,8 +22,8 @@
           "splitting_conditions":[
             {"elevation":{
                 "threshold":-10,
-                "upperBound": 1,
-                "lowerBound":0}}]
+                "upper_bound": 1,
+                "lower_bound":0}}]
         }
       }
     ],

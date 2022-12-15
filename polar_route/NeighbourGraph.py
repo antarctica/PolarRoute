@@ -126,33 +126,37 @@ class NeighbourGraph:
                         case -4 -> cellbox_b is North of cellbox_a\n
         """
 
-        if (cellbox_a.long + cellbox_a.width) == cellbox_b.long and (
-                cellbox_a.lat + cellbox_a.height) == cellbox_b.lat:
+        long_a = cellbox_a.bounds.get_long_min()
+        lat_a = cellbox_a.bounds.get_lat_min()
+        long_b = cellbox_b.bounds.get_long_min()
+        lat_b = cellbox_b.bounds.get_lat_min()
+        if (long_a + cellbox_a.bounds.get_width()) == long_b and (
+                lat_a + cellbox_a.bounds.get_height()) == lat_b:
             return 1  # North-East
-        if (cellbox_a.long + cellbox_a.width == cellbox_b.long) and (
-                cellbox_b.lat < (cellbox_a.lat + cellbox_a.height)) and (
-                (cellbox_b.lat + cellbox_b.height) > cellbox_a.lat):
+        if (long_a + cellbox_a.bounds.get_width ()== long_b) and (
+                lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
+                (lat_b + cellbox_b.bounds.get_height()) > lat_a):
             return 2  # East
-        if (cellbox_a.long + cellbox_a.width) == cellbox_b.long and (
-                cellbox_a.lat == cellbox_b.lat + cellbox_b.height):
+        if (long_a + cellbox_a.bounds.get_width()) == long_b and (
+                lat_a == lat_b + cellbox_b.bounds.get_height()):
             return 3  # South-East
-        if ((cellbox_b.lat + cellbox_b.height) == cellbox_a.lat) and (
-                (cellbox_b.long + cellbox_b.width) > cellbox_a.long) and (
-                cellbox_b.long < (cellbox_a.long + cellbox_a.width)):
+        if ((lat_b + cellbox_b.bounds.get_height()) == lat_a) and (
+                (long_b + cellbox_b.bounds.get_width()) > long_a) and (
+                long_b < (long_a + cellbox_a.bounds.get_width())):
             return 4  # South
-        if cellbox_a.long == (cellbox_b.long + cellbox_b.width) and cellbox_a.lat == (
-                cellbox_b.lat + cellbox_b.height):
+        if long_a == (long_b + cellbox_b.bounds.get_width()) and lat_a == (
+                lat_b + cellbox_b.bounds.get_height()):
             return -1  # South-West
-        if (cellbox_b.long + cellbox_b.width == cellbox_a.long) and (
-                cellbox_b.lat < (cellbox_a.lat + cellbox_a.height)) and (
-                (cellbox_b.lat + cellbox_b.height) > cellbox_a.lat):
+        if (long_b + cellbox_b.bounds.get_width() == long_a) and (
+                lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
+                (lat_b + cellbox_b.bounds.get_height()) > lat_a):
             return -2  # West
-        if cellbox_a.long == (cellbox_b.long + cellbox_b.width) and (
-                cellbox_a.lat + cellbox_a.height == cellbox_b.lat):
+        if long_a == (long_b + cellbox_b.bounds.get_width()) and (
+                lat_a + cellbox_a.bounds.get_height() == lat_b):
             return -3  # North-West
-        if (cellbox_b.lat == (cellbox_a.lat + cellbox_a.height)) and (
-                (cellbox_b.long + cellbox_b.width) > cellbox_a.long) and (
-                cellbox_b.long < (cellbox_a.long + cellbox_a.width)):
+        if (lat_b == (lat_a + cellbox_a.bounds.get_height())) and (
+                (long_b + cellbox_b.bounds.get_width()) > long_a) and (
+                long_b < (long_a + cellbox_a.bounds.get_width())):
             return -4  # North
         return 0  # Cells are not neighbours.
 

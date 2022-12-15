@@ -131,14 +131,14 @@ class Mesh:
         """
         return_cellboxes = []
         for cellbox in self.cellboxes:
-            if isinstance(cellbox, CellBox):
+            if isinstance(cellbox, CellBox): #checking to filter out the cellbox that was splitted and replaced
 
                 # Get json for CellBox
-                cell = cellbox.to_json()
+                #cell = cellbox.to_json()
                 # Append ID to CellBox
-                cell['id'] = str(self.cellboxes.index(cellbox))
+                #cell['id'] = str(self.cellboxes.index(cellbox))
 
-                return_cellboxes.append(cell)
+                return_cellboxes.append(cellbox)
         return return_cellboxes
 
     def get_cellbox(self, long, lat):

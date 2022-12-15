@@ -61,10 +61,14 @@ class Boundary:
 
     def get_height(self):
         height = self.lat_range[1] - self.lat_range[0]
+        return height
 
     def get_width(self):
         width = self.long_range[1] - self.long_range[0]
         return width
+    def get_time_range (self):
+        return self.time_range
+
 
     def getdcx(self):
         """

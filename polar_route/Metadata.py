@@ -26,8 +26,8 @@ class Metadata:
                aggregate_type (string): the type of aggrgation applied to CellBox data (ex. Min, Max ,..)
                value_fill_tyep (string): represents the way the data of a cellBox will be filled in case it has void data (ex. parent , 0 )
                 
-        """
-        # Boundary information 
+        """ 
+        
         self.data_loader = data_loader
         self.splitting_conditions = spliiting_conditions
         self.aggregate_type = aggregate_type
