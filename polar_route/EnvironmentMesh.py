@@ -51,7 +51,41 @@ class EnvironmentMesh:
         """
         output = dict()
         output['config'] = self.config
-        output["cellboxes"] = self.agg_cellboxes
+        output["cellboxes"] = self.cellboxes_to_json()
         output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
         return json.loads(json.dumps(output))
+
+    def cellboxes_to_json (self):
+        """
+            returns a list of dictionaries containing information about each cellbox
+            in this Mesh.
+            all cellboxes will include id, geometry, cx, cy, dcx, dcy
+
+            Returns:
+                cellboxes (list<dict>): a list of CellBoxes which form the Mesh.
+                    CellBoxes are of the form -
+
+                    {
+                        "id": (string) ... \n
+                        "geometry": (string) POLYGON(...), \n
+                        "cx": (float) ..., \n
+                        "cy": (float) ..., \n
+                        "dcx": (float) ..., \n
+                        "dcy": (float) ..., \n
+                        \n
+                        "value_1": (float) ..., \n
+                        ..., \n
+                        "value_n": (float) ... \n
+                    }
+        """
+        return_cellboxes = []
+        for cellbox in self.agg_cellboxes:
+
+                # Get json for CellBox
+                cell = cellbox.to_json()
+                # Append ID to CellBox
+                #cell['id'] = str(self.cellboxes.index(cellbox))
+
+        return_cellboxes.append(cellbox)
+        

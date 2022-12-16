@@ -242,8 +242,8 @@ class MeshBuilder:
         """
         output = dict()
         output['config'] = self.config
-        output["cellboxes"] = self.get_cellboxes()
-        output['neighbour_graph'] = self.neighbour_graph
+        output["cellboxes"] = self.mesh.get_cellboxes()
+        output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
 
 ##############################
@@ -479,5 +479,6 @@ if __name__=='__main__':
         print (config)
     mesh_builder = MeshBuilder (config)
     print ("MeshBuilder created successfully .... ") 
-    mesh_builder.build_environmental_mesh()
+    env_mesh = mesh_builder.build_environmental_mesh()
+    print (env_mesh.to_json())
 
