@@ -165,3 +165,7 @@ class NeighbourGraph:
 
     def remove_neighbour(self ,  index ,  direction , neighbour_index):
         self.neighbour_graph [index][direction].remove (neighbour_index) 
+    
+    def to_str(self):
+        #TODO: fill with string representation
+        return ""

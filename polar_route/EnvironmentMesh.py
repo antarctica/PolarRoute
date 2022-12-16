@@ -32,7 +32,7 @@ class EnvironmentMesh:
         self.agg_cellboxes = agg_cellboxes
         self.neighbour_graph = neighbour_graph
         self.config = config
-
+        
 
     def to_json(self):
         """
@@ -52,6 +52,6 @@ class EnvironmentMesh:
         output = dict()
         output['config'] = self.config
         output["cellboxes"] = self.agg_cellboxes
-        output['neighbour_graph'] = self.neighbour_graph
+        output['neighbour_graph'] = self.neighbour_graph.to_str()
 
         return json.loads(json.dumps(output))

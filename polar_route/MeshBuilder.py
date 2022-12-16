@@ -459,16 +459,18 @@ class MeshBuilder:
         """
         self.split_to_depth(self.mesh.get_max_split_depth())
         agg_cellboxes = []
-        for cellbox in self.mesh.get_cellboxes():
+        for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
                agg_cellboxes.append (cellbox.aggregate()) 
-        env_mesh = EnvironmentMesh (self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
+        
+        env_mesh = EnvironmentMesh(self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
+        #env_mesh = EnvironmentMesh(self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
         return env_mesh
 
 #################################################################################################
-    @property
+    
     def get_config(self):
-        return self._config
+        return self.config
 
 if __name__=='__main__':
     config = None

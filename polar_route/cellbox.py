@@ -170,9 +170,11 @@ class CellBox:
 
         split_boxes = self.create_splitted_cell_boxes(start_id)
 
-        # set CellBox split_depth
+        # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
             split_box.set_split_depth ( self.get_split_depth() + 1)
+            split_box.set_data_source (self.get_data_source())
+            split_box.set_parent (self)
 
         return split_boxes
 
@@ -210,7 +212,6 @@ class CellBox:
         south_east = CellBox(boundary , index)
 
         split_boxes = [north_west, north_east, south_west, south_east]
-        print (">>>>>> split boxes >>> " , split_boxes)
         return split_boxes
 
     def aggregate(self):
@@ -222,7 +223,7 @@ class CellBox:
         agg_dict = {}
         for current_source in self.get_data_source():
             agg_type = current_source.get_aggregate_type()
-            agg_value = current_source.get_data_loader().get_value( agg_type , self.bounds) # get the aggregated value from the associated DataLoader
+            agg_value = current_source.get_data_loader().get_value( self.bounds) # get the aggregated value from the associated DataLoader
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = AggregatedCellBox (self.bounds , agg_dict , self.get_id())

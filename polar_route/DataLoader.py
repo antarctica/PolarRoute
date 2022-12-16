@@ -7,6 +7,15 @@ import numpy as np
 
 import logging
 import glob
+import os, sys
+#'/home/user/example/parent/child'
+current_path = os.path.abspath('.')
+ 
+#'/home/user/example/parent'
+parent_path = os.path.dirname(current_path)
+sys.path.append(parent_path)
+sys.path.insert(1, os.getcwd())
+
 
 from polar_route.Boundary import Boundary
 
@@ -28,8 +37,8 @@ class DataLoaderFactory:
 
 
 		if   name == 'GEBCO':  data_loader = GEBCO_DataLoader
-		elif name == 'AMSR':  data_loader = AMSR_DataLoader
-		elif name == 'SOSE':  data_loader = SOSE_DataLoader
+		#elif name == 'AMSR':  data_loader = AMSR_DataLoader
+		#elif name == 'SOSE':  data_loader = SOSE_DataLoader
 		# elif ...
 		else: raise ValueError(f'{name} not in known list of DataLoaders')
 
@@ -101,8 +110,8 @@ class ScalarDataLoader(ABC):
 				Default = True (ignore's NaN's)
 
 		Returns:
-			aggregate_value (float): Aggregated value within bounds following
-				aggregation_type
+			aggregate_value (dict): Aggregated value within bounds following
+				aggregation_type along with the asociated data_name( ex. {elevation: 600})
 		'''
 
 		# Remove lat, long and time column if they exist
@@ -112,15 +121,15 @@ class ScalarDataLoader(ABC):
 			return None
 		# Return float of aggregated value
 		elif self.aggregate_type == 'MIN':
-			return float(dps.min(skipna=skipna))
+			return {self._get_data_name() :float(dps.min(skipna=skipna))}
 		elif self.aggregate_type == 'MAX':
-			return float(dps.max(skipna=skipna))
+			return {self._get_data_name() :float(dps.max(skipna=skipna))}
 		elif self.aggregate_type == 'MEAN':
-			return float(dps.mean(skipna=skipna))
+			return {self._get_data_name() :float(dps.mean(skipna=skipna))}
 		elif self.aggregate_type == 'MEDIAN':
-			return float(dps.median(skipna=skipna))
+			return {self._get_data_name() :float(dps.median(skipna=skipna))}
 		elif self.aggregate_type == 'STD':
-			return float(dps.std(skipna=skipna))
+			return {self._get_data_name() : float(dps.std(skipna=skipna))}
 		# If aggregation_type not available
 		else:
 			raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
@@ -156,11 +165,13 @@ class ScalarDataLoader(ABC):
 		'''
 		# Retrieve datapoints to analyse
 		dps = self.get_datapoints(bounds)
+		print (splitting_conds)
 		
 		# If not enough datapoints
 		if len(dps) < self.min_dp: return 'MIN'
 		# Otherwise, extract the homogeneity condition
 
+        
 		# Calculate fraction over threshold
 		num_over_threshold = dps[dps > splitting_conds['threshold']]
 		frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
@@ -182,6 +193,7 @@ class ScalarDataLoader(ABC):
 			dps (pd.Series): Datapoints within boundary limits
 		'''
 		dps = self.data
+	   
 		dps = dps[dps['lat'].between(bounds.get_lat_min(), 
 									bounds.get_lat_max())]
 		dps = dps[dps['long'].between(bounds.get_long_min(), 
@@ -218,7 +230,7 @@ class GEBCO_DataLoader(ScalarDataLoader):
 if __name__=='__main__':
 
 	params = {
-		'file': 'PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+		'file': './datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
 		'downsample_factors': (5,5),
 		'data_name': 'elevation',
 		'aggregate_type': 'MAX'
@@ -230,11 +242,12 @@ if __name__=='__main__':
 	bounds = Boundary([-85,-84.9], [-135,-134.9], ['1970-01-01','2021-12-31'])
 
 
-	print(gebco.get_value(bounds))
 
+	print (gebco.get_value (bounds))
 	split_conds = {
 	'threshold': 620,
 	'upper_bound': 0.9,
 	'lower_bound': 0.1
 	}
 	print(gebco.get_hom_condition(bounds, split_conds))
+    
