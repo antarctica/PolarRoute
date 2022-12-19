@@ -60,6 +60,8 @@ class CellBox:
         """
             set the minimum number of data contained within CellBox boundaries
         """
+        if (minimum_datapoints < 0):
+             raise ValueError(f'CellBox: minimum number of data contained can not be negative')
         self.minimum_datapoints = minimum_datapoints
 
     def set_data_source (self, data_source):
@@ -82,6 +84,8 @@ class CellBox:
         """
             set the split depth of a CellBox, which represents is the number of times the CellBox has been split to reach it's current size.
         """
+        if (split_depth < 0):
+             raise ValueError(f'CellBox: split depth can not be negative')
         self.split_depth = split_depth
 
     def set_id (self , id):
@@ -191,14 +195,12 @@ class CellBox:
         boundary = Boundary (lat_range , long_range , time_range)
         north_west = CellBox(boundary , index )
 
-
         lat_range = [lat + half_height , lat + self.bounds.get_height() ] 
         long_range = [long + half_width , long + self.bounds.get_width()]
         boundary = Boundary (lat_range , long_range , time_range)
         index +=1
         north_east = CellBox(boundary , index)
 
-       
         lat_range = [lat, lat + half_height ] 
         long_range = [long, long + half_width]
         boundary = Boundary (lat_range , long_range , time_range)

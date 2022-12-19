@@ -36,6 +36,3 @@ class TestBoundary (unittest.TestCase):
     [-85, -134.9],
     [-85,-135]]
     self.assertEqual ( bounds, self.boundary.get_bounds())
-
-if __name__ == '__main__':
-    unittest.main()
