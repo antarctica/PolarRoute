@@ -64,7 +64,8 @@ class TestCellBox (unittest.TestCase):
        self.assertLess ( self.cellbox.bounds.get_lat_max() , splitted_boxes [3].bounds.get_lat_max ())
 
        
-
+   def test_aggregate (self):
+      self.assertEqual ({'elevation': 680}, self.cellbox.aggregate().get_agg_data())
 
 
 
