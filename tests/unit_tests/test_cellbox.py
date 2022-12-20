@@ -65,7 +65,7 @@ class TestCellBox (unittest.TestCase):
 
        
    def test_aggregate (self):
-      self.assertEqual ({'elevation': 680}, self.cellbox.aggregate().get_agg_data())
+      self.assertEqual ({'elevation': 628.0}, self.cellbox.aggregate().get_agg_data())
 
 
 
