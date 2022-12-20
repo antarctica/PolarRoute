@@ -30,6 +30,8 @@ class Boundary:
                 
         """
         # check the bounds are valid
+        if (len(lat_range) < 2 or len (long_range)<2 or len(time_range) <2):             
+            raise ValueError(f'Boundary: range should contain two values')
         if (lat_range[0] > lat_range [1]):
              raise ValueError(f'Boundary: Latitude start range should be smaller than range end')
         if (long_range[0] > long_range [1]):

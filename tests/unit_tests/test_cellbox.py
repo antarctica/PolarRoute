@@ -10,7 +10,7 @@ class TestCellBox (unittest.TestCase):
          boundary = Boundary([-85,-84.9], [-135,-134.9], ['1970-01-01','2021-12-31'])
          self.cellbox = CellBox (boundary , 1)
          params = {
-      'file': '../DEPLOYMENT/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+      'file': './datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
 		'downsample_factors': (5,5),
 		'data_name': 'elevation',
 		'aggregate_type': 'MAX',
@@ -23,7 +23,7 @@ class TestCellBox (unittest.TestCase):
 	}
          factory = DataLoaderFactory
          gebco = factory.get_dataloader('GEBCO', params, min_dp = 5)
-         self.cellbox.set_data_source (Metadata (gebco , split_conds , params ['aggregate_type'] , params ['value_fill_types']))
+         self.cellbox.set_data_source ([Metadata (gebco , [split_conds] , params ['aggregate_type'] , params ['value_fill_types'])])
 
    def test_minimum_data_points (self):
       self.assertRaises(ValueError, self.cellbox.set_minimum_datapoints , -1 )
@@ -35,7 +35,7 @@ class TestCellBox (unittest.TestCase):
       self.assertTrue(self.cellbox.should_split())
 
    def test_split (self):
-       splitted_boxes = self.cellbox.split (0)
+       splitted_boxes = self.cellbox.split (1)
        # test the splitted cellboxes have valid Ids
        self.assertEqual (1 , splitted_boxes [0].get_id())
        self.assertEqual (2 , splitted_boxes [1].get_id())
@@ -44,24 +44,24 @@ class TestCellBox (unittest.TestCase):
 
       # test the bounds of the splitted cellboxes
        self.assertEqual ( self.cellbox.bounds.get_long_min() , splitted_boxes [0].bounds.get_long_min ())
-       self.assertLess ( self.cellbox.bounds.get_long_max() , splitted_boxes [0].bounds.get_long_max ())
-       self.assertless ( self.cellbox.bounds.get_lat_min() , splitted_boxes [0].bounds.get_lat_min ())
+       self.assertGreater ( self.cellbox.bounds.get_long_max() , splitted_boxes [0].bounds.get_long_max ())
+       self.assertLess ( self.cellbox.bounds.get_lat_min() , splitted_boxes [0].bounds.get_lat_min ())
        self.assertEqual ( self.cellbox.bounds.get_lat_max() , splitted_boxes [0].bounds.get_lat_max ())
 
-       self.assertless ( self.cellbox.bounds.get_long_min() , splitted_boxes [1].bounds.get_long_min ())
+       self.assertLess ( self.cellbox.bounds.get_long_min() , splitted_boxes [1].bounds.get_long_min ())
        self.assertEqual( self.cellbox.bounds.get_long_max() , splitted_boxes [1].bounds.get_long_max ())
-       self.assertless ( self.cellbox.bounds.get_lat_min() , splitted_boxes [1].bounds.get_lat_min ())
+       self.assertLess ( self.cellbox.bounds.get_lat_min() , splitted_boxes [1].bounds.get_lat_min ())
        self.assertEqual ( self.cellbox.bounds.get_lat_max() , splitted_boxes [1].bounds.get_lat_max ())
 
        self.assertEqual ( self.cellbox.bounds.get_long_min() , splitted_boxes [2].bounds.get_long_min ())
-       self.assertLess( self.cellbox.bounds.get_long_max() , splitted_boxes [2].bounds.get_long_max ())
+       self.assertGreater( self.cellbox.bounds.get_long_max() , splitted_boxes [2].bounds.get_long_max ())
        self.assertEqual ( self.cellbox.bounds.get_lat_min() , splitted_boxes [2].bounds.get_lat_min ())
-       self.assertLess ( self.cellbox.bounds.get_lat_max() , splitted_boxes [2].bounds.get_lat_max ())
+       self.assertGreater ( self.cellbox.bounds.get_lat_max() , splitted_boxes [2].bounds.get_lat_max ())
 
        self.assertLess ( self.cellbox.bounds.get_long_min() , splitted_boxes [3].bounds.get_long_min ())
        self.assertEqual( self.cellbox.bounds.get_long_max() , splitted_boxes [3].bounds.get_long_max ())
        self.assertEqual ( self.cellbox.bounds.get_lat_min() , splitted_boxes [3].bounds.get_lat_min ())
-       self.assertLess ( self.cellbox.bounds.get_lat_max() , splitted_boxes [3].bounds.get_lat_max ())
+       self.assertGreater ( self.cellbox.bounds.get_lat_max() , splitted_boxes [3].bounds.get_lat_max ())
 
        
    def test_aggregate (self):

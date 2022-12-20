@@ -24,6 +24,7 @@ class TestBoundary (unittest.TestCase):
       self.assertEqual ( width , self.boundary.get_width())
 
    def test_valid_bounds (self):
+    self.assertRaises(ValueError, Boundary , [] , [-135,-134.9], ['1970-01-01','2021-12-31'])
     self.assertRaises(ValueError, Boundary , [3,2] , [-135,-134.9], ['1970-01-01','2021-12-31'])
     self.assertRaises(ValueError , Boundary ,[-85,-84.9] , [3,2], ['1970-01-01','2021-12-31'])
     self.assertRaises(ValueError ,  Boundary ,[-85,-84.9] ,[-135,-134.9], ['2021-12-31', '1970-01-01'])
