@@ -2,6 +2,17 @@
     Regression testing package to ensure consistance functionality in development
     of the PolarRoute python package.
 """
+
+import os, sys
+#'/home/user/example/parent/child'
+current_path = os.path.abspath('.')
+ 
+#'/home/user/example/parent'
+parent_path = os.path.dirname(current_path)
+sys.path.append(parent_path)
+sys.path.insert(1, os.getcwd())
+print ("current path >>>" , current_path)
+
 import numpy as np
 import pandas as pd
 import json
@@ -13,9 +24,9 @@ from polar_route.MeshBuilder import MeshBuilder
 
 #File locations of all enviromental meshes to be recaculated for regression testing.
 TEST_ENV_MESHES = [
-    './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json',
-    './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80_new_format.json',
-    './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80_new_format.json'
+    './tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json',
+    './tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80_new_format.json',
+    './tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80_new_format.json'
 ]
 
 
@@ -50,70 +61,6 @@ def test_env_mesh_neighbour_graph_values(env_mesh_pair):
     compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
 
 
-# Testing Abstract Meshes
-# Circle
-def test_circle_mesh_cellbox_count(circle_mesh_pair):
-    compare_cellbox_count(circle_mesh_pair[0], circle_mesh_pair[1])
-
-def test_circle_mesh_cellbox_ids(circle_mesh_pair):
-    compare_cellbox_ids(circle_mesh_pair[0], circle_mesh_pair[1])
-
-def test_circle_mesh_cellbox_values(circle_mesh_pair):
-    compare_cellbox_values(circle_mesh_pair[0], circle_mesh_pair[1])
-
-def test_circle_mesh_cellbox_attributes(circle_mesh_pair):
-    compare_cellbox_attributes(circle_mesh_pair[0], circle_mesh_pair[1])
-
-def test_circle_mesh_neighbour_graph_count(circle_mesh_pair):
-    compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
-
-def test_circle_mesh_neighbour_graph_ids(circle_mesh_pair):
-    compare_neighbour_graph_ids(circle_mesh_pair[0], circle_mesh_pair[1])
-
-def test_circle_mesh_neighbour_graph_values(circle_mesh_pair):
-    compare_neighbour_graph_count(circle_mesh_pair[0], circle_mesh_pair[1])
-# Gradient
-def test_gradient_mesh_cellbox_count(gradient_mesh_pair):
-    compare_cellbox_count(gradient_mesh_pair[0], gradient_mesh_pair[1])
-
-def test_gradient_mesh_cellbox_ids(gradient_mesh_pair):
-    compare_cellbox_ids(gradient_mesh_pair[0], gradient_mesh_pair[1])
-
-def test_gradient_mesh_cellbox_values(gradient_mesh_pair):
-    compare_cellbox_values(gradient_mesh_pair[0], gradient_mesh_pair[1])
-
-def test_gradient_mesh_cellbox_attributes(gradient_mesh_pair):
-    compare_cellbox_attributes(gradient_mesh_pair[0], gradient_mesh_pair[1])
-
-def test_gradient_mesh_neighbour_graph_count(gradient_mesh_pair):
-    compare_neighbour_graph_count(gradient_mesh_pair[0], gradient_mesh_pair[1])
-
-def test_gradient_mesh_neighbour_graph_ids(gradient_mesh_pair):
-    compare_neighbour_graph_ids(gradient_mesh_pair[0], gradient_mesh_pair[1])
-
-def test_gradient_mesh_neighbour_graph_values(gradient_mesh_pair):
-    compare_neighbour_graph_count(gradient_mesh_pair[0], gradient_mesh_pair[1])
-# Checkerboard
-def test_checkerboard_mesh_cellbox_count(checkerboard_mesh_pair):
-    compare_cellbox_count(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
-
-def test_checkerboard_mesh_cellbox_ids(checkerboard_mesh_pair):
-    compare_cellbox_ids(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
-
-def test_checkerboard_mesh_cellbox_values(checkerboard_mesh_pair):
-    compare_cellbox_values(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
-
-def test_checkerboard_mesh_cellbox_attributes(checkerboard_mesh_pair):
-    compare_cellbox_attributes(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
-
-def test_checkerboard_mesh_neighbour_graph_count(checkerboard_mesh_pair):
-    compare_neighbour_graph_count(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
-
-def test_checkerboard_mesh_neighbour_graph_ids(checkerboard_mesh_pair):
-    compare_neighbour_graph_ids(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
-
-def test_checkerboard_mesh_neighbour_graph_values(checkerboard_mesh_pair):
-    compare_neighbour_graph_count(checkerboard_mesh_pair[0], checkerboard_mesh_pair[1])
 
 
 # Utility functions

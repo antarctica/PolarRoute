@@ -13,7 +13,7 @@
             },
             "Data_sources": [
                 {
-                    "loader": "load_gebco",
+                    "loader": "GEBCO",
                     "params": {
                         "downsample_factors": [
                             5,
