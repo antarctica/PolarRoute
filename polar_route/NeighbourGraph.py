@@ -33,9 +33,10 @@ class NeighbourGraph:
     """
    
 
-    def __init__(self):
+    def __init__(self , cellboxes ,grid_width):
         # initialize graph with an empty one
         self.neighbour_graph = {}
+        self.initialise_neighbour_graph(cellboxes ,grid_width)
 
 
     def get_graph(self):
@@ -76,7 +77,7 @@ class NeighbourGraph:
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[1])   
 
-    def remove_node_from_neighbours (self , cellbox_indx, direction):
+    def remove_node_from_neighbours (self , cellbox_indx, direction): # go through neighbours in a given direction and remove cellbox_index from their neighbour_maps
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
         for indx in neighbour_indx_list:
             self.neighbour_graph[indx][-1*direction].remove(cellbox_indx)
@@ -165,4 +166,40 @@ class NeighbourGraph:
 
     def remove_neighbour(self ,  index ,  direction , neighbour_index):
         self.neighbour_graph [index][direction].remove (neighbour_index) 
+
+    def initialise_neighbour_graph (self , cellboxes ,grid_width):
+        
+        for cellbox in cellboxes:
+            cellbox_indx = cellboxes.index(cellbox)
+            neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
+
+            # add east neighbours to neighbour graph
+            if (cellbox_indx + 1) % grid_width != 0:
+                neighbour_map[2].append(cellbox_indx + 1)
+                # south-east neighbours
+                if cellbox_indx + grid_width < len(cellboxes):
+                    neighbour_map[1].append(int((cellbox_indx + grid_width) + 1))
+                # north-east neighbours
+                if cellbox_indx - grid_width >= 0:
+                    neighbour_map[3].append(int((cellbox_indx - grid_width) + 1))
+
+            # add west neighbours to neighbour graph
+            if cellbox_indx % grid_width != 0:
+                neighbour_map[-2].append(cellbox_indx - 1)
+                # add south-west neighbours to neighbour graph
+                if cellbox_indx + grid_width < len(cellboxes):
+                    neighbour_map[-3].append(int((cellbox_indx + grid_width) - 1))
+                # add north-west neighbours to neighbour graph
+                if cellbox_indx - grid_width >= 0:
+                    neighbour_map[-1].append(int((cellbox_indx - grid_width) - 1))
+
+            # add south neighbours to neighbour graph
+            if cellbox_indx + grid_width < len(cellboxes):
+                neighbour_map[-4].append(int(cellbox_indx + grid_width))
+
+            # add north neighbours to neighbour graph
+            if cellbox_indx - grid_width >= 0:
+                neighbour_map[4].append(int(cellbox_indx - grid_width))
+
+            self.add_node (cellbox_indx , neighbour_map)
     

@@ -178,7 +178,7 @@ class MeshBuilder:
         ###########################################
         print (">>>> init NG ...")
         logging.debug("Initialise neighbours graph...")
-        self.initialise_neighbour_graph(cellboxes , grid_width) 
+        self.neighbour_graph = NeighbourGraph(cellboxes , grid_width) 
         ##########################################
 
         print (" >>>> creating data_loaders...")
@@ -247,43 +247,6 @@ class MeshBuilder:
 
 
 ##############################
-    def initialise_neighbour_graph (self , cellboxes ,grid_width):
-        self.neighbour_graph = NeighbourGraph ()
-        for cellbox in cellboxes:
-            cellbox_indx = cellboxes.index(cellbox)
-            neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
-
-            # add east neighbours to neighbour graph
-            if (cellbox_indx + 1) % grid_width != 0:
-                neighbour_map[2].append(cellbox_indx + 1)
-                # south-east neighbours
-                if cellbox_indx + grid_width < len(cellboxes):
-                    neighbour_map[1].append(int((cellbox_indx + grid_width) + 1))
-                # north-east neighbours
-                if cellbox_indx - grid_width >= 0:
-                    neighbour_map[3].append(int((cellbox_indx - grid_width) + 1))
-
-            # add west neighbours to neighbour graph
-            if cellbox_indx % grid_width != 0:
-                neighbour_map[-2].append(cellbox_indx - 1)
-                # add south-west neighbours to neighbour graph
-                if cellbox_indx + grid_width < len(cellboxes):
-                    neighbour_map[-3].append(int((cellbox_indx + grid_width) - 1))
-                # add north-west neighbours to neighbour graph
-                if cellbox_indx - grid_width >= 0:
-                    neighbour_map[-1].append(int((cellbox_indx - grid_width) - 1))
-
-            # add south neighbours to neighbour graph
-            if cellbox_indx + grid_width < len(cellboxes):
-                neighbour_map[-4].append(int(cellbox_indx + grid_width))
-
-            # add north neighbours to neighbour graph
-            if cellbox_indx - grid_width >= 0:
-                neighbour_map[4].append(int(cellbox_indx - grid_width))
-
-            self.neighbour_graph.add_node (cellbox_indx , neighbour_map)
-      
-
 
     # Functions for splitting cellboxes within the Mesh
 
