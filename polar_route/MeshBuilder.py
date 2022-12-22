@@ -476,7 +476,7 @@ if __name__=='__main__':
     config = None
     with open ("smallmesh_test.json" , "r") as config_file:
         config = json.load(config_file)
-        print (config)
+        print (">>>>>>> config >>>>> " , config)
     mesh_builder = MeshBuilder (config)
     print ("MeshBuilder created successfully .... ") 
     env_mesh = mesh_builder.build_environmental_mesh()
