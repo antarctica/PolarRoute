@@ -70,6 +70,6 @@ class TestNeighbourGraph (unittest.TestCase):
       self.assertEqual ( {1: [], 2: [], 3: [], 4: [], -1: [], -2: [2], -3: [2,4], -4: [1]} , self.neighbour_graph.get_graph()[3]) # SE cellbox
       self.neighbour_graph.update_neighbour(3, Direction.north_west , [0]) # undo the previous line
    
-   #TODO: fill
-   #def test_update_corner_neighbours(self):
-   #   self.neighbour_graph.update_corner_neighbours (0 , )
+   def test_update_corner_neighbours(self):
+      self.neighbour_graph.update_corner_neighbours (0 , -1, -1, -1, 5 )
+      self.assertEqual ( {1: [], 2: [], 3: [], 4: [], -1: [], -2: [2], -3: [5], -4: [1]} , self.neighbour_graph.get_graph()[3]) # SE cellbox
