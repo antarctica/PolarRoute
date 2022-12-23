@@ -26,9 +26,9 @@ class TestNeighbourGraph (unittest.TestCase):
          factory = DataLoaderFactory
          gebco = factory.get_dataloader('GEBCO', params, min_dp = 5)
          cellbox.set_data_source ([Metadata (gebco , [split_conds] , params ['aggregate_type'] , params ['value_fill_types'])])
-         self.cellboxes = self.cellbox.split()
+         self.cellboxes = cellbox.split(0)
          cell_width = 2.5
-         grid_width = (boundary.get_long_max - boundary.get_long_min) / cell_width
+         grid_width = (boundary.get_long_max() - boundary.get_long_min()) / cell_width
          self.neighbour_graph = NeighbourGraph (self.cellboxes ,grid_width )
 
    def test_initialize_NG(self):
@@ -42,6 +42,7 @@ class TestNeighbourGraph (unittest.TestCase):
    def test_remove_neighbour (self):
       self.neighbour_graph.remove_neighbour(0 ,  Direction.south_east , 3)
       self.assertEqual ( {1: [], 2: [1], 3: [], 4: [2], -1: [], -2: [], -3: [], -4: []} , self.neighbour_graph.get_graph()[0]) # NW cellbox
+      self.neighbour_graph.update_neighbour(0 , Direction.south_east , [3]) # undo the previous line
 
    def test_update_neighbour (self):
       self.neighbour_graph.update_neighbour(0 ,  Direction.south_east , [3])
