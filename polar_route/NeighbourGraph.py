@@ -69,11 +69,13 @@ class NeighbourGraph:
         for indx in neighbour_indx_list:
             crossing_case = self.get_neighbour_case(cellboxes[indx],
                                                     cellboxes[new_neighbours_indx[0]])
+            
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[0])
 
             crossing_case = self.get_neighbour_case(cellboxes[indx],
                                                     cellboxes[new_neighbours_indx[1]])
+           
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[1])   
 
