@@ -19,7 +19,7 @@
                             5,
                             5
                         ],
-                        "file": "../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
+                        "file": "../../../BAS/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
                         "data_name": "elevation",
                         "value_fill_types": "parent",
                         "value_output_types": "MAX",
