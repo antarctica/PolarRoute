@@ -126,17 +126,6 @@ class NewtonianDistance:
             val = val
         return val
 
-    def waypoint_correction(self,Wp,Cp):
-        '''
-            FILL
-        '''
-        x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
-        y = (Cp[1]-Wp[1])*self.m_lat
-        Su  = self.source_graph['Vector_x']*self.zero_current_factor
-        Sv  = self.source_graph['Vector_y']*self.zero_current_factor
-        Ssp = self.source_speed
-        traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
-        return self._unit_time(traveltime)
 
     def _F(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
         '''
@@ -205,6 +194,19 @@ class NewtonianDistance:
             traveltime = np.inf
             #raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
         return traveltime
+
+    def waypoint_correction(self,Wp,Cp):
+        '''
+            FILL
+        '''
+        x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
+        y = (Cp[1]-Wp[1])*self.m_lat
+        Su  = self.source_graph['Vector_x']*self.zero_current_factor
+        Sv  = self.source_graph['Vector_y']*self.zero_current_factor
+        Ssp = self.source_speed
+        traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+        return self._unit_time(traveltime)
+
 
     def _longitude(self):
         '''
@@ -280,8 +282,7 @@ class NewtonianDistance:
         Y = ptvl*(n_cx-s_cx)*self.m_long*np.cos((n_cy+s_cy)*(np.pi/180)/2.0)
 
         y,TravelTime   = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
-        clon = s_cx  + ptvl*y/(self.m_long*np.cos((n_cy+\
-               s_cy)*(np.pi/180)/2.0))
+        clon = s_cx  + ptvl*y/(self.m_long*np.cos((n_cy+s_cy)*(np.pi/180)/2.0))
         clat = s_cy + -1*ptvl*s_dcy
 
         CrossPoints = (clon,clat)
@@ -459,11 +460,11 @@ class NewtonianCurve:
         return Val
 
 
-    def _calXDist(self,start_long,end_long):
+    def _calXDist(self,start_long,end_long,centralLat):
         '''
             Calculate the X Distance
         '''
-        return (end_long - start_long)*self.m_long#*np.cos(centralLat)
+        return (end_long - start_long)*self.m_long#*np.cos(centralLat*(np.pi/180))
     def _calYDist(self,start_lat,end_lat):
         '''
             Calculate the Y Distance
@@ -622,9 +623,9 @@ class NewtonianCurve:
                 return y0
 
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
-            θ  = (y/R + λ_s*(np.pi/180))
+            θ  = (y/(2*R) + λ_s)#(y/R + λ_s)
             zl = x*np.cos(θ)
-            ψ  = (-(Y-y)/R + φ_r*(np.pi/180))
+            ψ  = ((Y-y)/(2*R) + φ_r)#((Y-y)/R + φ_r)
             zr = a*np.cos(ψ)
 
             C1  = speed_s**2 - u1**2 - v1**2
@@ -634,8 +635,8 @@ class NewtonianCurve:
             X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
             X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
 
-            dzr = -zr*np.sin(ψ)/R
-            dzl = -zl*np.sin(θ)/R
+            dzr = x#-zr*np.sin(ψ)/R
+            dzl = a#-zl*np.sin(θ)/R
 
             dD1 = dzl*u1 + v1
             dD2 = dzr*u2 - v2
@@ -671,11 +672,11 @@ class NewtonianCurve:
         else:
             sgn  = -1
 
-        λ_s  = Sp[1]
-        φ_r  = Np[1]
+        λ_s  = Sp[1]*(np.pi/180)
+        φ_r  = Np[1]*(np.pi/180)
 
-        x           = sgn*self._calXDist(Sp[0],Cp[0])
-        a           = sgn*self._calXDist(Cp[0],Np[0])
+        x           = sgn*self._calXDist(Sp[0],Cp[0],Cp[1])
+        a           = sgn*self._calXDist(Cp[0],Np[0],Cp[1])
         Y           = (Np[1]-Sp[1])*self.m_lat
         y0          = Y/2
         u1          = sgn*self.zc*cell_s_u; v1 = self.zc*cell_s_v
