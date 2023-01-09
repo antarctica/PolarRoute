@@ -227,7 +227,6 @@ class CellBox:
             agg_type = source.get_aggregate_type()
             agg_value = source.get_data_loader().get_value( self.bounds) # get the aggregated value from the associated DataLoader
             data_name = source.get_data_loader()._get_data_name()
-            #TODO: replace None with something else after discussing with Harry the return of get_value if there is no data wthin bounds
             if (agg_value[data_name] == None and source.get_value_fill_type()=='parent'):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
                agg_value = source.get_data_loader().get_value( self.get_parent().bounds) 
             elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0

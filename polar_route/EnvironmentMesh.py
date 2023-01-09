@@ -1,6 +1,6 @@
 
 import json
-
+from polar_route.AggregatedJGridCellBox import AggregatedJGridCellBox
 class EnvironmentMesh:
     """
     a class that defines the environmental mesh structure and contains each cellbox aggregate information
@@ -88,4 +88,30 @@ class EnvironmentMesh:
                 #cell['id'] = str(self.cellboxes.index(cellbox))
 
         return_cellboxes.append(cellbox)
-        
+
+
+
+
+    def save (self, path):
+
+       with open(path, 'w') as f:
+            if  isinstance (self.agg_cellboxes[0] , AggregatedJGridCellBox) :
+                self.dump_mesh (f)
+            else:
+                json.dump(self.to_json(), f)
+
+
+    def dump_mesh(self, file):
+        """
+            creates a string representation of this Mesh which
+            is then saved to a file location specified by parameter
+            'file'
+            for use in j_grid regression testing
+        """
+        mesh_dump = ""
+        for cell_box in self.agg_cellboxes:
+            if isinstance(cell_box, AggregatedJGridCellBox):
+                mesh_dump += cell_box.mesh_dump()
+
+        file.write(mesh_dump)
+        file.close()

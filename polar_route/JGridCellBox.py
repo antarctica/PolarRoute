@@ -1,21 +1,4 @@
-"""
-Outlined in this section we will discuss the usage of the CellBox functionality
-of the PolarRoute package. In this series of class distributions we house our discrete
-representation of input data. In each CellBox, we represent a way of accessing the information governing our numerical world, this includes and is not limited to:
-Ocean Currents, Sea Ice Concentration and Bathymetric depth.
 
-Example:
-    An example of running this code can be executed by running the following
-    in a ipython/Jupyter Notebook::
-
-        from polar_route import cellbox
-        ....
-
-Note:
-    CellBoxes are intended to be constructed by and used within a Mesh
-    object. The methods provided are to extract information for CellBoxes
-    contained within a Mesh.
-"""
 
 from shapely.geometry import Polygon
 import numpy as np
@@ -160,43 +143,4 @@ def node_string(self):
         focus_string += "]"
         return node_string + " " + focus_string
 
-#TODO: check if the current data is empty and use the parent bounds
-def mesh_dump(self):
-        """
-            returns a string representing all the information stored in the mesh
-            of this cellbox
 
-            for use in j_grid regression testing
-        """
-        number_of_points=0
-        mesh_dump = ""
-        mesh_dump += self.node_string() + "; "  # add node string
-        mesh_dump += "0 "
-        ice_area = 0
-        uc = None
-        vc = None
-        mesh_dump += str(self.bounds.getcy()) + ", " + str(self.bounds.getcx()) + "; "  # add lat,long
-        for source in self.get_data_sources():
-            loader = source.get_data_loader()
-            if loader.get_data_name() =='SIC':
-                value = loader.get_value(self.bounds)
-                number_of_points = loader.get_datapoints (self.bounds).size
-                if value['SIC']!= None:
-                   ice_area = value['SIC']
-            if loader.get_data_name() == 'current':
-                current_data = loader.get_value (self.bounds)
-                uc = current_data['uc']
-                vc = current_data['vc']
-
-        mesh_dump += str(ice_area) + "; "  # add ice area
-        # add uc, uv
-        if (uc == None): 
-            uc = 0
-        if (vc == None):
-             vc = 0
-        
-        mesh_dump += str(uc) + ", " + str(vc) + ", "
-        mesh_dump += str(number_of_points) # TODO: double check 
-        mesh_dump += "\n"
-
-        return mesh_dump
