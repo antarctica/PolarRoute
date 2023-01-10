@@ -437,11 +437,13 @@ class MeshBuilder:
 
 if __name__=='__main__':
     config = None
-    with open ("smallmesh_test.json" , "r") as config_file:
-        config = json.load(config_file)
+    with open ("GEBCO_create_mesh_output2013_4_80_new_format.json" , "r") as config_file:
+        config = json.load(config_file)['config']
         print (">>>>>>> config >>>>> " , config)
     mesh_builder = MeshBuilder (config)
     print ("MeshBuilder created successfully .... ") 
     env_mesh = mesh_builder.build_environmental_mesh()
-    print (env_mesh.to_json())
+    print (" >>>> agg cellboxes >>> " , len (env_mesh.agg_cellboxes))
+    with open ("output.json" , 'w')  as file:
+        json.dump (env_mesh.to_json() , file)
 

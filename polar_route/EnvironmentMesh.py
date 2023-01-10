@@ -79,7 +79,8 @@ class EnvironmentMesh:
                         "value_n": (float) ... \n
                     }
         """
-        return_cellboxes = []
+        
+        cellboxes_json = []
         for cellbox in self.agg_cellboxes:
 
                 # Get json for CellBox
@@ -87,5 +88,5 @@ class EnvironmentMesh:
                 # Append ID to CellBox
                 #cell['id'] = str(self.cellboxes.index(cellbox))
 
-        return_cellboxes.append(cellbox)
-        
+                cellboxes_json.append(cell)
+        return cellboxes_json
