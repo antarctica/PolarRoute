@@ -145,7 +145,11 @@ class MeshBuilder:
 
       
 
-        # TODO: we should be using the inheritance hierarchy to achieve this
+        # TODO: we should be using the inheritance hierarchy to achieve this, and creatJGridCellBox instead, assign boundaries and coordinates.
+        #  # set gridCoord of cellBox
+        #     x_coord = cellbox_indx % grid_width
+        #     y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
+        #     cellbox.set_grid_coord(x_coord, y_coord)
         '''
 
         self._j_grid = j_grid
