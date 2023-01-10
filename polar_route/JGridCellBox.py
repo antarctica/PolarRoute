@@ -4,7 +4,7 @@ from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
 from polar_route.Boundary import Boundary
-from polar_route.AggregatedCellBox import AggregatedCellBox
+from polar_route.AggregatedJGridCellBox import AggregatedJGridCellBox
 from polar_route.cellbox import CellBox
 
 class JGridCellBox (CellBox):
@@ -69,28 +69,32 @@ class JGridCellBox (CellBox):
         return split_boxes
 
 
-
+#TODO: check if ee still need to check value fill type???
     def aggregate(self):
         '''
-            aggregates CellBox data using the associated data_source's aggregate type and returns AggregatedCellBox object
+            aggregates JGridCellBox data using the associated data_source's aggregate type and returns AggregatedJGridCellBox object
             
         '''
      
         agg_dict = {}
         for source in self.get_data_source():
             agg_type = source.get_aggregate_type()
-            agg_value = source.get_data_loader().get_value( self.bounds) # get the aggregated value from the associated DataLoader
-            data_name = source.get_data_loader()._get_data_name()
-            #TODO: replace None with something else after discussing with Harry the return of get_value if there is no data wthin bounds
+            loader = source.get_data_loader()
+            data_name = loader._get_data_name()
+            bounds = self.bounds
+            if data_name =='uc' or data_name=='vc':
+                bounds = self.parent.bounds
+            agg_value = loader.get_value( bounds) # get the aggregated value from the associated DataLoader
             if (agg_value[data_name] == None and source.get_value_fill_type()=='parent'):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-               agg_value = source.get_data_loader().get_value( self.get_parent().bounds) 
+               agg_value = loader.get_value( self.get_parent().bounds) 
             elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
                 agg_value = 0  
             else:
                  agg_value = np.nan
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
-        agg_cellbox = AggregatedCellBox (self.bounds , agg_dict , self.get_id())
+        agg_cellbox = AggregatedJGridCellBox (self.bounds , agg_dict , self.get_id())
+        agg_cellbox.set_node_string(self.node_string())
 
         return agg_cellbox  
 
