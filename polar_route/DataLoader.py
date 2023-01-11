@@ -32,7 +32,7 @@ class DataLoaderFactory:
 		if 'data_name' in params: data_name = params['data_name'] 
 		else: 					  data_name = None
 		
-		if 'aggregate_type' in params: agg_type = params['aggregate_type']  
+		if 'value_output_types' in params: agg_type = params['value_output_types']  
 		else:                          agg_type = 'MEAN'
 
 
@@ -230,7 +230,7 @@ class GEBCO_DataLoader(ScalarDataLoader):
 if __name__=='__main__':
 
 	params = {
-		'file': './datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+		'file': '/home/ayat/BAS/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
 		'downsample_factors': (5,5),
 		'data_name': 'elevation',
 		'aggregate_type': 'MAX'
@@ -239,8 +239,9 @@ if __name__=='__main__':
 	factory = DataLoaderFactory
 	gebco = factory.get_dataloader('GEBCO', params, min_dp = 5)
 
-	bounds = Boundary([-85,-84.9], [-135,-134.9], ['1970-01-01','2021-12-31'])
-
+	# bounds = Boundary([-85,-84.9], [-135,-134.9], ['1970-01-01','2021-12-31'])
+	bounds = Boundary([-65.0,-62.5], [-70.0,-65], ['2013-03-01','2013-03-14'])
+    
 
 
 	print (gebco.get_value (bounds))
@@ -250,4 +251,4 @@ if __name__=='__main__':
 	'lower_bound': 0.1
 	}
 	print(gebco.get_hom_condition(bounds, split_conds))
-    
+   

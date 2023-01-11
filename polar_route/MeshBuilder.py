@@ -172,7 +172,7 @@ class MeshBuilder:
                 cell_lat_range = [lat, lat+cell_height]
                 cell_long_range = [long , long+cell_width]
                 cell_bounds = Boundary (cell_lat_range , cell_long_range , time_range)
-                cell_id = len (cellboxes)
+                cell_id = str(len (cellboxes))
                 cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
 
@@ -192,6 +192,7 @@ class MeshBuilder:
         if 'Data_sources' in self.config['Mesh_info'].keys():
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
+            agg_type = data_source['params']["value_output_types"]
             print("creating data loader {}".format(data_source['loader']))
             loader = DataLoaderFactory.get_dataloader( loader_name, data_source['params'] , min_datapoints)
             print (">>>>>> data_loader created ...")
@@ -204,14 +205,13 @@ class MeshBuilder:
             for split_cond in splitting_conds:
                 cond = split_cond [loader._get_data_name()]
                 updated_splitiing_cond.append (cond) 
-            agg_type = data_source['params']["value_output_types"]
+           
             value_fill_type = data_source['params']['value_fill_types']
-            if (agg_type == ""):
-               agg_type = "MEAN"
+          
 
                 
             print (">>>>>> creating MetaData ...." )
-            meta_data_obj = Metadata ( loader, updated_splitiing_cond , agg_type , value_fill_type)
+            meta_data_obj = Metadata ( loader, updated_splitiing_cond ,  value_fill_type)
             meta_data_list.append(meta_data_obj)
     
             

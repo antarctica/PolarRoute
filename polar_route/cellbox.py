@@ -193,25 +193,25 @@ class CellBox:
         long = self.bounds.get_long_min()
         long_range = [long , long + half_width]
         boundary = Boundary (lat_range , long_range , time_range)
-        north_west = CellBox(boundary , index )
+        north_west = CellBox(boundary , str(index) )
 
         lat_range = [lat + half_height , lat + self.bounds.get_height() ] 
         long_range = [long + half_width , long + self.bounds.get_width()]
         boundary = Boundary (lat_range , long_range , time_range)
         index +=1
-        north_east = CellBox(boundary , index)
+        north_east = CellBox(boundary , str(index))
 
         lat_range = [lat, lat + half_height ] 
         long_range = [long, long + half_width]
         boundary = Boundary (lat_range , long_range , time_range)
         index +=1
-        south_west = CellBox(boundary , index)
+        south_west = CellBox(boundary , str(index))
 
         lat_range = [lat, lat + half_height ] 
         long_range = [long + half_width, long + self.bounds.get_width()]
         boundary = Boundary (lat_range , long_range , time_range)
         index +=1
-        south_east = CellBox(boundary , index)
+        south_east = CellBox(boundary , str(index))
 
         split_boxes = [north_west, north_east, south_west, south_east]
         return split_boxes
@@ -224,15 +224,19 @@ class CellBox:
      
         agg_dict = {}
         for source in self.get_data_source():
-            agg_type = source.get_aggregate_type()
-            agg_value = source.get_data_loader().get_value( self.bounds) # get the aggregated value from the associated DataLoader
-            data_name = source.get_data_loader()._get_data_name()
-            if (agg_value[data_name] == None and source.get_value_fill_type()=='parent'):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-               agg_value = source.get_data_loader().get_value( self.get_parent().bounds) 
-            elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-                agg_value = 0  
-            else:
-                 agg_value = np.nan
+            loader = source.get_data_loader()
+            agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
+            data_name = loader._get_data_name()
+            print (self.bounds.get_bounds())
+            print (agg_value)
+            if agg_value[data_name] == None: 
+                if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                     agg_value = loader.get_value( self.get_parent().bounds) 
+                elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                     agg_value[data_name] = 0  
+                else:
+                    agg_value[data_name] = np.nan
+            print (self.get_id())
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = AggregatedCellBox (self.bounds , agg_dict , self.get_id())

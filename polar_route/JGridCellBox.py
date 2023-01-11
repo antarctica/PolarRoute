@@ -85,12 +85,13 @@ class JGridCellBox (CellBox):
             if data_name =='uc' or data_name=='vc':
                 bounds = self.parent.bounds
             agg_value = loader.get_value( bounds) # get the aggregated value from the associated DataLoader
-            if (agg_value[data_name] == None and source.get_value_fill_type()=='parent'):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-               agg_value = loader.get_value( self.get_parent().bounds) 
-            elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-                agg_value = 0  
-            else:
-                 agg_value = np.nan
+            if agg_value[data_name] == None: 
+                if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                     agg_value = loader.get_value( self.get_parent().bounds) 
+                elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                     agg_value[data_name] = 0  
+                else:
+                    agg_value[data_name] = np.nan
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = AggregatedJGridCellBox (self.bounds , agg_dict , self.get_id())
