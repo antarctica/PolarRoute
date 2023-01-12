@@ -8,6 +8,7 @@
 import copy
 import pandas as pd
 import numpy as np
+import pyproj
 np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -623,9 +624,18 @@ class NewtonianCurve:
                 return y0
 
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
-            θ  = (y/(2*R) + λ_s)#(y/R + λ_s)
+            ρ = (λ_s+φ_r)/2.0
+            ϕ_min = min(λ_s,φ_r) 
+            if λ_s > φ_r:
+                ϕ_l   = (ϕ_min+ρ)/2
+                ϕ_r   = ρ
+            else:
+                ϕ_l   = ρ
+                ϕ_r   = (ϕ_min+ρ)/2
+
+            θ  = (y/(2*R) + ϕ_l)#(y/R + λ_s)
             zl = x*np.cos(θ)
-            ψ  = ((Y-y)/(2*R) + φ_r)#((Y-y)/R + φ_r)
+            ψ  = ((Y-y)/(2*R) + ϕ_r)#((Y-y)/R + φ_r)
             zr = a*np.cos(ψ)
 
             C1  = speed_s**2 - u1**2 - v1**2
@@ -635,8 +645,8 @@ class NewtonianCurve:
             X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
             X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
 
-            dzr = x#-zr*np.sin(ψ)/R
-            dzl = a#-zl*np.sin(θ)/R
+            dzr = -a*np.sin(ψ)/(2*R)#-zr*np.sin(ψ)/R
+            dzl = -x*np.sin(θ)/(2*R)#-zl*np.sin(θ)/R
 
             dD1 = dzl*u1 + v1
             dD2 = dzr*u2 - v2
@@ -650,8 +660,8 @@ class NewtonianCurve:
 
             dF = (X1+X2) + y*(dX1 + dX2) - (v1/C1)*(dX2*(X1-D1) + X2*(dX1-dD1))\
                 - Y*dX1 + (v2/C2)*(dX1*(X2-D2) + X1*(dX2-dD2))\
-                - (zr/(R**2))*zr_term*X1\
-                - (zl/(R**2))*zl_term*X2\
+                - (zr/(4*(R**2)))*zr_term*X1\
+                - (zl/(4*(R**2)))*zl_term*X2\
                 + dzr*(dzr-u2*(dX2-dD2))/C2*X1\
                 + dzl*(dzl-u1*(dX1-dD1))/C1*X2\
                 + dzr*zr_term*dX1 + dzl*zl_term*dX2
@@ -730,7 +740,9 @@ class NewtonianCurve:
             ψ   = ψ*(np.pi/180)
             θ   = θ*(np.pi/180)
             r1  = np.cos(λ)/np.cos(θ)
+            #r1  = np.cos((θ + 3*λ)/4)/np.cos(θ)
             r2  = np.cos(ψ)/np.cos(θ)
+            #r2  = np.cos((θ + 3*ψ)/4)/np.cos(θ)
 
             d1  = np.sqrt(x**2 + (r1*y)**2)
             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
@@ -802,7 +814,24 @@ class NewtonianCurve:
     
         commonIndices = list(set(sourceNeighbourIndices['neighbourIndex']).intersection(endNeighbourIndices['neighbourIndex']))
         CornerCells   = self.neighbour_graph.loc[commonIndices]
-        Y_line = ((Ye-Ys)/(Xe-Xs))*(Xc-Xs) + Ys
+
+        # Straight Line Crossing Point
+        #Y_line = ((Ye-Ys)/(Xe-Xs))*(Xc-Xs) + Ys
+
+        # Arc Crossing Point
+        def great_circle_lat(start_lat, start_long, end_lat, end_long,mid_long):
+            # calculate distance between points
+            g = pyproj.Geod(ellps='WGS84')
+            (az12, az21, dist) = g.inv(start_long, start_lat, end_long, end_lat)
+            # calculate line string along path with segments <= 1 km
+            lonlats = np.array(g.npts(start_long, start_lat, end_long, end_lat,10000))
+            diff    = abs(lonlats[:,0]-mid_long)
+            mid_lat = lonlats[np.argmin(diff),1]
+            return mid_lat,np.min(diff)
+        Y_line,diff = great_circle_lat(Ys,Xs,Ye,Xe,Xc)
+        if diff > 1e-3:
+            raise Exception('Corner Case Issue - Great-Circle Crossing too coarse')
+
 
         try:
             if Yc >= Y_line:
@@ -844,69 +873,67 @@ class NewtonianCurve:
         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
 
-    def _mergePoint(self,merge_distance = 1e-8):
+    def _mergePoint(self,merge_distance = 1e-5):
         '''
             Merging two points into a corner case if their distance is small enough.
         '''
 
-        
+        def PtDist(Ser1,Ser2):
+            #return np.sqrt(self._calXDist(Ser2['cx'],Ser1['cx'])**2 + self._calXDist(Ser2['cy'],Ser1['cy'])**2)
+            return np.sqrt((Ser1['cx'] - Ser2['cx'])**2 + (Ser1['cy'] - Ser2['cy'])**2)
 
-        # def PtDist(Ser1,Ser2):
-        #     return np.sqrt(self._calXDist(Ser2['cx'],Ser1['cx'])**2 + self._calXDist(Ser2['cy'],Ser1['cy'])**2)
-        #     #return np.sqrt((Ser1['cx'] - Ser2['cx'])**2 + (Ser1['cy'] - Ser2['cy'])**2)
+        id=0
+        while id < len(self.CrossingDF)-3:
+            triplet = self.CrossingDF.iloc[id:id+3]
+            if PtDist(triplet.iloc[0],triplet.iloc[1]) < merge_distance:
+                try:
+                    neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
+                except:
+                    id+=1
+                    continue
+                case           = triplet['cellStart'].iloc[0]['case'][neighbourIndex]
+                crossingPoint  = triplet['cellStart'].iloc[0]['neighbourCrossingPoints'][neighbourIndex]
+                triplet['cx'].iloc[0]      = crossingPoint[0]
+                triplet['cy'].iloc[0]      = crossingPoint[1]
+                triplet['cellEnd'].iloc[0] = copy.deepcopy(triplet.iloc[1]['cellEnd'])
+                triplet['case'].iloc[0]    = copy.deepcopy(case)
+                self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
+            if PtDist(triplet.iloc[1],triplet.iloc[2]) < merge_distance:
+                try:
+                    neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
+                except:
+                    id+=1
+                    continue
+                case           = triplet['cellStart'].iloc[1]['case'][neighbourIndex]
+                crossingPoint  = triplet['cellStart'].iloc[1]['neighbourCrossingPoints'][neighbourIndex]
+                triplet['cx'].iloc[1]      = crossingPoint[0]
+                triplet['cy'].iloc[1]      = crossingPoint[1]
+                triplet['cellEnd'].iloc[1] = copy.deepcopy(triplet.iloc[2]['cellEnd'])
+                triplet['case'].iloc[1]    = copy.deepcopy(case)
+                self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[2].name)
 
-        # id=0
-        # while id < len(self.CrossingDF)-3:
-        #     triplet = self.CrossingDF.iloc[id:id+3]
-        #     if PtDist(triplet.iloc[0],triplet.iloc[1]) < distance:
-        #         try:
-        #             neighbourIndex = np.where(np.array(triplet.iloc[0]['cellStart']['neighbourIndex'])==triplet.iloc[1]['cellEnd'].name)[0][0]
-        #         except:
-        #             id+=1
-        #             continue
-        #         case           = triplet['cellStart'].iloc[0]['case'][neighbourIndex]
-        #         crossingPoint  = triplet['cellStart'].iloc[0]['neighbourCrossingPoints'][neighbourIndex]
-        #         triplet['cx'].iloc[0]      = crossingPoint[0]
-        #         triplet['cy'].iloc[0]      = crossingPoint[1]
-        #         triplet['cellEnd'].iloc[0] = copy.deepcopy(triplet.iloc[1]['cellEnd'])
-        #         triplet['case'].iloc[0]    = copy.deepcopy(case)
-        #         self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[1].name)
-        #     if PtDist(triplet.iloc[1],triplet.iloc[2]) < distance:
-        #         try:
-        #             neighbourIndex = np.where(np.array(triplet.iloc[1]['cellStart']['neighbourIndex'])==triplet.iloc[2]['cellEnd'].name)[0][0]
-        #         except:
-        #             id+=1
-        #             continue
-        #         case           = triplet['cellStart'].iloc[1]['case'][neighbourIndex]
-        #         crossingPoint  = triplet['cellStart'].iloc[1]['neighbourCrossingPoints'][neighbourIndex]
-        #         triplet['cx'].iloc[1]      = crossingPoint[0]
-        #         triplet['cy'].iloc[1]      = crossingPoint[1]
-        #         triplet['cellEnd'].iloc[1] = copy.deepcopy(triplet.iloc[2]['cellEnd'])
-        #         triplet['case'].iloc[1]    = copy.deepcopy(case)
-        #         self.CrossingDF           = self.CrossingDF.drop(triplet.iloc[2].name)
+            id+=1
 
-        #     id+=1
-
-        # self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
+        self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
 
 
-        def PointDistance(CrossingDF):
-            dist = (np.array(CrossingDF['cx'])[1:]-np.array(CrossingDF['cx'])[:-1]) +(np.array(CrossingDF['cy'])[1:]-np.array(CrossingDF['cy'])[:-1])
-            return dist
-        idx_merg_points = (PointDistance(self.CrossingDF) < merge_distance)
-        while idx_merg_points.any():
-            idx = np.where(idx_merg_points)[0][0]
-            cellStart = self.CrossingDF.iloc[idx]['cellStart']
-            cellEnd   = self.CrossingDF.iloc[idx+1]['cellEnd']
-            neighbour_indx = np.where(cellStart['neighbourIndex']==cellEnd.name)[0][0]
-            self.CrossingDF.iloc[idx]['cellEnd'] = cellEnd
-            self.CrossingDF.iloc[idx]['case'] = cellStart['case'][neighbour_indx]
-            self.CrossingDF.iloc[idx]['cx']   = cellStart['neighbourCrossingPoints'][neighbour_indx][0]
-            self.CrossingDF.iloc[idx]['cy']   = cellStart['neighbourCrossingPoints'][neighbour_indx][1]
-            self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.index[idx+1])
-            self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
-            self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
-            idx_merg_points = (PointDistance(self.CrossingDF) < merge_distance)
+        # def PointDistance(CrossingDF):
+        #     dist = (np.array(CrossingDF['cx'])[1:]-np.array(CrossingDF['cx'])[:-1]) +(np.array(CrossingDF['cy'])[1:]-np.array(CrossingDF['cy'])[:-1])
+        #     return dist
+        # idx_merg_points = (PointDistance(self.CrossingDF) < merge_distance)
+        # while idx_merg_points.any():
+        #     idx = np.where(idx_merg_points)[0][0]
+        #     cellStart = self.CrossingDF.iloc[idx]['cellStart']
+        #     cellEnd   = self.CrossingDF.iloc[idx+1]['cellEnd']
+        #     neighbour_indx = np.where(cellStart['neighbourIndex']==cellEnd.name)[0][0]
+        #     self.CrossingDF.iloc[idx]['cellEnd'] = cellEnd
+        #     self.CrossingDF.iloc[idx]['case'] = cellStart['case'][neighbour_indx]
+        #     self.CrossingDF.iloc[idx]['cx']   = cellStart['neighbourCrossingPoints'][neighbour_indx][0]
+        #     self.CrossingDF.iloc[idx]['cy']   = cellStart['neighbourCrossingPoints'][neighbour_indx][1]
+        #     self.CrossingDF = self.CrossingDF.drop(self.CrossingDF.index[idx+1])
+        #     self.CrossingDF = self.CrossingDF.sort_index().reset_index(drop=True)
+        #     self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
+        #     idx_merg_points = (PointDistance(self.CrossingDF) < merge_distance)
 
         
 
@@ -925,8 +952,8 @@ class NewtonianCurve:
 
         # Returning if corner horseshoe case type
         if abs(case)==1 or abs(case)==3 or abs(case)==0:
-            self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin+1e-9,vmax-1e-9) 
-            self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],vmin+1e-9,vmax-1e-9) 
+            # self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],cellStartGraph['cx']-cellStartGraph['dcx'] ,cellStartGraph['cx']+cellStartGraph['dcx']) 
+            # self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],cellStartGraph['cy']-cellStartGraph['dcy'] ,cellStartGraph['cy']+cellStartGraph['dcy']) 
             return None,None
         elif abs(case) == 2:
             # Defining the min and max of the start and end cells

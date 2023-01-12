@@ -992,11 +992,25 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
         GRF[GRF<threshold_value] = 0.0
         GRF = (GRF == True)
         return GRF
-    def scalar_field(size = 128, field_min = 0, field_max = 26.5, alpha=1.0):
-        GRF = gaussian_random_field(size=size, alpha=alpha)
-        scaling_factor = field_min - field_max
-        GRF = field_max + GRF*scaling_factor
+    # def scalar_field(size = 128, field_min = 0, field_max = 26.5, alpha=1.0):
+    #     GRF = gaussian_random_field(size=size, alpha=alpha)
+    #     scaling_factor = field_min - field_max
+    #     GRF = field_max + GRF*scaling_factor
+    #     return GRF
+
+    def scalar_field(size=128,max_val = 26.5,threshold_value=[0.5,0.8],alpha=3.2,min_val=2.5,multiplication=1.0,offset=0.0,mask_threshold=[None,'lower']):
+        GRF = gaussian_random_field(alpha=alpha,size=size)
+        GRF[GRF>=threshold_value[1]] = threshold_value[1]
+        GRF[GRF<(threshold_value[0])] = threshold_value[0]
+        GRF = (GRF-GRF.min())/(GRF.max()-GRF.min())
+        GRF = max_val*GRF
+        if type(min_val) != type(None):
+            GRF[(GRF<=min_val)&(GRF!=0)] = min_val
+        GRF = GRF*multiplication + offset
         return GRF
+
+
+
     def vector_field(size = 128, field_min = 1.0, field_max=10.0, alpha=1.0):
         magntiude = gaussian_random_field(size=size, alpha=alpha) * \
                     (field_max-field_min) + field_min
@@ -1010,11 +1024,15 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
     # Set values to defaults if not defined in params
     name      = params['name']  # Only field with no default value
     seed      = params['seed']  if ( 'seed' in params) else None
-    size      = params['size']  if ( 'size' in params) else 128
-    alpha     = params['alpha'] if ('alpha' in params) else 5.0
+    size      = params['size']  if ( 'size' in params) else 512
+    alpha     = params['alpha'] if ('alpha' in params) else 3.2
     min_val   = params['min']   if (  'min' in params) else 1.0
     max_val   = params['max']   if (  'max' in params) else 10.0
+    threshold_value = params['threshold value scalar'] if ( 'threshold value scalar' in params) else [0.5,0.8]
     threshold = params['max']   if (  'max' in params) else 0.8
+    multiplication = params['multiplication']   if (  'multiplication' in params) else 1.0
+    offset = params['offset']   if (  'offset' in params) else 0.0
+    mask_threshold = params['mask_threshold'] if ('mask_threshold' in params) else [None,'upper']
     vec_col_x = params['vec_x'] if ( 'cols' in params) else 'uC'
     vec_col_y = params['vec_y'] if ( 'cols' in params) else 'vC'
     vec_cols  = (vec_col_x, vec_col_y) 
@@ -1023,7 +1041,7 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
     np.random.seed(seed)
 
     # Define all names of fields that can be generated
-    scalars = ['cloud', 'SIC', 'elevation', 'thickness', 'density']
+    scalars = ['cloud', 'SIC', 'elevation', 'thickness', 'density','speed']
     vectors = ['currents', 'winds']
     masks   = ['land']
 
@@ -1035,7 +1053,7 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
     # Create scalar field if config calls for it
     if name in scalars:
         scalar = scalar_field(size = size, alpha = alpha,
-                            field_min = min_val, field_max = max_val)
+                            min_val = min_val, max_val = max_val, threshold_value=threshold_value,multiplication=multiplication,offset=offset,mask_threshold=mask_threshold)
     # Create vector field if config calls for it
     elif name in vectors:
         vec_x, vec_y = vector_field(size = size, alpha = alpha,
@@ -1062,7 +1080,7 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
             long = longv[i,j]
             # Retrieve scalar data and add to row
             if name in scalars:
-                data = scalar[i,j]
+                data      = scalar[i,j]
                 new_lines.append({'lat': lat, 'long': long, f'{name}': data})
             # Vectors are split into two columns for x and y components
             elif name in vectors:
@@ -1076,5 +1094,6 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
                 
     # Add all rows to dataframe
     dummy_df = pd.DataFrame(new_lines)
+    print(dummy_df)
 
     return dummy_df

@@ -230,8 +230,12 @@ class RoutePlanner:
         self.unit_time       = self.config['time_unit']
         self.zero_currents   = self.config['zero_currents']
         self.variable_speed  = self.config['variable_speed']
-        if type(self.variable_speed) == type(float):
+        if type(self.variable_speed) == float:
+            logging.info(' Defining a constant speed map = {}'.format(self.variable_speed))
             self.neighbour_graph['speed'] = self.variable_speed
+            cbxs = pd.DataFrame(self.mesh['cellboxes'])
+            cbxs['speed'] = self.variable_speed
+            self.mesh['cellboxes'] = cbxs.to_dict('records')
 
         # ====== Waypoints ======
         self.mesh['waypoints'] = waypoints_df
@@ -563,6 +567,7 @@ class RoutePlanner:
                         break
 
                     self.nc = nc
+
                     nc._mergePoint()
                     self.nc = nc
                     iter+=1
