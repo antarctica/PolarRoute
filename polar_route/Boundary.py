@@ -134,11 +134,20 @@ class Boundary:
             Returns:
                 bounds (list<tuples>): The geo-spatial boundaries of this CellBox.
         """
-        bounds = [[self.lat_range[0] , self.long_range[0]],
-                   [self.lat_range[1], self.long_range[0]],
-                    [self.lat_range[1], self.long_range[1]],
-                    [self.lat_range[0], self.long_range[1]],
-                    [self.lat_range[0], self.long_range[0]]]
+
+
+        # TODO: see if we should have lat then long back
+        # bounds = [[self.lat_range[0] , self.long_range[0]],
+                #    [self.lat_range[1], self.long_range[0]],
+                #     [self.lat_range[1], self.long_range[1]],
+                #     [self.lat_range[0], self.long_range[1]],
+                #     [self.lat_range[0], self.long_range[0]]]
+        
+        bounds = [[ self.long_range[0], self.lat_range[0] ],
+                   [ self.long_range[0], self.lat_range[1]],
+                    [ self.long_range[1], self.lat_range[1]],
+                    [ self.long_range[1], self.lat_range[0]],
+                    [self.long_range[0], self.lat_range[0], ]]
         return bounds
 
 

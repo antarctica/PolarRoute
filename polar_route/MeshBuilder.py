@@ -175,7 +175,7 @@ class MeshBuilder:
                 cell_id = str(len (cellboxes))
                 cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
-
+        print (">>>> initial cellboxes len >>>" , len (cellboxes))
         grid_width = (long_max - long_min) / cell_width
         grid_height = (lat_max - lat_min) / cell_height
 
@@ -186,7 +186,9 @@ class MeshBuilder:
         ##########################################
 
         print (" >>>> creating data_loaders...")
-        min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
+        min_datapoints=5
+        if 'splitting' in self.config['Mesh_info']:
+             min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
         meta_data_list = []
         splitting_conds = []
         if 'Data_sources' in self.config['Mesh_info'].keys():
@@ -198,13 +200,13 @@ class MeshBuilder:
             print (">>>>>> data_loader created ...")
             # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
-            splitting_conds = data_source['params']['splitting_conditions']
             updated_splitiing_cond = [] # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader 
-        
-            print (splitting_conds) 
-            for split_cond in splitting_conds:
-                cond = split_cond [loader._get_data_name()]
-                updated_splitiing_cond.append (cond) 
+            if 'splitting_conditions' in data_source['params']:
+                  splitting_conds = data_source['params']['splitting_conditions'] 
+                  print (splitting_conds) 
+                  for split_cond in splitting_conds:
+                      cond = split_cond [loader._get_data_name()]
+                      updated_splitiing_cond.append (cond) 
            
             value_fill_type = data_source['params']['value_fill_types']
           
@@ -223,7 +225,9 @@ class MeshBuilder:
                 # assign meta data to each cellbox
                 cellbox.set_data_source (meta_data_list)           
     ####################### 
-        max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
+        max_split_depth = 0
+        if 'splitting' in self.config['Mesh_info']:
+             max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
         self.mesh = Mesh(bounds , cellboxes , self.neighbour_graph, max_split_depth)
         self.mesh.set_config (config)
 
@@ -414,9 +418,11 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
-        for cellbox in self.mesh.get_cellboxes():
+        print (">>>> mesh split_depth >>> " , split_depth)
+        for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
-                if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
+                print (">>>cellbox split depth >>>",cellbox.get_split_depth())
+                if (cellbox.get_split_depth() < split_depth) & (cellbox.should_split()):
                     self.split_and_replace(cellbox) 
 #################################################################################################
     def build_environmental_mesh(self):
@@ -441,13 +447,14 @@ class MeshBuilder:
 
 if __name__=='__main__':
     config = None
-    with open ("GEBCO_create_mesh_output2013_4_80_new_format.json" , "r") as config_file:
+    # with open ("GEBCO_create_mesh_output2013_4_80_new_format.json" , "r") as config_file:
+    with open ("smallmesh_test.json" , "r") as config_file:
         config = json.load(config_file)['config']
         print (">>>>>>> config >>>>> " , config)
     mesh_builder = MeshBuilder (config)
     print ("MeshBuilder created successfully .... ") 
     env_mesh = mesh_builder.build_environmental_mesh()
     print (" >>>> agg cellboxes >>> " , len (env_mesh.agg_cellboxes))
-    with open ("output.json" , 'w')  as file:
+    with open ("output_without_split.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
 

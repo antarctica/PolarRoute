@@ -219,9 +219,11 @@ class GEBCO_DataLoader(ScalarDataLoader):
 		if self.ds: # If downsampling not 'None'
 			logging.debug(f"- Downsampling GEBCO data by {self.ds} for (y,x), i.e. (lat, long)")
 			# Taking max because bathymetry
-			raw_data = raw_data.coarsen(lat=self.ds[1]).max()
-			raw_data = raw_data.coarsen(lon=self.ds[0]).max()
-		
+			# raw_data = raw_data.coarsen(lat=self.ds[1]).max()
+			# raw_data = raw_data.coarsen(lon=self.ds[0]).max()
+			raw_data = raw_data['elevation'][::self.ds[0],::self.ds[1]]
+			  
+
 		# Final output form
 		raw_data = raw_data.rename({'lon': 'long'})
 		self.data = raw_data.to_dataframe().reset_index()
@@ -238,10 +240,9 @@ if __name__=='__main__':
 
 	factory = DataLoaderFactory
 	gebco = factory.get_dataloader('GEBCO', params, min_dp = 5)
-
+	gebco.aggregate_type = 'MAX'
 	# bounds = Boundary([-85,-84.9], [-135,-134.9], ['1970-01-01','2021-12-31'])
-	bounds = Boundary([-65.0,-62.5], [-70.0,-65], ['2013-03-01','2013-03-14'])
-    
+	bounds = Boundary( [-65, -62.5], [-55,-50],['2013-03-01','2013-03-14'])
 
 
 	print (gebco.get_value (bounds))

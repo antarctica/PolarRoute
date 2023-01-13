@@ -177,6 +177,7 @@ class CellBox:
         # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
             split_box.set_split_depth ( self.get_split_depth() + 1)
+            print (">>> split >>  cellbox depth >> " , split_box.get_split_depth())
             split_box.set_data_source (self.get_data_source())
             split_box.set_parent (self)
 
