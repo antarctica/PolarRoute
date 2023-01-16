@@ -436,6 +436,9 @@ class NewtonianCurve:
         else:
             self.zc = 1.0
 
+
+        self.previous_horeshoes = []
+
     def _unit_speed(self,Val):
         '''
             Applying unit speed for an input type.
@@ -627,15 +630,15 @@ class NewtonianCurve:
             ρ = (λ_s+φ_r)/2.0
             ϕ_min = min(λ_s,φ_r) 
             if λ_s > φ_r:
-                ϕ_l   = (ϕ_min+ρ)/2
-                ϕ_r   = ρ
-            else:
                 ϕ_l   = ρ
                 ϕ_r   = (ϕ_min+ρ)/2
+            else:
+                ϕ_l   = (ϕ_min+ρ)/2
+                ϕ_r   = ρ
 
-            θ  = (y/(2*R) + ϕ_l)#(y/R + λ_s)
+            θ  = (y/(2*R) + ϕ_l) #(y/R + λ_s)
             zl = x*np.cos(θ)
-            ψ  = ((Y-y)/(2*R) + ϕ_r)#((Y-y)/R + φ_r)
+            ψ  = ((Y-y)/(2*R) + ϕ_r) #((Y-y)/R + φ_r)
             zr = a*np.cos(ψ)
 
             C1  = speed_s**2 - u1**2 - v1**2
@@ -739,10 +742,10 @@ class NewtonianCurve:
             λ   = λ*(np.pi/180)
             ψ   = ψ*(np.pi/180)
             θ   = θ*(np.pi/180)
-            r1  = np.cos(λ)/np.cos(θ)
-            #r1  = np.cos((θ + 3*λ)/4)/np.cos(θ)
-            r2  = np.cos(ψ)/np.cos(θ)
-            #r2  = np.cos((θ + 3*ψ)/4)/np.cos(θ)
+            #r1  = np.cos(λ)/np.cos(θ)
+            r1  = np.cos((θ + 3*λ)/4)/np.cos(θ)
+            #r2  = np.cos(ψ)/np.cos(θ)
+            r2  = np.cos((θ + 3*ψ)/4)/np.cos(θ)
 
             d1  = np.sqrt(x**2 + (r1*y)**2)
             d2  = np.sqrt(a**2 + (r2*(Y-y))**2)
@@ -815,8 +818,6 @@ class NewtonianCurve:
         commonIndices = list(set(sourceNeighbourIndices['neighbourIndex']).intersection(endNeighbourIndices['neighbourIndex']))
         CornerCells   = self.neighbour_graph.loc[commonIndices]
 
-        # Straight Line Crossing Point
-        #Y_line = ((Ye-Ys)/(Xe-Xs))*(Xc-Xs) + Ys
 
         # Arc Crossing Point
         def great_circle_lat(start_lat, start_long, end_lat, end_long,mid_long):
@@ -824,7 +825,7 @@ class NewtonianCurve:
             g = pyproj.Geod(ellps='WGS84')
             (az12, az21, dist) = g.inv(start_long, start_lat, end_long, end_lat)
             # calculate line string along path with segments <= 1 km
-            lonlats = np.array(g.npts(start_long, start_lat, end_long, end_lat,10000))
+            lonlats = np.array(g.npts(start_long, start_lat, end_long, end_lat,50000))
             diff    = abs(lonlats[:,0]-mid_long)
             mid_lat = lonlats[np.argmin(diff),1]
             return mid_lat,np.min(diff)
@@ -873,7 +874,7 @@ class NewtonianCurve:
         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
 
-    def _mergePoint(self,merge_distance = 1e-5):
+    def _mergePoint(self,merge_distance = 1e-3):
         '''
             Merging two points into a corner case if their distance is small enough.
         '''
@@ -1255,7 +1256,7 @@ class NewtonianCurve:
         # Determining if crossing point lies outside of interface between two cellboxes
         
 
-    def _updateCrossingPoint(self,previous_horeshoes):
+    def _updateCrossingPoint(self):
         self.org_points = copy.deepcopy(self.triplet) 
         self.speed_s = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellStart']['speed']))
         self.speed_e = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellEnd']['speed']))
@@ -1271,13 +1272,31 @@ class NewtonianCurve:
             new_variables = self.objective_function(self.horshoe_points)
             if ((new_variables[self.objective_func]['path_values'][-1] - org_variables[self.objective_func]['path_values'][-1])/org_variables[self.objective_func]['path_values'][-1])*100 > -5:
                 horeshoe_points     = self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy()
-                previous_horeshoes += [horeshoe_points]
-                same_horseshoes_num = len(np.where([(entry==horeshoe_points).all() for entry in previous_horeshoes])[0])
+                same_horseshoes_num = count_similarities(horeshoe_points,self.previous_horeshoes)
                 if same_horseshoes_num <=5:
                     self.CrossingDF = self.CrossingDF.drop(self.triplet.index)
-                    self.CrossingDF = self.CrossingDF.append(self.horshoe_points).sort_index().reset_index(drop=True)
+                    self.CrossingDF = pd.concat([self.CrossingDF, self.horshoe_points]).sort_index().reset_index(drop=True)
+                self.previous_horeshoes += [horeshoe_points]
+
 
         self._reverseCase()
         self.CrossingDF = self.CrossingDF.reset_index(drop=True)
         self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
 
+
+
+def count_similarities(horshoe_points,previous_horeshoes):
+
+    comparison = []
+
+    if len(previous_horeshoes) == 0:
+        return 0
+
+    for entry in previous_horeshoes:
+        similar = (horshoe_points == entry)
+        if type(similar) == bool:
+            comparison += [similar]
+        else:
+
+            comparison += [similar.any()]
+    return len(np.where(comparison)[0])

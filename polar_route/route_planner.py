@@ -549,16 +549,15 @@ class RoutePlanner:
 
                 self.nc = nc
                 self.all_crossing_points = []
-
                 for iter in pbar:
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0
                     while id <= (len(nc.CrossingDF) - 3):
                         
-                        previous_horeshoes = []
+                        
                         # -- Updating the crossing point
                         nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                        nc._updateCrossingPoint(previous_horeshoes)
+                        nc._updateCrossingPoint()
                         self.nc = nc
                         id += 1
 
@@ -579,7 +578,7 @@ class RoutePlanner:
                         Dist = np.max(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
                         self.allDist.append(Dist)
                         pbar.set_description("Mean Difference = {}".format(Dist))
-                        if (Dist < minimumDiff) and (Dist != 0.0):
+                        if (Dist < minimumDiff) and (iter>=50):
                             logging.info('{} iterations - dDist={}'.format(iter, Dist))
                             break
 
