@@ -12,7 +12,7 @@ class Boundary:
     Attributes:
         lat_range (float[]): array contains the start and end of latitude range 
         long_range (float[]): array contains the start and end of longtitude range 
-        time_range(Date[]): array contains the start and end of time range 
+        time_range(string[]): array contains the start and end of time range 
         
 
     Note:
@@ -126,6 +126,12 @@ class Boundary:
 
     def get_long_max(self):
         return self.long_range[1]  
+    
+    def get_time_min(self):
+        return self.time_range[0]
+
+    def get_time_max(self):
+        return self.time_range[1] 
 
     def get_bounds(self):
         """
