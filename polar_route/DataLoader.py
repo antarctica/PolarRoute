@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
-from datetime import date, timedelta
+from datetime import datetime, timedelta
+from pyproj import Transformer
+from pyproj import CRS
 
 import xarray as xr
 import pandas as pd
@@ -7,21 +9,12 @@ import numpy as np
 
 import logging
 import glob
-import os, sys
-#'/home/user/example/parent/child'
-current_path = os.path.abspath('.')
- 
-#'/home/user/example/parent'
-parent_path = os.path.dirname(current_path)
-sys.path.append(parent_path)
-sys.path.insert(1, os.getcwd())
-
 
 from polar_route.Boundary import Boundary
 
 class DataLoaderFactory:
 
-    def get_dataloader(name, params, min_dp=5):
+    def get_dataloader(name, bounds, params, min_dp=5):
         # If file or folder passed into config
         if 'file' in params:     file_location = params['file']
         elif 'folder' in params: file_location = params['folder']
@@ -45,8 +38,7 @@ class DataLoaderFactory:
         # elif ...
         else: raise ValueError(f'{name} not in known list of DataLoaders')
 
-        return data_loader(file_location, min_dp=min_dp, ds=ds, data_name=data_name, aggregate_type=agg_type)
-
+        return data_loader(file_location, bounds, min_dp=min_dp, ds=ds, data_name=data_name, aggregate_type=agg_type)
 
 class ScalarDataLoader(ABC):
     '''
@@ -187,7 +179,6 @@ class ScalarDataLoader(ABC):
         elif frac_over_threshold >= splitting_conds['upper_bound']: return 'HOM'
         else: return 'HET'
 
-
 class GEBCODataLoader(ScalarDataLoader):
 
     def import_data(self, bounds):
@@ -234,11 +225,13 @@ class AMSRDataLoader(ScalarDataLoader):
         '''
         Load AMSR netCDF from folder
         '''
-        def retrieve_data(filename):
-            data = xr.open_dataset(filename)
-            # Extract date from filename
+        def retrieve_date(filename):
             date = filename.split('-')[-2]
             date = f'{date[:4]}-{date[4:6]}-{date[6:]}'
+            return date
+        
+        def retrieve_data(filename, date):
+            data = xr.open_dataset(filename)
             # Add date to data
             data = data.assign_coords(time=date)
             return data
@@ -248,7 +241,8 @@ class AMSRDataLoader(ScalarDataLoader):
         # If single NetCDF File specified
         if self.file_location[-3:] == '.nc':
             logging.debug(f"- Opening file {self.file_location}")
-            raw_data = retrieve_data(self.file_location)
+            date = retrieve_date(self.file_location)
+            raw_data = retrieve_data(self.file_location, date)
         # If folder specified
         elif self.file_location[-1] in ('/','\\'):
             # Open folder and read in files
@@ -256,7 +250,11 @@ class AMSRDataLoader(ScalarDataLoader):
             raw_data_array = []
             for file in glob.glob(f'{self.file_location}*.nc'):
                 logging.debug(f"- Opening file {file}")
-                raw_data_array.append(retrieve_data(file))
+                date = retrieve_date(file)
+                if datetime.strptime(bounds.get_time_min(), '%Y-%m-%d') <= \
+                   datetime.strptime(date, '%Y-%m-%d') <= \
+                   datetime.strptime(bounds.get_time_max(), '%Y-%m-%d'):
+                    raw_data_array.append(retrieve_data(file, date))
             raw_data = xr.concat(raw_data_array,'time')
         else:
             raise ValueError(f'{self.file_location} not a valid .nc or folder!')
@@ -264,12 +262,12 @@ class AMSRDataLoader(ScalarDataLoader):
         raw_df = raw_data.to_dataframe().reset_index()
         # AMSR data is in a EPSG:3412 projection and must be reprojected into
         # EPSG:4326
+        # TODO Different projections per hemisphere
         in_proj = CRS('EPSG:3412')
         out_proj = CRS('EPSG:4326')
-        
         logging.debug(f'- Reprojecting from {in_proj} to {out_proj}')
         x, y = Transformer.from_crs(in_proj, out_proj, always_xy=True).transform(
-            raw_data['x'].to_numpy(), raw_data['y'].to_numpy())
+            raw_df['x'].to_numpy(), raw_df['y'].to_numpy())
 
         # Format final output dataframe
         reprojected_df = pd.DataFrame({
@@ -289,16 +287,19 @@ class AMSRDataLoader(ScalarDataLoader):
                (self.data['time'] >= bounds.get_time_min()) & \
                (self.data['time'] <  bounds.get_time_max())
                    
-        return self.data.loc[mask]
+        return self.data.loc[mask][self.data_name]
         
 class SOSEDataLoader(ScalarDataLoader):
     
-    def import_data(self, ):
+    def import_data(self, bounds):
+        pass
+    
+    def get_datapoints(self, bounds):
         pass
   
 class ThicknessDataLoader(ScalarDataLoader):
     
-    def import_data(self):
+    def import_data(self, bounds):
         '''
         Placeholder until lookup-table dataloader class implemented
         '''
@@ -342,13 +343,10 @@ class ThicknessDataLoader(ScalarDataLoader):
         lats = [lat for lat in np.arange(bounds.get_lat_min(), 
                                          bounds.get_lat_max(), 0.05)]
         lons = [lon for lon in np.arange(bounds.get_long_min(), 
-                                         bounds.get_long_min(), 0.05)]
+                                         bounds.get_long_max(), 0.05)]
         
-        # lats = [lat for lat in np.arange(-90, 90, 0.5)]
-        # lons = [lon for lon in np.arange(-180, 180, 0.5)]
-        
-        start_date = date(2013, 3, 1)
-        end_date = date(2013, 3, 14)
+        start_date = datetime.strptime(bounds.get_time_min(), "%Y-%m-%d")
+        end_date = datetime.strptime(bounds.get_time_max(), "%Y-%m-%d")
         delta = end_date - start_date
         dates = [start_date + timedelta(days=i) for i in range(delta.days+1)]
         
@@ -360,15 +358,22 @@ class ThicknessDataLoader(ScalarDataLoader):
                 time=[d.strftime('%Y-%m-%d') for d in dates]),
             dims=('time','lat','long'),
             name='thickness')
+
+        return thickness_data
+    
+    def get_datapoints(self, bounds):
+        dps = self.data
+        dps = dps.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
+        dps = dps.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
+
+        dps = dps.to_dataframe().reset_index()
+
+        return dps[self.data_name]
         
-        thickness_df = thickness_data.to_dataframe().reset_index()
-        thickness_df = thickness_df.set_index(['lat','long','time']).reset_index()
-        
-        return thickness_df
     
 class DensityDataLoader(ScalarDataLoader):
     
-    def import_data(self):
+    def import_data(self, bounds):
         '''
         Placeholder until lookup-table dataloader class implemented
         '''
@@ -389,14 +394,13 @@ class DensityDataLoader(ScalarDataLoader):
             return densities[season]
         
         
-        lats = [lat for lat in np.arange(-65, -60, 0.05)]
-        lons = [lon for lon in np.arange(-70, -50, 0.05)]
-        
-        # lats = [lat for lat in np.arange(-90, 90, 0.5)]
-        # lons = [lon for lon in np.arange(-180, 180, 0.5)]
-        
-        start_date = date(2013, 3, 1)
-        end_date = date(2013, 3, 14)
+        lats = [lat for lat in np.arange(bounds.get_lat_min(), 
+                                         bounds.get_lat_max(), 0.05)]
+        lons = [lon for lon in np.arange(bounds.get_long_min(), 
+                                         bounds.get_long_max(), 0.05)]
+
+        start_date = datetime.strptime(bounds.get_time_min(), "%Y-%m-%d")
+        end_date = datetime.strptime(bounds.get_time_max(), "%Y-%m-%d")
         delta = end_date - start_date
         dates = [start_date + timedelta(days=i) for i in range(delta.days+1)]
         
@@ -409,17 +413,26 @@ class DensityDataLoader(ScalarDataLoader):
             dims=('time','lat','long'),
             name='density')
         
-        density_df = density_data.to_dataframe().reset_index()
-        density_df = density_df.set_index(['lat','long','time']).reset_index()
+        return density_data
         
-        return density_df
+    def get_datapoints(self, bounds):
+        dps = self.data
+        dps = dps.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
+        dps = dps.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
+
+        dps = dps.to_dataframe().reset_index()
+
+        return dps[self.data_name]
+
+
+
 
 if __name__=='__main__':
 
     factory = DataLoaderFactory
-    bounds = Boundary([-65,-60], [-70,-50], ['1970-01-01','2021-12-31'])
+    bounds = Boundary([-65,-60], [-70,-50], ['2013-03-01','2013-03-14'])
     
-    if True: # Run GEBCO
+    if False: # Run GEBCO
         params = {
             'file': 'PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
             'downsample_factors': (5,5),
@@ -433,7 +446,7 @@ if __name__=='__main__':
             'lower_bound': 0.1
         }
 
-        gebco = factory.get_dataloader('GEBCO', params, min_dp = 5)
+        gebco = factory.get_dataloader('GEBCO', bounds, params, min_dp = 5)
 
         print(gebco.get_value(bounds))
         print(gebco.get_hom_condition(bounds, split_conds))
@@ -452,10 +465,13 @@ if __name__=='__main__':
             'lower_bound': 0.1
         }
 
-        amsr = factory.get_dataloader('AMSR', params, min_dp = 5)
+        amsr = factory.get_dataloader('AMSR', bounds, params, min_dp = 5)
 
         print(amsr.get_value(bounds))
         print(amsr.get_hom_condition(bounds, split_conds))
+
+    if True: # Run SOSE
+        pass
 
     if False: # Run Thickness
         params = {
@@ -469,15 +485,15 @@ if __name__=='__main__':
             'lower_bound': 0.1
         }
         
-        thickness = factory.get_dataloader('thickness', params, min_dp = 1)
-
+        thickness = factory.get_dataloader('thickness', bounds, params, min_dp = 1)
+        print(thickness.data)
         print(thickness.get_value(bounds))
         print(thickness.get_hom_condition(bounds, split_conds))
 
     if False: # Run Density
         params = {
             'file': '',
-            'data_name': 'thickness',
+            'data_name': 'density',
         }
   
         split_conds = {
@@ -486,7 +502,7 @@ if __name__=='__main__':
             'lower_bound': 0.1
         }
         
-        density = factory.get_dataloader('thickness', params, min_dp = 1)
+        density = factory.get_dataloader('density', bounds, params, min_dp = 1)
 
         print(density.get_value(bounds))
         print(density.get_hom_condition(bounds, split_conds))
