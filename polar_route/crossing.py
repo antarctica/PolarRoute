@@ -629,7 +629,7 @@ class NewtonianCurve:
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
             ρ = (λ_s+φ_r)/2.0
             ϕ_min = min(λ_s,φ_r) 
-            if λ_s > φ_r:
+            if λ_s < φ_r:
                 ϕ_l   = ρ
                 ϕ_r   = (ϕ_min+ρ)/2
             else:
