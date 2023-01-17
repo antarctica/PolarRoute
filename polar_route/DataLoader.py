@@ -32,7 +32,7 @@ class DataLoaderFactory:
 
         if   name == 'GEBCO':     data_loader = GEBCODataLoader
         elif name == 'AMSR':      data_loader = AMSRDataLoader
-        # elif name == 'SOSE':      data_loader = SOSEDataLoader
+        elif name == 'SOSE':      data_loader = SOSEDataLoader
         elif name == 'thickness': data_loader = ThicknessDataLoader
         elif name == 'density':   data_loader = DensityDataLoader
         # elif ...
@@ -179,6 +179,112 @@ class ScalarDataLoader(ABC):
         elif frac_over_threshold >= splitting_conds['upper_bound']: return 'HOM'
         else: return 'HET'
 
+
+class VectorDataLoader(ABC):
+    '''
+    Abstract class for all vector datasets
+
+    Args:
+        file_location (str): Path to data file or folder
+        min_dp (int)   : Minimum number of datapoints to require per cellbox
+            before allowing HOM condition to be calculated
+        ds (int, int)  : Tuple of downsampling factors in lat, long
+        data_name (str): Name of data, also name of data column in self.data
+        aggregate_type (str): Type of aggregation to be used when calling
+            self.get_hom_condition()
+    '''
+    def __init__(self, file_location, bounds, min_dp=5, ds=None, data_name=None, aggregate_type="MEAN"):
+        self.file_location  = file_location
+        self.min_dp         = min_dp
+        self.ds             = ds
+
+        # Cast string to uppercase to accept mismatched case
+        self.aggregate_type = aggregate_type.upper()
+
+        self.data = self.import_data(bounds)
+        # If no data name specified, retrieve from self.data
+        self.data_name = data_name if data_name else self.get_data_name()
+        
+        logging.debug(f'- Successfully extracted {self.data_name}')
+
+    @abstractmethod
+    def import_data(self, bounds):
+        '''
+        Import data from whatever format this datasource is in and
+        reproject it to EPSG:4326 (our working projection)
+        '''
+        pass
+
+    @abstractmethod
+    def get_datapoints(self, bounds):
+        '''
+        Retrieve datapoints within bounds, unique per implementation of 
+        self.import_data
+        '''
+        pass
+    
+    def get_data_name(self):
+        '''
+        Retrieve name of data column
+
+        Returns:
+            data_name (str): Name of data column
+        '''
+        # Store name of data column for future reference
+        columns = self.data.columns
+        # Filter out lat, long, time columns leaves us with data column name
+        filtered_cols = filter(lambda col: col not in ['lat','long','time'], columns)
+        data_name_list = list(filtered_cols)
+        return f'{data_name_list[0]},{data_name_list[1]}'
+    
+    def get_value(self, bounds, skipna=True):
+        '''
+        Retrieve aggregated value from within bounds
+        
+        Args:
+            aggregation_type (str): Method of aggregation of datapoints within
+                bounds. Can be upper or lower case. 
+                Accepts 'MIN', 'MAX', 'MEAN', 'STD'
+                Errors on 'MEDIAN' since nonsensical for 2D vectors
+            bounds (Boundary): Boundary object with limits of lat/long
+            skipna (bool): Defines whether to propogate NaN's or not
+                Default = True (ignore's NaN's)
+
+        Returns:
+            aggregate_value (float): Aggregated value within bounds following
+                aggregation_type
+        '''
+
+        # Remove lat, long and time column if they exist
+        dps = self.get_datapoints(bounds)
+        # Get list of variables that aren't coords
+        col_vars = self.get_data_name().split(',')
+        # Create a magnitude column 
+        dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
+        # If no data
+        if len(dps) == 0:
+            return None        
+        # Return float of aggregated value
+        elif self.aggregate_type == 'MIN': # Find min mag vector
+            row = dps[dps.mag == dps.mag.min(skipna=skipna)]
+            return row[col_vars]
+        elif self.aggregate_type == 'MAX': # Find max mag vector
+            row = dps[dps.mag == dps.mag.max(skipna=skipna)]
+            return row[col_vars]
+        elif self.aggregate_type == 'MEAN': # Average each vector axis
+            mean = [dps[x].mean(skipna=skipna) for x in col_vars]
+            return mean
+        elif self.aggregate_type == 'STD': # Std Dev each vector axis
+            std = [dps[x].std(skipna=skipna) for x in col_vars]
+            return std
+        # Median of vectors does not make sense
+        elif self.aggregate_type == 'MEDIAN':
+            raise Exception('Cannot find median of multi-dimensional variable!')
+        # If aggregation_type not available
+        else:
+            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
+
+    #TODO get_home_condition()
 class GEBCODataLoader(ScalarDataLoader):
 
     def import_data(self, bounds):
@@ -198,6 +304,9 @@ class GEBCODataLoader(ScalarDataLoader):
             # Taking max because bathymetry
             raw_data = raw_data.coarsen(lat=self.ds[1]).max()
             raw_data = raw_data.coarsen(lon=self.ds[0]).max()
+            
+        raw_data = raw_data.sel(lat=slice(bounds.get_lat_min(),bounds.get_lat_max()))
+        raw_data = raw_data.sel(lon=slice(bounds.get_long_min(),bounds.get_long_max()))
         
         return raw_data
 
@@ -289,13 +398,45 @@ class AMSRDataLoader(ScalarDataLoader):
                    
         return self.data.loc[mask][self.data_name]
         
-class SOSEDataLoader(ScalarDataLoader):
+class SOSEDataLoader(VectorDataLoader):
     
     def import_data(self, bounds):
-        pass
+        '''
+        Load GEBCO netCDF and downsample
+        '''
+        logging.debug("Importing SOSE data...")
+        # Import raw data
+
+        # Open dataset and cast to pandas df
+        logging.debug(f"- Opening file {self.file_location}")
+        raw_data = xr.open_dataset(self.file_location)
+
+        raw_df = raw_data.to_dataframe().reset_index()
+        
+        raw_df['long'] = raw_df['lon'].apply(lambda x: x-360 if x>180 else x)
+        raw_df = raw_df[['lat','long','uC','vC']]
+        
+        raw_df = raw_df[raw_df['long'].between(bounds.get_long_min(), bounds.get_long_max())]
+        raw_df = raw_df[raw_df['lat'].between(bounds.get_lat_min(), bounds.get_lat_max())]
+
+        return raw_df
     
     def get_datapoints(self, bounds):
-        pass
+        '''
+        Retrieve all datapoints within bounds
+
+        Args:
+            bounds (Boundary): Boundary object with limits of lat/long
+        
+        Returns:
+            dps (pd.Series): Datapoints within boundary limits
+        '''
+        mask = (self.data['lat']  >= bounds.get_lat_min())  & \
+               (self.data['lat']  <  bounds.get_lat_max())  & \
+               (self.data['long'] >= bounds.get_long_min()) & \
+               (self.data['long'] <  bounds.get_long_max())
+                   
+        return self.data.loc[mask][self.data_name.split(',')]
   
 class ThicknessDataLoader(ScalarDataLoader):
     
@@ -369,8 +510,7 @@ class ThicknessDataLoader(ScalarDataLoader):
         dps = dps.to_dataframe().reset_index()
 
         return dps[self.data_name]
-        
-    
+
 class DensityDataLoader(ScalarDataLoader):
     
     def import_data(self, bounds):
@@ -424,9 +564,6 @@ class DensityDataLoader(ScalarDataLoader):
 
         return dps[self.data_name]
 
-
-
-
 if __name__=='__main__':
 
     factory = DataLoaderFactory
@@ -471,7 +608,14 @@ if __name__=='__main__':
         print(amsr.get_hom_condition(bounds, split_conds))
 
     if True: # Run SOSE
-        pass
+        params = {
+            'file': 'PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+            'aggregate_type': 'MEAN'
+        }
+
+        sose = factory.get_dataloader('SOSE', bounds, params, min_dp = 5)
+
+        print(sose.get_value(bounds))
 
     if False: # Run Thickness
         params = {
