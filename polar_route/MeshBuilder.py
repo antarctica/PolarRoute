@@ -15,6 +15,14 @@ Example:
         mesh = Mesh(config)
 """
 
+import os, sys
+#'/home/user/example/parent/child'
+current_path = os.path.abspath('.')
+ 
+#'/home/user/example/parent'
+parent_path = os.path.dirname(current_path)
+sys.path.append(parent_path)
+sys.path.insert(1, os.getcwd())
 import logging
 import math
 import numpy as np
@@ -23,15 +31,14 @@ import matplotlib.pyplot as plt
 import json
 
 from matplotlib.patches import Polygon as MatplotPolygon
+from polar_route.Boundary import Boundary
 from polar_route.cellbox import CellBox
-import polar_route.data_loaders as data_loader
-
-from PolarRoute.polar_route.Boundary import Boundary
-from PolarRoute.polar_route.Direction import Direction
-from PolarRoute.polar_route.EnvironmentMesh import EnvironmentMesh
-from PolarRoute.polar_route.Metadata import Metadata
-from PolarRoute.polar_route.NeighbourGraph import NeighbourGraph
-from PolarRoute.polar_route.mesh import Mesh
+from polar_route.Direction import Direction
+from polar_route.EnvironmentMesh import EnvironmentMesh
+from polar_route.Metadata import Metadata
+from polar_route.NeighbourGraph import NeighbourGraph
+from polar_route.mesh import Mesh
+from polar_route.DataLoader import DataLoaderFactory
 
 class MeshBuilder:
     """
@@ -138,7 +145,11 @@ class MeshBuilder:
 
       
 
-        # TODO: we should be using the inheritance hierarchy to achieve this
+        # TODO: we should be using the inheritance hierarchy to achieve this, and creatJGridCellBox instead, assign boundaries and coordinates.
+        #  # set gridCoord of cellBox
+        #     x_coord = cellbox_indx % grid_width
+        #     y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
+        #     cellbox.set_grid_coord(x_coord, y_coord)
         '''
 
         self._j_grid = j_grid
@@ -150,8 +161,9 @@ class MeshBuilder:
        
 
         logging.info("Initialising mesh...")
-
+        
         logging.debug("Initialise cellBoxes...")
+        print ("Initialise cellBoxes...")
         cell_bounds = None
         cellboxes =[]
         self.neighbour_graph = None
@@ -160,48 +172,62 @@ class MeshBuilder:
                 cell_lat_range = [lat, lat+cell_height]
                 cell_long_range = [long , long+cell_width]
                 cell_bounds = Boundary (cell_lat_range , cell_long_range , time_range)
-                cell_id = len (cellboxes)
+                cell_id = str(len (cellboxes))
                 cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
-
-        grid_width = (long_max - long_min) / self._cell_width
-        grid_height = (lat_max - lat_min) / self._cell_height
+        print (">>>> initial cellboxes len >>>" , len (cellboxes))
+        grid_width = (long_max - long_min) / cell_width
+        grid_height = (lat_max - lat_min) / cell_height
 
         ###########################################
+        print (">>>> init NG ...")
         logging.debug("Initialise neighbours graph...")
-        self.initialise_neoghbour_graph(cellboxes , grid_width) 
+        self.neighbour_graph = NeighbourGraph(cellboxes , grid_width) 
         ##########################################
 
-        logging.debug("creating data_loaders...")
-        min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
+        print (" >>>> creating data_loaders...")
+        min_datapoints=5
+        if 'splitting' in self.config['Mesh_info']:
+             min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
         meta_data_list = []
         splitting_conds = []
         if 'Data_sources' in self.config['Mesh_info'].keys():
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
-            # loader = DataLoaderFactory.get_data_loader( loader_name, data_source['params'] , min_datapoints)
-            loader = None # to uncomment the previous line and use instead after itegrating wz Harry
+            agg_type = data_source['params']["value_output_types"]
+            print("creating data loader {}".format(data_source['loader']))
+            loader = DataLoaderFactory.get_dataloader( loader_name, data_source['params'] , min_datapoints)
+            print (">>>>>> data_loader created ...")
+            # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
+            updated_splitiing_cond = [] # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader 
+            if 'splitting_conditions' in data_source['params']:
+                  splitting_conds = data_source['params']['splitting_conditions'] 
+                  print (splitting_conds) 
+                  for split_cond in splitting_conds:
+                      cond = split_cond [loader._get_data_name()]
+                      updated_splitiing_cond.append (cond) 
            
-            for split_cond in loader['splitting_conditions']:
-                agg_type = loader["value_output_types"]
-                value_fill_type = loader['value_fill_types']
-                if (agg_type == ""):
-                   agg_type = "MEAN"
-                splitting_conds.append(split_cond)
+            value_fill_type = data_source['params']['value_fill_types']
+          
 
-            meta_data_obj = Metadata ( loader, splitting_conds , agg_type , value_fill_type)
+                
+            print (">>>>>> creating MetaData ...." )
+            meta_data_obj = Metadata ( loader, updated_splitiing_cond ,  value_fill_type)
             meta_data_list.append(meta_data_obj)
     
             
 
+        print (">>>> assigning metadata to cellboxes ...")
         for cellbox in cellboxes: # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
             if isinstance(cellbox, CellBox):
                 cellbox.set_minimum_datapoints(min_datapoints)
                 # assign meta data to each cellbox
                 cellbox.set_data_source (meta_data_list)           
     ####################### 
-        max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
+        max_split_depth = 0
+        if 'splitting' in self.config['Mesh_info']:
+             max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
         self.mesh = Mesh(bounds , cellboxes , self.neighbour_graph, max_split_depth)
         self.mesh.set_config (config)
 
@@ -224,48 +250,11 @@ class MeshBuilder:
         """
         output = dict()
         output['config'] = self.config
-        output["cellboxes"] = self.get_cellboxes()
-        output['neighbour_graph'] = self.neighbour_graph
+        output["cellboxes"] = self.mesh.get_cellboxes()
+        output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
 
 ##############################
-    def initialise_neighbour_graph (self , cellboxes ,grid_width):
-        self.neighbour_graph = NeighbourGraph ()
-        for cellbox in cellboxes:
-            cellbox_indx = cellboxes.index(cellbox)
-            neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
-
-            # add east neighbours to neighbour graph
-            if (cellbox_indx + 1) % grid_width != 0:
-                neighbour_map[2].append(cellbox_indx + 1)
-                # south-east neighbours
-                if cellbox_indx + grid_width < len(cellboxes):
-                    neighbour_map[1].append(int((cellbox_indx + grid_width) + 1))
-                # north-east neighbours
-                if cellbox_indx - grid_width >= 0:
-                    neighbour_map[3].append(int((cellbox_indx - grid_width) + 1))
-
-            # add west neighbours to neighbour graph
-            if cellbox_indx % grid_width != 0:
-                neighbour_map[-2].append(cellbox_indx - 1)
-                # add south-west neighbours to neighbour graph
-                if cellbox_indx + grid_width < len(cellboxes):
-                    neighbour_map[-3].append(int((cellbox_indx + grid_width) - 1))
-                # add north-west neighbours to neighbour graph
-                if cellbox_indx - grid_width >= 0:
-                    neighbour_map[-1].append(int((cellbox_indx - grid_width) - 1))
-
-            # add south neighbours to neighbour graph
-            if cellbox_indx + grid_width < len(cellboxes):
-                neighbour_map[-4].append(int(cellbox_indx + grid_width))
-
-            # add north neighbours to neighbour graph
-            if cellbox_indx - grid_width >= 0:
-                neighbour_map[4].append(int(cellbox_indx - grid_width))
-
-            self.neighbour_graph.add_node (cellbox_indx , neighbour_map)
-      
-
 
     # Functions for splitting cellboxes within the Mesh
 
@@ -281,11 +270,11 @@ class MeshBuilder:
                     4 smaller CellBox objects.
 
         """
-        split_cellboxes = cellbox.split()
-        self.mesh.get_cellboxes().extend (split_cellboxes)
-        cellboxes = self.mesh.get_cellboxes()
+        split_cellboxes = cellbox.split(len (self.mesh.cellboxes))
+        self.mesh.cellboxes.extend (split_cellboxes)
+        cellboxes = self.mesh.cellboxes
         cellbox_indx = cellboxes.index(cellbox)
-
+        
         north_west_indx = cellboxes.index(split_cellboxes[0])
         north_east_indx = cellboxes.index(split_cellboxes[1])
         south_west_indx = cellboxes.index(split_cellboxes[2])
@@ -354,9 +343,9 @@ class MeshBuilder:
         self.neighbour_graph.update_neighbours (cellbox_indx, [ south_west_indx, south_east_indx], Direction.south, cellboxes) # Update south neighbour cellbox_indx with the new neighbours comming from the splitted cellbox 
         self.neighbour_graph.update_neighbours (cellbox_indx, [ north_west_indx, south_west_indx], Direction.west, cellboxes)  # Update west neighbour cellbox_indx with the new neighbours comming from the splitted cellbox 
         # Update corner neighbour maps
-        self.update_corner_neighbours(cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx)
+        self.neighbour_graph.update_corner_neighbours(cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx)
 
-        self.neighbour_graph.remove_node () #remove the original splitted cellbox from the neighbour_graph
+        self.neighbour_graph.remove_node (cellbox_indx) #remove the original splitted cellbox from the neighbour_graph
         cellboxes[cellbox_indx] = None #set the original splitted cellbox to its None 
       
 
@@ -365,7 +354,7 @@ class MeshBuilder:
  ############################## methods to fill the neighbour maps of the splitted cells ########################
     # method that fills the South east neighbours 
     def fill_se_map(self, south_east_indx, south_neighbour_indx, east_neighbour_indx, se_neighbour_map):
-        cellboxes = self.mesh.get_cellboxes()
+        cellboxes = self.mesh.cellboxes
         for indx in south_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == 4:
                 se_neighbour_map[4].append(indx)
@@ -379,7 +368,7 @@ class MeshBuilder:
 
     # method that fills the North east neighbours  
     def fill_ne_map(self, north_east_indx, north_neighbour_indx, east_neighbour_indx, ne_neighbour_map):
-        cellboxes = self.mesh.get_cellboxes()
+        cellboxes = self.mesh.cellboxes
         for indx in north_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == -4:
                 ne_neighbour_map[-4].append(indx)
@@ -393,7 +382,7 @@ class MeshBuilder:
 
     # method that fills the North west neighbours 
     def fill_nw_map(self,  north_west_indx, north_neighbour_indx, west_neighbour_indx, nw_neighbour_map):
-        cellboxes = self.mesh.get_cellboxes()
+        cellboxes = self.mesh.cellboxes
         for indx in north_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == -4:
                 nw_neighbour_map[-4].append(indx)
@@ -407,7 +396,7 @@ class MeshBuilder:
     
     # method that fills the South west neighbours 
     def fill_sw_neighbour_map(self, south_west_indx, south_neighbour_indx, west_neighbour_indx, sw_neighbour_map):
-        cellboxes = self.mesh.get_cellboxes()
+        cellboxes = self.mesh.cellboxes
         for indx in south_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == 3:
                 sw_neighbour_map[3].append(indx)
@@ -429,25 +418,43 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
-        for cellbox in self.mesh.get_cellboxes():
+        print (">>>> mesh split_depth >>> " , split_depth)
+        for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
-                if (cellbox.split_depth < split_depth) & (cellbox.should_split()):
+                print (">>>cellbox split depth >>>",cellbox.get_split_depth())
+                if (cellbox.get_split_depth() < split_depth) & (cellbox.should_split()):
                     self.split_and_replace(cellbox) 
 #################################################################################################
     def build_environmental_mesh(self):
         """
-            goes through the mesh cellboxes and builds and evironmental mesh that contains the cellboxes aggregates
+            splits the mesh then goes through the mesh cellboxes and builds an evironmental mesh that contains the cellboxes aggregated data
 
         """
+        self.split_to_depth(self.mesh.get_max_split_depth())
         agg_cellboxes = []
-        for cellbox in self.mesh.get_cellboxes():
+        for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
                agg_cellboxes.append (cellbox.aggregate()) 
-        env_mesh = EnvironmentMesh (self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
+        
+        env_mesh = EnvironmentMesh(self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
+        #env_mesh = EnvironmentMesh(self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
         return env_mesh
 
 #################################################################################################
-    @property
+    
     def get_config(self):
-        return self._config
+        return self.config
+
+if __name__=='__main__':
+    config = None
+    # with open ("GEBCO_create_mesh_output2013_4_80_new_format.json" , "r") as config_file:
+    with open ("smallmesh_test.json" , "r") as config_file:
+        config = json.load(config_file)['config']
+        print (">>>>>>> config >>>>> " , config)
+    mesh_builder = MeshBuilder (config)
+    print ("MeshBuilder created successfully .... ") 
+    env_mesh = mesh_builder.build_environmental_mesh()
+    print (" >>>> agg cellboxes >>> " , len (env_mesh.agg_cellboxes))
+    with open ("output_without_split.json" , 'w')  as file:
+        json.dump (env_mesh.to_json() , file)
 

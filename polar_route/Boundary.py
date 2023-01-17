@@ -29,6 +29,16 @@ class Boundary:
                time_range(Date[]): array contains the start and end of time range 
                 
         """
+        # check the bounds are valid
+        if (len(lat_range) < 2 or len (long_range)<2 or len(time_range) <2):             
+            raise ValueError(f'Boundary: range should contain two values')
+        if (lat_range[0] > lat_range [1]):
+             raise ValueError(f'Boundary: Latitude start range should be smaller than range end')
+        if (long_range[0] > long_range [1]):
+             raise ValueError(f'Boundary: Longtitude start range should be smaller than range end')
+        if (time_range[0] > time_range [1]):
+             raise ValueError(f'Boundary: Start time range should be smaller than range end')
+
         # Boundary information 
         self.lat_range = lat_range
         self.long_range = long_range
@@ -60,11 +70,30 @@ class Boundary:
         return self.lat_range[0] + self.get_height()/2
 
     def get_height(self):
+        """
+            returns height of the cellbox
+
+            Returns:
+                height (float): the height of the CellBox
+                    given in degrees latitude.
+        """
         height = self.lat_range[1] - self.lat_range[0]
+        return height
 
     def get_width(self):
+        """
+            returns width of the cellbox
+
+            Returns:
+                width (float): the width of the CellBox
+                    given in degrees longtitude.
+        """
         width = self.long_range[1] - self.long_range[0]
         return width
+
+    def get_time_range (self):
+        return self.time_range
+
 
     def getdcx(self):
         """
@@ -105,10 +134,20 @@ class Boundary:
             Returns:
                 bounds (list<tuples>): The geo-spatial boundaries of this CellBox.
         """
-        bounds = [[self.lat_range[0] , self.long_range[0]],
-                   [self.lat_range[1], self.long_range[0]],
-                    [self.lat_range[1], self.long_range[1]],
-                    [self.lat_range[0], self.long_range[1]],
-                    [self.lat_range[0], self.long_range[0]]]
+
+
+        # TODO: see if we should have lat then long back
+        # bounds = [[self.lat_range[0] , self.long_range[0]],
+                #    [self.lat_range[1], self.long_range[0]],
+                #     [self.lat_range[1], self.long_range[1]],
+                #     [self.lat_range[0], self.long_range[1]],
+                #     [self.lat_range[0], self.long_range[0]]]
+        
+        bounds = [[ self.long_range[0], self.lat_range[0] ],
+                   [ self.long_range[0], self.lat_range[1]],
+                    [ self.long_range[1], self.lat_range[1]],
+                    [ self.long_range[1], self.lat_range[0]],
+                    [self.long_range[0], self.lat_range[0], ]]
         return bounds
+
 

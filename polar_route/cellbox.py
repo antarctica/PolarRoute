@@ -20,8 +20,8 @@ Note:
 from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
-import Boundary
-import AggregatedCellBox
+from polar_route.Boundary import Boundary
+from polar_route.AggregatedCellBox import AggregatedCellBox
 
 
 class CellBox:
@@ -60,6 +60,8 @@ class CellBox:
         """
             set the minimum number of data contained within CellBox boundaries
         """
+        if (minimum_datapoints < 0):
+             raise ValueError(f'CellBox: minimum number of data contained can not be negative')
         self.minimum_datapoints = minimum_datapoints
 
     def set_data_source (self, data_source):
@@ -82,6 +84,8 @@ class CellBox:
         """
             set the split depth of a CellBox, which represents is the number of times the CellBox has been split to reach it's current size.
         """
+        if (split_depth < 0):
+             raise ValueError(f'CellBox: split depth can not be negative')
         self.split_depth = split_depth
 
     def set_id (self , id):
@@ -112,7 +116,7 @@ class CellBox:
         return self.parent
 
 
-    def get_split_depth(self, split_depth):
+    def get_split_depth(self):
         """
             get the split depth of a CellBox, which represents is the number of times the CellBox has been split to reach it's current size.
         """
@@ -145,7 +149,9 @@ class CellBox:
         hom_conditions = []
         for current_data_source in self.data_source:
             data_loader = current_data_source.get_data_loader()
-            hom_conditions.append(data_loader.get_hom_cond())
+            for splitting_cond in current_data_source.get_splitting_conditions():
+               hom_cond = data_loader.get_hom_condition(self.bounds, splitting_cond)
+               hom_conditions.append(hom_cond )
 
         if "HOM" in hom_conditions:
             return False
@@ -156,50 +162,57 @@ class CellBox:
 
         return True
 
-    def split(self):
+    def split(self , start_id):
         """
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
-
+            args
+            start_id : represenst the start of the splitted cellboxes ids, usuallly it is the number of the existing cellboxes
             Returns:
                 split_boxes (list<CellBox>): The 4 corner cellboxes generates by splitting
                     this current cellboxes and dividing the data_points contained between.
         """
 
-        split_boxes = self.create_splitted_cell_boxes()
+        split_boxes = self.create_splitted_cell_boxes(start_id)
 
-        # set CellBox split_depth
+        # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
             split_box.set_split_depth ( self.get_split_depth() + 1)
+            print (">>> split >>  cellbox depth >> " , split_box.get_split_depth())
+            split_box.set_data_source (self.get_data_source())
+            split_box.set_parent (self)
 
         return split_boxes
 
-    def create_splitted_cell_boxes(self):
+    def create_splitted_cell_boxes(self, index):
         half_width = self.bounds.get_width() / 2
         half_height = self.bounds.get_height() / 2
 
         # create 4 new cellBoxes
         time_range = self.bounds.get_time_range()
-        lat_range = [self.lat + half_height , self.lat + self.bounds.get_height() ] 
-        long_range = [self.long , self.long + half_width]
+        lat = self.bounds.get_lat_min()
+        lat_range = [lat + half_height , lat + self.bounds.get_height() ] 
+        long = self.bounds.get_long_min()
+        long_range = [long , long + half_width]
         boundary = Boundary (lat_range , long_range , time_range)
-        north_west = CellBox(boundary)
+        north_west = CellBox(boundary , str(index) )
 
-
-        lat_range = [self.lat + half_height , self.lat + self.bounds.get_height() ] 
-        long_range = [self.long + half_width , self.long + self.bounds.get_width()]
+        lat_range = [lat + half_height , lat + self.bounds.get_height() ] 
+        long_range = [long + half_width , long + self.bounds.get_width()]
         boundary = Boundary (lat_range , long_range , time_range)
-        north_east = CellBox(boundary)
+        index +=1
+        north_east = CellBox(boundary , str(index))
 
-       
-        lat_range = [self.lat, self.lat + half_height ] 
-        long_range = [self.long, self.long + half_width]
+        lat_range = [lat, lat + half_height ] 
+        long_range = [long, long + half_width]
         boundary = Boundary (lat_range , long_range , time_range)
-        south_west = CellBox(boundary)
+        index +=1
+        south_west = CellBox(boundary , str(index))
 
-        lat_range = [self.lat, self.lat + half_height ] 
-        long_range = [self.long + half_width, self.long + self.bounds.get_width()]
+        lat_range = [lat, lat + half_height ] 
+        long_range = [long + half_width, long + self.bounds.get_width()]
         boundary = Boundary (lat_range , long_range , time_range)
-        south_east = CellBox(boundary)
+        index +=1
+        south_east = CellBox(boundary , str(index))
 
         split_boxes = [north_west, north_east, south_west, south_east]
         return split_boxes
@@ -211,10 +224,20 @@ class CellBox:
         '''
      
         agg_dict = {}
-        for current_source in self.get_data_source:
-            name = current_source.get_data_source().get_name()
-            agg_type = current_source.get_aggregation_type()
-            agg_value = current_source.get_data_source().get_value( agg_type , self.bounds) # get the aggregated value from the associated DataLoader
+        for source in self.get_data_source():
+            loader = source.get_data_loader()
+            agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
+            data_name = loader._get_data_name()
+            print (self.bounds.get_bounds())
+            print (agg_value)
+            if agg_value[data_name] == None: 
+                if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                     agg_value = loader.get_value( self.get_parent().bounds) 
+                elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                     agg_value[data_name] = 0  
+                else:
+                    agg_value[data_name] = np.nan
+            print (self.get_id())
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = AggregatedCellBox (self.bounds , agg_dict , self.get_id())

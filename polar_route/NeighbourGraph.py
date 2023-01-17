@@ -33,9 +33,10 @@ class NeighbourGraph:
     """
    
 
-    def __init__(self):
+    def __init__(self , cellboxes ,grid_width):
         # initialize graph with an empty one
         self.neighbour_graph = {}
+        self.initialise_neighbour_graph(cellboxes ,grid_width)
 
 
     def get_graph(self):
@@ -68,15 +69,17 @@ class NeighbourGraph:
         for indx in neighbour_indx_list:
             crossing_case = self.get_neighbour_case(cellboxes[indx],
                                                     cellboxes[new_neighbours_indx[0]])
+            
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[0])
 
             crossing_case = self.get_neighbour_case(cellboxes[indx],
                                                     cellboxes[new_neighbours_indx[1]])
+           
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[1])   
 
-    def remove_node_from_neighbours (self , cellbox_indx, direction):
+    def remove_node_from_neighbours (self , cellbox_indx, direction): # go through neighbours in a given direction and remove cellbox_index from their neighbour_maps
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
         for indx in neighbour_indx_list:
             self.neighbour_graph[indx][-1*direction].remove(cellbox_indx)
@@ -126,33 +129,37 @@ class NeighbourGraph:
                         case -4 -> cellbox_b is North of cellbox_a\n
         """
 
-        if (cellbox_a.long + cellbox_a.width) == cellbox_b.long and (
-                cellbox_a.lat + cellbox_a.height) == cellbox_b.lat:
+        long_a = cellbox_a.bounds.get_long_min()
+        lat_a = cellbox_a.bounds.get_lat_min()
+        long_b = cellbox_b.bounds.get_long_min()
+        lat_b = cellbox_b.bounds.get_lat_min()
+        if (long_a + cellbox_a.bounds.get_width()) == long_b and (
+                lat_a + cellbox_a.bounds.get_height()) == lat_b:
             return 1  # North-East
-        if (cellbox_a.long + cellbox_a.width == cellbox_b.long) and (
-                cellbox_b.lat < (cellbox_a.lat + cellbox_a.height)) and (
-                (cellbox_b.lat + cellbox_b.height) > cellbox_a.lat):
+        if (long_a + cellbox_a.bounds.get_width ()== long_b) and (
+                lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
+                (lat_b + cellbox_b.bounds.get_height()) > lat_a):
             return 2  # East
-        if (cellbox_a.long + cellbox_a.width) == cellbox_b.long and (
-                cellbox_a.lat == cellbox_b.lat + cellbox_b.height):
+        if (long_a + cellbox_a.bounds.get_width()) == long_b and (
+                lat_a == lat_b + cellbox_b.bounds.get_height()):
             return 3  # South-East
-        if ((cellbox_b.lat + cellbox_b.height) == cellbox_a.lat) and (
-                (cellbox_b.long + cellbox_b.width) > cellbox_a.long) and (
-                cellbox_b.long < (cellbox_a.long + cellbox_a.width)):
+        if ((lat_b + cellbox_b.bounds.get_height()) == lat_a) and (
+                (long_b + cellbox_b.bounds.get_width()) > long_a) and (
+                long_b < (long_a + cellbox_a.bounds.get_width())):
             return 4  # South
-        if cellbox_a.long == (cellbox_b.long + cellbox_b.width) and cellbox_a.lat == (
-                cellbox_b.lat + cellbox_b.height):
+        if long_a == (long_b + cellbox_b.bounds.get_width()) and lat_a == (
+                lat_b + cellbox_b.bounds.get_height()):
             return -1  # South-West
-        if (cellbox_b.long + cellbox_b.width == cellbox_a.long) and (
-                cellbox_b.lat < (cellbox_a.lat + cellbox_a.height)) and (
-                (cellbox_b.lat + cellbox_b.height) > cellbox_a.lat):
+        if (long_b + cellbox_b.bounds.get_width() == long_a) and (
+                lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
+                (lat_b + cellbox_b.bounds.get_height()) > lat_a):
             return -2  # West
-        if cellbox_a.long == (cellbox_b.long + cellbox_b.width) and (
-                cellbox_a.lat + cellbox_a.height == cellbox_b.lat):
+        if long_a == (long_b + cellbox_b.bounds.get_width()) and (
+                lat_a + cellbox_a.bounds.get_height() == lat_b):
             return -3  # North-West
-        if (cellbox_b.lat == (cellbox_a.lat + cellbox_a.height)) and (
-                (cellbox_b.long + cellbox_b.width) > cellbox_a.long) and (
-                cellbox_b.long < (cellbox_a.long + cellbox_a.width)):
+        if (lat_b == (lat_a + cellbox_a.bounds.get_height())) and (
+                (long_b + cellbox_b.bounds.get_width()) > long_a) and (
+                long_b < (long_a + cellbox_a.bounds.get_width())):
             return -4  # North
         return 0  # Cells are not neighbours.
 
@@ -161,3 +168,40 @@ class NeighbourGraph:
 
     def remove_neighbour(self ,  index ,  direction , neighbour_index):
         self.neighbour_graph [index][direction].remove (neighbour_index) 
+
+    def initialise_neighbour_graph (self , cellboxes ,grid_width):
+        
+        for cellbox in cellboxes:
+            cellbox_indx = cellboxes.index(cellbox)
+            neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
+
+            # add east neighbours to neighbour graph
+            if (cellbox_indx + 1) % grid_width != 0:
+                neighbour_map[2].append(cellbox_indx + 1)
+                # south-east neighbours
+                if cellbox_indx + grid_width < len(cellboxes):
+                    neighbour_map[1].append(int((cellbox_indx + grid_width) + 1))
+                # north-east neighbours
+                if cellbox_indx - grid_width >= 0:
+                    neighbour_map[3].append(int((cellbox_indx - grid_width) + 1))
+
+            # add west neighbours to neighbour graph
+            if cellbox_indx % grid_width != 0:
+                neighbour_map[-2].append(cellbox_indx - 1)
+                # add south-west neighbours to neighbour graph
+                if cellbox_indx + grid_width < len(cellboxes):
+                    neighbour_map[-3].append(int((cellbox_indx + grid_width) - 1))
+                # add north-west neighbours to neighbour graph
+                if cellbox_indx - grid_width >= 0:
+                    neighbour_map[-1].append(int((cellbox_indx - grid_width) - 1))
+
+            # add south neighbours to neighbour graph
+            if cellbox_indx + grid_width < len(cellboxes):
+                neighbour_map[-4].append(int(cellbox_indx + grid_width))
+
+            # add north neighbours to neighbour graph
+            if cellbox_indx - grid_width >= 0:
+                neighbour_map[4].append(int(cellbox_indx - grid_width))
+
+            self.add_node (cellbox_indx , neighbour_map)
+    

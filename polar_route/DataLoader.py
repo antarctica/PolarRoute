@@ -7,6 +7,15 @@ import numpy as np
 
 import logging
 import glob
+import os, sys
+#'/home/user/example/parent/child'
+current_path = os.path.abspath('.')
+ 
+#'/home/user/example/parent'
+parent_path = os.path.dirname(current_path)
+sys.path.append(parent_path)
+sys.path.insert(1, os.getcwd())
+
 
 from polar_route.Boundary import Boundary
 

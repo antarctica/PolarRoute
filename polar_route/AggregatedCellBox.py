@@ -27,7 +27,7 @@ class AggregatedCellBox:
         """
         # Box information relative to bottom left
         self.boundary = boundary
-        self.aggregated_data = agg_data
+        self.agg_data = agg_data
         self.id = id
         
 ######## setters and getters ########
@@ -45,7 +45,7 @@ class AggregatedCellBox:
       
         self.id = id
     
-    def get_Boundary(self):
+    def get_boundary(self):
         """
             get the boundary of the CellBox
         """
@@ -91,7 +91,7 @@ class AggregatedCellBox:
 
         cell_json.update(self.get_agg_data())
         cell_json['id'] = self.get_id()
-
+        
         return cell_json
 
 
