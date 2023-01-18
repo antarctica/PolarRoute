@@ -14,7 +14,7 @@ Example:
 
         mesh = Mesh(config)
 """
-
+from memory_profiler import profile
 import os, sys
 #'/home/user/example/parent/child'
 current_path = os.path.abspath('.')
@@ -163,7 +163,6 @@ class MeshBuilder:
         logging.info("Initialising mesh...")
         
         logging.debug("Initialise cellBoxes...")
-        print ("Initialise cellBoxes...")
         cell_bounds = None
         cellboxes =[]
         self.neighbour_graph = None
@@ -175,17 +174,17 @@ class MeshBuilder:
                 cell_id = str(len (cellboxes))
                 cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
-        print (">>>> initial cellboxes len >>>" , len (cellboxes))
+
         grid_width = (long_max - long_min) / cell_width
         grid_height = (lat_max - lat_min) / cell_height
 
         ###########################################
-        print (">>>> init NG ...")
+    
         logging.debug("Initialise neighbours graph...")
         self.neighbour_graph = NeighbourGraph(cellboxes , grid_width) 
         ##########################################
 
-        print (" >>>> creating data_loaders...")
+       
         min_datapoints=5
         if 'splitting' in self.config['Mesh_info']:
              min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
@@ -197,13 +196,12 @@ class MeshBuilder:
             agg_type = data_source['params']["value_output_types"]
             print("creating data loader {}".format(data_source['loader']))
             loader = DataLoaderFactory.get_dataloader( loader_name, data_source['params'] , min_datapoints)
-            print (">>>>>> data_loader created ...")
+          
             # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
             updated_splitiing_cond = [] # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader 
             if 'splitting_conditions' in data_source['params']:
                   splitting_conds = data_source['params']['splitting_conditions'] 
-                  print (splitting_conds) 
                   for split_cond in splitting_conds:
                       cond = split_cond [loader._get_data_name()]
                       updated_splitiing_cond.append (cond) 
@@ -212,13 +210,13 @@ class MeshBuilder:
           
 
                 
-            print (">>>>>> creating MetaData ...." )
+          
             meta_data_obj = Metadata ( loader, updated_splitiing_cond ,  value_fill_type)
             meta_data_list.append(meta_data_obj)
     
             
 
-        print (">>>> assigning metadata to cellboxes ...")
+
         for cellbox in cellboxes: # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
             if isinstance(cellbox, CellBox):
                 cellbox.set_minimum_datapoints(min_datapoints)
@@ -346,8 +344,10 @@ class MeshBuilder:
         self.neighbour_graph.update_corner_neighbours(cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx)
 
         self.neighbour_graph.remove_node (cellbox_indx) #remove the original splitted cellbox from the neighbour_graph
+        obj = cellboxes[cellbox_indx] #free up memory
+        del obj
         cellboxes[cellbox_indx] = None #set the original splitted cellbox to its None 
-      
+        
 
 
 
@@ -409,6 +409,7 @@ class MeshBuilder:
                 sw_neighbour_map[-3].append(indx)
 
 ###################################################################################################
+    @profile
     def split_to_depth(self, split_depth):
         """
             splits all cellboxes in this grid until a maximum split depth
@@ -418,13 +419,13 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
-        print (">>>> mesh split_depth >>> " , split_depth)
+       
         for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
-                print (">>>cellbox split depth >>>",cellbox.get_split_depth())
                 if (cellbox.get_split_depth() < split_depth) & (cellbox.should_split()):
                     self.split_and_replace(cellbox) 
 #################################################################################################
+    # @profile
     def build_environmental_mesh(self):
         """
             splits the mesh then goes through the mesh cellboxes and builds an evironmental mesh that contains the cellboxes aggregated data
@@ -446,15 +447,15 @@ class MeshBuilder:
         return self.config
 
 if __name__=='__main__':
+    import time
+    import timeit
     config = None
     # with open ("GEBCO_create_mesh_output2013_4_80_new_format.json" , "r") as config_file:
     with open ("smallmesh_test.json" , "r") as config_file:
         config = json.load(config_file)['config']
-        print (">>>>>>> config >>>>> " , config)
     mesh_builder = MeshBuilder (config)
-    print ("MeshBuilder created successfully .... ") 
-    env_mesh = mesh_builder.build_environmental_mesh()
-    print (" >>>> agg cellboxes >>> " , len (env_mesh.agg_cellboxes))
-    with open ("output_without_split.json" , 'w')  as file:
-        json.dump (env_mesh.to_json() , file)
+    print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
+    # env_mesh = mesh_builder.build_environmental_mesh()
+    # with open ("GEBCO_refactored_split_6.json" , 'w')  as file:
+    #     json.dump (env_mesh.to_json() , file)
 

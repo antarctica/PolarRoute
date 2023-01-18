@@ -16,7 +16,7 @@ Note:
     object. The methods provided are to extract information for CellBoxes
     contained within a Mesh.
 """
-
+from memory_profiler import profile
 from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
@@ -177,7 +177,6 @@ class CellBox:
         # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
             split_box.set_split_depth ( self.get_split_depth() + 1)
-            print (">>> split >>  cellbox depth >> " , split_box.get_split_depth())
             split_box.set_data_source (self.get_data_source())
             split_box.set_parent (self)
 
@@ -216,7 +215,7 @@ class CellBox:
 
         split_boxes = [north_west, north_east, south_west, south_east]
         return split_boxes
-
+    @profile
     def aggregate(self):
         '''
             aggregates CellBox data using the associated data_source's aggregate type and returns AggregatedCellBox object
@@ -228,8 +227,6 @@ class CellBox:
             loader = source.get_data_loader()
             agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
             data_name = loader._get_data_name()
-            print (self.bounds.get_bounds())
-            print (agg_value)
             if agg_value[data_name] == None: 
                 if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
                      agg_value = loader.get_value( self.get_parent().bounds) 
@@ -237,11 +234,29 @@ class CellBox:
                      agg_value[data_name] = 0  
                 else:
                     agg_value[data_name] = np.nan
-            print (self.get_id())
+            
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = AggregatedCellBox (self.bounds , agg_dict , self.get_id())
-
+        # free the memory space used by the cellbox
+        self.deallocate_cellbox()
         return agg_cellbox  
 
-   
+# Method to free up the memory space allocated by the cellbox
+    
+    def deallocate_cellbox(self):
+        for source in self.get_data_source():
+            loader = source.get_data_loader()
+            del loader
+            del source
+        parent = self.parent
+        # free up the memory space used by the parent cellboxes chain
+        while isinstance(parent, CellBox):
+            for source in self.parent.get_data_source():
+                loader = source.get_data_loader()
+                del loader
+                del source
+            grandparent = parent.parent
+            del parent
+            parent = grandparent
+        del self

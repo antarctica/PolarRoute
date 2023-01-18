@@ -165,7 +165,6 @@ class ScalarDataLoader(ABC):
 		'''
 		# Retrieve datapoints to analyse
 		dps = self.get_datapoints(bounds)
-		print (splitting_conds)
 		
 		# If not enough datapoints
 		if len(dps) < self.min_dp: return 'MIN'
