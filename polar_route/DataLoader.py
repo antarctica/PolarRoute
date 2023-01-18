@@ -15,6 +15,7 @@ from polar_route.Boundary import Boundary
 class DataLoaderFactory:
 
     def get_dataloader(name, bounds, params, min_dp=5):
+      
         # If file or folder passed into config
         if 'file' in params:     file_location = params['file']
         elif 'folder' in params: file_location = params['folder']
@@ -91,6 +92,7 @@ class ScalarDataLoader(ABC):
             data_name (str): Name of data column
         '''
         # Store name of data column for future reference
+        
         columns = self.data.columns
         # Filter out lat, long, time columns leaves us with data column name
         filtered_cols = filter(lambda col: col not in ['lat','long','time'], columns)
@@ -302,8 +304,10 @@ class GEBCODataLoader(ScalarDataLoader):
         if self.ds: # If downsampling not 'None'
             logging.debug(f"- Downsampling GEBCO data by {self.ds} for (y,x), i.e. (lat, long)")
             # Taking max because bathymetry
-            raw_data = raw_data.coarsen(lat=self.ds[1]).max()
-            raw_data = raw_data.coarsen(lon=self.ds[0]).max()
+            # raw_data = raw_data.coarsen(lat=self.ds[1]).max()
+            # raw_data = raw_data.coarsen(lon=self.ds[0]).max()
+			        
+            raw_data = raw_data['elevation'][::self.ds[0],::self.ds[1]]
             
         raw_data = raw_data.sel(lat=slice(bounds.get_lat_min(),bounds.get_lat_max()))
         raw_data = raw_data.sel(lon=slice(bounds.get_long_min(),bounds.get_long_max()))
@@ -571,7 +575,7 @@ if __name__=='__main__':
     
     if False: # Run GEBCO
         params = {
-            'file': 'PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+            'file': '/home/ayat/BAS/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
             'downsample_factors': (5,5),
             'data_name': 'elevation',
             'aggregate_type': 'MAX'
@@ -590,7 +594,7 @@ if __name__=='__main__':
 
     if False: # Run AMSR
         params = {
-            'folder': 'PolarRoute/datastore/sic/amsr_south/',
+            'folder': '/home/ayat/BAS/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
             'data_name': 'SIC',
             'aggregate_type': 'MEAN'
@@ -609,7 +613,7 @@ if __name__=='__main__':
 
     if True: # Run SOSE
         params = {
-            'file': 'PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+            'file': '/home/ayat/BAS/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
             'aggregate_type': 'MEAN'
         }
 

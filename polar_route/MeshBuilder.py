@@ -193,9 +193,9 @@ class MeshBuilder:
         if 'Data_sources' in self.config['Mesh_info'].keys():
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
-            agg_type = data_source['params']["value_output_types"]
+            agg_type = data_source['params']["aggregate_type"]
             print("creating data loader {}".format(data_source['loader']))
-            loader = DataLoaderFactory.get_dataloader( loader_name, data_source['params'] , min_datapoints)
+            loader = DataLoaderFactory.get_dataloader( loader_name, bounds ,data_source['params'] , min_datapoints)
           
             # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
@@ -203,7 +203,7 @@ class MeshBuilder:
             if 'splitting_conditions' in data_source['params']:
                   splitting_conds = data_source['params']['splitting_conditions'] 
                   for split_cond in splitting_conds:
-                      cond = split_cond [loader._get_data_name()]
+                      cond = split_cond [loader.data_name]
                       updated_splitiing_cond.append (cond) 
            
             value_fill_type = data_source['params']['value_fill_types']

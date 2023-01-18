@@ -226,7 +226,7 @@ class CellBox:
         for source in self.get_data_source():
             loader = source.get_data_loader()
             agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
-            data_name = loader._get_data_name()
+            data_name = loader.data_name
             if agg_value[data_name] == None: 
                 if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
                      agg_value = loader.get_value( self.get_parent().bounds) 
