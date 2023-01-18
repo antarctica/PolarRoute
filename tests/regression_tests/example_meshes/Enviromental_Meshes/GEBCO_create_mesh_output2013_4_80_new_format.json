@@ -13,13 +13,13 @@
             },
             "Data_sources": [
                 {
-                    "loader": "GEBCO",
+                    "loader": "load_gebco",
                     "params": {
                         "downsample_factors": [
                             5,
                             5
                         ],
-                        "file": "../../../BAS/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
+                        "file": "/home/ayat/BAS/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
                         "data_name": "elevation",
                         "value_fill_types": "parent",
                         "value_output_types": "MAX",
