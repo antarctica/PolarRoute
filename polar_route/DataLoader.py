@@ -123,15 +123,15 @@ class ScalarDataLoader(ABC):
             return None
         # Return float of aggregated value
         elif self.aggregate_type == 'MIN':
-            return float(dps.min(skipna=skipna))
+            return {self.data_name :float(dps.min(skipna=skipna))}
         elif self.aggregate_type == 'MAX':
-            return float(dps.max(skipna=skipna))
+            return {self.data_name :float(dps.max(skipna=skipna))}
         elif self.aggregate_type == 'MEAN':
-            return float(dps.mean(skipna=skipna))
+            return {self.data_name :float(dps.mean(skipna=skipna))}
         elif self.aggregate_type == 'MEDIAN':
-            return float(dps.median(skipna=skipna))
+            return {self.data_name :float(dps.median(skipna=skipna))}
         elif self.aggregate_type == 'STD':
-            return float(dps.std(skipna=skipna))
+            return {self.data_name :float(dps.std(skipna=skipna))}
         # If aggregation_type not available
         else:
             raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
@@ -269,16 +269,16 @@ class VectorDataLoader(ABC):
         # Return float of aggregated value
         elif self.aggregate_type == 'MIN': # Find min mag vector
             row = dps[dps.mag == dps.mag.min(skipna=skipna)]
-            return row[col_vars]
+            return {self.data_name :row[col_vars]}
         elif self.aggregate_type == 'MAX': # Find max mag vector
             row = dps[dps.mag == dps.mag.max(skipna=skipna)]
-            return row[col_vars]
+            return {self.data_name :row[col_vars]}
         elif self.aggregate_type == 'MEAN': # Average each vector axis
             mean = [dps[x].mean(skipna=skipna) for x in col_vars]
             return mean
         elif self.aggregate_type == 'STD': # Std Dev each vector axis
             std = [dps[x].std(skipna=skipna) for x in col_vars]
-            return std
+            return {self.data_name :std}
         # Median of vectors does not make sense
         elif self.aggregate_type == 'MEDIAN':
             raise Exception('Cannot find median of multi-dimensional variable!')
