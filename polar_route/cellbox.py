@@ -109,7 +109,7 @@ class CellBox:
         return self.data_source
     
 
-    def get_parent(self, parent):
+    def get_parent(self):
         """
             get the parent CellBox, which is the bigger CellBox that conains this CellBox
         """
@@ -215,7 +215,7 @@ class CellBox:
 
         split_boxes = [north_west, north_east, south_west, south_east]
         return split_boxes
-    @profile
+    
     def aggregate(self):
         '''
             aggregates CellBox data using the associated data_source's aggregate type and returns AggregatedCellBox object
@@ -227,10 +227,24 @@ class CellBox:
             loader = source.get_data_loader()
             agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
             data_name = loader.data_name
-            if agg_value[data_name] == None: 
+            if ',' in data_name: # check if the data name has many entries (ex. uC,uV)
+               data_name_list =  data_name.split(',')
+               for name in data_name_list:
+                #   print (agg_value)
+                #   print (">>>> name >>> " , name)
+                  if agg_value == None: 
+                    if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                        agg_value = loader.get_value( self.get_parent().bounds)
+
+                    elif source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                        agg_value[name] = 0  
+                    else:
+                        agg_value[name] = np.nan
+
+            elif agg_value == None: 
                 if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
                      agg_value = loader.get_value( self.get_parent().bounds) 
-                elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                elif source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
                      agg_value[data_name] = 0  
                 else:
                     agg_value[data_name] = np.nan

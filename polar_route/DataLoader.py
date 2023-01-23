@@ -263,22 +263,28 @@ class VectorDataLoader(ABC):
         col_vars = self.get_data_name().split(',')
         # Create a magnitude column 
         dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
+        dict = {}
         # If no data
         if len(dps) == 0:
             return None        
         # Return float of aggregated value
         elif self.aggregate_type == 'MIN': # Find min mag vector
             row = dps[dps.mag == dps.mag.min(skipna=skipna)]
-            return {self.data_name :row[col_vars]}
+            for name in col_vars:
+                dict[name] = row[col_vars]
+            return dict
         elif self.aggregate_type == 'MAX': # Find max mag vector
-            row = dps[dps.mag == dps.mag.max(skipna=skipna)]
-            return {self.data_name :row[col_vars]}
+           for name in col_vars:
+                dict[name] = row[col_vars]
+           return dict
         elif self.aggregate_type == 'MEAN': # Average each vector axis
-            mean = [dps[x].mean(skipna=skipna) for x in col_vars]
-            return mean
+            for x in col_vars:
+                dict[x] = dps[x].mean(skipna=skipna)
+            return dict
         elif self.aggregate_type == 'STD': # Std Dev each vector axis
-            std = [dps[x].std(skipna=skipna) for x in col_vars]
-            return {self.data_name :std}
+            for x in col_vars:
+                dict[x] = dps[x].std(skipna=skipna)
+            return dict
         # Median of vectors does not make sense
         elif self.aggregate_type == 'MEDIAN':
             raise Exception('Cannot find median of multi-dimensional variable!')
@@ -398,7 +404,7 @@ class AMSRDataLoader(ScalarDataLoader):
                (self.data['long'] >= bounds.get_long_min()) & \
                (self.data['long'] <  bounds.get_long_max()) & \
                (self.data['time'] >= bounds.get_time_min()) & \
-               (self.data['time'] <  bounds.get_time_max())
+               (self.data['time'] <=  bounds.get_time_max())
                    
         return self.data.loc[mask][self.data_name]
         

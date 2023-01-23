@@ -193,7 +193,6 @@ class MeshBuilder:
         if 'Data_sources' in self.config['Mesh_info'].keys():
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
-            agg_type = data_source['params']["aggregate_type"]
             print("creating data loader {}".format(data_source['loader']))
             loader = DataLoaderFactory.get_dataloader( loader_name, bounds ,data_source['params'] , min_datapoints)
           
@@ -203,6 +202,7 @@ class MeshBuilder:
             if 'splitting_conditions' in data_source['params']:
                   splitting_conds = data_source['params']['splitting_conditions'] 
                   for split_cond in splitting_conds:
+                      print (">>>" , loader.data_name)
                       cond = split_cond [loader.data_name]
                       updated_splitiing_cond.append (cond) 
            
@@ -409,7 +409,7 @@ class MeshBuilder:
                 sw_neighbour_map[-3].append(indx)
 
 ###################################################################################################
-    @profile
+    
     def split_to_depth(self, split_depth):
         """
             splits all cellboxes in this grid until a maximum split depth
@@ -450,12 +450,12 @@ if __name__=='__main__':
     import time
     import timeit
     config = None
-    # with open ("GEBCO_create_mesh_output2013_4_80_new_format.json" , "r") as config_file:
-    with open ("smallmesh_test.json" , "r") as config_file:
+    with open ("create_mesh.output2013_4_80_new_format.json" , "r") as config_file:
+    # with open ("smallmesh_test.json" , "r") as config_file:
         config = json.load(config_file)['config']
     mesh_builder = MeshBuilder (config)
-    print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
-    # env_mesh = mesh_builder.build_environmental_mesh()
-    # with open ("GEBCO_refactored_split_6.json" , 'w')  as file:
-    #     json.dump (env_mesh.to_json() , file)
+    # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
+    env_mesh = mesh_builder.build_environmental_mesh()
+    with open ("mesh.output2013_4_80_refactored_split_depth_1.json" , 'w')  as file:
+        json.dump (env_mesh.to_json() , file)
 
