@@ -266,7 +266,9 @@ class VectorDataLoader(ABC):
         dict = {}
         # If no data
         if len(dps) == 0:
-            return None        
+            for name in col_vars:
+                dict[name] = np.nan
+            return dict
         # Return float of aggregated value
         elif self.aggregate_type == 'MIN': # Find min mag vector
             row = dps[dps.mag == dps.mag.min(skipna=skipna)]
@@ -442,9 +444,9 @@ class SOSEDataLoader(VectorDataLoader):
             dps (pd.Series): Datapoints within boundary limits
         '''
         mask = (self.data['lat']  >= bounds.get_lat_min())  & \
-               (self.data['lat']  <  bounds.get_lat_max())  & \
+               (self.data['lat']  <= bounds.get_lat_max())  & \
                (self.data['long'] >= bounds.get_long_min()) & \
-               (self.data['long'] <  bounds.get_long_max())
+               (self.data['long'] <= bounds.get_long_max())
                    
         return self.data.loc[mask][self.data_name.split(',')]
   
@@ -577,7 +579,14 @@ class DensityDataLoader(ScalarDataLoader):
 if __name__=='__main__':
 
     factory = DataLoaderFactory
-    bounds = Boundary([-65,-60], [-70,-50], ['2013-03-01','2013-03-14'])
+    # 32 - bounds = Boundary([-63.125,-2.5], [-65,-63.75], ['2013-03-01','2013-03-14'])
+    # bounds2= Boundary([-65,-64.375], [-62.5,-61.25], ['2013-03-01','2013-03-14'])
+    # bounds = Boundary([-64.375,-63.75], [-61.25,-60], ['2013-03-01','2013-03-14'])
+    # bounds = Boundary([-64.375,-63.75], [-60,-58.75], ['2013-03-01','2013-03-14']) # 56
+    # bounds = Boundary([-64.375,-63.75], [-58.75,-57.5], ['2013-03-01','2013-03-14']) # 57
+    bounds = Boundary([-65,-64.375], [-60,-58.75], ['2013-03-01','2013-03-14']) # 58
+
+    # bounds = Boundary([-65,-60], [-70,-50], ['2013-03-01','2013-03-14'])
     
     if False: # Run GEBCO
         params = {
@@ -600,7 +609,8 @@ if __name__=='__main__':
 
     if False: # Run AMSR
         params = {
-            'folder': '/home/ayat/BAS/PolarRoute/datastore/sic/amsr_south/',
+            'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
+            # 'folder': '/home/ayat/BAS/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
             'data_name': 'SIC',
             'aggregate_type': 'MEAN'
@@ -619,13 +629,15 @@ if __name__=='__main__':
 
     if True: # Run SOSE
         params = {
-            'file': '/home/ayat/BAS/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+            # 'file': '/home/ayat/BAS/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
             'aggregate_type': 'MEAN'
         }
 
         sose = factory.get_dataloader('SOSE', bounds, params, min_dp = 5)
 
         print(sose.get_value(bounds))
+
 
     if False: # Run Thickness
         params = {
