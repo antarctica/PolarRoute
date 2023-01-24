@@ -456,6 +456,6 @@ if __name__=='__main__':
     mesh_builder = MeshBuilder (config)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
-    with open ("mesh.output2013_4_80_refactored_split_depth_1.json" , 'w')  as file:
+    with open ("mesh.output2013_4_80_refactored_split_depth_2.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
 
