@@ -152,7 +152,7 @@ class CellBox:
             for splitting_cond in current_data_source.get_splitting_conditions():
                hom_cond = data_loader.get_hom_condition(self.bounds, splitting_cond)
                hom_conditions.append(hom_cond )
-
+      
         if "HOM" in hom_conditions:
             return False
         if "MIN" in hom_conditions:
@@ -227,30 +227,23 @@ class CellBox:
             loader = source.get_data_loader()
             agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
             data_name = loader.data_name
-            parent = self.get_parent()
             if ',' in data_name: # check if the data name has many entries (ex. uC,uV)
                data_name_list =  data_name.split(',')
                for name in data_name_list:
-                #   print (agg_value)
-                #   print (">>>> name >>> " , name)
-                  if agg_value[name] == np.nan :
-                    if source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                  parent = self.get_parent() 
+                  if np.isnan(agg_value[name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
                         agg_value[name] = 0  
-                    else: 
-                        while source.get_value_fill_type()=='parent'and parent !=None: #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                  elif np.isnan(agg_value[name]) and source.get_value_fill_type()=='parent': 
+                        while np.isnan(agg_value[name]): #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
                             agg_value [name] = loader.get_value( parent.bounds)[name]
-                            parent = parent.get_parent()
+                            parent = parent.get_parent()     
 
-                    
-                  
-
-            if agg_value == np.nan:
-                if source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-                     agg_value[data_name] = 0 
-                else: 
-                    while source.get_value_fill_type()=='parent' and parent !=None:  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                        agg_value = loader.get_value( parent.bounds) 
-                        parent = parent.get_parent()
+            elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                agg_value[data_name] = 0 
+            elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='parent': 
+                while parent !=None and np.isnan(agg_value[data_name]):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                    agg_value = loader.get_value( parent.bounds) 
+                    parent = parent.get_parent()
                
                  
            

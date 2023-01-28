@@ -1,3 +1,11 @@
+import os, sys
+
+current_path = os.path.abspath('.')
+ 
+
+parent_path = os.path.dirname(current_path)
+sys.path.append(parent_path)
+sys.path.insert(1, os.getcwd())
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from pyproj import Transformer
@@ -11,6 +19,7 @@ import logging
 import glob
 
 from polar_route.Boundary import Boundary
+
 
 class DataLoaderFactory:
 
@@ -403,7 +412,7 @@ class AMSRDataLoader(ScalarDataLoader):
 
         mask = (self.data['lat']  >= bounds.get_lat_min())  & \
                (self.data['lat']  <  bounds.get_lat_max())  & \
-               (self.data['long'] >= bounds.get_long_min()) & \
+               (self.data['long'] > bounds.get_long_min()) & \
                (self.data['long'] <  bounds.get_long_max()) & \
                (self.data['time'] >= bounds.get_time_min()) & \
                (self.data['time'] <=  bounds.get_time_max())
@@ -445,7 +454,7 @@ class SOSEDataLoader(VectorDataLoader):
         '''
         mask = (self.data['lat']  >= bounds.get_lat_min())  & \
                (self.data['lat']  <= bounds.get_lat_max())  & \
-               (self.data['long'] >= bounds.get_long_min()) & \
+               (self.data['long'] > bounds.get_long_min()) & \
                (self.data['long'] <= bounds.get_long_max())
                    
         return self.data.loc[mask][self.data_name.split(',')]
@@ -584,8 +593,8 @@ if __name__=='__main__':
     # bounds = Boundary([-64.375,-63.75], [-61.25,-60], ['2013-03-01','2013-03-14'])
     # bounds = Boundary([-64.375,-63.75], [-60,-58.75], ['2013-03-01','2013-03-14']) # 56
     # bounds = Boundary([-64.375,-63.75], [-58.75,-57.5], ['2013-03-01','2013-03-14']) # 57
-    bounds = Boundary([-65,-64.375], [-60,-58.75], ['2013-03-01','2013-03-14']) # 58
-
+    bounds = Boundary([-64.375,-63.75], [-60,-58.75], ['2013-03-01','2013-03-14']) # 58
+# -60 -64.375, -60 -63.75, -58.75 -63.75, -58.75 -64.375, -60 -64.37
     # bounds = Boundary([-65,-60], [-70,-50], ['2013-03-01','2013-03-14'])
     
     if False: # Run GEBCO
@@ -609,8 +618,8 @@ if __name__=='__main__':
 
     if False: # Run AMSR
         params = {
-            'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
-            # 'folder': '/home/ayat/BAS/PolarRoute/datastore/sic/amsr_south/',
+            # 'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
+            'folder': '/home/ayat/BAS/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
             'data_name': 'SIC',
             'aggregate_type': 'MEAN'
@@ -629,8 +638,8 @@ if __name__=='__main__':
 
     if True: # Run SOSE
         params = {
-            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
-            # 'file': '/home/ayat/BAS/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+            # 'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+             'file': '/home/ayat/BAS/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
             'aggregate_type': 'MEAN'
         }
 

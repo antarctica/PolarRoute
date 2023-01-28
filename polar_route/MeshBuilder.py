@@ -16,10 +16,10 @@ Example:
 """
 from memory_profiler import profile
 import os, sys
-#'/home/user/example/parent/child'
+
 current_path = os.path.abspath('.')
  
-#'/home/user/example/parent'
+
 parent_path = os.path.dirname(current_path)
 sys.path.append(parent_path)
 sys.path.insert(1, os.getcwd())
@@ -344,8 +344,8 @@ class MeshBuilder:
         self.neighbour_graph.update_corner_neighbours(cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx)
 
         self.neighbour_graph.remove_node (cellbox_indx) #remove the original splitted cellbox from the neighbour_graph
-        obj = cellboxes[cellbox_indx] #free up memory
-        del obj
+        # obj = cellboxes[cellbox_indx] #free up memory
+        # del obj
         cellboxes[cellbox_indx] = None #set the original splitted cellbox to its None 
         
 
@@ -422,7 +422,11 @@ class MeshBuilder:
        
         for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
-                if (cellbox.get_split_depth() < split_depth) & (cellbox.should_split()):
+                should_split = cellbox.should_split()
+                print ( self.mesh.cellboxes.index (cellbox) , "," , cellbox.split_depth ,"," , should_split , "," , cellbox.bounds.get_bounds())
+                print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , cellbox.bounds.get_bounds())
+                # print (cellbox.get_id() , "," , should_split)
+                if (cellbox.get_split_depth() < split_depth) & should_split:
                     self.split_and_replace(cellbox) 
 #################################################################################################
     # @profile
