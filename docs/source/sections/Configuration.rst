@@ -1,119 +1,93 @@
-********
+""""""""""""
 Input - Configuration
-********
+""""""""""""
 
 In this section we will outline the standard structure for a configuration file used in all portions of the PolarRoute software package.
 
 Outlined below is an example configuration file for running PolarRoute. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.
+
+^^^^^^^^^^^^
+Mesh Contruction configuration file example.
+^^^^^^^^^^^^
 ::
+
    {
-      "Mesh_info":{
-         "Region": {
-            "latMin": -77.5,
-            "latMax": -55,
-            "longMin": -120,
-            "longMax": -10,
-            "startTime": "2017-02-01",
-            "endTime": "2017-02-14",
-            "cellWidth":5,
-            "cellHeight":2.5
-         },
-         "Data_sources": [
-            {
+      "Region": {
+         "latMin": -77.5,
+         "latMax": -55,
+         "longMin": -120,
+         "longMax": -10,
+         "startTime": "2017-02-01",
+         "endTime": "2017-02-14",
+         "cellWidth":5,
+         "cellHeight":2.5
+      },
+      "Data_sources": [
+         {
             "loader":"load_bsose_depth",
             "params":{
                "file":"../../Data/BSOSE/bsose_i122_2013to2017_1day_SeaIceArea.nc",
                "data_name": "elevation"
             }
-            }, 
-            {
+         }, 
+         {
             "loader":"load_amsr",
             "params":{
                "file":"../../Data/AMSR/asi-AMSR-2017.nc"
             }
-            },
-            {
+         },
+         {
             "loader":"load_sose_currents",
             "params":{
                "file":"../../Data/SOSE_surface_velocity_6yearMean_2005-2010.nc"
             }
-            },
-            {
+         },
+         {
             "loader":"load_thickness",
             "params":{
-            }
-            },
-            {
+               }
+         },
+         {
             "loader":"load_density",
             "params":{
             }
-            }
-         ],
-         "splitting": {
-            "split_depth":3,
-            "minimum_datapoints":5,
-            "splitting_conditions":[
-               {"elevation":{
+         }
+      ],
+      "splitting": {
+         "split_depth":3,
+         "minimum_datapoints":5,
+         "splitting_conditions":[
+            {
+               "elevation":{
                   "threshold":-10,
                   "upperBound": 1,
                   "lowerBound":0
-               }},
-               {"SIC":{
+               }
+            },
+            {
+               "SIC":{
                   "threshold":35,
                   "upperBound": 0.9,
                   "lowerBound":0.1
-               }}
-            ],
-            "value_fill_types":{
-               "SIC": "parent",
-               "uC": "parent",
-               "vC": "parent"
+               }
+            }
+         ],
+         "value_fill_types":{
+            "SIC": "parent",
+            "uC": "parent",
+            "vC": "parent"
             }
          },
          "value_output_types":{
             "elevation":"MAX"
          }
-      },
-      "Vessel": {
-         "Speed": 26.5,
-         "Unit": "km/hr",
-         "Beam": 24.0,
-         "HullType": "slender",
-         "ForceLimit": 96634.5,
-         "MaxIceExtent": 80,
-         "MinDepth": -10
-      },
-      "Route_Info": {
-         "Objective_Function": "traveltime",
-         "Path_Variables": [
-            "fuel",
-            "traveltime"
-         ],
-         "WayPoints": "./WayPoints_org.csv",
-         "Source_Waypoints": ["LongPathStart"],
-         "End_Waypoints": [],
-         "Vector Names": ["uC","vC"],
-         "Zero_Currents": false,
-         "Variable_Speed": true,
-         "Time_Unit": "days",
-         "Early_Stopping_Criterion": true,
-         "Save_Dijkstra_Graphs": false,
-         "Smooth Path":{
-            "Max Iteration Number":1000,
-            "Minimum Difference": 1e-3
-         }
-      }
    }
 
-The Configuration file is composed of three distinct sections 'Mesh_info', 'Vessel', and 'Route_Info'.
-Each of these contain configuration information for the various stages of the route planning pipeline.
 
-^^^^^^^^^^^^^^^^^^
-Mesh_info
-^^^^^^^^^^^^^^^^^^
-Mesh_info contains information required to build the discretised environment in which the route planner
+The configuration file used for mesh contruction contains information required to build the discretised environment in which the route planner
 operates. Information here dictates the region in which the mesh is constructed, the data contained within
-the mesh and how the mesh is split to a non-uniform resolution. 
+the mesh and how the mesh is split to a non-uniform resolution. The configution file used to generate a mesh is stored in a section of the
+output mesh titled 'Mesh_info' 
 
 The 'Mesh_info' section of the configuration file contains three primary sections:
 
@@ -274,18 +248,18 @@ with a (CellBox) are calculated by taking the mean of all data points of a given
 
 * **<value_name>** *(string)* : The name of the value which the output type change will be applied to 
 
-^^^^^^^^
-Vessel
-^^^^^^^^
+^^^^^^^^^^^^^^^^^
+Vessel Performance configuration file example.
+^^^^^^^^^^^^^^^^^
 
-The Vessel section of the configuration file provides all the necessary information about the vessel that will execute
+The Vessel configuration file provides all the necessary information about the vessel that will execute
 the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the `VesselPerformance`
-class for this vessel.
-
+class for this vessel. A file of this structure is also used as a command line argument for the 'add_vehicle' entry point.
 
 ::
 
-   "Vessel": {
+   {
+      "Vessel": {
          "Speed": 26.5,
          "Unit": "km/hr",
          "Beam": 24.0,
@@ -293,9 +267,10 @@ class for this vessel.
          "ForceLimit": 96634.5,
          "MaxIceExtent": 80,
          "MinDepth": -10
-      },
+      }
+   }
 
-where the variables are as follows:
+Above are a typical set of configuration parameters used for a vessel where the variables are as follows:
 
 * **Speed** *(float)* : The maximum speed of the vessel in open water.
 * **Unit** *(string)* : The units of measurement for the speed of the vessel (currently only "km/hr" is supported).
@@ -305,37 +280,35 @@ where the variables are as follows:
 * **MaxIceExtent** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
 * **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through in metres. Negative values correspond to a depth below sea level.
 
-
-^^^^^^^^^^^^^^^
-Route_Info
-^^^^^^^^^^^^^^^
-
-TODO intro to route info
-
+^^^^^^^^^^^^^^^^^
+Route Planning configuration file example.
+^^^^^^^^^^^^^^^^^
 ::
 
-   "Route_Info": {
-         "objective_function": "traveltime",
-         "path_variables": [
+   {
+      "Route_Info": {
+         "Objective_Function": "traveltime",
+         "Path_Variables": [
             "fuel",
             "traveltime"
          ],
-         "waypoints_path": "./WayPoints_org.csv",
-         "source_waypoints": ["LongPathStart"],
-         "end_waypoints": [],
-         "vector_names": ["uC","vC"],
-         "zero_currents": false,
-         "variable_speed": true,
-         "time_unit": "days",
-         "early_stopping_criterion": true,
-         "save_dijkstra_graphs": false,
-         "smooth_path":{
-            "max_iteration_number":1000,
-            "minimum_difference": 1e-3
+         "WayPoints": "./WayPoints_org.csv",
+         "Source_Waypoints": ["LongPathStart"],
+         "End_Waypoints": [],
+         "Vector Names": ["uC","vC"],
+         "Zero_Currents": false,
+         "Variable_Speed": true,
+         "Time_Unit": "days",
+         "Early_Stopping_Criterion": true,
+         "Save_Dijkstra_Graphs": false,
+         "Smooth Path":{
+            "Max Iteration Number":1000,
+            "Minimum Difference": 1e-3
          }
       }
+   }
 
-where the variables are as follows:
+above is a typical set of configuration parameters used for route planning where the variables are as follows:
 
 * **objective_function** *(string)* : Defining the objective function to minimise for the construction of the mesh based Dijkstra routes. This variable can either be defined as 'traveltime' or 'fuel' .
 * **path_variables** *(list<(string)>)* : A list of strings of the route variables to return in the output geojson. 
@@ -351,3 +324,4 @@ where the variables are as follows:
 * **Smooth Path**
    * **max_iteration_number** *(int)* : For development use only. Maximum number of iterations in the path smoothing. For most paths convergence is met 100x earlier than this value. 
    * **minimum_difference** *(float)* : For development use only. Minimum difference between two path smoothing iterations before convergence is triggered
+
