@@ -44,7 +44,7 @@ class VesselPerformance:
             vessel_params (dict): The vessel specific information contained within the config
 
     """
-    def __init__(self, mesh_json):
+    def __init__(self, mesh_json, vessel_params):
         """
             Constructs the VesselPerformance class from a given input mesh in json format which is then modified
             according to the vessel parameters defined in the config.
@@ -57,7 +57,10 @@ class VesselPerformance:
         self.mesh = mesh_json
         self.config = self.mesh['config']
         self.mesh_df = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
-        self.vessel_params = self.config['Vessel']
+        self.vessel_params = vessel_params
+
+        # Appended vessel params to mesh config file
+        self.mesh['config']['Vessel'] = vessel_params
 
         # Check for NaNs in input and zero them if present
         if self.mesh_df.isnull().values.any():

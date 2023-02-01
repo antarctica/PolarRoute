@@ -96,9 +96,9 @@ def add_vehicle_cli():
     mesh = json.load(args.mesh)
     vessel = json.load(args.config)
 
-    mesh['config']['Vessel'] = vessel['Vessel']
+    
 
-    vp = VesselPerformance(mesh)
+    vp = VesselPerformance(mesh, vessel['Vessel'])
 
     logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
