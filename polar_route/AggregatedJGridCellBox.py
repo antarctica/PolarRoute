@@ -3,7 +3,7 @@
 from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
-import Boundary
+from polar_route.Boundary import Boundary
 from polar_route.AggregatedCellBox import AggregatedCellBox
 
 class AggregatedJGridCellBox (AggregatedCellBox):
