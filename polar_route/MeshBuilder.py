@@ -15,14 +15,6 @@ Example:
         mesh = Mesh(config)
 """
 from memory_profiler import profile
-import os, sys
-
-current_path = os.path.abspath('.')
- 
-
-parent_path = os.path.dirname(current_path)
-sys.path.append(parent_path)
-sys.path.insert(1, os.getcwd())
 import logging
 import math
 import numpy as np
@@ -268,8 +260,9 @@ class MeshBuilder:
                     4 smaller CellBox objects.
 
         """
+        print ( cellbox.get_id() , "," , cellbox.split_depth , "," , len (self.mesh.cellboxes) , ", ", cellbox.bounds.get_bounds())
         split_cellboxes = cellbox.split(len (self.mesh.cellboxes))
-        self.mesh.cellboxes.extend (split_cellboxes)
+        self.mesh.cellboxes += split_cellboxes
         cellboxes = self.mesh.cellboxes
         cellbox_indx = cellboxes.index(cellbox)
         
@@ -423,8 +416,7 @@ class MeshBuilder:
         for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
                 should_split = cellbox.should_split()
-                print ( self.mesh.cellboxes.index (cellbox) , "," , cellbox.split_depth ,"," , should_split , "," , cellbox.bounds.get_bounds())
-                print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , cellbox.bounds.get_bounds())
+                # print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , len (self.mesh.cellboxes) , "" , cellbox.bounds.get_bounds())
                 # print (cellbox.get_id() , "," , should_split)
                 if (cellbox.get_split_depth() < split_depth) & should_split:
                     self.split_and_replace(cellbox) 
@@ -462,4 +454,3 @@ if __name__=='__main__':
     env_mesh = mesh_builder.build_environmental_mesh()
     with open ("mesh.output2013_4_80_refactored_split_depth_2.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
-

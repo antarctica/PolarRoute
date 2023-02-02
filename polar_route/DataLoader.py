@@ -126,7 +126,7 @@ class ScalarDataLoader(ABC):
         '''
 
         # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds)
+        dps = self.get_datapoints(bounds).dropna()
         # If no data
         if len(dps) == 0:
             return None
@@ -328,8 +328,10 @@ class GEBCODataLoader(ScalarDataLoader):
             
         raw_data = raw_data.sel(lat=slice(bounds.get_lat_min(),bounds.get_lat_max()))
         raw_data = raw_data.sel(lon=slice(bounds.get_long_min(),bounds.get_long_max()))
+  
         
         return raw_data
+
 
     def get_datapoints(self, bounds):
         '''
@@ -342,12 +344,19 @@ class GEBCODataLoader(ScalarDataLoader):
             dps (pd.Series): Datapoints within boundary limits
         '''
         dps = self.data
-        dps = dps.sel(lon=slice(bounds.get_long_min(), bounds.get_long_max()))
-        dps = dps.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
+        # dps = dps.sel(lon=slice(bounds.get_long_min(), bounds.get_long_max()))
+        # dps = dps.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
 
         dps = dps.to_dataframe().reset_index()
 
-        return dps[self.data_name]
+        gebco_df = dps
+        gebco_df = gebco_df.rename(columns={'lon': 'long'})
+
+        gebco_df = gebco_df[gebco_df['long'].between(bounds.get_long_min(), bounds.get_long_max())]
+        gebco_df = gebco_df[gebco_df['lat'].between(bounds.get_lat_min(), bounds.get_lat_max())]
+
+        # return dps[self.data_name]
+        return gebco_df[self.data_name]
 
 class AMSRDataLoader(ScalarDataLoader):
 
@@ -378,7 +387,7 @@ class AMSRDataLoader(ScalarDataLoader):
             # Open folder and read in files
             logging.debug(f"- Searching folder {self.file_location}")
             raw_data_array = []
-            for file in glob.glob(f'{self.file_location}*.nc'):
+            for file in sorted(glob.glob(f'{self.file_location}*.nc')):
                 logging.debug(f"- Opening file {file}")
                 date = retrieve_date(file)
                 if datetime.strptime(bounds.get_time_min(), '%Y-%m-%d') <= \
@@ -410,10 +419,17 @@ class AMSRDataLoader(ScalarDataLoader):
 
     def get_datapoints(self, bounds):
 
+        # mask = (self.data['lat']  >= bounds.get_lat_min())  & \
+        #        (self.data['lat']  <  bounds.get_lat_max())  & \
+        #        (self.data['long'] > bounds.get_long_min()) & \
+        #        (self.data['long'] <  bounds.get_long_max()) & \
+        #        (self.data['time'] >= bounds.get_time_min()) & \
+        #        (self.data['time'] <=  bounds.get_time_max())
+
         mask = (self.data['lat']  >= bounds.get_lat_min())  & \
-               (self.data['lat']  <  bounds.get_lat_max())  & \
-               (self.data['long'] > bounds.get_long_min()) & \
-               (self.data['long'] <  bounds.get_long_max()) & \
+               (self.data['lat']  <=  bounds.get_lat_max())  & \
+               (self.data['long'] >= bounds.get_long_min()) & \
+               (self.data['long'] <=  bounds.get_long_max()) & \
                (self.data['time'] >= bounds.get_time_min()) & \
                (self.data['time'] <=  bounds.get_time_max())
                    
