@@ -412,14 +412,15 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
-       
-        for cellbox in self.mesh.cellboxes:
-            if isinstance(cellbox, CellBox):
-                should_split = cellbox.should_split()
-                # print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , len (self.mesh.cellboxes) , "" , cellbox.bounds.get_bounds())
-                # print (cellbox.get_id() , "," , should_split)
-                if (cellbox.get_split_depth() < split_depth) & should_split:
-                    self.split_and_replace(cellbox) 
+        
+        for source in self.mesh.cellboxes[0].get_data_source():
+            for cellbox in self.mesh.cellboxes:
+                if isinstance(cellbox, CellBox):
+                    should_split = cellbox.should_split(source)
+                    print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , len (self.mesh.cellboxes) , "" , cellbox.bounds.get_bounds())
+                    #  print (cellbox.get_id() , "," , should_split)
+                    if (cellbox.get_split_depth() < split_depth) & should_split:
+                            self.split_and_replace(cellbox) 
 #################################################################################################
     # @profile
     def build_environmental_mesh(self):
@@ -452,5 +453,5 @@ if __name__=='__main__':
     mesh_builder = MeshBuilder (config)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
-    with open ("mesh.output2013_4_80_refactored_split_depth_2.json" , 'w')  as file:
+    with open ("mesh.output2013_4_80_refactored_split_depth_4.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)

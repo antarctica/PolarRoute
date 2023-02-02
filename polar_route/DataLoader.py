@@ -129,7 +129,7 @@ class ScalarDataLoader(ABC):
         dps = self.get_datapoints(bounds).dropna()
         # If no data
         if len(dps) == 0:
-            return None
+            return {self.data_name :np.nan}
         # Return float of aggregated value
         elif self.aggregate_type == 'MIN':
             return {self.data_name :float(dps.min(skipna=skipna))}

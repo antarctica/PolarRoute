@@ -126,7 +126,44 @@ class CellBox:
 # methods used for splitting a cellbox
 
 
-    def should_split(self):
+
+    def should_split(self , current_data_source):
+        """
+            determines if a cellbox should be split based on the homogeneity
+            condition of each data type contained within. The homogeneity condition
+            of values within this cellbox is calculated using the method
+            'get_hom_cond' in each DataLoader object inside CellBox's metadata
+
+            if ANY data returns 'HOM':
+                do not split
+            if ANY data returns 'MIN':
+                do not split
+            if ALL data returns 'CLR':
+                do not split
+            else (mixture of CLR & HET):
+                split
+
+            Returns:
+                should_split (bool): True if the splitting_conditions of this CellBox
+                    will result in the CellBox being split.
+        """
+        hom_conditions = []
+       
+        data_loader = current_data_source.get_data_loader()
+        for splitting_cond in current_data_source.get_splitting_conditions():
+               hom_cond = data_loader.get_hom_condition(self.bounds, splitting_cond)
+               hom_conditions.append(hom_cond )
+      
+        if "HOM" in hom_conditions:
+            return False
+        if "MIN" in hom_conditions:
+            return False
+        if hom_conditions.count("CLR") == len(hom_conditions):
+            return False
+
+        return True
+
+    def should_split_breadth_first(self):
         """
             determines if a cellbox should be split based on the homogeneity
             condition of each data type contained within. The homogeneity condition
@@ -227,6 +264,7 @@ class CellBox:
             loader = source.get_data_loader()
             agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
             data_name = loader.data_name
+            parent = self.get_parent()
             if ',' in data_name: # check if the data name has many entries (ex. uC,uV)
                data_name_list =  data_name.split(',')
                for name in data_name_list:
