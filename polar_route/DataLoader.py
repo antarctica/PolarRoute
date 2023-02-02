@@ -398,7 +398,9 @@ class AMSRDataLoader(ScalarDataLoader):
         else:
             raise ValueError(f'{self.file_location} not a valid .nc or folder!')
         
-        raw_df = raw_data.to_dataframe().reset_index()
+        raw_df = raw_data.to_dataframe().reset_index().dropna()
+        
+        # raw_df = raw_df.set_index('time').sort_index().reset_index()
         # AMSR data is in a EPSG:3412 projection and must be reprojected into
         # EPSG:4326
         # TODO Different projections per hemisphere
@@ -415,7 +417,26 @@ class AMSRDataLoader(ScalarDataLoader):
             'SIC': raw_df['z'],
             'time': pd.to_datetime(raw_df['time'])
         })
-        return reprojected_df
+        
+        mask = (reprojected_df['lat']  >= bounds.get_lat_min())  & \
+               (reprojected_df['lat']  <= bounds.get_lat_max())  & \
+               (reprojected_df['long'] > bounds.get_long_min()) & \
+               (reprojected_df['long'] <= bounds.get_long_max()) & \
+               (reprojected_df['time'] >= bounds.get_time_min()) & \
+               (reprojected_df['time'] <=  bounds.get_time_max())
+               
+        return reprojected_df.loc[mask]
+
+    def get_datapoints(self, bounds):
+
+        mask = (self.data['lat']  >= bounds.get_lat_min())  & \
+               (self.data['lat']  <= bounds.get_lat_max())  & \
+               (self.data['long'] > bounds.get_long_min()) & \
+               (self.data['long'] <= bounds.get_long_max()) & \
+               (self.data['time'] >= bounds.get_time_min()) & \
+               (self.data['time'] <=  bounds.get_time_max())
+                   
+        return self.data.loc[mask][self.data_name]
 
     def get_datapoints(self, bounds):
 
@@ -602,67 +623,105 @@ class DensityDataLoader(ScalarDataLoader):
         return dps[self.data_name]
 
 if __name__=='__main__':
-
-    factory = DataLoaderFactory
-    # 32 - bounds = Boundary([-63.125,-2.5], [-65,-63.75], ['2013-03-01','2013-03-14'])
-    # bounds2= Boundary([-65,-64.375], [-62.5,-61.25], ['2013-03-01','2013-03-14'])
-    # bounds = Boundary([-64.375,-63.75], [-61.25,-60], ['2013-03-01','2013-03-14'])
-    # bounds = Boundary([-64.375,-63.75], [-60,-58.75], ['2013-03-01','2013-03-14']) # 56
-    # bounds = Boundary([-64.375,-63.75], [-58.75,-57.5], ['2013-03-01','2013-03-14']) # 57
-    bounds = Boundary([-64.375,-63.75], [-60,-58.75], ['2013-03-01','2013-03-14']) # 58
-# -60 -64.375, -60 -63.75, -58.75 -63.75, -58.75 -64.375, -60 -64.37
-    # bounds = Boundary([-65,-60], [-70,-50], ['2013-03-01','2013-03-14'])
     
-    if False: # Run GEBCO
+    def polygon_str_to_boundaries(polygon):
+        "POLYGON ((-61.25 -65, -61.25 -64.375, -60 -64.375, -60 -65, -61.25 -65))"
+        new_str = polygon.replace('POLYGON ((', '').replace('))','')
+        coords = new_str.split(',')
+        c1 = coords[0].lstrip().split(' ')
+        c2 = coords[2].lstrip().split(' ')
+        
+        long_min = float(c1[0])
+        lat_min = float(c1[1])
+        
+        long_max = float(c2[0])
+        lat_max = float(c2[1])
+        
+        return [lat_min, lat_max], [long_min, long_max]
+    
+    def boundary_str_to_boundaries(bounds):
+        "POLYGON ((-61.25 -65, -61.25 -64.375, -60 -64.375, -60 -65, -61.25 -65))"
+        new_str = bounds.replace('[', '').replace(']','').replace(' ','')
+        coords = new_str.split(',')
+        long_min = float(coords[0])
+        lat_min = float(coords[1])
+        
+        long_max = float(coords[4])
+        lat_max = float(coords[5])
+        
+        return [lat_min, lat_max], [long_min, long_max]
+
+    lat_range, long_range = polygon_str_to_boundaries(
+        "POLYGON ((-59.375 -65, -59.375 -64.6875, -58.75 -64.6875, -58.75 -65, -59.375 -65))"
+        # "POLYGON ((-59.375 -64.84375, -59.375 -64.6875, -59.0625 -64.6875, -59.0625 -64.84375, -59.375 -64.84375))", #600
+        # "POLYGON ((-59.0625 -64.84375, -59.0625 -64.6875, -58.75 -64.6875, -58.75 -64.84375, -59.0625 -64.84375))", #601
+        
+        
+        
+        )
+    # lat_range, long_range = boundary_str_to_boundaries(
+        # "[[-52.5, -61.25], [-52.5, -60], [-50.0, -60], [-50.0, -61.25], [-52.5, -61.25]]" # Parent
+        # "[[-52.5, -60.625], [-52.5, -60.0], [-51.25, -60.0], [-51.25, -60.625], [-52.5, -60.625]]" #92
+        # "[[-51.25, -60.625], [-51.25, -60.0], [-50.0, -60.0], [-50.0, -60.625], [-51.25, -60.625]]" #93
+        # "[[-52.5, -61.25], [-52.5, -60.625], [-51.25, -60.625], [-51.25, -61.25], [-52.5, -61.25]]" #94
+        # "[[-51.25, -61.25], [-51.25, -60.625], [-50.0, -60.625], [-50.0, -61.25], [-51.25, -61.25]]" #95
+        # )
+    cb = '179'
+    # lat_range = [-61.25, -60]
+    # long_range = [-52.5, -50]
+    
+    factory = DataLoaderFactory
+    bounds = Boundary(lat_range, long_range, ['2013-03-01','2013-03-14'])
+    
+    if True: # Run GEBCO
         params = {
-            'file': '/home/ayat/BAS/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+
+            # 'file': '/home/ayat/BAS/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
             'downsample_factors': (5,5),
             'data_name': 'elevation',
             'aggregate_type': 'MAX'
         }
 
         split_conds = {
-            'threshold': 620,
-            'upper_bound': 0.9,
-            'lower_bound': 0.1
-        }
+                "threshold": -10,
+                "upper_bound": 1,
+                "lower_bound": 0
+            }
 
         gebco = factory.get_dataloader('GEBCO', bounds, params, min_dp = 5)
-
-        print(gebco.get_value(bounds))
+        
+        gebco_data = gebco.get_datapoints(bounds)
         print(gebco.get_hom_condition(bounds, split_conds))
-
-    if False: # Run AMSR
+        
+    if True: # Run AMSR
         params = {
-            # 'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
-            'folder': '/home/ayat/BAS/PolarRoute/datastore/sic/amsr_south/',
+            'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
+            # 'folder': '/home/ayat/BAS/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
             'data_name': 'SIC',
             'aggregate_type': 'MEAN'
         }
 
         split_conds = {
-            'threshold': 80,
-            'upper_bound': 0.9,
-            'lower_bound': 0.1
-        }
+                "threshold": 35,
+                "upper_bound": 0.9,
+                "lower_bound": 0.1
+            }
 
         amsr = factory.get_dataloader('AMSR', bounds, params, min_dp = 5)
-
-        print(amsr.get_value(bounds))
+        
+        amsr_data = amsr.get_datapoints(bounds)
         print(amsr.get_hom_condition(bounds, split_conds))
 
-    if True: # Run SOSE
+    if False: # Run SOSE
         params = {
-            # 'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
-             'file': '/home/ayat/BAS/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
+            # 'file': '/home/ayat/BAS/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
             'aggregate_type': 'MEAN'
         }
 
         sose = factory.get_dataloader('SOSE', bounds, params, min_dp = 5)
-
-        print(sose.get_value(bounds))
-
 
     if False: # Run Thickness
         params = {
@@ -677,9 +736,6 @@ if __name__=='__main__':
         }
         
         thickness = factory.get_dataloader('thickness', bounds, params, min_dp = 1)
-        print(thickness.data)
-        print(thickness.get_value(bounds))
-        print(thickness.get_hom_condition(bounds, split_conds))
 
     if False: # Run Density
         params = {
@@ -695,5 +751,21 @@ if __name__=='__main__':
         
         density = factory.get_dataloader('density', bounds, params, min_dp = 1)
 
-        print(density.get_value(bounds))
-        print(density.get_hom_condition(bounds, split_conds))
+    # dls = [gebco, amsr, sose, density, thickness]
+    
+    # for dl in dls:
+        # # Choose which method to retrieve data based on input type
+        # if type(dl.data) == type(pd.DataFrame()):
+        #     df = dl.data
+        # elif type(dl.data) == type(xr.Dataset()):
+        #     df = dl.data.to_dataframe()
+        # elif type(dl.data) == type(xr.DataArray()):
+        #     df = dl.data.to_dataframe()
+        # print(dl.data_name)
+        # # dl.get_datapoints(bounds).to_csv(f'/home/habbot/Documents/Work/test_outputs/refactor_{dl.data_name}_cb{cb}.csv')
+        # if dl.data_name == 'uC,vC':
+        #     dl.data_name = 'currents'
+        
+        # df.to_csv(f'/home/habbot/Documents/Work/test_outputs/refactor_{dl.data_name}_cb{cb}.csv')
+        # print('written out')
+    print('hi')
