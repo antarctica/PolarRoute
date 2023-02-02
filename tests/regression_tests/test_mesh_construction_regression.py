@@ -3,15 +3,6 @@
     of the PolarRoute python package.
 """
 
-import os, sys
-#'/home/user/example/parent/child'
-current_path = os.path.abspath('.')
- 
-#'/home/user/example/parent'
-parent_path = os.path.dirname(current_path)
-sys.path.append(parent_path)
-sys.path.insert(1, os.getcwd())
-print ("current path >>>" , current_path)
 
 import numpy as np
 import pandas as pd
@@ -24,9 +15,9 @@ from polar_route.MeshBuilder import MeshBuilder
 
 #File locations of all enviromental meshes to be recaculated for regression testing.
 TEST_ENV_MESHES = [
-    './tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json',
-    './tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80_new_format.json',
-    './tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80_new_format.json'
+    './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json',
+    './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80_new_format.json',
+    './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80_new_format.json'
 ]
 
 
