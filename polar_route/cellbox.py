@@ -127,7 +127,7 @@ class CellBox:
 
 
 
-    def should_split(self , current_data_source):
+    def should_split(self , stop_index):
         """
             determines if a cellbox should be split based on the homogeneity
             condition of each data type contained within. The homogeneity condition
@@ -148,11 +148,15 @@ class CellBox:
                     will result in the CellBox being split.
         """
         hom_conditions = []
-       
-        data_loader = current_data_source.get_data_loader()
-        for splitting_cond in current_data_source.get_splitting_conditions():
-               hom_cond = data_loader.get_hom_condition(self.bounds, splitting_cond)
-               hom_conditions.append(hom_cond )
+        
+        current_data_source = None
+        for index in range (0, stop_index): 
+            current_data_source = self.get_data_source()[index] 
+            data_loader = current_data_source.get_data_loader()
+            for splitting_cond in current_data_source.get_splitting_conditions():
+                 hom_cond = data_loader.get_hom_condition(self.bounds, splitting_cond)
+                 hom_conditions.append(hom_cond )
+             
       
         if "HOM" in hom_conditions:
             return False

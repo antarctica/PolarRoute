@@ -412,15 +412,16 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
-        
-        for source in self.mesh.cellboxes[0].get_data_source():
-            for cellbox in self.mesh.cellboxes:
-                if isinstance(cellbox, CellBox):
-                    should_split = cellbox.should_split(source)
-                    print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , len (self.mesh.cellboxes) , "" , cellbox.bounds.get_bounds())
-                    #  print (cellbox.get_id() , "," , should_split)
-                    if (cellbox.get_split_depth() < split_depth) & should_split:
-                            self.split_and_replace(cellbox) 
+        data_sources =  self.mesh.cellboxes[0].get_data_source()
+        for index in range (0, len (data_sources)):
+            if (len(data_sources[index].get_splitting_conditions()) >0 ):
+                for cellbox in self.mesh.cellboxes:
+                    if isinstance(cellbox, CellBox):
+                        should_split = cellbox.should_split(index+1)
+                        print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , len (self.mesh.cellboxes) , "" , cellbox.bounds.get_bounds())
+                        #  print (cellbox.get_id() , "," , should_split)
+                        if (cellbox.get_split_depth() < split_depth) & should_split:
+                                self.split_and_replace(cellbox) 
 #################################################################################################
     # @profile
     def build_environmental_mesh(self):
