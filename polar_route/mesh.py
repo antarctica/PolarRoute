@@ -1,20 +1,3 @@
-"""
-In this section we will discuss the usage of the Mesh
-functionality of PolarRoute.
-
-Example:
-    An example of how to run this code can be executed by running the
-    following in an ipython/Jupyter Notebook::
-
-        from RoutePlanner import Mesh
-
-        import json
-        with open('./config.json', 'r') as f:
-            config = json.load(f)
-
-        mesh = Mesh(config)
-"""
-
 import logging
 import math
 import numpy as np

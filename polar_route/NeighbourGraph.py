@@ -50,12 +50,19 @@ class NeighbourGraph:
     def get_neighbours(self ,cellbox_indx , direction):
         return self.neighbour_graph [cellbox_indx][direction] 
 
+    
     def add_node(self ,  index ,  neighbour_map):
+         ''' 
+            method that adds a node to the neighbour_graph at a given index
+        '''
         self.neighbour_graph [index] = neighbour_map     
        
     
         
     def remove_node (self, cellbox_index):
+        ''' 
+            method that removes a node to the neighbour_graph at a given index
+        '''
       self.neighbour_graph.pop(cellbox_index)
 
  
@@ -79,13 +86,20 @@ class NeighbourGraph:
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[1])   
 
-    def remove_node_from_neighbours (self , cellbox_indx, direction): # go through neighbours in a given direction and remove cellbox_index from their neighbour_maps
+    def remove_node_from_neighbours (self , cellbox_indx, direction):
+         '''
+         method that goes through neighbours in a given direction and remove cellbox_index from their neighbour_maps
+         '''
+
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
         for indx in neighbour_indx_list:
             self.neighbour_graph[indx][-1*direction].remove(cellbox_indx)
 
 
     def update_corner_neighbours(self, cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx):
+        ''' 
+            method that updates the corner neighbours of cellbox_indx with the given indeces
+        '''
         north_east_corner_indx = self.neighbour_graph[cellbox_indx][1]
         if len(north_east_corner_indx) > 0:
             self.neighbour_graph[north_east_corner_indx[0]][-1] = [north_east_indx]
@@ -120,7 +134,7 @@ class NeighbourGraph:
                         case 0 -> CellBoxes are not neighbours
 
                         case 1 -> cellbox_b is the North-East corner of cellbox_a\n
-                        case 2 -> cellbox_b is East of cellbox_a\n
+                        case 2 -> cellbox_b is East of cellbadd_nodeox_a\n
                         case 3 -> cellbox_b is the South-East corner of cellbox_a\n
                         case 4 -> cellbox_b is South of cellbox_a\n
                         case -1 -> cellbox_b is the South-West corner of cellbox_a\n

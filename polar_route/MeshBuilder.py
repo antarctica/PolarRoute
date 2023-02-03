@@ -6,13 +6,14 @@ Example:
     An example of how to run this code can be executed by running the
     following in an ipython/Jupyter Notebook::
 
-        from RoutePlanner import Mesh
+        from RoutePlanner import MeshBuilder
 
         import json
         with open('./config.json', 'r') as f:
             config = json.load(f)
 
-        mesh = Mesh(config)
+        mesh_builder = MeshBuilder(config)
+        mesh_builder.build_environmental_mesh()
 """
 from memory_profiler import profile
 import logging
@@ -260,7 +261,6 @@ class MeshBuilder:
                     4 smaller CellBox objects.
 
         """
-        print ( cellbox.get_id() , "," , cellbox.split_depth , "," , len (self.mesh.cellboxes) , ", ", cellbox.bounds.get_bounds())
         split_cellboxes = cellbox.split(len (self.mesh.cellboxes))
         self.mesh.cellboxes += split_cellboxes
         cellboxes = self.mesh.cellboxes
@@ -412,14 +412,13 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
-        data_sources =  self.mesh.cellboxes[0].get_data_source()
+        # loop over the data_sources then cellboxes to implement depth-first splitting. should be simpler and loop over cellboxes only once we switch to breadth-first splitting
+        data_sources =  self.mesh.cellboxes[0].get_data_source() # this impl assumws all the cellboxes have the same data sources. should not be the caase once we switch to breadth-first splitting.
         for index in range (0, len (data_sources)):
             if (len(data_sources[index].get_splitting_conditions()) >0 ):
                 for cellbox in self.mesh.cellboxes:
                     if isinstance(cellbox, CellBox):
                         should_split = cellbox.should_split(index+1)
-                        print ( cellbox.get_id() , "," , cellbox.split_depth ,"," , should_split , "," , len (self.mesh.cellboxes) , "" , cellbox.bounds.get_bounds())
-                        #  print (cellbox.get_id() , "," , should_split)
                         if (cellbox.get_split_depth() < split_depth) & should_split:
                                 self.split_and_replace(cellbox) 
 #################################################################################################

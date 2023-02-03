@@ -142,7 +142,8 @@ class CellBox:
                 do not split
             else (mixture of CLR & HET):
                 split
-
+            Args:
+                stop_index: the index of the data source at which checking the splitting conditions stops. Implemented like this to perform depth-first splitting. Should be deprecated once we switch to breadth-first splitting
             Returns:
                 should_split (bool): True if the splitting_conditions of this CellBox
                     will result in the CellBox being split.
