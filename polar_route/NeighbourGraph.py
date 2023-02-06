@@ -29,9 +29,9 @@ class NeighbourGraph:
                         }\n
                     }\n
                }
-        
+
     """
-   
+
 
     def __init__(self , cellboxes ,grid_width):
         # initialize graph with an empty one
@@ -40,56 +40,54 @@ class NeighbourGraph:
 
 
     def get_graph(self):
-        
+
         return self.neighbour_graph
 
 
-    def update_neighbour(self ,  index ,  direction , neighbours):
-        self.neighbour_graph [index][direction] = neighbours     
-        
-    def get_neighbours(self ,cellbox_indx , direction):
-        return self.neighbour_graph [cellbox_indx][direction] 
+    def update_neighbour(self, index, direction, neighbours):
+        self.neighbour_graph [index][direction] = neighbours
 
-    
-    def add_node(self ,  index ,  neighbour_map):
-         ''' 
+    def get_neighbours(self ,cellbox_indx , direction):
+        return self.neighbour_graph [cellbox_indx][direction]
+
+
+    def add_node(self, index, neighbour_map):
+        '''
             method that adds a node to the neighbour_graph at a given index
         '''
-        self.neighbour_graph [index] = neighbour_map     
-       
-    
-        
+        self.neighbour_graph[index] = neighbour_map
+
     def remove_node (self, cellbox_index):
-        ''' 
+        '''
             method that removes a node to the neighbour_graph at a given index
         '''
-      self.neighbour_graph.pop(cellbox_index)
+        self.neighbour_graph.pop(cellbox_index)
 
- 
+
     def update_neighbours(self,cellbox_indx, new_neighbours_indx, direction, cellboxes):
         '''
         method that updates the neighbour of a certain cellbox in a specific direction
         '''
-          
-        self.remove_node_from_neighbours (cellbox_indx, direction)  
+
+        self.remove_node_from_neighbours (cellbox_indx, direction)
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
         for indx in neighbour_indx_list:
             crossing_case = self.get_neighbour_case(cellboxes[indx],
                                                     cellboxes[new_neighbours_indx[0]])
-            
+
             if crossing_case != 0:
                 self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[0])
 
             crossing_case = self.get_neighbour_case(cellboxes[indx],
                                                     cellboxes[new_neighbours_indx[1]])
-           
+
             if crossing_case != 0:
-                self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[1])   
+                self.neighbour_graph[indx][crossing_case].append(new_neighbours_indx[1])
 
     def remove_node_from_neighbours (self , cellbox_indx, direction):
-         '''
-         method that goes through neighbours in a given direction and remove cellbox_index from their neighbour_maps
-         '''
+        '''
+        method that goes through neighbours in a given direction and remove cellbox_index from their neighbour_maps
+        '''
 
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
         for indx in neighbour_indx_list:
@@ -97,7 +95,7 @@ class NeighbourGraph:
 
 
     def update_corner_neighbours(self, cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx):
-        ''' 
+        '''
             method that updates the corner neighbours of cellbox_indx with the given indeces
         '''
         north_east_corner_indx = self.neighbour_graph[cellbox_indx][1]
@@ -115,8 +113,8 @@ class NeighbourGraph:
         south_west_corner_indx = self.neighbour_graph[cellbox_indx][-1]
         if len(south_west_corner_indx) > 0:
             self.neighbour_graph[south_west_corner_indx[0]][1] = [south_west_indx]
-               
-    
+
+
     def get_neighbour_case(self, cellbox_a, cellbox_b):
         """
             Given two cellBoxes (cellbox_a, cellbox_b) returns a case number
@@ -181,10 +179,10 @@ class NeighbourGraph:
 
 
     def remove_neighbour(self ,  index ,  direction , neighbour_index):
-        self.neighbour_graph [index][direction].remove (neighbour_index) 
+        self.neighbour_graph [index][direction].remove (neighbour_index)
 
     def initialise_neighbour_graph (self , cellboxes ,grid_width):
-        
+
         for cellbox in cellboxes:
             cellbox_indx = cellboxes.index(cellbox)
             neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
@@ -218,4 +216,3 @@ class NeighbourGraph:
                 neighbour_map[4].append(int(cellbox_indx - grid_width))
 
             self.add_node (cellbox_indx , neighbour_map)
-    

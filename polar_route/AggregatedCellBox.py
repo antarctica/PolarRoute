@@ -1,13 +1,7 @@
-
-
 from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
-<<<<<<< HEAD
 from polar_route.Boundary import Boundary
-=======
-from polar_route import Boundary
->>>>>>> 8806e9b1ca6ce54bc49e9123374c2ded553de536
 
 
 class AggregatedCellBox:

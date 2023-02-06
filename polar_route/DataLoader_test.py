@@ -36,8 +36,6 @@ class DataLoaderFactory:
             data_loader (Scalar/Vector/LUT DataLoader): 
                 DataLoader object of correct type, with required params set 
         '''
-        # Cast name to lowercase to make case insensitive
-        name = name.lower()
         # Add default values if they don't exist
         params = self.set_default_params(name, params, min_dp)
         
@@ -69,7 +67,7 @@ class DataLoaderFactory:
             'density':   (DensityDataLoader, [])
         }
         # If name is recognised as a dataloader
-        if name in dataloader_requirements:
+        if name.lower() in dataloader_requirements:
             # Set data loader and params required for it to work
             data_loader = dataloader_requirements[name][0]
             required_params = dataloader_requirements[name][1]
@@ -78,7 +76,7 @@ class DataLoaderFactory:
 
         # Assert dataloader will get all required params to work
         assert all(key in params for key in required_params), \
-            f'Dataloader {name} is missing some parameters! Requires {required_params}. Has {list(params.keys())}'
+            f'Missing some parameters! Requires {required_params}'
 
         # Create instance of dataloader
         return data_loader(bounds, params)
@@ -247,7 +245,7 @@ class ScalarDataLoader(ABC):
             # TODO Change <= to < after regression tests pass
             mask = (data['lat']  >= bounds.get_lat_min())  & \
                    (data['lat']  <= bounds.get_lat_max())  & \
-                   (data['long'] >  bounds.get_long_min()) & \
+                   (data['long'] >= bounds.get_long_min()) & \
                    (data['long'] <= bounds.get_long_max())
             # Mask with time if time column exists
             if 'time' in data.columns:
@@ -267,7 +265,7 @@ class ScalarDataLoader(ABC):
             if 'time' in data.coords.keys():
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
             # Cast as a pd.DataFrame
-            data = data.to_dataframe().reset_index().dropna()
+            data = data.to_dataframe().reset_index()
             # Return column of data from within bounds
             return data[name]
             
@@ -298,7 +296,7 @@ class ScalarDataLoader(ABC):
         dps = self.get_datapoints(bounds)
         # If no data
         if len(dps) == 0:
-            return {self.data_name: np.nan}
+            return None
         # Return float of aggregated value
         elif self.aggregate_type == 'MIN':
             return {self.data_name :float(dps.min(skipna=skipna))}
@@ -404,7 +402,7 @@ class ScalarDataLoader(ABC):
             '''
             # Cast to dataframe, then reproject using reproject_df
             # Cannot reproject directly as memory usage skyrockets
-            df = data.to_dataframe().reset_index().dropna()
+            df = data.to_dataframe().reset_index()
             return reproject_df(df, in_proj, out_proj, x_col, y_col)
         
         # If no reprojection to do
@@ -632,7 +630,7 @@ class VectorDataLoader(ABC):
             # TODO Change <= to < after regression tests pass
             mask = (data['lat']  >= bounds.get_lat_min())  & \
                    (data['lat']  <= bounds.get_lat_max())  & \
-                   (data['long'] > bounds.get_long_min()) & \
+                   (data['long'] >= bounds.get_long_min()) & \
                    (data['long'] <= bounds.get_long_max())
             # Mask with time if time column exists
             if 'time' in data.columns:
@@ -1059,7 +1057,6 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         
         return dummy_df    
 
-    # TODO finish this
     def _gen_square(self, bounds):
         """
             Generates a square within bounds
@@ -1112,12 +1109,10 @@ class AMSRDataLoader(ScalarDataLoader):
         self.data = self.downsample()
         self.data = self.set_data_col_name('SIC')
         
-        # Set to lower case for case insensitivity
-        self.hemisphere = self.hemisphere.lower()
         # Reproject to mercator
-        if self.hemisphere == 'north': 
+        if self.hemisphere.upper() == 'NORTH': 
             self.data = self.reproject('EPSG:3411', 'EPSG:4326', x_col='x', y_col='y')
-        elif self.hemisphere == 'south':
+        elif self.hemisphere.upper() == 'SOUTH':
             self.data = self.reproject('EPSG:3412', 'EPSG:4326', x_col='x', y_col='y')
         else:
             raise ValueError('No hemisphere defined in params!')
@@ -1164,7 +1159,7 @@ class AMSRDataLoader(ScalarDataLoader):
             logging.debug(f"- Searching folder {self.folder}")
             data_array = []
             # For each .nc file in folder
-            for file in sorted(glob.glob(f'{self.folder}*.nc')):
+            for file in glob.glob(f'{self.folder}*.nc'):
                 logging.debug(f"- Opening file {file}")
                 # If date within boundary
                 date = retrieve_date(file)
@@ -1665,11 +1660,11 @@ class ORAS5CurrentDataLoader(VectorDataLoader):
         lon_min = np.floor(min(data_u.nav_lon.min(), data_v.nav_lon.min()))
         lon_max = np.ceil(max(data_u.nav_lon.max(), data_v.nav_lon.max()))
         lon_range = np.arange(lon_min, lon_max, binsize)
-        time = data_u.time_counter.values
+        time = data_u.time_counter.values``
         
         
         
-        # TODO
+        
         
 
         data = xr.open_dataset(self.file)
@@ -1727,41 +1722,12 @@ class SOSEDataLoader(VectorDataLoader):
 
 
 if __name__ == '__main__':
-
-    def polygon_str_to_boundaries(polygon):
-        "POLYGON ((-61.25 -65, -61.25 -64.375, -60 -64.375, -60 -65, -61.25 -65))"
-        new_str = polygon.replace('POLYGON ((', '').replace('))','')
-        coords = new_str.split(',')
-        c1 = coords[0].lstrip().split(' ')
-        c2 = coords[2].lstrip().split(' ')
-        
-        long_min = float(c1[0])
-        lat_min = float(c1[1])
-        
-        long_max = float(c2[0])
-        lat_max = float(c2[1])
-        
-        return [lat_min, lat_max], [long_min, long_max]
-    
-    def boundary_str_to_boundaries(bounds):
-        "POLYGON ((-61.25 -65, -61.25 -64.375, -60 -64.375, -60 -65, -61.25 -65))"
-        new_str = bounds.replace('[', '').replace(']','').replace(' ','')
-        coords = new_str.split(',')
-        long_min = float(coords[0])
-        lat_min = float(coords[1])
-        
-        long_max = float(coords[4])
-        lat_max = float(coords[5])
-        
-        return [lat_min, lat_max], [long_min, long_max]    
-
-    lat_range, long_range = polygon_str_to_boundaries(
-        "POLYGON ((-52.5 -65, -52.5 -63.75, -50 -63.75, -50 -65, -52.5 -65))"
-        )
-
-    
     factory = DataLoaderFactory()
-    bounds = Boundary(lat_range, long_range, ['2013-03-01','2013-03-14'])
+    # bounds = Boundary([-64.375,-63.75], [-60,-58.75], ['2013-03-01','2013-03-14']) # 56
+    #58 -  bounds = Boundary([-65,-62.5], [-65,-60], ['2013-03-01','2013-03-14'])
+    #46 -  bounds = Boundary([-65,-62.5], [-65,-60], ['2013-03-01','2013-03-14'])
+    # bounds = Boundary([-65,-62.5], [-65,-60], ['2013-03-01','2013-03-14'])
+    bounds = Boundary([-179,179], [-80,80], ['2000-01-01','2019-03-14'])
     
     # ............... SCALAR DATA LOADERS ............... #
     
@@ -1784,7 +1750,7 @@ if __name__ == '__main__':
         print(gebco.get_value(bounds))
         print(gebco.get_hom_condition(bounds, split_conds))
 
-    if True: # Run AMSR
+    if False: # Run AMSR
         params = {
             'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',

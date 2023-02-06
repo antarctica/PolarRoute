@@ -187,7 +187,7 @@ class MeshBuilder:
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
             print("creating data loader {}".format(data_source['loader']))
-            loader = DataLoaderFactory.get_dataloader( loader_name, bounds ,data_source['params'] , min_datapoints)
+            loader = DataLoaderFactory().get_dataloader(loader_name, bounds ,data_source['params'] , min_datapoints)
           
             # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
@@ -447,19 +447,11 @@ if __name__=='__main__':
     import time
     import timeit
     config = None
-<<<<<<< HEAD
     with open ("create_mesh.output2019_6_80_new_format.json" , "r") as config_file:
-=======
-    with open ("/home/habbot/Documents/Work/create_mesh.output2013_4_80_new_format.json" , "r") as config_file:
->>>>>>> 8806e9b1ca6ce54bc49e9123374c2ded553de536
     # with open ("smallmesh_test.json" , "r") as config_file:
         config = json.load(config_file)['config']
     mesh_builder = MeshBuilder (config)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
-<<<<<<< HEAD
     with open ("mesh.output2013_4_80_refactored_split_depth_6_2019.json" , 'w')  as file:
-=======
-    with open ("/home/habbot/Documents/Work/mesh.output2013_4_80_refactored_split_depth_4.json" , 'w')  as file:
->>>>>>> 8806e9b1ca6ce54bc49e9123374c2ded553de536
         json.dump (env_mesh.to_json() , file)
