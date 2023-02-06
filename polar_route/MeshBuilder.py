@@ -112,27 +112,18 @@ class MeshBuilder:
                     format as the original Java CellGrid, to be used for regression testing.
         """
         self.config = config      
-        long_min = config['Mesh_info']['Region']['longMin']
-        long_max = config['Mesh_info']['Region']['longMax']
-        lat_min = config['Mesh_info']['Region']['latMin']
-        lat_max = config['Mesh_info']['Region']['latMax']
-        start_time = config['Mesh_info']['Region']['startTime']
-        end_time = config['Mesh_info']['Region']['endTime']
-        lat_range = [lat_min, lat_max]
-        long_range = [long_min , long_max]
-        time_range = [start_time , end_time]
-        bounds = Boundary ( lat_range , long_range , time_range)
+        bounds = Boundary.from_json( config)
 
 
    
         cell_width = config['Mesh_info']['Region']['cellWidth']
         cell_height = config['Mesh_info']['Region']['cellHeight']
 
-        assert (long_max - long_min) % cell_width == 0, \
+        assert (bounds.get_long_max() - bounds.get_long_min()) % cell_width == 0, \
             f"""The defined longitude region <{long_min} :{long_max}>
             is not divisable by the initial cell width <{cell_width}>"""
 
-        assert (lat_max - lat_min) % cell_height == 0, \
+        assert (bounds.get_lat_max() - bounds.get_lat_min()) % cell_height == 0, \
             f"""The defined longitude region <{lat_min} :{lat_max}>
             is not divisable by the initial cell width <{cell_height}>"""
 
@@ -158,18 +149,17 @@ class MeshBuilder:
         logging.debug("Initialise cellBoxes...")
         cell_bounds = None
         cellboxes =[]
-        self.neighbour_graph = None
-        for lat in np.arange(lat_min, lat_max, cell_height):
-            for long in np.arange(long_min, long_max, cell_width):
+        for lat in np.arange(bounds.get_lat_min(), bounds.get_lat_max(), cell_height):
+            for long in np.arange(bounds.get_long_min(), bounds.get_long_max(), cell_width):
                 cell_lat_range = [lat, lat+cell_height]
                 cell_long_range = [long , long+cell_width]
-                cell_bounds = Boundary (cell_lat_range , cell_long_range , time_range)
+                cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
                 cell_id = str(len (cellboxes))
                 cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
 
-        grid_width = (long_max - long_min) / cell_width
-        grid_height = (lat_max - lat_min) / cell_height
+        grid_width = (bounds.get_long_max() - bounds.get_long_min()) / cell_width
+        grid_height = (bounds.get_lat_max() - bounds.get_lat_min()) / cell_height
 
         ###########################################
     
@@ -453,5 +443,6 @@ if __name__=='__main__':
     mesh_builder = MeshBuilder (config)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
+    print (mesh_builder.mesh.boundary.get_bounds())
     with open ("mesh.output2013_4_80_refactored_split_depth_6_2019.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)

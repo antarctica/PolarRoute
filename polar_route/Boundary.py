@@ -1,7 +1,7 @@
 
 
 
-
+from datetime import datetime
 
 class Boundary:
     """
@@ -19,8 +19,29 @@ class Boundary:
         All geospatial boundaries are given in a 'EPSG:4326' projection
     """
    
+    @classmethod
+    def from_json(self, config):
+        """
+             constructs a boundary object from json input
+            Args:
+               config (json): json object that contains the boundary attributes
+                
+        """
+        long_min = config['Mesh_info']['Region']['longMin']
+        long_max = config['Mesh_info']['Region']['longMax']
+        lat_min = config['Mesh_info']['Region']['latMin']
+        lat_max = config['Mesh_info']['Region']['latMax']
+        start_time = config['Mesh_info']['Region']['startTime']
+        end_time = config['Mesh_info']['Region']['endTime']
+        lat_range = [lat_min, lat_max]
+        long_range = [long_min , long_max]
+        time_range = [start_time , end_time]
+        self = Boundary (lat_range , long_range , time_range)
+        return self
 
-    def __init__(self, lat_range , long_range , time_range):
+
+
+    def __init__(self, lat_range , long_range , time_range=[]):
         """
 
             Args:
@@ -29,21 +50,34 @@ class Boundary:
                time_range(Date[]): array contains the start and end of time range 
                 
         """
-        # check the bounds are valid
-        if (len(lat_range) < 2 or len (long_range)<2 or len(time_range) <2):             
-            raise ValueError(f'Boundary: range should contain two values')
-        if (lat_range[0] > lat_range [1]):
-             raise ValueError(f'Boundary: Latitude start range should be smaller than range end')
-        if (long_range[0] > long_range [1]):
-             raise ValueError(f'Boundary: Longtitude start range should be smaller than range end')
-        if (time_range[0] > time_range [1]):
-             raise ValueError(f'Boundary: Start time range should be smaller than range end')
 
+        self.validate_bounds(lat_range , long_range , time_range)
         # Boundary information 
         self.lat_range = lat_range
         self.long_range = long_range
         self.time_range = time_range
 
+
+    def validate_bounds (self, lat_range , long_range , time_range):
+
+        
+        """
+            method to check the bounds are valid
+            Args:
+               lat_range (float[]): array contains the start and end of latitude range 
+               long_range (float[]): array contains the start and end of longtitude range 
+               time_range(Date[]): array contains the start and end of time range 
+                
+        """
+        if (len(lat_range) < 2 or len (long_range)<2 ):
+            raise ValueError(f'Boundary: range should contain two values')
+        if (lat_range[0] > lat_range [1]):
+             raise ValueError(f'Boundary: Latitude start range should be smaller than range end')
+        if (long_range[0] > long_range [1]):
+             raise ValueError(f'Boundary: Longtitude start range should be smaller than range end')
+        if (len (time_range) > 0):
+             if (datetime.strptime(time_range[0], '%Y-%m-%d') >= datetime.strptime(time_range[1], '%Y-%m-%d')):
+                     raise ValueError(f'Boundary: Start time range should be smaller than range end')
 
     # Functions used for getting data from a cellBox
     def getcx(self):

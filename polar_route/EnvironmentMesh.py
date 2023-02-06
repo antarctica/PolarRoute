@@ -15,7 +15,79 @@ class EnvironmentMesh:
 
     
     """
-   
+    @classmethod
+    def from_json(self, config_file):
+
+        """
+            Constructs an Env.Mesh from a given config file to be used by other modules (ex.Vessel Performance Modeller).
+
+            Args:
+                config (dict): config file which defines the attributes of the Mesh 
+                    to be constructed. config is of the form - \n
+                    \n
+                    {\n
+                        "config": {\n
+                            "Mesh_info":{\n
+                                "Region": {\n
+                                    "latMin": (real),\n
+                                    "latMax": (real),\n
+                                    "longMin": (real),\n
+                                    "longMax": (real),\n
+                                    "startTime": (string) 'YYYY-MM-DD',\n
+                                    "endTime": (string) 'YYYY-MM-DD',\n
+                                    "cellWidth": (real),\n
+                                    "cellHeight" (real),\n
+                                    "splitDepth" (int)\n
+                                },\n
+                                "Data_sources": [
+                                    {
+                                        "loader": (string)\n
+                                        "params" (dict)\n
+                                    },\n
+                                    ...,\n
+                                    {...}
+                                    ], \n
+                                "splitting":
+                                {
+                                     "split_depth": ()real,
+                                     "minimum_datapoints": (real)
+                                }\n
+                                "cellboxes": [
+                                    {
+                                        
+                                    },\n
+                                    ...,\n
+                                    {...}
+
+                                ]\n,
+                                "neighbour_graph": [
+                                    {
+                                        
+                                    },\n
+                                    ...,\n
+                                    {...}\n
+                                ]
+                            }\n
+                        }\n
+                    }\n
+
+           
+        """
+        with open (file_path , "r") as config_file:
+            json_file = json.load(config_file)
+        self.config = json_file['config']
+        cellboxes_json = json_file['cellboxes']
+        self.agg_cellboxes = []
+        self.bounds= Boundary (self.config)
+        #load the agg_cellboxes
+        for cellbox_json in cellboxes_json:
+            agg_cellbox = AggregatedCellBox.from_json(cellbox_json)
+            self.agg_cellboxes.append (agg_cellbox)
+        self.neighbour_graph = NeighbourGraph.from_json (json_file['neighbour_graph'])
+        return self
+        
+    
+
 
     def __init__(self, bounds, agg_cellboxes , neighbour_graph ,config):
         """
