@@ -15,7 +15,11 @@
                 {
                     "loader": "GEBCO",
                     "params": {
+<<<<<<< HEAD
                         "file": "../../../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
+=======
+                        "file": "../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
+>>>>>>> 8806e9b1ca6ce54bc49e9123374c2ded553de536
                         "downsample_factors": [
                             5,
                             5
@@ -37,6 +41,7 @@
                 {
                     "loader": "AMSR",
                     "params": {
+<<<<<<< HEAD
                         "folder": "../../../../datastore/sic/amsr_south/",
                         "splitting_conditions": [
                             {
@@ -45,6 +50,16 @@
                                     "upper_bound": 0.9,
                                     "lower_bound": 0.1
                                 }
+=======
+                        "folder": "../../datastore/sic/amsr_south/",
+                   
+                    "splitting_conditions": [
+                        {
+                            "SIC": {
+                                "threshold": 35,
+                                "upper_bound": 0.9,
+                                "lower_bound": 0.1
+>>>>>>> 8806e9b1ca6ce54bc49e9123374c2ded553de536
                             }
                         ],
                         "data_name": "SIC",
@@ -54,7 +69,11 @@
                 {
                     "loader": "SOSE",
                     "params": {
+<<<<<<< HEAD
                         "file": "../../../../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
+=======
+                        "file": "../../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
+>>>>>>> 8806e9b1ca6ce54bc49e9123374c2ded553de536
                         "value_fill_types": "parent",
                         "data_name": "uC,vC"
                     }
@@ -20140,4 +20159,4 @@
             ]
         }
     }
-}
+}}
