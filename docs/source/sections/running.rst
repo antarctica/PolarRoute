@@ -15,6 +15,8 @@ Once installed, a mesh can be created from a config file using the command:
 ::
     create_mesh <config.json>
 
+The format of the required *<config.json>* file can be found in the :ref:`Input - Configuration` section of the documentation.
+
 optional arguments are
 ::
     -v (verbose logging)
@@ -27,7 +29,10 @@ Vehicle Specific Information
 Vehicle specific information can be encoded into the mesh using
 the command:
 ::
-    add_vehicle <mesh.json>
+    add_vehicle <vessel.json> <mesh.json>
+
+The format for the required *<vessel.json>* file can be found in the :ref:`Input - Configuration` section of the documentation.
+The required *<mesh.json>* file can be created using the *create_mesh* command shown above.
 
 optional arguments are
 ::
@@ -41,13 +46,54 @@ Route Planning
 ^^^^^^^^^^^^^^^^^^
 Optimal routes through a mesh can be calculated using the command:
 ::
-    optimise_routes <vessel_mesh.json> <waypoints.csv>
+    optimise_routes <vessel_mesh.json> <route_config.json> <waypoints.csv>
+
+The format for the required *<route_config.json>* file can be found in the :ref:`Input - Configuration` section of the documentation.
+The required *<vessel_mesh.json>* file can be generated using the *add_vehicle* command shown above.
+
+
+The format for the requried *<waypoints.csv>* file is as follows:
+
+As table:
+
++------------------+---------------+---------------+---------+---------------+
+| Name             | Lat           | Long          | Source  | Destination   |
++==================+===============+===============+=========+===============+
+| Halley           | -75.26722     | -27.21694     |         | X             |
++------------------+---------------+---------------+---------+---------------+
+| Rothera          | -68.3892      | -95.2436      |         |               |
++------------------+---------------+---------------+---------+---------------+
+| South Georiga    | -54.87916667  | -37.26416667  | X       |               |
++------------------+---------------+---------------+---------+---------------+
+| Falklands        | -55.63472222  | -64.88        |         |               |
++------------------+---------------+---------------+---------+---------------+
+| Elephant Island  | -60.54722222  | -55.18138889  |         |               |
++------------------+---------------+---------------+---------+---------------+
+
+
+As .csv:
+::
+
+    Name,Lat,Long,Source,Destination
+    Halley,-75.26722,-27.21694,,X
+    Rothera,-68.3892,-95.2436,,
+    South Georiga,-54.87916667,-37.26416667,X,
+    Falklands,-55.63472222,-64.88,,
+    Elephant Island,-60.54722222,-55.18138889,,
+
+
+
+
+Additional waypoints may be added by extending the '<waypoints.csv>' file. Which waypoints are navigated between is determined by 
+added a **X** in either the *Source* or *Destination* columns. When processed, the route planner will create routes from all 
+waypoints marked with an **X** in the source column to all waypoints marked with a **X** in the *destination* column. 
 
 optional arguments are
 ::
     -v (verbose logging)
     -o <output location> (set output location for mesh)
     -p (output only the caculated path, not the entire mesh
+    -d (output Dijkstra path as well as smoothed path)
 
 
 ^^^^^^^^^^^^^^^^^^

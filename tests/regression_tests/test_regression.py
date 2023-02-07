@@ -228,7 +228,7 @@ def calculate_vessel_mesh(mesh_location):
 
     regression_mesh = env_meshes[0]
 
-    new_mesh = VesselPerformance(env_meshes[1])
+    new_mesh = VesselPerformance(env_meshes[1], env_meshes[1]['config']['Vessel'])
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
@@ -351,7 +351,8 @@ def compare_cellbox_values(mesh_a, mesh_b):
                         value_a = cellbox_a[key]
 
                     # Compare values
-                    if not(value_a == value_b) and not(np.isnan(value_a) or np.isnan(value_b)):
+                    
+                    if str(value_a) != str(value_b):
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
 
