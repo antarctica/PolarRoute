@@ -295,7 +295,7 @@ class ScalarDataLoader(ABC):
         '''
 
         # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds)
+        dps = self.get_datapoints(bounds).astype(np.float64)
         # If no data
         if len(dps) == 0:
             return {self.data_name: np.nan}
@@ -951,8 +951,10 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         
         # Set up data
         self.data = self.import_data(bounds)
-        self.data = self.set_data_col_name(self.shape)
-        self.data_name = self.get_data_col_name()
+        self.data = self.set_data_col_name("dummy_data")
+        # self.data = self.set_data_col_name(self.shape)
+        # self.data_name = self.get_data_col_name()
+        self.data_name = "dummy_data"
     
     def import_data(self, bounds):
         # Generate rows
@@ -1755,13 +1757,15 @@ if __name__ == '__main__':
         
         return [lat_min, lat_max], [long_min, long_max]    
 
-    lat_range, long_range = polygon_str_to_boundaries(
-        "POLYGON ((-52.5 -65, -52.5 -63.75, -50 -63.75, -50 -65, -52.5 -65))"
-        )
+    # lat_range, long_range = polygon_str_to_boundaries(
+    #     "POLYGON ((-52.5 -65, -52.5 -63.75, -50 -63.75, -50 -65, -52.5 -65))"
+    #     )
 
+    lat_range = [-65, -60]
+    long_range = [-70, -50]
     
     factory = DataLoaderFactory()
-    bounds = Boundary(lat_range, long_range, ['2013-03-01','2013-03-14'])
+    bounds = Boundary(lat_range, long_range, ['2019-01-01','2019-01-14'])
     
     # ............... SCALAR DATA LOADERS ............... #
     
@@ -1784,7 +1788,7 @@ if __name__ == '__main__':
         print(gebco.get_value(bounds))
         print(gebco.get_hom_condition(bounds, split_conds))
 
-    if True: # Run AMSR
+    if False: # Run AMSR
         params = {
             'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
@@ -1934,21 +1938,23 @@ if __name__ == '__main__':
 
     # ............... ABSTRACT SHAPE DATA LOADERS ............... #
 
-    if False: # Run Circle
+    if True: # Run Circle
         params = {
-            'n': 11,
-            'radius': 5,
-            'centre': (None, None)
+            "data_name": "dummy_data",
+            "value_fill_types": "parent",
+            "nx": 201,
+            "ny": 201,
+            "radius": 3,
+            "centre": [-65, -70],
         }
+
         split_conds = {
             'threshold': 0.5,
-            'upper_bound': 0.9,
-            'lower_bound': 0.1
+            'upper_bound': 0.8,
+            'lower_bound': 0.01
         }
-        circle = factory.get_dataloader('circle', bounds, params, min_dp = 1)
-        
-        print(circle.get_value(bounds))
-        print(circle.get_hom_condition(bounds, split_conds))
+
+        circle = factory.get_dataloader('circle', bounds, params, min_dp = 5)
 
     if False: # Run Gradient
         params = {
@@ -1979,5 +1985,6 @@ if __name__ == '__main__':
         
         print(checkerboard.get_value(bounds))
         print(checkerboard.get_hom_condition(bounds, split_conds))
+
     
     print('hi')

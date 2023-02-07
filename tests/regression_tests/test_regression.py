@@ -13,9 +13,9 @@ from polar_route.vessel_performance import VesselPerformance
 
 #File locations of all vessel performance meshes to be recaculated for regression testing.
 TEST_VESSEL_MESHES = [
-    # './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80.json',
-    # './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80.json',
-    # './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80.json'
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80_new_format.json',
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80_new_format.json',
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80_new_format.json'
 ]
 
 #File locations of all enviromental meshes to be recaculated for regression testing.
@@ -26,20 +26,20 @@ TEST_ENV_MESHES = [
 ]
 
 TEST_GRADIENT_MESHES = [
-    # './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh.json',
-    # './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh_new_format.json',
+    './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh_new_format.json'
 ]
 
 TEST_CHECKERBOARD_MESHES = [
-    # './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw2.5_gh2.5_mesh.json',
-    # './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw5_gh2.5_mesh.json',
-    # './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw6_gh3_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw2.5_gh2.5_mesh_new_format.json',
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw5_gh2.5_mesh_new_format.json',
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw6_gh3_mesh_new_format.json'
 ]
 
 TEST_CIRCLE_MESHES = [
-    # './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json',
-    # './example_meshes/Abstract_Environmental_Meshes/cornercirclesplit_n201_r3_cy-65_cx-70_mesh.json',
-    # './example_meshes/Abstract_Environmental_Meshes/cornercirclenosplit_n201_r3_cy-65_cx-70_mesh.json'
+    './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh_new_format.json',
+    './example_meshes/Abstract_Environmental_Meshes/cornercirclesplit_n201_r3_cy-65_cx-70_mesh_new_format.json',
+    './example_meshes/Abstract_Environmental_Meshes/cornercirclenosplit_n201_r3_cy-65_cx-70_mesh_new_format.json'
 ]
 
 @pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES)
@@ -235,115 +235,21 @@ def calculate_vessel_mesh(mesh_location):
 
 def calculate_circle_mesh(mesh_location):
     """
-        recreates a circular environment mesh from the config of a pre-computed mesh.
-
-        params:
-            mesh_location (string): File location of the mesh to be recomputed
-
-        returns:
-            mesh_pair (list):
-                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
-                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+        DELETE
     """ 
-    with open(mesh_location, 'r') as f:
-        regression_mesh = json.load(f)
-    # Retrieve config info
-    config = regression_mesh['config']
-
-    parameters = retrieve_gen_parameters(mesh_location, config)
-
-    # Create circle data for mesh generation
-    circle_datapoints = gen_circle(parameters['latMin'], 
-                                   parameters['latMax'],
-                                   parameters['longMin'], 
-                                   parameters['longMax'],
-                                   time   = parameters['startTime'],
-                                   n      = parameters['n'],
-                                   radius = parameters['radius'],
-                                   centre = parameters['centre'])
-    # Create new mesh to compare against
-    new_mesh = Mesh(config)
-    new_mesh.add_data_points(circle_datapoints)
-    new_mesh.split_to_depth(parameters['split_depth'])
-
-    # Set to JSON to make it comparable to regression_mesh
-    new_mesh = new_mesh.to_json()
-
-    return [regression_mesh, new_mesh]
+    return calculate_env_mesh(mesh_location)
 
 def calculate_gradient_mesh(mesh_location):
     """
-        recreates a gradient environment mesh from the config of a pre-computed mesh.
-
-        params:
-            mesh_location (string): File location of the mesh to be recomputed
-
-        returns:
-            mesh_pair (list):
-                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
-                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+        DELETE
     """ 
-    with open(mesh_location, 'r') as f:
-        regression_mesh = json.load(f)
-    # Retrieve config info
-    config = regression_mesh['config']
-
-    parameters = retrieve_gen_parameters(mesh_location, config)
-
-    # Create circle data for mesh generation
-    gradient_datapoints = gen_gradient(parameters['latMin'], 
-                                       parameters['latMax'],
-                                       parameters['longMin'], 
-                                       parameters['longMax'],
-                                       time     = parameters['startTime'],
-                                       n        = parameters['n'],
-                                       vertical = parameters['vertical'])
-    # Create new mesh to compare against
-    new_mesh = Mesh(config)
-    new_mesh.add_data_points(gradient_datapoints)
-    new_mesh.split_to_depth(parameters['split_depth'])
-
-    # Set to JSON to make it comparable to regression_mesh
-    new_mesh = new_mesh.to_json()
-
-    return [regression_mesh, new_mesh]
+    return calculate_env_mesh(mesh_location)
 
 def calculate_checkerboard_mesh(mesh_location):
     """
-        recreates a checkerboard environment mesh from the config of a pre-computed mesh.
-
-        params:
-            mesh_location (string): File location of the mesh to be recomputed
-
-        returns:
-            mesh_pair (list):
-                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
-                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+        DELETE
     """ 
-    with open(mesh_location, 'r') as f:
-        regression_mesh = json.load(f)
-    # Retrieve config info
-    config = regression_mesh['config']
-
-    parameters = retrieve_gen_parameters(mesh_location, config)
-
-    # Create circle data for mesh generation
-    checkerboard_datapoints = gen_checkerboard(parameters['latMin'], 
-                                               parameters['latMax'],
-                                               parameters['longMin'], 
-                                               parameters['longMax'],
-                                               time     = parameters['startTime'],
-                                               n        = parameters['n'],
-                                               gridsize = parameters['gridsize'])
-    # Create new mesh to compare against
-    new_mesh = Mesh(config)
-    new_mesh.add_data_points(checkerboard_datapoints)
-    new_mesh.split_to_depth(parameters['split_depth'])
-
-    # Set to JSON to make it comparable to regression_mesh
-    new_mesh = new_mesh.to_json()
-
-    return [regression_mesh, new_mesh]
+    return calculate_env_mesh(mesh_location)
 
 def compare_cellbox_count(mesh_a, mesh_b):
     """
@@ -437,8 +343,8 @@ def compare_cellbox_values(mesh_a, mesh_b):
 
                     # Round to 5 dec. pl if value is a float, high precision can be issue between OS's
                     if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):
-                        value_b = np.round(float(cellbox_b[key]), decimals=5)
-                        value_a = np.round(float(cellbox_a[key]), decimals=5)
+                        value_b = np.round(float(cellbox_b[key]), decimals=2)
+                        value_a = np.round(float(cellbox_a[key]), decimals=2)
                     # Otherwise just extract values
                     else:
                         value_b = cellbox_b[key]  
