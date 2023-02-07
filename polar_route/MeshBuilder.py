@@ -177,7 +177,7 @@ class MeshBuilder:
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
             print("creating data loader {}".format(data_source['loader']))
-            loader = DataLoaderFactory.get_dataloader( loader_name, bounds ,data_source['params'] , min_datapoints)
+            loader = DataLoaderFactory().get_dataloader(loader_name, bounds ,data_source['params'] , min_datapoints)
           
             # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))

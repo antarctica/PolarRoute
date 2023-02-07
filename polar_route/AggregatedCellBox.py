@@ -1,5 +1,3 @@
-
-
 from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
