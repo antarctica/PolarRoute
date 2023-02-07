@@ -444,7 +444,7 @@ def compare_cellbox_values(mesh_a, mesh_b):
 
                     # Compare values
                     
-                    if value_a != value_b:
+                    if str(value_a) != str(value_b):
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
 
