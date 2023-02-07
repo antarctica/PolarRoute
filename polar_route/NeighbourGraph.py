@@ -2,7 +2,7 @@
 
 
 
-
+from polar_route.Direction import Direction
 class NeighbourGraph:
     """
     A NeighbourGraph is a class that defines the  graphical representation of the adjacency \n relationship between CellBoxes in the Mesh.
@@ -67,11 +67,23 @@ class NeighbourGraph:
        
     
         
-    def remove_node (self, cellbox_index):
+    def remove_node_and_update_neighbours (self, cellbox_index):
         ''' 
-            method that removes a node to the neighbour_graph at a given index
+            method that removes a node in the neighbour_graph at a given index. remove_node_from_neighbours should be called first.
+        '''
+        # go through all thee neighbours in all the directions to remove the give cellbox_index from their neighbour_map
+        direction_obj = Direction()
+        for direction in direction_obj.__dict__.values(): 
+            remove_node_from_neighbours (self , cellbox_indx, direction)
+
+        self.neighbour_graph.pop(cellbox_index)
+     
+    def remove_node(self, cellbox_index):
+        ''' 
+            method that removes a node in the neighbour_graph at a given index.
         '''
         self.neighbour_graph.pop(cellbox_index)
+        
 
  
     def update_neighbours(self,cellbox_indx, new_neighbours_indx, direction, cellboxes):

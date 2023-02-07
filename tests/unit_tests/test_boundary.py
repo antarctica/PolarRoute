@@ -37,11 +37,11 @@ class TestBoundary (unittest.TestCase):
 
 
    def test_load_from_json (self):
-      # /home/aykry/BAS/code/refactored/PolarRoute/tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json
+      
       json_file = "../regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json"
       with open (json_file , "r") as config_file:
           config = json.load(config_file) ['config']
           boundary = Boundary.from_json (config)
-          print (boundary.get_bounds())
+          self.assertEqual ( boundary.get_bounds() , [[-70, -65], [-70, -60], [-50, -60], [-50, -65], [-70, -65]] )
 
 

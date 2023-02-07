@@ -327,9 +327,7 @@ class MeshBuilder:
         self.neighbour_graph.update_corner_neighbours(cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx)
 
         self.neighbour_graph.remove_node (cellbox_indx) #remove the original splitted cellbox from the neighbour_graph
-        # obj = cellboxes[cellbox_indx] #free up memory
-        # del obj
-        cellboxes[cellbox_indx] = None #set the original splitted cellbox to its None 
+        cellboxes[cellbox_indx] = None #set the original splitted cellbox to None 
         
 
 

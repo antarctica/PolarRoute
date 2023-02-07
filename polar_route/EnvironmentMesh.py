@@ -165,7 +165,16 @@ class EnvironmentMesh:
 
 
 
+    def update_cellbox (self , index ,values):
 
+        """
+            method that adds values to the dict of a cellbox at certain index (to be used by the vessel perf. module to add the perf. metrics to the cellbox)
+            Args:
+              index (int): the index of the cellbox to be updated
+              values (dict): a dict contains perf. metrics names and values
+                
+        """
+        self.agg_cellboxes[index].agg_data.append (values)
 
     def save (self, path):
 

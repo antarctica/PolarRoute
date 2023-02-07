@@ -7,3 +7,6 @@ class Direction:
     west=-2
     north_west=-3
     north= -4
+
+    def __init__(self):
+        pass
