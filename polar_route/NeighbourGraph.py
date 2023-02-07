@@ -55,7 +55,7 @@ class NeighbourGraph:
     def update_neighbour(self, index, direction, neighbours):
         self.neighbour_graph [index][direction] = neighbours
 
-<<<<<<< HEAD
+
     
     def add_node(self ,  index ,  neighbour_map):
         ''' 
@@ -82,24 +82,7 @@ class NeighbourGraph:
         '''
         self.neighbour_graph.pop(cellbox_index)
         
-=======
-    def get_neighbours(self ,cellbox_indx , direction):
-        return self.neighbour_graph [cellbox_indx][direction]
 
-
-    def add_node(self, index, neighbour_map):
-        '''
-            method that adds a node to the neighbour_graph at a given index
-        '''
-        self.neighbour_graph[index] = neighbour_map
-
-    def remove_node (self, cellbox_index):
-        '''
-            method that removes a node to the neighbour_graph at a given index
-        '''
-        self.neighbour_graph.pop(cellbox_index)
-
->>>>>>> dataloader-redesign
 
     def update_neighbours(self,cellbox_indx, new_neighbours_indx, direction, cellboxes):
         '''
