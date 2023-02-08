@@ -65,7 +65,7 @@
           "params": {
             "data_name": "thickness",
             "file": "",
-            "value_fill_types": ""
+            "value_fill_types": "parent"
           }
         },
         {
@@ -73,7 +73,7 @@
           "params": {
             "data_name": "density",
             "file": "",
-            "value_fill_types": ""
+            "value_fill_types": "parent"
           }
         }
       ],

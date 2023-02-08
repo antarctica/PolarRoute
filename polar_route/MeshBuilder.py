@@ -31,6 +31,7 @@ from polar_route.EnvironmentMesh import EnvironmentMesh
 from polar_route.Metadata import Metadata
 from polar_route.NeighbourGraph import NeighbourGraph
 from polar_route.mesh import Mesh
+# from polar_route.DataLoader_old import DataLoaderFactory
 from polar_route.DataLoader import DataLoaderFactory
 
 class MeshBuilder:
@@ -447,11 +448,20 @@ if __name__=='__main__':
     import time
     import timeit
     config = None
-    with open ("create_mesh.output2019_6_80_new_format.json" , "r") as config_file:
-    # with open ("smallmesh_test.json" , "r") as config_file:
-        config = json.load(config_file)['config']
-    mesh_builder = MeshBuilder (config)
-    # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
-    env_mesh = mesh_builder.build_environmental_mesh()
-    with open ("mesh.output2013_4_80_refactored_split_depth_6_2019.json" , 'w')  as file:
-        json.dump (env_mesh.to_json() , file)
+    
+    files = [
+        "/home/habbot/Documents/Work/tests/create_mesh.output2013_4_80_new_format.json",
+        # "/home/habbot/Documents/Work/tests/create_mesh.output2016_6_80_new_format.json",
+        # "/home/habbot/Documents/Work/tests/create_mesh.output2019_6_80_new_format.json"
+             ]
+    
+    for i, file in enumerate(files):
+        
+        with open (file , "r") as config_file:
+        # with open ("smallmesh_test.json" , "r") as config_file:
+            config = json.load(config_file)['config']
+        mesh_builder = MeshBuilder (config)
+        # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
+        env_mesh = mesh_builder.build_environmental_mesh()
+        with open (f"/home/habbot/Documents/Work/tests/refactored_output_{i}.json" , 'w')  as file:
+            json.dump (env_mesh.to_json() , file)
