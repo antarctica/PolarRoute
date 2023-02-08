@@ -10,15 +10,22 @@ import json
 import pytest
 
 from polar_route.MeshBuilder import MeshBuilder
+from polar_route.vessel_performance import VesselPerformance
 
-
+#File locations of all vessel performance meshes to be recaculated for regression testing.
+TEST_VESSEL_MESHES = [
+    # './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80_new_format.json',
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80_new_format.json',
+    # './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80_new_format.json'
+]
 
 #File locations of all enviromental meshes to be recaculated for regression testing.
 TEST_ENV_MESHES = [
-    './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json',
+    # './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json',
     './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80_new_format.json',
-    './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80_new_format.json'
+    # './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80_new_format.json'
 ]
+
 
 
 @pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES)
@@ -27,6 +34,14 @@ def env_mesh_pair(request):
         creates a mesh pair for all meshes listed in array TEST_ENV_MESHES
     """
     return calculate_env_mesh(request.param)
+
+@pytest.fixture(scope='session', autouse=False, params=TEST_VESSEL_MESHES)
+def vessel_mesh_pair(request):
+    """
+        creates a mesh pair for all vessel performance meshes listed 
+        in array TEST_VESSEL_MESHES
+    """
+    return calculate_vessel_mesh(request.param)
 
 
 # Testing Enviromental Meshes
@@ -51,6 +66,28 @@ def test_env_mesh_neighbour_graph_ids(env_mesh_pair):
 def test_env_mesh_neighbour_graph_values(env_mesh_pair):
     compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
 
+
+# Testing Vessel Performances Meshes
+def test_vp_mesh_cellbox_count(vessel_mesh_pair):
+    compare_cellbox_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_cellbox_ids(vessel_mesh_pair):
+    compare_cellbox_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_cellbox_values(vessel_mesh_pair):
+    compare_cellbox_values(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_cellbox_attributes(vessel_mesh_pair):
+    compare_cellbox_attributes(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_neighbour_graph_count(vessel_mesh_pair):
+    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_neighbour_graph_ids(vessel_mesh_pair):
+    compare_neighbour_graph_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
+
+def test_vp_mesh_neighbour_graph_values(vessel_mesh_pair):
+    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
 
 
@@ -77,6 +114,29 @@ def calculate_env_mesh(mesh_location):
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
+
+
+def calculate_vessel_mesh(mesh_location):
+    """
+        recreates a vessel performance mesh from the config of a pre-computed mesh.
+
+        params:
+            mesh_location (string): File location of the mesh to be recomputed
+
+        returns:
+            mesh_pair (list):
+                mesh_pair[0]: Regression mesh (from pre-computed mesh file)
+                mesh_pair[1]: Recomputed mesh (recalculated from config in mesh file)
+    """
+    env_meshes = calculate_env_mesh(mesh_location)
+
+    regression_mesh = env_meshes[0]
+
+    new_mesh = VesselPerformance(env_meshes[1])
+    new_mesh = new_mesh.to_json()
+
+    return [regression_mesh, new_mesh]
+
 
 
 def compare_cellbox_count(mesh_a, mesh_b):
@@ -179,7 +239,7 @@ def compare_cellbox_values(mesh_a, mesh_b):
                         value_a = cellbox_a[key]
 
                     # Compare values
-                    if not(value_a == value_b) and not(np.isnan(value_a) or np.isnan(value_b)):
+                    if str(value_a) != str(value_b) :
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
 

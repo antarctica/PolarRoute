@@ -247,7 +247,7 @@ class ScalarDataLoader(ABC):
             # TODO Change <= to < after regression tests pass
             mask = (data['lat']  >= bounds.get_lat_min())  & \
                    (data['lat']  <= bounds.get_lat_max())  & \
-                   (data['long'] >  bounds.get_long_min()) & \
+                   (data['long'] >= bounds.get_long_min()) & \
                    (data['long'] <= bounds.get_long_max())
             # Mask with time if time column exists
             if 'time' in data.columns:
@@ -272,10 +272,13 @@ class ScalarDataLoader(ABC):
             return data[name]
             
         # Choose which method to retrieve data based on input type
+        if hasattr(self, 'data_name'): data_name = self.data_name
+        else:                          data_name = self.get_data_col_name()
+        
         if type(self.data) == type(pd.DataFrame()):
-            return get_datapoints_from_df(self.data, self.get_data_col_name(), bounds)
+            return get_datapoints_from_df(self.data, data_name, bounds)
         elif type(self.data) == type(xr.Dataset()):
-            return get_datapoints_from_xr(self.data, self.get_data_col_name(), bounds)
+            return get_datapoints_from_xr(self.data, data_name, bounds)
 
     def get_value(self, bounds, skipna=True):
         '''
@@ -295,7 +298,7 @@ class ScalarDataLoader(ABC):
         '''
 
         # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds).astype(np.float64)
+        dps = self.get_datapoints(bounds).dropna().sort_values()
         # If no data
         if len(dps) == 0:
             return {self.data_name: np.nan}
@@ -499,7 +502,7 @@ class ScalarDataLoader(ABC):
         elif type(self.data) == type(xr.Dataset()):
             return get_data_name_from_xr(self.data)
 
-    def set_data_col_name(self, name):
+    def set_data_col_name(self, old_name, new_name):
         '''
         Sets name of data column/data variable
         
@@ -525,9 +528,9 @@ class ScalarDataLoader(ABC):
         
         # Change data name depending on data type
         if type(self.data) == type(pd.DataFrame()):
-            return set_name_df(self.data, self.get_data_col_name(), name)
+            return set_name_df(self.data, old_name, new_name)
         elif type(self.data) == type(xr.Dataset()):
-            return set_name_xr(self.data, self.get_data_col_name(), name)
+            return set_name_xr(self.data, old_name, new_name)
 
 class VectorDataLoader(ABC):
     '''
@@ -1104,30 +1107,126 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         return dummy_df
 
 
-class AMSRDataLoader(ScalarDataLoader):
+# class AMSRDataLoader(ScalarDataLoader):
+#     def __init__(self, bounds, params):
+#         # Creates a class attribute for all keys in params
+#         for key, val in params.items():
+#             setattr(self, key, val)
+        
+#         self.data = self.import_data(bounds)
+#         # self.data = self.downsample()
+#         # self.data = self.set_data_col_name('z', 'SIC')
+        
+#         self.data = self.data.to_dataframe().reset_index().dropna()
+#         # Set to lower case for case insensitivity
+#         self.hemisphere = self.hemisphere.lower()
+#         # Reproject to mercator
+#         if self.hemisphere == 'north': 
+#             self.data = self.reproject('EPSG:3411', 'EPSG:4326', x_col='x', y_col='y')
+#         elif self.hemisphere == 'south':
+#             self.data = self.reproject('EPSG:3412', 'EPSG:4326', x_col='x', y_col='y')
+#         else:
+#             raise ValueError('No hemisphere defined in params!')
+        
+#         self.data['SIC'] = self.data['z']
+#         # Limit dataset to just values within bounds
+#         self.data = self.data.loc[self.get_datapoints(bounds).index]
+        
+#         print('')
+        
+#     def import_data(self, bounds):
+#         '''
+#         Load AMSR netCDF, either as single '.nc' file, 
+#         or from a folder of '.nc' files
+#         '''
+#         def retrieve_date(filename):
+#             '''
+#             Get date from filename in format:
+#                 asi-AMSR2-s6250-<year><month><day>-v.5.4.nc
+#             '''
+#             date = filename.split('-')[-2]
+#             date = f'{date[:4]}-{date[4:6]}-{date[6:]}'
+#             return date
+        
+#         def retrieve_data(filename, date):
+#             '''
+#             Read in data as xr.Dataset, create time coordinate
+#             '''
+#             data = xr.open_dataset(filename)
+#             # Add date to data
+#             data = data.assign_coords(time=date)
+#             return data
+        
+#         logging.debug("Importing AMSR data...")
+
+#         # If single NetCDF File specified
+#         if hasattr(self, 'file'):
+#             # Ensure .nc file passed in params
+#             assert(self.file[-3:] == '.nc')
+#             logging.debug(f"- Opening file {self.file}")
+#             # Extract data, append date to coords
+#             date = retrieve_date(self.file)
+#             data = retrieve_data(self.file, date)
+#         # If folder specified
+#         elif hasattr(self, 'folder'):
+#             # Open folder and read in files
+#             logging.debug(f"- Searching folder {self.folder}")
+#             data_array = []
+#             # For each .nc file in folder
+#             for file in sorted(glob.glob(f'{self.folder}*.nc')):
+#                 logging.debug(f"- Opening file {file}")
+#                 # If date within boundary
+#                 date = retrieve_date(file)
+#                 # If file data from within time boundary, append to list
+#                 # Doing now to avoid ingesting too much data initially
+#                 if datetime.strptime(bounds.get_time_min(), '%Y-%m-%d') <= \
+#                    datetime.strptime(date, '%Y-%m-%d') <= \
+#                    datetime.strptime(bounds.get_time_max(), '%Y-%m-%d'):
+#                     data_array.append(retrieve_data(file, date))
+#             # Concat all valid files
+#             data = xr.concat(data_array,'time')
+#         # Otherwise need a file or folder to read from
+#         else:
+#             raise ValueError('File or folder not specified in params!')
+
+#         # Remove unnecessary column
+#         # data = data.drop_vars('polar_stereographic')
+        
+#         return data
+
+class AMSRDataLoader:
+    
+    '''
+    Abstract class for all scalar datasets
+
+    Args:
+        file_location (str): Path to data file or folder
+        min_dp (int)   : Minimum number of datapoints to require per cellbox
+            before allowing HOM condition to be calculated
+        ds (int, int)  : Tuple of downsampling factors in lat, long
+        data_name (str): Name of data, also name of data column in self.data
+        aggregate_type (str): Type of aggregation to be used when calling
+            self.get_hom_condition()
+    '''
     def __init__(self, bounds, params):
-        # Creates a class attribute for all keys in params
-        for key, val in params.items():
-            setattr(self, key, val)
-        
+
+    # def __init__(self, file_location, bounds, min_dp=5, ds=None, data_name=None, aggregate_type="MEAN"):
+        self.file_location  = params['folder']
+        self.min_dp         = params['min_dp']
+        self.ds             = params['downsample_factors']
+        self.hemisphere     = params['hemisphere'].lower()
+
+        # Cast string to uppercase to accept mismatched case
+        self.aggregate_type = params['aggregate_type'].upper()
+
         self.data = self.import_data(bounds)
-        self.data = self.downsample()
-        self.data = self.set_data_col_name('SIC')
+        # If no data name specified, retrieve from self.data
+        self.data_name = 'SIC' #data_name if data_name else self.get_data_name()
         
-        # Set to lower case for case insensitivity
-        self.hemisphere = self.hemisphere.lower()
-        # Reproject to mercator
-        if self.hemisphere == 'north': 
-            self.data = self.reproject('EPSG:3411', 'EPSG:4326', x_col='x', y_col='y')
-        elif self.hemisphere == 'south':
-            self.data = self.reproject('EPSG:3412', 'EPSG:4326', x_col='x', y_col='y')
-        else:
-            raise ValueError('No hemisphere defined in params!')
-        
-        # Limit dataset to just values within bounds
-        self.data = self.data.loc[self.get_datapoints(bounds).index]
-        
+        logging.debug(f'- Successfully extracted {self.data_name}')    
+
     def import_data(self, bounds):
+        
         '''
         Load AMSR netCDF, either as single '.nc' file, 
         or from a folder of '.nc' files
@@ -1151,6 +1250,12 @@ class AMSRDataLoader(ScalarDataLoader):
             return data
         
         logging.debug("Importing AMSR data...")
+        
+        if self.file_location[-3:] == '.nc':
+            self.file = self.file_location
+        else:
+            self.folder = self.file_location
+
 
         # If single NetCDF File specified
         if hasattr(self, 'file'):
@@ -1182,10 +1287,240 @@ class AMSRDataLoader(ScalarDataLoader):
         else:
             raise ValueError('File or folder not specified in params!')
 
-        # Remove unnecessary column
-        data = data.drop(labels='polar_stereographic')
+#         # Remove unnecessary column
+        # data = data.drop(labels='polar_stereographic')
         
-        return data
+        
+        raw_df = data.to_dataframe().reset_index().dropna()
+        
+        # raw_df = raw_df.set_index('time').sort_index().reset_index()
+        # AMSR data is in a EPSG:3412 projection and must be reprojected into
+        # EPSG:4326
+        # TODO Different projections per hemisphere
+        in_proj = 'EPSG:3412'
+        out_proj = 'EPSG:4326'
+        
+        
+        
+        logging.debug(f'- Reprojecting from {in_proj} to {out_proj}')
+
+        reprojected_df = self.reproject(raw_df, in_proj=in_proj, out_proj=out_proj, 
+                                        x_col='x', y_col='y')
+        
+        mask = (reprojected_df['lat']  >= bounds.get_lat_min())  & \
+               (reprojected_df['lat']  <= bounds.get_lat_max())  & \
+               (reprojected_df['long'] > bounds.get_long_min()) & \
+               (reprojected_df['long'] <= bounds.get_long_max()) & \
+               (reprojected_df['time'] >= bounds.get_time_min()) & \
+               (reprojected_df['time'] <=  bounds.get_time_max())
+               
+        return reprojected_df.loc[mask]
+
+    def reproject(self, data, in_proj='EPSG:4326', out_proj='EPSG:4326', 
+                        x_col='lat', y_col='long'):
+        '''
+        Reprojects data using pyProj.Transformer
+        self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            in_proj (str): 
+                Projection that the imported dataset is in
+                Must be allowed by PyProj.CRS (Coordinate Reference System)
+            out_proj (str): 
+                Projection required for final data output
+                Must be allowed by PyProj.CRS (Coordinate Reference System)
+                Shouldn't change from default value (EPSG:4326)
+            x_col (str): Name of coordinate column 1
+            y_col (str): Name of coordinate column 2
+                x_col and y_col will be cast into lat and long by the 
+                reprojection 
+            
+        Returns:
+            data (pd.DataFrame): Reprojected data with 'lat', 'long' columns 
+                replacing 'x_col' and 'y_col'
+        '''
+        def reproject_df(data, in_proj, out_proj, x_col, y_col):
+            '''
+            Reprojects a pandas dataframe
+            '''
+            # Do the reprojection
+            x, y = Transformer\
+                    .from_crs(CRS(in_proj), CRS(out_proj), always_xy=True)\
+                    .transform(data[x_col].to_numpy(), data[y_col].to_numpy())
+            # Replace columns with reprojected columns called 'lat'/'long'
+            data = data.drop(x_col, axis=1)
+            data = data.drop(y_col, axis=1)
+            data['lat']  = y
+            data['long'] = x
+            data['SIC'] = data['z']
+            data['time'] = pd.to_datetime(data['time'])
+            
+            return data
+            
+        def reproject_xr(data, in_proj, out_proj, x_col, y_col):
+            '''
+            Reprojects a xarray dataset
+            '''
+            # Cast to dataframe, then reproject using reproject_df
+            # Cannot reproject directly as memory usage skyrockets
+            df = data.to_dataframe().reset_index().dropna()
+            return reproject_df(df, in_proj, out_proj, x_col, y_col)
+        
+        # If no reprojection to do
+        if in_proj == out_proj:
+            return data
+        # Choose appropriate method of reprojection based on data type
+        elif type(data) == type(pd.DataFrame()):
+            return reproject_df(data, in_proj, out_proj, x_col, y_col)
+        elif type(data) == type(xr.Dataset()):
+            return reproject_xr(data, in_proj, out_proj, x_col, y_col)
+
+    def get_datapoints(self, bounds):
+        '''
+        Extracts datapoints from self.data within boundary defined by 'bounds'.
+        self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            bounds (Boundary): Limits of lat/long/time to select data from
+            
+        Returns:
+            data (pd.Series): Column of data values within selected region 
+        '''
+        def get_datapoints_from_df(data, name, bounds):
+            '''
+            Extracts data from a pd.DataFrame
+            '''
+            # Mask off any positions not within spatial bounds
+            # TODO Change <= to < after regression tests pass
+            mask = (data['lat']  >= bounds.get_lat_min())  & \
+                   (data['lat']  <= bounds.get_lat_max())  & \
+                   (data['long'] >= bounds.get_long_min()) & \
+                   (data['long'] <= bounds.get_long_max())
+            # Mask with time if time column exists
+            if 'time' in data.columns:
+                mask &= (data['time'] >= bounds.get_time_min()) & \
+                        (data['time'] <= bounds.get_time_max())
+            # Return column of data from within bounds
+            return data.loc[mask][name]
+        
+        def get_datapoints_from_xr(data, name, bounds):
+            '''
+            Extracts data from a xr.Dataset
+            '''
+            # Select data region within spatial bounds
+            data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
+            data = data.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
+            # Select data region within temporal bounds if time exists as a coordinate
+            if 'time' in data.coords.keys():
+                data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
+            # Cast as a pd.DataFrame
+            data = data.to_dataframe().reset_index().dropna()
+            # Return column of data from within bounds
+            return data[name]
+            
+        # Choose which method to retrieve data based on input type
+        if type(self.data) == type(pd.DataFrame()):
+            return get_datapoints_from_df(self.data, 'SIC', bounds)
+        elif type(self.data) == type(xr.Dataset()):
+            return get_datapoints_from_xr(self.data, 'SIC', bounds)
+
+
+    def get_data_name(self):
+        '''
+        Retrieve name of data column
+
+        Returns:
+            data_name (str): Name of data column
+        '''
+        # Store name of data column for future reference
+        
+        columns = self.data.columns
+        # Filter out lat, long, time columns leaves us with data column name
+        filtered_cols = filter(lambda col: col not in ['lat','long','time'], columns)
+        data_name = list(filtered_cols)[0]
+        return data_name
+
+    def get_value(self, bounds, skipna=True):
+        '''
+        Retrieve aggregated value from within bounds
+        
+        Args:
+            aggregation_type (str): Method of aggregation of datapoints within
+                bounds. Can be upper or lower case. 
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD'
+            bounds (Boundary): Boundary object with limits of lat/long
+            skipna (bool): Defines whether to propogate NaN's or not
+                Default = True (ignore's NaN's)
+
+        Returns:
+            aggregate_value (float): Aggregated value within bounds following
+                aggregation_type
+        '''
+
+        # Remove lat, long and time column if they exist
+        dps = self.get_datapoints(bounds).dropna()
+        # If no data
+        if len(dps) == 0:
+            return {self.data_name :np.nan}
+        # Return float of aggregated value
+        elif self.aggregate_type == 'MIN':
+            return {self.data_name :float(dps.min(skipna=skipna))}
+        elif self.aggregate_type == 'MAX':
+            return {self.data_name :float(dps.max(skipna=skipna))}
+        elif self.aggregate_type == 'MEAN':
+            return {self.data_name :float(dps.mean(skipna=skipna))}
+        elif self.aggregate_type == 'MEDIAN':
+            return {self.data_name :float(dps.median(skipna=skipna))}
+        elif self.aggregate_type == 'STD':
+            return {self.data_name :float(dps.std(skipna=skipna))}
+        # If aggregation_type not available
+        else:
+            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
+
+    def get_hom_condition(self, bounds, splitting_conds):
+        '''
+        Retrieve homogeneity condition
+        
+        Args: 
+            bounds (Boundary): Boundary object with limits of datarange to analyse
+            splitting_conds (dict):
+                ['threshold'] (float):  The threshold at which data points of 
+                    type 'value' within this CellBox are checked to be either 
+                    above or below
+                ['upper_bound'] (float): The lowerbound of acceptable percentage 
+                    of data_points of type value within this CellBox that are 
+                    above 'threshold'
+                ['lower_bound'] (float): the upperbound of acceptable percentage 
+                    of data_points of type value within this CellBox that are 
+                    above 'threshold'
+
+        Returns:
+            hom_condition (string): The homogeniety condtion of this CellBox by 
+                given parameters hom_condition is of the form -
+            CLR = the proportion of data points within this cellbox over a given
+                threshold is lower than the lowerbound
+            HOM = the proportion of data points within this cellbox over a given
+                threshold is higher than the upperbound
+            MIN = the cellbox contains less than a minimum number of data points
+
+            HET = the proportion of data points within this cellbox over a given
+                threshold if between the upper and lower bound
+        '''
+        # Retrieve datapoints to analyse
+        dps = self.get_datapoints(bounds)
+        
+        # If not enough datapoints
+        if len(dps) < self.min_dp: return 'MIN'
+        # Otherwise, extract the homogeneity condition
+
+        # Calculate fraction over threshold
+        num_over_threshold = dps[dps > splitting_conds['threshold']]
+        frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
+
+        # Return homogeneity condition
+        if   frac_over_threshold <= splitting_conds['lower_bound']: return 'CLR'
+        elif frac_over_threshold >= splitting_conds['upper_bound']: return 'HOM'
+        else: return 'HET'
 
 class BSOSESeaIceDataLoader(ScalarDataLoader):
     def __init__(self, bounds, params):
@@ -1446,7 +1781,7 @@ class DensityDataLoader(ScalarDataLoader):
             dims=('time','lat','long'),
             name='thickness')
 
-        return thickness_data.to_dataset()
+        return thickness_data.to_dataframe().reset_index().set_index(['lat', 'long', 'time']).reset_index()
 
 class ThicknessDataLoader(ScalarDataLoader):
     
@@ -1498,7 +1833,7 @@ class ThicknessDataLoader(ScalarDataLoader):
             dims=('time','lat','long'),
             name='density')
         
-        return density_data.to_dataset()
+        return density_data.to_dataframe().reset_index().set_index(['lat', 'long', 'time']).reset_index()
     
 
 # ---------- VECTOR DATA LOADERS ---------- #
@@ -1757,15 +2092,12 @@ if __name__ == '__main__':
         
         return [lat_min, lat_max], [long_min, long_max]    
 
-    # lat_range, long_range = polygon_str_to_boundaries(
-    #     "POLYGON ((-52.5 -65, -52.5 -63.75, -50 -63.75, -50 -65, -52.5 -65))"
-    #     )
-
-    lat_range = [-65, -60]
-    long_range = [-70, -50]
+    lat_range, long_range = polygon_str_to_boundaries(
+        "POLYGON ((-52.5 -65, -52.5 -63.75, -50 -63.75, -50 -65, -52.5 -65))"
+        )
     
     factory = DataLoaderFactory()
-    bounds = Boundary(lat_range, long_range, ['2019-01-01','2019-01-14'])
+    bounds = Boundary(lat_range, long_range, ['2013-03-01','2013-03-14'])
     
     # ............... SCALAR DATA LOADERS ............... #
     
@@ -1788,7 +2120,7 @@ if __name__ == '__main__':
         print(gebco.get_value(bounds))
         print(gebco.get_hom_condition(bounds, split_conds))
 
-    if False: # Run AMSR
+    if True: # Run AMSR
         params = {
             'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
@@ -1798,7 +2130,7 @@ if __name__ == '__main__':
         }
 
         split_conds = {
-            'threshold': 80,
+            'threshold': 35,
             'upper_bound': 0.9,
             'lower_bound': 0.1
         }
@@ -1938,7 +2270,7 @@ if __name__ == '__main__':
 
     # ............... ABSTRACT SHAPE DATA LOADERS ............... #
 
-    if True: # Run Circle
+    if False: # Run Circle
         params = {
             "data_name": "dummy_data",
             "value_fill_types": "parent",

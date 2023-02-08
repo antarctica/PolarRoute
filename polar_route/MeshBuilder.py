@@ -177,7 +177,7 @@ class MeshBuilder:
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
             print("creating data loader {}".format(data_source['loader']))
-            loader = DataLoaderFactory().get_dataloader(loader_name, bounds ,data_source['params'] , min_datapoints)
+            loader = DataLoaderFactory.get_dataloader(loader_name, bounds ,data_source['params'] , min_datapoints)
           
             # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
@@ -434,13 +434,14 @@ class MeshBuilder:
 if __name__=='__main__':
     import time
     import timeit
-    config = None
-    with open ("create_mesh.output2019_6_80_new_format.json" , "r") as config_file:
+    conf = None
+    with open ("add_vehicle.output2017_6_80_new_format.json" , "r") as config_file:
     # with open ("smallmesh_test.json" , "r") as config_file:
-        config = json.load(config_file)['config']
-    mesh_builder = MeshBuilder (config)
+        conf = json.load(config_file)['config']
+        print (conf)
+    mesh_builder = MeshBuilder (conf)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
-    print (mesh_builder.mesh.boundary.get_bounds())
-    with open ("mesh.output2013_4_80_refactored_split_depth_6_2019.json" , 'w')  as file:
+    print (conf)
+    with open ("mesh.vessel.output_2016.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
