@@ -961,9 +961,9 @@ class AbstractShapeDataLoader(ScalarDataLoader):
     
     def import_data(self, bounds):
         # Generate rows
-        self.lat  = np.linspace(bounds.get_lat_min(), bounds.get_lat_max(), self.ny)    
+        self.lat  = np.linspace(bounds.get_lat_min(), bounds.get_lat_max(), self.ny, endpoint=False)    
         # Generate cols
-        self.long = np.linspace(bounds.get_long_min(),bounds.get_long_max(),self.nx)
+        self.long = np.linspace(bounds.get_long_min(),bounds.get_long_max(),self.nx, endpoint=False)
         
         # Choose appropriate shape to generate
         if self.shape == 'circle':
@@ -1145,7 +1145,7 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         else:
             raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
 
-        return_dict[self.data_name] = 1.0 if return_dict[self.data_name] > 0.5 else 0.0
+        return_dict[self.data_name] = 1.0 if return_dict[self.data_name] >= 0.5 else 0.0
         
         return return_dict
 
@@ -2135,12 +2135,20 @@ if __name__ == '__main__':
         
         return [lat_min, lat_max], [long_min, long_max]    
 
-    lat_range, long_range = polygon_str_to_boundaries(
-        "POLYGON ((-52.5 -65, -52.5 -63.75, -50 -63.75, -50 -65, -52.5 -65))"
-        )
+    # lat_range, long_range = polygon_str_to_boundaries(
+    #     "POLYGON ((-55 -61.953125, -55 -61.875, -54.84375 -61.875, -54.84375 -61.953125, -55 -61.953125))"
+    #     )
+    
+    lat_range = [-65, -60]
+    long_range = [-70, -50]
     
     factory = DataLoaderFactory()
     bounds = Boundary(lat_range, long_range, ['2013-03-01','2013-03-14'])
+    bad_lat_range, bad_long_range = polygon_str_to_boundaries(
+        'POLYGON ((-55 -61.953125, -55 -61.875, -54.84375 -61.875, -54.84375 -61.953125, -55 -61.953125))'
+    )
+    bad_cb_bounds = Boundary(bad_lat_range, bad_long_range, ['2013-03-01','2013-03-14'])
+    
     
     # ............... SCALAR DATA LOADERS ............... #
     
@@ -2163,7 +2171,7 @@ if __name__ == '__main__':
         print(gebco.get_value(bounds))
         print(gebco.get_hom_condition(bounds, split_conds))
 
-    if True: # Run AMSR
+    if False: # Run AMSR
         params = {
             'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
@@ -2346,20 +2354,20 @@ if __name__ == '__main__':
         print(gradient.get_value(bounds))
         print(gradient.get_hom_condition(bounds, split_conds))
     
-    if False: # Run Checkerboard
+    if True: # Run Checkerboard
         params = {
-            'n': 11,
-            'gridsize': (2,2)
+            'nx': 201,
+            'ny': 201,
+            'gridsize': (6,3)
         }
         split_conds = {
             'threshold': 0.5,
-            'upper_bound': 0.9,
-            'lower_bound': 0.1
+            'upper_bound': 0.85,
+            'lower_bound': 0.15
         }
-        checkerboard = factory.get_dataloader('checkerboard', bounds, params, min_dp = 1)
+        checkerboard = factory.get_dataloader('checkerboard', bounds, params, min_dp = 5)
         
         print(checkerboard.get_value(bounds))
         print(checkerboard.get_hom_condition(bounds, split_conds))
-
-    
+            
     print('hi')
