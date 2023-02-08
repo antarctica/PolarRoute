@@ -31,6 +31,7 @@ from polar_route.EnvironmentMesh import EnvironmentMesh
 from polar_route.Metadata import Metadata
 from polar_route.NeighbourGraph import NeighbourGraph
 from polar_route.mesh import Mesh
+# from polar_route.DataLoader_old import DataLoaderFactory
 from polar_route.DataLoader import DataLoaderFactory
 
 class MeshBuilder:
@@ -177,7 +178,7 @@ class MeshBuilder:
          for data_source in   self.config['Mesh_info']['Data_sources']:  
             loader_name = data_source['loader']
             print("creating data loader {}".format(data_source['loader']))
-            loader = DataLoaderFactory.get_dataloader(loader_name, bounds ,data_source['params'] , min_datapoints)
+            loader = DataLoaderFactory().get_dataloader(loader_name, bounds ,data_source['params'] , min_datapoints)
           
             # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
@@ -434,6 +435,7 @@ class MeshBuilder:
 if __name__=='__main__':
     import time
     import timeit
+
     conf = None
     with open ("add_vehicle.output2017_6_80_new_format.json" , "r") as config_file:
     # with open ("smallmesh_test.json" , "r") as config_file:
@@ -445,3 +447,4 @@ if __name__=='__main__':
     print (conf)
     with open ("mesh.vessel.output_2016.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
+

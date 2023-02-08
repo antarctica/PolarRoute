@@ -228,7 +228,7 @@ def calculate_vessel_mesh(mesh_location):
 
     regression_mesh = env_meshes[0]
 
-    new_mesh = VesselPerformance(env_meshes[1])
+    new_mesh = VesselPerformance(env_meshes[1], env_meshes[1]['config']['Vessel'])
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
@@ -343,15 +343,16 @@ def compare_cellbox_values(mesh_a, mesh_b):
 
                     # Round to 5 dec. pl if value is a float, high precision can be issue between OS's
                     if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):
-                        value_b = np.round(float(cellbox_b[key]), decimals=2)
-                        value_a = np.round(float(cellbox_a[key]), decimals=2)
+                        value_b = np.round(float(cellbox_b[key]), decimals=5)
+                        value_a = np.round(float(cellbox_a[key]), decimals=5)
                     # Otherwise just extract values
                     else:
                         value_b = cellbox_b[key]  
                         value_a = cellbox_a[key]
 
                     # Compare values
-                    if not(value_a == value_b) and not(np.isnan(value_a) or np.isnan(value_b)):
+                    
+                    if str(value_a) != str(value_b):
                         mismatch_values.append(key)
                         mismatch_cellboxes[cellbox_a['id']] = mismatch_values
 
