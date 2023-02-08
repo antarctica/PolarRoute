@@ -502,7 +502,7 @@ class ScalarDataLoader(ABC):
         elif type(self.data) == type(xr.Dataset()):
             return get_data_name_from_xr(self.data)
 
-    def set_data_col_name(self, old_name, new_name):
+    def set_data_col_name(self, new_name):
         '''
         Sets name of data column/data variable
         
@@ -528,9 +528,9 @@ class ScalarDataLoader(ABC):
         
         # Change data name depending on data type
         if type(self.data) == type(pd.DataFrame()):
-            return set_name_df(self.data, old_name, new_name)
+            return set_name_df(self.data, self.get_data_col_name(), new_name)
         elif type(self.data) == type(xr.Dataset()):
-            return set_name_xr(self.data, old_name, new_name)
+            return set_name_xr(self.data, self.get_data_col_name(), new_name)
 
 class VectorDataLoader(ABC):
     '''
@@ -1105,6 +1105,49 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         dummy_df = dummy_df.replace(True, 1)
 
         return dummy_df
+
+    def get_value(self, bounds, skipna=True):
+        '''
+        Retrieve aggregated value from within bounds
+        
+        Args:
+            aggregation_type (str): Method of aggregation of datapoints within
+                bounds. Can be upper or lower case. 
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD'
+            bounds (Boundary): Boundary object with limits of lat/long
+            skipna (bool): Defines whether to propogate NaN's or not
+                Default = True (ignore's NaN's)
+
+        Returns:
+            aggregate_value (float): Aggregated value within bounds following
+                aggregation_type
+        '''
+
+        # Remove lat, long and time column if they exist
+        dps = self.get_datapoints(bounds).dropna().sort_values()
+        
+        return_dict = {}
+        # If no data
+        if len(dps) == 0:
+            return_dict =  {self.data_name: np.nan}
+        # Return float of aggregated value
+        elif self.aggregate_type == 'MIN':
+            return_dict =  {self.data_name :float(dps.min(skipna=skipna))}
+        elif self.aggregate_type == 'MAX':
+            return_dict =  {self.data_name :float(dps.max(skipna=skipna))}
+        elif self.aggregate_type == 'MEAN':
+            return_dict =  {self.data_name :float(dps.mean(skipna=skipna))}
+        elif self.aggregate_type == 'MEDIAN':
+            return_dict =  {self.data_name :float(dps.median(skipna=skipna))}
+        elif self.aggregate_type == 'STD':
+            return_dict =  {self.data_name :float(dps.std(skipna=skipna))}
+        # If aggregation_type not available
+        else:
+            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
+
+        return_dict[self.data_name] = 1.0 if return_dict[self.data_name] > 0.5 else 0.0
+        
+        return return_dict
 
 
 # class AMSRDataLoader(ScalarDataLoader):
