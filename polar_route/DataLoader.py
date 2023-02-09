@@ -245,9 +245,9 @@ class ScalarDataLoader(ABC):
             '''
             # Mask off any positions not within spatial bounds
             # TODO Change <= to < after regression tests pass
-            mask = (data['lat']  >= bounds.get_lat_min())  & \
+            mask = (data['lat']  > bounds.get_lat_min())  & \
                    (data['lat']  <= bounds.get_lat_max())  & \
-                   (data['long'] >= bounds.get_long_min()) & \
+                   (data['long'] > bounds.get_long_min()) & \
                    (data['long'] <= bounds.get_long_max())
             # Mask with time if time column exists
             if 'time' in data.columns:
@@ -502,7 +502,7 @@ class ScalarDataLoader(ABC):
         elif type(self.data) == type(xr.Dataset()):
             return get_data_name_from_xr(self.data)
 
-    def set_data_col_name(self, old_name, new_name):
+    def set_data_col_name(self, new_name):
         '''
         Sets name of data column/data variable
         
@@ -528,9 +528,9 @@ class ScalarDataLoader(ABC):
         
         # Change data name depending on data type
         if type(self.data) == type(pd.DataFrame()):
-            return set_name_df(self.data, old_name, new_name)
+            return set_name_df(self.data, self.get_data_col_name(), new_name)
         elif type(self.data) == type(xr.Dataset()):
-            return set_name_xr(self.data, old_name, new_name)
+            return set_name_xr(self.data, self.get_data_col_name(), new_name)
 
 class VectorDataLoader(ABC):
     '''
@@ -960,11 +960,7 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         self.data_name = "dummy_data"
     
     def import_data(self, bounds):
-        # Generate rows
-        self.lat  = np.linspace(bounds.get_lat_min(), bounds.get_lat_max(), self.ny)    
-        # Generate cols
-        self.long = np.linspace(bounds.get_long_min(),bounds.get_long_max(),self.nx)
-        
+        # TODO Move self.lat/long = np.linspace here after reg tests pass
         # Choose appropriate shape to generate
         if self.shape == 'circle':
             data = self._gen_circle(bounds)
@@ -985,6 +981,11 @@ class AbstractShapeDataLoader(ScalarDataLoader):
             Args:
                 bounds (Boundary): Limits of lat/long to generate within
         """
+        # Generate rows
+        self.lat  = np.linspace(bounds.get_lat_min(), bounds.get_lat_max(), self.ny)    
+        # Generate cols
+        self.long = np.linspace(bounds.get_long_min(),bounds.get_long_max(),self.nx)        
+
         # Set centre as centre of data_grid if none specified
         c_y = self.lat[int(self.ny/2)]  if not self.centre[0] else self.centre[0]
         c_x = self.long[int(self.nx/2)] if not self.centre[1] else self.centre[1]
@@ -1019,6 +1020,11 @@ class AbstractShapeDataLoader(ScalarDataLoader):
             Args:
                 bounds (Boundary): Limits of lat/long to generate within
         """
+        # Generate rows
+        self.lat  = np.linspace(bounds.get_lat_min(), bounds.get_lat_max(), self.ny)    
+        # Generate cols
+        self.long = np.linspace(bounds.get_long_min(),bounds.get_long_max(),self.nx)
+        
         #Create 1D gradient
         if self.vertical:   gradient = np.linspace(0,1,self.ny)
         else:               gradient = np.linspace(0,1,self.nx)
@@ -1042,7 +1048,10 @@ class AbstractShapeDataLoader(ScalarDataLoader):
             Args:
                 bounds (Boundary): Limits of lat/long to generate within
         """
-        
+        # Generate rows
+        self.lat  = np.linspace(bounds.get_lat_min(), bounds.get_lat_max(), self.ny, endpoint=False)    
+        # Generate cols
+        self.long = np.linspace(bounds.get_long_min(),bounds.get_long_max(),self.nx, endpoint=False)
 
         # Create checkerboard pattern
         # Create horizontal stripes of 0's and 1's, stripe size defined by gridsize
@@ -1105,6 +1114,52 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         dummy_df = dummy_df.replace(True, 1)
 
         return dummy_df
+
+    def get_value(self, bounds, skipna=True):
+        '''
+        Retrieve aggregated value from within bounds
+        
+        Args:
+            aggregation_type (str): Method of aggregation of datapoints within
+                bounds. Can be upper or lower case. 
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD'
+            bounds (Boundary): Boundary object with limits of lat/long
+            skipna (bool): Defines whether to propogate NaN's or not
+                Default = True (ignore's NaN's)
+
+        Returns:
+            aggregate_value (float): Aggregated value within bounds following
+                aggregation_type
+        '''
+
+        # Remove lat, long and time column if they exist
+        dps = self.get_datapoints(bounds).dropna().sort_values()
+        
+        return_dict = {}
+        # If no data
+        if len(dps) == 0:
+            return_dict =  {self.data_name: np.nan}
+        # Return float of aggregated value
+        elif self.aggregate_type == 'MIN':
+            return_dict =  {self.data_name :float(dps.min(skipna=skipna))}
+        elif self.aggregate_type == 'MAX':
+            return_dict =  {self.data_name :float(dps.max(skipna=skipna))}
+        elif self.aggregate_type == 'MEAN':
+            return_dict =  {self.data_name :float(dps.mean(skipna=skipna))}
+        elif self.aggregate_type == 'MEDIAN':
+            return_dict =  {self.data_name :float(dps.median(skipna=skipna))}
+        elif self.aggregate_type == 'STD':
+            return_dict =  {self.data_name :float(dps.std(skipna=skipna))}
+        # If aggregation_type not available
+        else:
+            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
+
+        if len(dps) < self.min_dp:
+            return return_dict
+        else:
+            if self.shape in ['circle', 'checkerboard']:
+                return_dict[self.data_name] = 1.0 if return_dict[self.data_name] >= 0.5 else 0.0
+            return return_dict
 
 
 # class AMSRDataLoader(ScalarDataLoader):
@@ -2092,12 +2147,25 @@ if __name__ == '__main__':
         
         return [lat_min, lat_max], [long_min, long_max]    
 
-    lat_range, long_range = polygon_str_to_boundaries(
-        "POLYGON ((-52.5 -65, -52.5 -63.75, -50 -63.75, -50 -65, -52.5 -65))"
-        )
+    # lat_range, long_range = polygon_str_to_boundaries(
+    #     "POLYGON ((-55 -61.953125, -55 -61.875, -54.84375 -61.875, -54.84375 -61.953125, -55 -61.953125))"
+    #     )
+    
+    lat_range = [-65, -60]
+    long_range = [-70, -50]
     
     factory = DataLoaderFactory()
     bounds = Boundary(lat_range, long_range, ['2013-03-01','2013-03-14'])
+    bad_lat_range, bad_long_range = polygon_str_to_boundaries(
+        # "POLYGON ((-70 -61.9921875, -70 -61.953125, -69.921875 -61.953125,  -69.921875 -61.9921875, -70 -61.9921875))"                    # 1316
+        # "POLYGON ((-69.921875 -61.9921875, -69.921875 -61.953125, -69.84375 -61.953125, -69.84375 -61.9921875, -69.921875 -61.9921875))"  # 1317
+        # "POLYGON ((-70 -62.03125, -70 -61.9921875, -69.921875 -61.9921875, -69.921875 -62.03125, -70 -62.03125))"                         # 1318
+        # "POLYGON ((-69.921875 -62.03125, -69.921875 -61.9921875, -69.84375 -61.9921875, -69.84375 -62.03125, -69.921875 -62.03125))"      # 1319
+        "POLYGON ((-70 -62.03125, -70 -61.953125, -69.84375 -61.953125, -69.84375 -62.03125, -70 -62.03125))"          # Total
+    )
+    bad_cb_bounds = Boundary(bad_lat_range, bad_long_range, ['2013-03-01','2013-03-14'])
+    
+
     
     # ............... SCALAR DATA LOADERS ............... #
     
@@ -2120,7 +2188,7 @@ if __name__ == '__main__':
         print(gebco.get_value(bounds))
         print(gebco.get_hom_condition(bounds, split_conds))
 
-    if True: # Run AMSR
+    if False: # Run AMSR
         params = {
             'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',
@@ -2303,20 +2371,20 @@ if __name__ == '__main__':
         print(gradient.get_value(bounds))
         print(gradient.get_hom_condition(bounds, split_conds))
     
-    if False: # Run Checkerboard
+    if True: # Run Checkerboard
         params = {
-            'n': 11,
-            'gridsize': (2,2)
+            'nx': 201,
+            'ny': 201,
+            'gridsize': (6,3)
         }
         split_conds = {
             'threshold': 0.5,
-            'upper_bound': 0.9,
-            'lower_bound': 0.1
+            'upper_bound': 0.85,
+            'lower_bound': 0.15
         }
-        checkerboard = factory.get_dataloader('checkerboard', bounds, params, min_dp = 1)
+        checkerboard = factory.get_dataloader('checkerboard', bounds, params, min_dp = 5)
         
         print(checkerboard.get_value(bounds))
         print(checkerboard.get_hom_condition(bounds, split_conds))
-
-    
+            
     print('hi')
