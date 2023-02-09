@@ -365,7 +365,7 @@ class CellBox:
                 HET = the proportion of data points within this cellbox over a given
                     threshold if between the upper and lower bound
         """
-        data_limit = 4
+        data_limit = self.minimum_datapoints
         if self._j_grid:
             data_limit = 3000
 
