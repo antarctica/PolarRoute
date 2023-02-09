@@ -450,8 +450,9 @@ if __name__=='__main__':
     config = None
     
     files = [
-        # "/home/habbot/Documents/Work/tests/Circle/circle_n201_r2_cy-62.5_cx-60.0_mesh_new_format.json",
-        "/home/habbot/Documents/Work/tests/Checkerboard/checkerboard_n201_gw6_gh3_mesh_new_format.json"
+        "/home/habbot/Documents/Work/tests/Circle/cornercirclenosplit_n201_r3_cy-65_cx-70_mesh_new_format.json",
+        # "/home/habbot/Documents/Work/tests/Checkerboard/checkerboard_n201_gw6_gh3_mesh_new_format.json",
+        # "/home/habbot/Documents/Work/tests/Gradient/vgrad_n201_vT_mesh_new_format.json"
         # "/home/habbot/Documents/Work/tests/create_mesh.output2016_6_80_new_format.json",
         # "/home/habbot/Documents/Work/tests/create_mesh.output2019_6_80_new_format.json"
              ]
@@ -464,5 +465,5 @@ if __name__=='__main__':
         mesh_builder = MeshBuilder (config)
         # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
         env_mesh = mesh_builder.build_environmental_mesh()
-        with open (f"/home/habbot/Documents/Work/tests/refactored_checkerboard_{i}.json" , 'w')  as file:
+        with open (f"/home/habbot/Documents/Work/tests/refactored_cornercircle_{i}.json" , 'w')  as file:
             json.dump (env_mesh.to_json() , file)
