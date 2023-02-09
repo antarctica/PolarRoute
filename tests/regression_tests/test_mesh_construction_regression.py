@@ -132,7 +132,7 @@ def calculate_vessel_mesh(mesh_location):
 
     regression_mesh = env_meshes[0]
 
-    new_mesh = VesselPerformance(env_meshes[1])
+    new_mesh = VesselPerformance(env_meshes[1], env_meshes[1]['config']['Vessel'])
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
