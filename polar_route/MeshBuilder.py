@@ -450,23 +450,9 @@ if __name__=='__main__':
         json.dump (env_mesh.to_json() , file)
 
 
-    # config = None
     
-    # files = [
-    #     # "/home/habbot/Documents/Work/tests/Circle/circle_n201_r2_cy-62.5_cx-60.0_mesh_new_format.json",
-    #     "/home/habbot/Documents/Work/tests/Checkerboard/checkerboard_n201_gw6_gh3_mesh_new_format.json"
-    #     # "/home/habbot/Documents/Work/tests/create_mesh.output2016_6_80_new_format.json",
-    #     # "/home/habbot/Documents/Work/tests/create_mesh.output2019_6_80_new_format.json"
-    #          ]
+  
     
-    # for i, file in enumerate(files):
+   
         
-    #     with open (file , "r") as config_file:
-    #     # with open ("smallmesh_test.json" , "r") as config_file:
-    #         config = json.load(config_file)['config']
-    #     mesh_builder = MeshBuilder (config)
-    #     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
-    #     env_mesh = mesh_builder.build_environmental_mesh()
-    #     with open (f"/home/habbot/Documents/Work/tests/refactored_checkerboard_{i}.json" , 'w')  as file:
-    #         json.dump (env_mesh.to_json() , file)
-
+   

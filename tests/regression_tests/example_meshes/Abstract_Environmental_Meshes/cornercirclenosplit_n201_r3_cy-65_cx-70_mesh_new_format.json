@@ -5,7 +5,7 @@
                 "latMin": -65,
                 "latMax": -60,
                 "longMin": -70,
-                "longMax": -50,
+                "longMax": -65,
                 "startTime": "2019-01-01",
                 "endTime": "2019-01-14",
                 "cellWidth": 2.5,

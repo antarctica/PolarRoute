@@ -1154,13 +1154,7 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         else:
             raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
 
-        return return_dict
-        # if len(dps) < self.min_dp:
-        #     return return_dict
-        # else:
-        #     if self.shape in ['circle', 'checkerboard']:
-        #         return_dict[self.data_name] = 1.0 if return_dict[self.data_name] >= 0.5 else 0.0
-        #    
+       return return_dict
 
 
 # class AMSRDataLoader(ScalarDataLoader):
@@ -2158,11 +2152,8 @@ if __name__ == '__main__':
     factory = DataLoaderFactory()
     bounds = Boundary(lat_range, long_range, ['2013-03-01','2013-03-14'])
     bad_lat_range, bad_long_range = polygon_str_to_boundaries(
-        # "POLYGON ((-70 -61.9921875, -70 -61.953125, -69.921875 -61.953125,  -69.921875 -61.9921875, -70 -61.9921875))"                    # 1316
-        # "POLYGON ((-69.921875 -61.9921875, -69.921875 -61.953125, -69.84375 -61.953125, -69.84375 -61.9921875, -69.921875 -61.9921875))"  # 1317
-        # "POLYGON ((-70 -62.03125, -70 -61.9921875, -69.921875 -61.9921875, -69.921875 -62.03125, -70 -62.03125))"                         # 1318
-        # "POLYGON ((-69.921875 -62.03125, -69.921875 -61.9921875, -69.84375 -61.9921875, -69.84375 -62.03125, -69.921875 -62.03125))"      # 1319
-        "POLYGON ((-70 -62.03125, -70 -61.953125, -69.84375 -61.953125, -69.84375 -62.03125, -70 -62.03125))"          # Total
+        # "POLYGON ((-59.375 -60.703125, -59.375 -60.625, -59.21875 -60.625, -59.21875 -60.703125, -59.375 -60.703125))"          # Total
+        "POLYGON ((-61.5625 -63.828125, -61.5625 -63.75, -61.40625 -63.75, -61.40625 -63.828125, -61.5625 -63.828125))"
     )
     bad_cb_bounds = Boundary(bad_lat_range, bad_long_range, ['2013-03-01','2013-03-14'])
     
@@ -2339,19 +2330,19 @@ if __name__ == '__main__':
 
     # ............... ABSTRACT SHAPE DATA LOADERS ............... #
 
-    if False: # Run Circle
+    if True: # Run Circle
         params = {
             "data_name": "dummy_data",
             "value_fill_types": "parent",
             "nx": 201,
             "ny": 201,
-            "radius": 3,
-            "centre": [-65, -70],
+            "radius": 2,
+            "centre": [-62.5, -60],
         }
 
         split_conds = {
             'threshold': 0.5,
-            'upper_bound': 0.8,
+            'upper_bound': 0.99,
             'lower_bound': 0.01
         }
 
