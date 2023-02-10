@@ -1154,12 +1154,13 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         else:
             raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
 
-        if len(dps) < self.min_dp:
-            return return_dict
-        else:
-            if self.shape in ['circle', 'checkerboard']:
-                return_dict[self.data_name] = 1.0 if return_dict[self.data_name] >= 0.5 else 0.0
-            return return_dict
+        return return_dict
+        # if len(dps) < self.min_dp:
+        #     return return_dict
+        # else:
+        #     if self.shape in ['circle', 'checkerboard']:
+        #         return_dict[self.data_name] = 1.0 if return_dict[self.data_name] >= 0.5 else 0.0
+        #    
 
 
 # class AMSRDataLoader(ScalarDataLoader):

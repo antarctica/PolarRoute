@@ -157,7 +157,7 @@ class CellBox:
             for splitting_cond in current_data_source.get_splitting_conditions():
                  hom_cond = data_loader.get_hom_condition(self.bounds, splitting_cond)
                  hom_conditions.append(hom_cond )
-             
+   
       
         if "HOM" in hom_conditions:
             return False

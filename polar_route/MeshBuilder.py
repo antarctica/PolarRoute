@@ -438,7 +438,7 @@ if __name__=='__main__':
 
 
     conf = None
-    with open ("add_vehicle.output2017_6_80_new_format.json" , "r") as config_file:
+    with open ("cornercirclenosplit_n201_r3_cy-65_cx-70_mesh_new_format.json" , "r") as config_file:
     # with open ("smallmesh_test.json" , "r") as config_file:
         conf = json.load(config_file)['config']
         print (conf)
@@ -446,7 +446,7 @@ if __name__=='__main__':
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
     print (conf)
-    with open ("mesh.vessel.output_2016.json" , 'w')  as file:
+    with open ("cornercirclenosplit_n201_r3_cy_output.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
 
 
