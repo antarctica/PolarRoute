@@ -1154,7 +1154,7 @@ class AbstractShapeDataLoader(ScalarDataLoader):
         else:
             raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
 
-       return return_dict
+        return return_dict
 
 
 # class AMSRDataLoader(ScalarDataLoader):
