@@ -21,12 +21,31 @@ class AggregatedCellBox:
         """
 
             Args:
-                cellbox_json(Json): json object that encapsulates boundary , agg_data and id of the CellBox
+                cellbox_json(Json): json object that encapsulates boundary, agg_data and id of the CellBox
         """
-        self.id = cellbox_json ['id']
-        self.boundary = self.load_boundary(cellbox_json)
-        self.agg_data = self.load_agg_data(cellbox_json)
-        return self
+        id = cellbox_json ['id']
+        def load_boundary (cellbox_json):
+        
+            shape = shapely.wkt.loads (cellbox_json ["geometry"])
+            bounds = shape.bounds
+            print (bounds)
+            lat_range = [bounds[1] , bounds[3]]
+            long_range = [bounds [0], bounds [2]]
+            return Boundary (lat_range , long_range)
+
+        def load_agg_data (cellbox_json):
+            dict_obj = {}
+            for key in cellbox_json:
+                if key  not in [  "geometry","cx", "cy", "dcx", "dcy"]:
+                    print (key)
+                    dict_obj[key] = cellbox_json[key]
+
+            return dict_obj
+        
+        boundary = load_boundary( cellbox_json)
+        agg_data = load_agg_data( cellbox_json)
+        obj = AggregatedCellBox(boundary , agg_data ,id )
+        return obj
 
 
 
@@ -108,22 +127,4 @@ class AggregatedCellBox:
         
         return cell_json
 
-    def load_boundary (self , cellbox_json):
-      
-        shape = shapely.wkt.loads (cellbox_json ["geometry"])
-        bounds = shape.bounds
-        print (bounds)
-        lat_range = [bounds[1] , bounds[3]]
-        long_range = [bounds [0], bounds [2]]
-        boundary = Boundary (lat_range , long_range)
 
-        return boundary
-
-
-    def load_agg_data (self , cellbox_json):
-        agg_dict = []
-        for key in cellbox_json:
-             if key  not in [  "geometry","cx", "cy", "dcx", "dcy"]:
-                agg_dict[key] = cellbox_json[key]
-
-        return agg_dict

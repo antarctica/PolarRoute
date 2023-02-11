@@ -1,6 +1,9 @@
 
 import json
 from polar_route.AggregatedJGridCellBox import AggregatedJGridCellBox
+from polar_route.Boundary import Boundary
+from polar_route.AggregatedCellBox import AggregatedCellBox
+from polar_route.NeighbourGraph import NeighbourGraph
 class EnvironmentMesh:
     """
     a class that defines the environmental mesh structure and contains each cellbox aggregate information
@@ -16,7 +19,7 @@ class EnvironmentMesh:
     
     """
     @classmethod
-    def from_json(self, config_file):
+    def load_from_json(self, file_path):
 
         """
             Constructs an Env.Mesh from a given config file to be used by other modules (ex.Vessel Performance Modeller).
@@ -73,18 +76,22 @@ class EnvironmentMesh:
 
            
         """
+        
+        mesh_json= None
         with open (file_path , "r") as config_file:
-            json_file = json.load(config_file)
-        self.config = json_file['config']
-        cellboxes_json = json_file['cellboxes']
-        self.agg_cellboxes = []
-        self.bounds= Boundary (self.config)
+            mesh_json = json.load(config_file)
+        config = mesh_json['config']
+        cellboxes_json = mesh_json['cellboxes']
+        agg_cellboxes = []
+        bounds= Boundary.from_json(config)
         #load the agg_cellboxes
         for cellbox_json in cellboxes_json:
+            print (cellbox_json)
             agg_cellbox = AggregatedCellBox.from_json(cellbox_json)
-            self.agg_cellboxes.append (agg_cellbox)
-        self.neighbour_graph = NeighbourGraph.from_json (json_file['neighbour_graph'])
-        return self
+            agg_cellboxes.append (agg_cellbox)
+        neighbour_graph = NeighbourGraph.from_json (mesh_json['neighbour_graph'])
+        obj = EnvironmentMesh( bounds , agg_cellboxes , neighbour_graph, config)
+        return obj
         
     
 
@@ -174,7 +181,11 @@ class EnvironmentMesh:
               values (dict): a dict contains perf. metrics names and values
                 
         """
-        self.agg_cellboxes[index].agg_data.append (values)
+        if index >-1 and index < len (self.agg_cellboxes):
+             self.agg_cellboxes[index].agg_data.update (values)
+        else:
+            raise ValueError(f'Invalid cellbox index')
+
 
     def save (self, path):
 

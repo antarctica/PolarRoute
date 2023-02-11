@@ -36,8 +36,8 @@ class Boundary:
         lat_range = [lat_min, lat_max]
         long_range = [long_min , long_max]
         time_range = [start_time , end_time]
-        self = Boundary (lat_range , long_range , time_range)
-        return self
+        obj = Boundary (lat_range , long_range , time_range)
+        return obj
 
 
 

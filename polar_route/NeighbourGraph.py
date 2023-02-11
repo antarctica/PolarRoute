@@ -33,18 +33,20 @@ class NeighbourGraph:
     """
 
 
-    def __init__(self , cellboxes ,grid_width):
+    def __init__(self , cellboxes=[] ,grid_width=0):
         # initialize graph with an empty one
         self.neighbour_graph = {}
         self.initialise_neighbour_graph(cellboxes ,grid_width)
 
     @classmethod
-    def from_json(self , ng_json):
+    def from_json( self, ng_json):
         # initialize graph from a json object
-        self.neighbour_graph = {}
+        neighbour_graph = {}
         for key in ng_json:
-            self.neighbour_graph [key] = ng_json [key]
-        return self
+            neighbour_graph [key] = ng_json [key]
+        obj = NeighbourGraph ()
+        obj.neighbour_graph = neighbour_graph
+        return obj
 
 
     def get_graph(self):
