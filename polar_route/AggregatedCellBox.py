@@ -17,13 +17,13 @@ class AggregatedCellBox:
         All geospatial boundaries of a CellBox are given in a 'EPSG:4326' projection
     """
     @classmethod
-    def from_json(self, cellbox_json):
+    def from_json(cls, cellbox_json):
         """
 
             Args:
                 cellbox_json(Json): json object that encapsulates boundary, agg_data and id of the CellBox
         """
-        id = cellbox_json ['id']
+        cellbox_id = cellbox_json ['id']
         def load_boundary (cellbox_json):
         
             shape = shapely.wkt.loads (cellbox_json ["geometry"])
@@ -42,7 +42,7 @@ class AggregatedCellBox:
         
         boundary = load_boundary( cellbox_json)
         agg_data = load_agg_data( cellbox_json)
-        obj = AggregatedCellBox(boundary , agg_data ,id )
+        obj = AggregatedCellBox(boundary , agg_data ,cellbox_id )
         return obj
 
 
@@ -62,7 +62,7 @@ class AggregatedCellBox:
         self.id = id
         
 ######## setters and getters ########
-    def set_Boundary(self, boundary):
+    def set_boundary(self, boundary):
         """
             set the boundary of the CellBox
         """

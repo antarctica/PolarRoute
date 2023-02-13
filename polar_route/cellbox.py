@@ -271,15 +271,7 @@ class CellBox:
             data_name = loader.data_name
             parent = self.get_parent()
             if ',' in data_name: # check if the data name has many entries (ex. uC,uV)
-               data_name_list =  data_name.split(',')
-               for name in data_name_list:
-                  parent = self.get_parent() 
-                  if np.isnan(agg_value[name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-                        agg_value[name] = 0  
-                  elif np.isnan(agg_value[name]) and source.get_value_fill_type()=='parent': 
-                        while np.isnan(agg_value[name]): #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                            agg_value [name] = loader.get_value( parent.bounds)[name]
-                            parent = parent.get_parent()     
+               agg_value = self.check_vector_data(source, loader, agg_value, data_name)     
 
             elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
                 agg_value[data_name] = 0 
@@ -296,7 +288,19 @@ class CellBox:
         agg_cellbox = AggregatedCellBox (self.bounds , agg_dict , self.get_id())
         # free the memory space used by the cellbox
         self.deallocate_cellbox()
-        return agg_cellbox  
+        return agg_cellbox 
+
+    def check_vector_data(self, source, loader, agg_value, data_name):
+        data_name_list =  data_name.split(',')
+        for name in data_name_list:
+           parent = self.get_parent() 
+           if np.isnan(agg_value[name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                 agg_value[name] = 0  
+           elif np.isnan(agg_value[name]) and source.get_value_fill_type()=='parent': 
+                 while np.isnan(agg_value[name]): #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                     agg_value [name] = loader.get_value( parent.bounds)[name]
+                     parent = parent.get_parent()
+        return agg_value 
 
 # Method to free up the memory space allocated by the cellbox
     

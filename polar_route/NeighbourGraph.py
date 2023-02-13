@@ -39,7 +39,7 @@ class NeighbourGraph:
         self.initialise_neighbour_graph(cellboxes ,grid_width)
 
     @classmethod
-    def from_json( self, ng_json):
+    def from_json( cls, ng_json):
         # initialize graph from a json object
         neighbour_graph = {}
         for key in ng_json:
@@ -65,7 +65,7 @@ class NeighbourGraph:
         # go through all thee neighbours in all the directions to remove the give cellbox_index from their neighbour_map
         direction_obj = Direction()
         for direction in direction_obj.__dict__.values(): 
-            remove_node_from_neighbours (self , cellbox_indx, direction)
+            self.remove_node_from_neighbours ( cellbox_index, direction)
 
         self.neighbour_graph.pop(cellbox_index)
      

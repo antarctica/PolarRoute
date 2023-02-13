@@ -20,7 +20,7 @@ class Boundary:
     """
    
     @classmethod
-    def from_json(self, config):
+    def from_json(cls, config):
         """
              constructs a boundary object from json input
             Args:

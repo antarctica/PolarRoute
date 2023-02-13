@@ -31,7 +31,7 @@ from polar_route.EnvironmentMesh import EnvironmentMesh
 from polar_route.Metadata import Metadata
 from polar_route.NeighbourGraph import NeighbourGraph
 from polar_route.mesh import Mesh
-# from polar_route.DataLoader_old import DataLoaderFactory
+
 from polar_route.DataLoader import DataLoaderFactory
 
 class MeshBuilder:
@@ -120,13 +120,7 @@ class MeshBuilder:
         cell_width = config['Mesh_info']['Region']['cellWidth']
         cell_height = config['Mesh_info']['Region']['cellHeight']
 
-        assert (bounds.get_long_max() - bounds.get_long_min()) % cell_width == 0, \
-            f"""The defined longitude region <{long_min} :{long_max}>
-            is not divisable by the initial cell width <{cell_width}>"""
-
-        assert (bounds.get_lat_max() - bounds.get_lat_min()) % cell_height == 0, \
-            f"""The defined longitude region <{lat_min} :{lat_max}>
-            is not divisable by the initial cell width <{cell_height}>"""
+        self.validate_bounds(bounds, cell_width, cell_height)
 
       
 
@@ -148,19 +142,10 @@ class MeshBuilder:
         logging.info("Initialising mesh...")
         
         logging.debug("Initialise cellBoxes...")
-        cell_bounds = None
         cellboxes =[]
-        for lat in np.arange(bounds.get_lat_min(), bounds.get_lat_max(), cell_height):
-            for long in np.arange(bounds.get_long_min(), bounds.get_long_max(), cell_width):
-                cell_lat_range = [lat, lat+cell_height]
-                cell_long_range = [long , long+cell_width]
-                cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
-                cell_id = str(len (cellboxes))
-                cellbox = CellBox(cell_bounds , cell_id)
-                cellboxes.append(cellbox)
+        cellboxes = self.initialize_cellboxes(bounds, cell_width, cell_height)
 
         grid_width = (bounds.get_long_max() - bounds.get_long_min()) / cell_width
-        grid_height = (bounds.get_lat_max() - bounds.get_lat_min()) / cell_height
 
         ###########################################
     
@@ -180,7 +165,6 @@ class MeshBuilder:
             print("creating data loader {}".format(data_source['loader']))
             loader = DataLoaderFactory().get_dataloader(loader_name, bounds ,data_source['params'] , min_datapoints)
           
-            # loader = None # to uncomment the previous line and use instead after itegrating wz Harry
             logging.debug("creating data loader {}".format(data_source['loader']))
             updated_splitiing_cond = [] # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader 
             if 'splitting_conditions' in data_source['params']:
@@ -192,14 +176,8 @@ class MeshBuilder:
            
             value_fill_type = data_source['params']['value_fill_types']
           
-
-                
-          
             meta_data_obj = Metadata ( loader, updated_splitiing_cond ,  value_fill_type)
             meta_data_list.append(meta_data_obj)
-    
-            
-
 
         for cellbox in cellboxes: # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
             if isinstance(cellbox, CellBox):
@@ -212,6 +190,29 @@ class MeshBuilder:
              max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
         self.mesh = Mesh(bounds , cellboxes , self.neighbour_graph, max_split_depth)
         self.mesh.set_config (config)
+
+    #########################################################################################
+
+    def initialize_cellboxes(self, bounds, cell_width, cell_height):
+        cellboxes= []
+        for lat in np.arange(bounds.get_lat_min(), bounds.get_lat_max(), cell_height):
+            for long in np.arange(bounds.get_long_min(), bounds.get_long_max(), cell_width):
+                cell_lat_range = [lat, lat+cell_height]
+                cell_long_range = [long , long+cell_width]
+                cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
+                cell_id = str(len (cellboxes))
+                cellbox = CellBox(cell_bounds , cell_id)
+                cellboxes.append(cellbox)
+        return cellboxes
+
+    def validate_bounds(self, bounds, cell_width, cell_height):
+        assert (bounds.get_long_max() - bounds.get_long_min()) % cell_width == 0, \
+            f"""The defined longitude region <{bounds.get_long_min()} :{bounds.get_long_max()}>
+            is not divisable by the initial cell width <{cell_width}>"""
+
+        assert (bounds.get_lat_max() - bounds.get_lat_min()) % cell_height == 0, \
+            f"""The defined longitude region <{bounds.get_lat_min()} :{bounds.get_lat_max()}>
+            is not divisable by the initial cell width <{cell_height}>"""
 
  ###############################       
 
