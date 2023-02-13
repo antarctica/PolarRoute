@@ -19,7 +19,7 @@ class EnvironmentMesh:
     
     """
     @classmethod
-    def load_from_json(self, file_path):
+    def load_from_json(cls, file_path):
 
         """
             Constructs an Env.Mesh from a given config file to be used by other modules (ex.Vessel Performance Modeller).
@@ -179,7 +179,7 @@ class EnvironmentMesh:
               values (dict): a dict contains perf. metrics names and values
                 
         """
-        if index >-1 and index < len (self.agg_cellboxes):
+        if index >-1 or index < len (self.agg_cellboxes):
              self.agg_cellboxes[index].agg_data.update (values)
         else:
             raise ValueError(f'Invalid cellbox index')
