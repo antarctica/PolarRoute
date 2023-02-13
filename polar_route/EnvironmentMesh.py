@@ -201,10 +201,10 @@ class EnvironmentMesh:
             'file'
             for use in j_grid regression testing
         """
-        mesh_dump = ""
+        mesh_dump_str = ""
         for cell_box in self.agg_cellboxes:
             if isinstance(cell_box, AggregatedJGridCellBox):
-                mesh_dump += cell_box.mesh_dump()
+                mesh_dump_str += cell_box.mesh_dump()
 
-        file.write(mesh_dump)
+        file.write(mesh_dump_str)
         file.close()

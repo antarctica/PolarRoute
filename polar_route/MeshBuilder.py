@@ -31,6 +31,7 @@ from polar_route.EnvironmentMesh import EnvironmentMesh
 from polar_route.Metadata import Metadata
 from polar_route.NeighbourGraph import NeighbourGraph
 from polar_route.mesh import Mesh
+from polar_route.JGridCellBox import JGridCellBox
 
 from polar_route.DataLoader import DataLoaderFactory
 
@@ -129,14 +130,10 @@ class MeshBuilder:
         #     x_coord = cellbox_indx % grid_width
         #     y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
         #     cellbox.set_grid_coord(x_coord, y_coord)
-        '''
 
-        self._j_grid = j_grid
-        if 'j_grid' in config['Mesh_info'].keys():
-            logging.warning("We're using the legacy Java style cell grid")
-            self._j_grid = True
 
-        '''
+        self.is_j_grid = False
+        self.is_jgrid_mesh(config)
        
 
         logging.info("Initialising mesh...")
@@ -191,6 +188,12 @@ class MeshBuilder:
         self.mesh = Mesh(bounds , cellboxes , self.neighbour_graph, max_split_depth)
         self.mesh.set_config (config)
 
+    def is_jgrid_mesh(self, config):
+        if 'j_grid' in config['Mesh_info'].keys():
+            logging.warning("We're using the legacy Java style cell grid")
+            self.is_j_grid = True
+        
+
     #########################################################################################
 
     def initialize_cellboxes(self, bounds, cell_width, cell_height):
@@ -201,7 +204,11 @@ class MeshBuilder:
                 cell_long_range = [long , long+cell_width]
                 cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
                 cell_id = str(len (cellboxes))
-                cellbox = CellBox(cell_bounds , cell_id)
+                if self.is_j_grid:
+                    cellbox = JGridCellBox(cell_bounds , cell_id)
+                    #TODO: set the initial_parent??
+                else:
+                    cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
         return cellboxes
 

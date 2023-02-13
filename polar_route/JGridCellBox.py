@@ -37,6 +37,7 @@ class JGridCellBox (CellBox):
         self.y_coord = 0
         self.focus = ""
         self.land_locked = False
+        self.initial_parent = None
  
 
 ######################################################
@@ -68,8 +69,7 @@ class JGridCellBox (CellBox):
           split_box.add_to_focus(split_boxes.index(split_box))
         return split_boxes
 
-
-#TODO: check if ee still need to check value fill type???
+#TODO: figure out the difference between this and cellbox aggregate???
     def aggregate(self):
         '''
             aggregates JGridCellBox data using the associated data_source's aggregate type and returns AggregatedJGridCellBox object
@@ -78,20 +78,21 @@ class JGridCellBox (CellBox):
      
         agg_dict = {}
         for source in self.get_data_source():
-            agg_type = source.get_aggregate_type()
             loader = source.get_data_loader()
-            data_name = loader._get_data_name()
-            bounds = self.bounds
-            if data_name =='uc' or data_name=='vc':
-                bounds = self.parent.bounds
-            agg_value = loader.get_value( bounds) # get the aggregated value from the associated DataLoader
-            if agg_value[data_name] == None: 
-                if source.get_value_fill_type()=='parent':  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                     agg_value = loader.get_value( self.get_parent().bounds) 
-                elif (agg_value[data_name] == None and source.get_value_fill_type()=='zero'): #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-                     agg_value[data_name] = 0  
-                else:
-                    agg_value[data_name] = np.nan
+            agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
+            data_name = loader.data_name
+            parent = self.get_parent()
+            if ',' in data_name: # check if the data name has many entries (ex. uC,uV)
+               agg_value = self.check_vector_data(source, loader, agg_value, data_name)     
+
+            elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                agg_value[data_name] = 0 
+            elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='parent': 
+                while parent !=None and np.isnan(agg_value[data_name]):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                    agg_value = loader.get_value( parent.bounds) 
+                    parent = parent.get_parent()
+               
+             
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = AggregatedJGridCellBox (self.bounds , agg_dict , self.get_id())
@@ -147,5 +148,8 @@ def node_string(self):
             focus_string += str(focus) + " "
         focus_string += "]"
         return node_string + " " + focus_string
+
+def set_initial_parent (self, parent):
+     self.initial_parent = parent
 
 
