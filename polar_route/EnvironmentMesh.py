@@ -22,11 +22,10 @@ class EnvironmentMesh:
     def load_from_json(cls, file_path):
 
         """
-            Constructs an Env.Mesh from a given config file to be used by other modules (ex.Vessel Performance Modeller).
+            Constructs an Env.Mesh from a given env-mesh json file to be used by other modules (ex.Vessel Performance Modeller).
 
             Args:
-                config (dict): config file which defines the attributes of the Mesh 
-                    to be constructed. config is of the form - \n
+                file_path (string): a string that contains a path to Env-mesh json file of the following format - \n
                     \n
                     {\n
                         "config": {\n
@@ -74,7 +73,8 @@ class EnvironmentMesh:
                         }\n
                     }\n
 
-           
+         Returns:
+         env_mesh_obj (EnvironmentMesh): object that contains all the json file mesh information  
         """
         
         mesh_json= None

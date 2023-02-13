@@ -40,7 +40,11 @@ class NeighbourGraph:
 
     @classmethod
     def from_json( cls, ng_json):
-        # initialize graph from a json object
+        ''' 
+            method that initializes a graph from a json object
+            Args: 
+            ng_json (json_object): json object that contains the neighbour_graph data
+        '''
         neighbour_graph = {}
         for key in ng_json:
             neighbour_graph [key] = ng_json [key]
@@ -61,6 +65,8 @@ class NeighbourGraph:
     def remove_node_and_update_neighbours (self, cellbox_index):
         ''' 
             method that removes a node in the neighbour_graph at a given index. remove_node_from_neighbours should be called first.
+            Args: 
+            cellbox_index (int): the index of the cellbox that will get removed from the neoghbpur_graph
         '''
         # go through all thee neighbours in all the directions to remove the give cellbox_index from their neighbour_map
         direction_obj = Direction()
@@ -78,19 +84,30 @@ class NeighbourGraph:
     def add_node(self, index, neighbour_map):
         '''
             method that adds a node to the neighbour_graph at a given index
+            Args:
+            index(int):the index at which the node will be added in the neighbour_graph
+            neighbour_map (dict): a dict that contains the neighbours of the node
         '''
         self.neighbour_graph[index] = neighbour_map
 
     def remove_node (self, cellbox_index):
         '''
             method that removes a node to the neighbour_graph at a given index
+            Args: 
+            cellbox_index (int): the index of the cellbox that will get removed from the neoghbpur_graph
         '''
         self.neighbour_graph.pop(cellbox_index)
 
 
     def update_neighbours(self,cellbox_indx, new_neighbours_indx, direction, cellboxes):
         '''
-        method that updates the neighbour of a certain cellbox in a specific direction
+            method that updates the neighbour of a certain cellbox in a specific direction. It removes cellbox_indx from the neighbour_map of its neighbours in a specific direction and add new_neighbour_indx
+            Args: 
+            cellbox_index (int): index of the cellbox that its neighbour will be updated
+            new_neighbour_indx (int): the index of the new neighbour that will replace cellbox_index
+            direction (int): an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)
+            cellboxes(list<CellBox>): the list that contains all the cellboxes of the mesh
+
         '''
 
         self.remove_node_from_neighbours (cellbox_indx, direction)
@@ -110,8 +127,10 @@ class NeighbourGraph:
 
     def remove_node_from_neighbours (self , cellbox_indx, direction):
         '''
-         method that goes through neighbours in a given direction and remove cellbox_index from their neighbour_maps
-
+            method that goes through neighbours in a given direction and remove cellbox_index from their neighbour_maps
+            Args:
+            cellbox_indx (int): the index of the cellbox that we will go through its neighbours and remove this index from their neighbour_map
+            directio (int): an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)
         '''
 
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
@@ -172,32 +191,32 @@ class NeighbourGraph:
         lat_b = cellbox_b.bounds.get_lat_min()
         if (long_a + cellbox_a.bounds.get_width()) == long_b and (
                 lat_a + cellbox_a.bounds.get_height()) == lat_b:
-            return 1  # North-East
+            return Direction.north_east
         if (long_a + cellbox_a.bounds.get_width ()== long_b) and (
                 lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
                 (lat_b + cellbox_b.bounds.get_height()) > lat_a):
-            return 2  # East
+            return Direction.east
         if (long_a + cellbox_a.bounds.get_width()) == long_b and (
                 lat_a == lat_b + cellbox_b.bounds.get_height()):
-            return 3  # South-East
+            return Direction.south_east
         if ((lat_b + cellbox_b.bounds.get_height()) == lat_a) and (
                 (long_b + cellbox_b.bounds.get_width()) > long_a) and (
                 long_b < (long_a + cellbox_a.bounds.get_width())):
-            return 4  # South
+            return Direction.south
         if long_a == (long_b + cellbox_b.bounds.get_width()) and lat_a == (
                 lat_b + cellbox_b.bounds.get_height()):
-            return -1  # South-West
+            return Direction.south_west
         if (long_b + cellbox_b.bounds.get_width() == long_a) and (
                 lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
                 (lat_b + cellbox_b.bounds.get_height()) > lat_a):
-            return -2  # West
+            return Direction.west
         if long_a == (long_b + cellbox_b.bounds.get_width()) and (
                 lat_a + cellbox_a.bounds.get_height() == lat_b):
-            return -3  # North-West
+            return Direction.north_west
         if (lat_b == (lat_a + cellbox_a.bounds.get_height())) and (
                 (long_b + cellbox_b.bounds.get_width()) > long_a) and (
                 long_b < (long_a + cellbox_a.bounds.get_width())):
-            return -4  # North
+            return Direction.north 
         return 0  # Cells are not neighbours.
 
 
@@ -210,13 +229,19 @@ class NeighbourGraph:
 
         for cellbox in cellboxes:
             cellbox_indx = cellboxes.index(cellbox)
+            neighbour_map = self.initialise_map (cellbox_indx , grid_width , len(cellboxes))
+
+            self.add_node (cellbox_indx , neighbour_map)
+
+
+    def initialise_map (self, cellbox_indx , grid_width , cellboxes_length):
             neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
 
             # add east neighbours to neighbour graph
             if (cellbox_indx + 1) % grid_width != 0:
                 neighbour_map[2].append(cellbox_indx + 1)
                 # south-east neighbours
-                if cellbox_indx + grid_width < len(cellboxes):
+                if cellbox_indx + grid_width < cellboxes_length:
                     neighbour_map[1].append(int((cellbox_indx + grid_width) + 1))
                 # north-east neighbours
                 if cellbox_indx - grid_width >= 0:
@@ -226,18 +251,18 @@ class NeighbourGraph:
             if cellbox_indx % grid_width != 0:
                 neighbour_map[-2].append(cellbox_indx - 1)
                 # add south-west neighbours to neighbour graph
-                if cellbox_indx + grid_width < len(cellboxes):
+                if cellbox_indx + grid_width < cellboxes_length:
                     neighbour_map[-3].append(int((cellbox_indx + grid_width) - 1))
                 # add north-west neighbours to neighbour graph
                 if cellbox_indx - grid_width >= 0:
                     neighbour_map[-1].append(int((cellbox_indx - grid_width) - 1))
 
             # add south neighbours to neighbour graph
-            if cellbox_indx + grid_width < len(cellboxes):
+            if cellbox_indx + grid_width < cellboxes_length:
                 neighbour_map[-4].append(int(cellbox_indx + grid_width))
 
             # add north neighbours to neighbour graph
             if cellbox_indx - grid_width >= 0:
                 neighbour_map[4].append(int(cellbox_indx - grid_width))
 
-            self.add_node (cellbox_indx , neighbour_map)
+            return neighbour_map
