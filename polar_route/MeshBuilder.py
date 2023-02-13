@@ -424,7 +424,7 @@ class MeshBuilder:
                agg_cellboxes.append (cellbox.aggregate()) 
         
         env_mesh = EnvironmentMesh(self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
-        #env_mesh = EnvironmentMesh(self.mesh.get_bounds() , agg_cellboxes , self.neighbour_graph ,self.get_config())
+      
         return env_mesh
 
 #################################################################################################
@@ -441,7 +441,7 @@ if __name__=='__main__':
     with open ("cornercirclenosplit_n201_r3_cy-65_cx-70_mesh_new_format.json" , "r") as config_file:
     # with open ("smallmesh_test.json" , "r") as config_file:
         conf = json.load(config_file)['config']
-        print (conf)
+
     mesh_builder = MeshBuilder (conf)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()

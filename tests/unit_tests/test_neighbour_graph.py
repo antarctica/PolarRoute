@@ -12,7 +12,7 @@ class TestNeighbourGraph (unittest.TestCase):
          boundary = Boundary([-85,-80], [-135,-130], ['1970-01-01','2021-12-31'])
          cellbox = CellBox (boundary , 0)
          params = {
-      'file': './datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+      'file': '../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
 		'downsample_factors': (5,5),
 		'data_name': 'elevation',
 		'aggregate_type': 'MAX',
@@ -23,9 +23,9 @@ class TestNeighbourGraph (unittest.TestCase):
 	'upper_bound': 0.9,
 	'lower_bound': 0.1
 	}
-         factory = DataLoaderFactory
-         gebco = factory.get_dataloader('GEBCO', params, min_dp = 5)
-         cellbox.set_data_source ([Metadata (gebco , [split_conds] , params ['aggregate_type'] , params ['value_fill_types'])])
+        
+         gebco = DataLoaderFactory().get_dataloader('GEBCO', boundary , params, min_dp = 5)
+         cellbox.set_data_source ([Metadata (gebco , [split_conds] ,  params ['value_fill_types'])])
          self.cellboxes = cellbox.split(0)
          cell_width = 2.5
          grid_width = (boundary.get_long_max() - boundary.get_long_min()) / cell_width

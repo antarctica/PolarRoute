@@ -28,7 +28,6 @@ class AggregatedCellBox:
         
             shape = shapely.wkt.loads (cellbox_json ["geometry"])
             bounds = shape.bounds
-            print (bounds)
             lat_range = [bounds[1] , bounds[3]]
             long_range = [bounds [0], bounds [2]]
             return Boundary (lat_range , long_range)
@@ -37,7 +36,6 @@ class AggregatedCellBox:
             dict_obj = {}
             for key in cellbox_json:
                 if key  not in [  "geometry","cx", "cy", "dcx", "dcy"]:
-                    print (key)
                     dict_obj[key] = cellbox_json[key]
 
             return dict_obj

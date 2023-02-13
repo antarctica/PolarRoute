@@ -164,8 +164,6 @@ class EnvironmentMesh:
 
                 # Get json for CellBox
                 cell = cellbox.to_json()
-                # Append ID to CellBox
-                #cell['id'] = str(self.cellboxes.index(cellbox))
 
                 cellboxes_json.append(cell)
         return cellboxes_json
