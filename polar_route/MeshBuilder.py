@@ -31,8 +31,6 @@ from polar_route.EnvironmentMesh import EnvironmentMesh
 from polar_route.Metadata import Metadata
 from polar_route.NeighbourGraph import NeighbourGraph
 from polar_route.mesh import Mesh
-from polar_route.JGridCellBox import JGridCellBox
-
 from polar_route.DataLoader import DataLoaderFactory
 
 class MeshBuilder:
