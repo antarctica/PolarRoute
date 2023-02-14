@@ -49,15 +49,14 @@ class DataLoaderInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod  
-    def get_hom_condition(self, bounds: Boundary, 
-                          splitting_conds: dict, agg_type: str):
+    def get_hom_condition(self, bounds: Boundary, splitting_conds: dict):
         ''' Reads values within boundary to determine if data is
         homogeneous or heterogeneous. Return as str'''
         raise NotImplementedError
     
     @abstractmethod  
     def reproject(self, in_proj: str, out_proj: str, 
-                  x_col: str, y_col: str):
+                        x_col: str, y_col: str):
         ''' Reprojects raw data into a common projection and 
         return as pd.DataFrame'''
         raise NotImplementedError

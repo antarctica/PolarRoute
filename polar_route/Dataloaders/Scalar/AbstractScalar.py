@@ -141,7 +141,7 @@ class ScalarDataLoader(DataLoaderInterface):
         elif type(self.data) == type(xr.Dataset()):
             return get_datapoints_from_xr(self.data, data_name, bounds)
 
-    def get_value(self, bounds, skipna=True):
+    def get_value(self, bounds, agg_type=None, skipna=True):
         '''
         Retrieve aggregated value from within bounds
         
@@ -157,22 +157,24 @@ class ScalarDataLoader(DataLoaderInterface):
             aggregate_value (float): Aggregated value within bounds following
                 aggregation_type
         '''
-
+        # Set to params if no specific aggregate type specified
+        if agg_type is None:
+            agg_type = self.aggregate_type
         # Remove lat, long and time column if they exist
         dps = self.get_datapoints(bounds).dropna().sort_values()
         # If no data
         if len(dps) == 0:
             return {self.data_name: np.nan}
         # Return float of aggregated value
-        elif self.aggregate_type == 'MIN':
+        elif agg_type == 'MIN':
             return {self.data_name :float(dps.min(skipna=skipna))}
-        elif self.aggregate_type == 'MAX':
+        elif agg_type == 'MAX':
             return {self.data_name :float(dps.max(skipna=skipna))}
-        elif self.aggregate_type == 'MEAN':
+        elif agg_type == 'MEAN':
             return {self.data_name :float(dps.mean(skipna=skipna))}
-        elif self.aggregate_type == 'MEDIAN':
+        elif agg_type == 'MEDIAN':
             return {self.data_name :float(dps.median(skipna=skipna))}
-        elif self.aggregate_type == 'STD':
+        elif agg_type == 'STD':
             return {self.data_name :float(dps.std(skipna=skipna))}
         # If aggregation_type not available
         else:
@@ -280,7 +282,7 @@ class ScalarDataLoader(DataLoaderInterface):
         elif type(self.data) == type(xr.Dataset()):
             return reproject_xr(self.data, in_proj, out_proj, x_col, y_col)
     
-    def downsample(self):
+    def downsample(self, agg_type=None):
         '''
         Downsamples imported data to be more easily manipulated
         self.data can be pd.DataFrame or xr.Dataset
@@ -319,14 +321,18 @@ class ScalarDataLoader(DataLoaderInterface):
             
             return data
         
+        # Set to params if no specific aggregate type specified
+        if agg_type is None:
+            agg_type = self.aggregate_type
+        
         # If no downsampling
         if self.downsample_factors == (1,1):
             return self.data
         # Otherwise, downsample appropriately
         elif type(self.data) == type(pd.DataFrame()):
-            return downsample_df(self.data, self.downsample_factors, self.aggregate_type)
+            return downsample_df(self.data, self.downsample_factors, agg_type)
         elif type(self.data) == type(xr.Dataset()):
-            return downsample_xr(self.data, self.downsample_factors, self.aggregate_type)
+            return downsample_xr(self.data, self.downsample_factors, agg_type)
         
     def get_data_col_name(self):
         '''
