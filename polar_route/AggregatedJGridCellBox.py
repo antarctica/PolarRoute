@@ -113,7 +113,7 @@ def mesh_dump(self):
              vc = 0
         
         mesh_dump += str(uc) + ", " + str(vc) + ", "
-        mesh_dump += str(number_of_points) # TODO: double check 
+        mesh_dump += str(number_of_points) #TODO: double check 
         mesh_dump += "\n"
 
         return mesh_dump

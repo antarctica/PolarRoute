@@ -37,7 +37,7 @@ class JGridCellBox (CellBox):
         self.y_coord = 0
         self.focus = ""
         self.land_locked = False
-        self.initial_parent = None
+        self.initial_bounds = None
  
 
 ######################################################
@@ -149,7 +149,7 @@ def node_string(self):
         focus_string += "]"
         return node_string + " " + focus_string
 
-def set_initial_parent (self, parent):
-     self.initial_parent = parent
+def set_initial_bounds(self, parent):
+     self.initial_bounds= parent
 
 

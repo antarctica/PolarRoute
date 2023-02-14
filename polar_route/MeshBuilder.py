@@ -444,18 +444,20 @@ if __name__=='__main__':
     import time
     import timeit
 
-
+    start = time.time()
     conf = None
-    with open ("cornercirclenosplit_n201_r3_cy-65_cx-70_mesh_new_format.json" , "r") as config_file:
-    # with open ("smallmesh_test.json" , "r") as config_file:
+    with open ("create_mesh.output2019_6_80_new_format_GEBCO_AMSR.json" , "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder (conf)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
     print (conf)
-    with open ("cornercirclenosplit_n201_r3_cy_output.json" , 'w')  as file:
+    with open ("output2019_6_80_new_format_GEBCO.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
+    end = time.time()
+    elapsed_seconds = float("%.2f" % (end - start))
+    print (elapsed_seconds)
 
 
     
