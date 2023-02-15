@@ -6,16 +6,17 @@ the information governing our numerical world, this includes and is not limited 
 Ocean Currents, Sea Ice Concentration and Bathymetric depth.
 
 Example:
-    An example of running this code can be executed by running the following
+    An example of running this code can be executed by running the following 
     in a ipython/Jupyter Notebook::
 
         from polar_route import cellbox
         ....
 
 Note:
-    CellBoxes are intended to be constructed by and used within a Mesh
-    object. The methods provided are to extract information for CellBoxes
-    contained within a Mesh.
+    CellBoxes are intended to be constructed by and used within a Mesh 
+    object. The methods provided are to extract information for CellBoxes 
+    contained within a Mesh. 
+
 """
 
 from shapely.geometry import Polygon
@@ -25,46 +26,47 @@ import pandas as pd
 
 class CellBox:
     """
-    A CellBox is a collection of data-points contained within a given geo-spatial/temporal
+    A CellBox is a collection of data-points contained within a given geo-spatial/temporal 
     boundary. Information about any given value of a CellBox is calculated from 
-    the mean of all data points of that type within those bounds. CellBoxes may
-    be split into smaller CellBoxes and the data points within distributed
-    between the newly created CellBoxes so as to construct a non-uniform mesh
-    of CellBoxes, such as within a Mesh.
+    the mean of all data points of that type within those bounds. CellBoxes may 
+    be split into smaller CellBoxes and the data points within distributed 
+    between the newly created CellBoxes so as to construct a non-uniform mesh 
+    of CellBoxes, such as within a Mesh. 
 
-
-    Attributes:
-        lat (float): The latitude of the top-left corner of the CellBox
-        long (float): The longitude of the top-left corner of the CellBox
-        width (float): The width of the CellBox, given in degrees longitude
-        height (float): The height of the CellBox, given in degrees latitude
+    Attributes: 
+        lat (float): The latitude of the top-left corner of the CellBox 
+        long (float): The longitude of the top-left corner of the CellBox 
+        width (float): The width of the CellBox, given in degrees longitude 
+        height (float): The height of the CellBox, given in degrees latitude 
 
     Note:
-        All geospatial boundaries of a CellBox are given in a 'EPSG:4326' projection
+        All geospatial boundaries of a CellBox are given in a 'EPSG:4326' projection 
+
     """
+    
     split_depth = 0
 
     def __init__(self, lat, long, width, height, splitting_conditions=[], j_grid=False):
         """
 
             Args:
-                lat (float): The latitude of the top-left corner of the CellBox
-                long (float): The longitude of the top-left corner of the CellBox
-                width (float): The width of the CellBox, given in degrees longitude
-                height (float): The height of the CellBox, given in degrees latitude
-                splitting_conditions (list<(dict)>): conditions in which the CellBox
-                    will be split into 4 smaller CellBoxes.
+                lat (float): The latitude of the top-left corner of the CellBox 
+                long (float): The longitude of the top-left corner of the CellBox 
+                width (float): The width of the CellBox, given in degrees longitude 
+                height (float): The height of the CellBox, given in degrees latitude 
+                splitting_conditions (list<(dict)>): conditions in which the CellBox 
+                    will be split into 4 smaller CellBoxes. 
 
                     splitting_conditions are of the form -
                         {
                             <value>:{
                                 "threshold" (float):,\n
                                 "upperBound" (float):,\n
-                                "lowerBound" (float)
-                            }
-                        }
+                                "lowerBound" (float) 
+                            } 
+                        } 
 
-                j_grid (bool): True if the CellBox should be constructed using the
+                j_grid (bool): True if the CellBox should be constructed using the 
                     format of the original Java codebase
         """
         # Box information relative to bottom left

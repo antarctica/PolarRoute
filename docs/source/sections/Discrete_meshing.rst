@@ -1,6 +1,6 @@
-********
+***************************
 Methods - Mesh Construction
-********
+***************************
 
 Overview
 ##############
@@ -28,7 +28,7 @@ CellBox
 Mesh
 ##############
 
-.. automodule:: polar_route.Mesh
+.. automodule:: polar_route.mesh
 
 .. autoclass:: polar_route.mesh.Mesh 
    :special-members: __init__  
