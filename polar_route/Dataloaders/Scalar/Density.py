@@ -14,65 +14,45 @@ class DensityDataLoader(ScalarDataLoader):
         
         self.data = self.import_data(bounds)
         self.data_name = self.get_data_col_name()
-                    
+        
     def import_data(self, bounds):
         '''
         Placeholder until lookup-table dataloader class implemented
         '''
-        thicknesses = {
-            'Ross':          {'winter': 0.72, 'spring': 0.67, 'summer': 1.32, 
-                              'autumn': 0.82, 'year': 1.07},
-            'Bellinghausen': {'winter': 0.65, 'spring': 0.79, 'summer': 2.14, 
-                              'autumn': 0.79, 'year': 0.90},
-            'Weddell E':     {'winter': 0.54, 'spring': 0.89, 'summer': 0.87, 
-                              'autumn': 0.44, 'year': 0.73},
-            'Weddell W':     {'winter': 1.33, 'spring': 1.33, 'summer': 1.20, 
-                              'autumn': 1.38, 'year': 1.33},
-            'Indian':        {'winter': 0.59, 'spring': 0.78, 'summer': 1.05, 
-                              'autumn': 0.45, 'year': 0.68},
-            'West Pacific':  {'winter': 0.72, 'spring': 0.68, 'summer': 1.17, 
-                              'autumn': 0.75, 'year': 0.79},
-            'None':          {'winter': 0.72, 'spring': 0.67, 'summer': 1.32, 
-                              'autumn': 0.82, 'year': 1.07}}
+        densities = {'summer': 875.0, 
+                     'autumn': 900.0, 
+                     'winter': 920.0,
+                     'spring': 900.0}
+
         seasons = {
             12: 'summer', 1:  'summer', 2:  'summer', 
             3:  'autumn', 4:  'autumn', 5:  'autumn', 
             6:  'winter', 7:  'winter', 8:  'winter', 
             9:  'spring', 10: 'spring', 11: 'spring'}
         
-        def get_thickness(d, lon):
+        def get_density(d):
             month = d.month
             season = seasons[month]
-            
-            if   -130 <= lon <  -60: sea = 'Bellinghausen'
-            elif  -60 <= lon <  -45: sea = 'Weddell W'
-            elif  -45 <= lon <   20: sea = 'Weddell E'
-            elif   20 <= lon <   90: sea = 'Indian'
-            elif   90 <= lon <  160: sea = 'West Pacific'
-            elif  160 <= lon <  180: sea = 'Ross'
-            elif -180 <= lon < -130: sea = 'Ross'
-            else: sea = 'None'
-            
-            return thicknesses[sea][season]
+            return densities[season]
         
         
         lats = [lat for lat in np.arange(bounds.get_lat_min(), 
                                          bounds.get_lat_max(), 0.05)]
         lons = [lon for lon in np.arange(bounds.get_long_min(), 
                                          bounds.get_long_max(), 0.05)]
-        
+
         start_date = datetime.strptime(bounds.get_time_min(), "%Y-%m-%d")
         end_date = datetime.strptime(bounds.get_time_max(), "%Y-%m-%d")
         delta = end_date - start_date
-        dates = [start_date + timedelta(days=i) for i in range(delta.days+1)]
+        dates = [start_date + timedelta(days=i) for i in range(delta.days)]
         
-        thickness_data = xr.DataArray(
-            data=[[[get_thickness(d, lon) for lon in lons] for _ in lats] for d in dates],
+        density_data = xr.DataArray(
+            data=[[[get_density(d) for _ in lons] for _ in lats] for d in dates],
             coords=dict(
                 lat=lats,
                 long=lons,
                 time=[d.strftime('%Y-%m-%d') for d in dates]),
             dims=('time','lat','long'),
-            name='thickness')
-
-        return thickness_data.to_dataframe().reset_index().set_index(['lat', 'long', 'time']).reset_index()
+            name='density')
+        
+        return density_data.to_dataframe().reset_index().set_index(['lat', 'long', 'time']).reset_index()
