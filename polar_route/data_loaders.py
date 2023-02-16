@@ -3,9 +3,9 @@
     PolarRoute requires data as a pandas dataframe
     in the following format:
 
-    long | lat | (time)* | value_1 | ... | value_n
+    long | lat | (time)* | value_1 | ... | value_n 
 
-    *time is optional
+    *time is optional*
 
     Note:
         long and lat values must be in a EPSG:4326 projection
