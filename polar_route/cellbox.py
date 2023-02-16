@@ -297,7 +297,7 @@ class CellBox:
            if np.isnan(agg_value[name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
                  agg_value[name] = 0  
            elif np.isnan(agg_value[name]) and source.get_value_fill_type()=='parent': 
-                 while np.isnan(agg_value[name]): #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                 while parent !=None and np.isnan(agg_value[name]): #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
                      agg_value [name] = loader.get_value( parent.bounds)[name]
                      parent = parent.get_parent()
         return agg_value 
