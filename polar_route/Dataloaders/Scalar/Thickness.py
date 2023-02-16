@@ -58,13 +58,13 @@ class ThicknessDataLoader(ScalarDataLoader):
         
         
         lats = [lat for lat in np.arange(bounds.get_lat_min(), 
-                                         bounds.get_lat_max(), 0.05)]
+                                         bounds.get_lat_max(), 0.05)][1:]
         lons = [lon for lon in np.arange(bounds.get_long_min(), 
-                                         bounds.get_long_max(), 0.05)]
+                                         bounds.get_long_max(), 0.05)][1:]
         
         start_date = datetime.strptime(bounds.get_time_min(), "%Y-%m-%d")
         end_date = datetime.strptime(bounds.get_time_max(), "%Y-%m-%d")
-        delta = end_date - start_date
+        # delta = end_date - start_date
         #TODO Add 1 to range(delta.days), standard code missed this
         # dates = [start_date + timedelta(days=i) for i in range(delta.days)]
         dates = [single_date for single_date in date_range(start_date, end_date)]
