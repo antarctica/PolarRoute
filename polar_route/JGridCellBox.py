@@ -69,7 +69,7 @@ class JGridCellBox (CellBox):
           split_box.add_to_focus(split_boxes.index(split_box))
         return split_boxes
 
-#TODO: figure out the difference between this and cellbox aggregate???
+#TODO: figure out the difference between this and cellbox aggregate??? use of Land_loader?
     def aggregate(self):
         '''
             aggregates JGridCellBox data using the associated data_source's aggregate type and returns AggregatedJGridCellBox object
@@ -104,7 +104,7 @@ def set_grid_coord(self, xpos, ypos):
         """
             sets up initial grid-coordinate when creating a j_grid
 
-            for use in j_grid regression testing
+            for use in j_grid impl
         """
         self.x_coord = xpos
         self.y_coord = ypos
@@ -113,7 +113,7 @@ def get_focus(self):
         """
             returns the focus of this cellbox
 
-            for use in j_grid regression testing
+            for use in j_grid impl
         """
         return self.focus
 
@@ -122,7 +122,7 @@ def add_to_focus(self, focus):
             append additional information to the focus of this cellbox
             to be used when splitting.
 
-            for use in j_grid regression testing
+            for use in j_grid impl
         """
         self.focus.append(focus)
 

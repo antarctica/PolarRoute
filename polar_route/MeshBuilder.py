@@ -6,7 +6,7 @@ Example:
     An example of how to run this code can be executed by running the
     following in an ipython/Jupyter Notebook::
 
-        from RoutePlanner import MeshBuilder
+        from polar_route import MeshBuilder
 
         import json
         with open('./config.json', 'r') as f:
@@ -15,15 +15,16 @@ Example:
         mesh_builder = MeshBuilder(config)
         mesh_builder.build_environmental_mesh()
 """
-from memory_profiler import profile
+
 import logging
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-
+from memory_profiler import profile
 import json
 
 from matplotlib.patches import Polygon as MatplotPolygon
+from polar_route.JGridCellBox import JGridCellBox
 from polar_route.Boundary import Boundary
 from polar_route.cellbox import CellBox
 from polar_route.Direction import Direction
@@ -120,18 +121,6 @@ class MeshBuilder:
         cell_height = config['Mesh_info']['Region']['cellHeight']
 
         self.validate_bounds(bounds, cell_width, cell_height)
-
-      
-
-        # TODO: we should be using the inheritance hierarchy to achieve this, and creatJGridCellBox instead, assign boundaries and coordinates.
-        #  # set gridCoord of cellBox
-        #     x_coord = cellbox_indx % grid_width
-        #     y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
-        #     cellbox.set_grid_coord(x_coord, y_coord)
-
-
-        self.is_j_grid = False
-        self.is_jgrid_mesh(config)
        
 
         logging.info("Initialising mesh...")
@@ -142,16 +131,32 @@ class MeshBuilder:
 
         grid_width = (bounds.get_long_max() - bounds.get_long_min()) / cell_width
 
-        ###########################################
-    
         logging.debug("Initialise neighbours graph...")
         self.neighbour_graph = NeighbourGraph(cellboxes , grid_width) 
-        ##########################################
-
        
         min_datapoints=5
         if 'splitting' in self.config['Mesh_info']:
              min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
+        meta_data_list = self.initialize_meta_data(bounds, min_datapoints)
+
+        for cellbox in cellboxes: # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
+            if isinstance(cellbox, CellBox):
+                cellbox.set_minimum_datapoints(min_datapoints)
+                # assign meta data to each cellbox
+                cellbox.set_data_source (meta_data_list)           
+
+
+    #######################
+        max_split_depth = 0
+        if 'splitting' in self.config['Mesh_info']:
+             max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
+        self.mesh = Mesh(bounds , cellboxes , self.neighbour_graph, max_split_depth)
+        self.mesh.set_config (config)
+
+
+
+
+    def initialize_meta_data(self, bounds, min_datapoints):
         meta_data_list = []
         splitting_conds = []
         if 'Data_sources' in self.config['Mesh_info'].keys():
@@ -165,7 +170,6 @@ class MeshBuilder:
             if 'splitting_conditions' in data_source['params']:
                   splitting_conds = data_source['params']['splitting_conditions'] 
                   for split_cond in splitting_conds:
-                      print (">>>" , loader.data_name)
                       cond = split_cond [loader.data_name]
                       updated_splitiing_cond.append (cond) 
            
@@ -173,26 +177,21 @@ class MeshBuilder:
           
             meta_data_obj = Metadata ( loader, updated_splitiing_cond ,  value_fill_type)
             meta_data_list.append(meta_data_obj)
+            if self.is_jgrid_mesh():
+                loader = DataLoaderFactory().get_dataloader("LandFromSOSE", bounds ,data_source['params'] , min_datapoints)  
+                meta_data_list.append( Metadata (loader)) #TODO: if this loader would need any splitting conds, value_fill_type
+        return meta_data_list
 
-        for cellbox in cellboxes: # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
-            if isinstance(cellbox, CellBox):
-                cellbox.set_minimum_datapoints(min_datapoints)
-                # assign meta data to each cellbox
-                cellbox.set_data_source (meta_data_list)           
-    ####################### 
-        max_split_depth = 0
-        if 'splitting' in self.config['Mesh_info']:
-             max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
-        self.mesh = Mesh(bounds , cellboxes , self.neighbour_graph, max_split_depth)
-        self.mesh.set_config (config)
 
-    def is_jgrid_mesh(self, config):
-        if 'j_grid' in config['Mesh_info'].keys():
+    def is_jgrid_mesh(self):
+        if 'j_grid' in self.config['Mesh_info'].keys():
             logging.warning("We're using the legacy Java style cell grid")
-            self.is_j_grid = True
+            return True
+        return False
         
 
-    #########################################################################################
+  
+
 
     def initialize_cellboxes(self, bounds, cell_width, cell_height):
         cellboxes= []
@@ -202,9 +201,14 @@ class MeshBuilder:
                 cell_long_range = [long , long+cell_width]
                 cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
                 cell_id = str(len (cellboxes))
-                if self.is_j_grid:
+                if self.is_jgrid_mesh():
                     cellbox = JGridCellBox(cell_bounds , cell_id)
-                    #TODO: set the initial_parent??
+                    # add land_dataloader
+                    # x_coord = cellbox_indx % grid_width
+                    # y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
+                    # cellbox.set_grid_coord(x_coord, y_coord)
+                    #TODO: set the initial_parent?? 
+   
                 else:
                     cellbox = CellBox(cell_bounds , cell_id)
                 cellboxes.append(cellbox)
@@ -441,17 +445,17 @@ class MeshBuilder:
 if __name__=='__main__':
     import time
     import timeit
-
+    from memory_profiler import profile
     start = time.time()
     conf = None
-    with open ("create_mesh.output2019_6_80_new_format_GEBCO_AMSR.json" , "r") as config_file:
+    with open ("create_mesh.output2019_6_80_new_format _AMSR_SOSE.json" , "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder (conf)
     # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
     print (conf)
-    with open ("output2019_6_80_new_format_GEBCO.json" , 'w')  as file:
+    with open ("output2019_6_80_new_format_SOSE.json" , 'w')  as file:
         json.dump (env_mesh.to_json() , file)
     end = time.time()
     elapsed_seconds = float("%.2f" % (end - start))

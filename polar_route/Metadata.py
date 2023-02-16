@@ -17,7 +17,7 @@ class Metadata:
     """
    
 
-    def __init__(self, data_loader , spliiting_conditions, value_fill_type):
+    def __init__(self, data_loader , spliiting_conditions =None, value_fill_type= ""):
         """
 
             Args:
