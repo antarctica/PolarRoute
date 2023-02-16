@@ -1,4 +1,5 @@
 from .AbstractScalar import ScalarDataLoader
+from polar_route.utils import date_range
 
 from datetime import datetime, timedelta
 
@@ -64,7 +65,9 @@ class ThicknessDataLoader(ScalarDataLoader):
         start_date = datetime.strptime(bounds.get_time_min(), "%Y-%m-%d")
         end_date = datetime.strptime(bounds.get_time_max(), "%Y-%m-%d")
         delta = end_date - start_date
-        dates = [start_date + timedelta(days=i) for i in range(delta.days)]
+        #TODO Add 1 to range(delta.days), standard code missed this
+        # dates = [start_date + timedelta(days=i) for i in range(delta.days)]
+        dates = [single_date for single_date in date_range(start_date, end_date)]
         
         thickness_data = xr.DataArray(
             data=[[[get_thickness(d, lon) for lon in lons] for _ in lats] for d in dates],

@@ -1,6 +1,10 @@
 from .AbstractScalar import ScalarDataLoader
+from polar_route.utils import date_range
+
 
 from datetime import datetime, timedelta
+
+
 
 import numpy as np
 import xarray as xr
@@ -43,8 +47,9 @@ class DensityDataLoader(ScalarDataLoader):
 
         start_date = datetime.strptime(bounds.get_time_min(), "%Y-%m-%d")
         end_date = datetime.strptime(bounds.get_time_max(), "%Y-%m-%d")
-        delta = end_date - start_date
-        dates = [start_date + timedelta(days=i) for i in range(delta.days)]
+        # delta = end_date - start_date
+        #TODO Add 1 to range(delta.days), standard code missed this
+        dates = [single_date for single_date in date_range(start_date, end_date)]
         
         density_data = xr.DataArray(
             data=[[[get_density(d) for _ in lons] for _ in lats] for d in dates],
