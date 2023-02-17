@@ -102,8 +102,8 @@ def mesh_dump(self):
                 if value != None:
                    ice_area = value
       
-        uc = self.agg_data['uc']
-        vc = self.agg_data['vc']
+        uc = self.agg_data['uC']
+        vc = self.agg_data['vC']
 
         mesh_dump += str(ice_area) + "; "  # add ice area
         # add uc, uv

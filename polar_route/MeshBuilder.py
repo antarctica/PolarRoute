@@ -177,7 +177,7 @@ class MeshBuilder:
           
             meta_data_obj = Metadata ( loader, updated_splitiing_cond ,  value_fill_type)
             meta_data_list.append(meta_data_obj)
-            if self.is_jgrid_mesh():
+            if self.is_jgrid_mesh():#TODO check if we really need to have a case for that? or it will already be added as the other loaders fron the config
                 loader = DataLoaderFactory().get_dataloader("LandFromSOSE", bounds ,data_source['params'] , min_datapoints)  
                 meta_data_list.append( Metadata (loader)) #TODO: if this loader would need any splitting conds, value_fill_type
         return meta_data_list
@@ -195,6 +195,8 @@ class MeshBuilder:
 
     def initialize_cellboxes(self, bounds, cell_width, cell_height):
         cellboxes= []
+        grid_width = (bounds.get_long_max() - bounds.get_long_min()) / cell_width
+        grid_height = (bounds.get_lat_max() - bounds.get_lat_min()) / self._cell_height
         for lat in np.arange(bounds.get_lat_min(), bounds.get_lat_max(), cell_height):
             for long in np.arange(bounds.get_long_min(), bounds.get_long_max(), cell_width):
                 cell_lat_range = [lat, lat+cell_height]
@@ -202,12 +204,12 @@ class MeshBuilder:
                 cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
                 cell_id = str(len (cellboxes))
                 if self.is_jgrid_mesh():
+                    cellbox_indx = len(cellboxes)
                     cellbox = JGridCellBox(cell_bounds , cell_id)
-                    # add land_dataloader
-                    # x_coord = cellbox_indx % grid_width
-                    # y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
-                    # cellbox.set_grid_coord(x_coord, y_coord)
-                    #TODO: set the initial_parent?? 
+                    x_coord = cellbox_indx % grid_width
+                    y_coord = abs(math.floor(cellbox_indx / grid_width) - (grid_height - 1))
+                    cellbox.set_grid_coord(x_coord, y_coord)
+                    cellbox.set_initial_bounds (bounds) #TODO: check that initial_bounds should be grid_bounds
    
                 else:
                     cellbox = CellBox(cell_bounds , cell_id)

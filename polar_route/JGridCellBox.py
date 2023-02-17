@@ -58,15 +58,15 @@ class JGridCellBox (CellBox):
         # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
         # if parent box is land, all child boxes are considered land
-          if self.land_locked:
+            if self.is_land():
                 split_box.land_locked = True
 
           # set gridCoord of split boxes equal to parent.
-          split_box.set_grid_coord(self.x_coord, self.y_coord)
+            split_box.set_grid_coord(self.x_coord, self.y_coord)
 
         # create focus for split boxes.
-          split_box.set_focus(self.get_focus().copy())
-          split_box.add_to_focus(split_boxes.index(split_box))
+            split_box.set_focus(self.get_focus().copy())
+            split_box.add_to_focus(split_boxes.index(split_box))
         return split_boxes
 
 #TODO: figure out the difference between this and cellbox aggregate??? use of Land_loader?
@@ -79,18 +79,20 @@ class JGridCellBox (CellBox):
         agg_dict = {}
         for source in self.get_data_source():
             loader = source.get_data_loader()
-            agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
+           
             data_name = loader.data_name
             parent = self.get_parent()
-            if ',' in data_name: # check if the data name has many entries (ex. uC,uV)
-               agg_value = self.check_vector_data(source, loader, agg_value, data_name)     
+            if ',' in data_name: # check if the data name has many entries (ex. uC,vC)
+              agg_value = loader.get_value( self.initial_bounds) # get uC, vC using the initial bounds   
 
-            elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-                agg_value[data_name] = 0 
-            elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='parent': 
-                while parent !=None and np.isnan(agg_value[data_name]):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                    agg_value = loader.get_value( parent.bounds) 
-                    parent = parent.get_parent()
+            else: 
+                agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
+                if np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
+                    agg_value[data_name] = 0 
+                elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='parent': 
+                  while parent !=None and np.isnan(agg_value[data_name]):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                        agg_value = loader.get_value( parent.bounds) 
+                        parent = parent.get_parent()
                
              
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
@@ -98,7 +100,10 @@ class JGridCellBox (CellBox):
         agg_cellbox = AggregatedJGridCellBox (self.bounds , agg_dict , self.get_id())
         agg_cellbox.set_node_string(self.node_string())
 
-        return agg_cellbox  
+        return agg_cellbox 
+
+
+ 
 
 def set_grid_coord(self, xpos, ypos):
         """
@@ -149,7 +154,16 @@ def node_string(self):
         focus_string += "]"
         return node_string + " " + focus_string
 
-def set_initial_bounds(self, parent):
-     self.initial_bounds= parent
+def set_initial_bounds(self, bounds):
+     self.initial_bounds= bounds
+
+def is_land(self):
+    is_land = False
+    for source in self.data_source:
+        loader = source.get_data_loader()
+        data_name = 'is_land'
+        if loader.data_name == data_name:
+            is_land = loader.get_value (self.bounnds)[data_name]  
+    return is_land
 
 

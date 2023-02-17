@@ -188,11 +188,9 @@ class EnvironmentMesh:
     def save (self, path):
 
        with open(path, 'w') as f:
+            json.dump(self.to_json(), f)
             if  isinstance (self.agg_cellboxes[0] , AggregatedJGridCellBox) :
                 self.dump_mesh (f)
-            else:
-                json.dump(self.to_json(), f)
-
 
     def dump_mesh(self, file):
         """
