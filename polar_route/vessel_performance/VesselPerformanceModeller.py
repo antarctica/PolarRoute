@@ -1,15 +1,33 @@
 from polar_route.EnvironmentMesh import EnvironmentMesh
 from polar_route.vessel_performance.VesselFactory import VesselFactory
 import logging
+import json
 
 class VesselPerformanceModeller:
+    """
+        Class for modelling the vessel performance.
+        Takes both an environmental mesh and vessel config as input in json format and modifies the input mesh to
+        include vessel specifics.
+    """
     def __init__(self, env_mesh_json, vessel_config):
+        """
+
+        Args:
+            env_mesh_json (str): a file path pointing to an environmental mesh json file
+            vessel_config (str): a file path pointing to a vessel config json file
+        """
         logging.info("Initialising Vessel Performance Modeller")
 
         self.env_mesh = EnvironmentMesh.load_from_json(env_mesh_json)
         self.vessel = VesselFactory.get_vessel(vessel_config)
 
     def model_accessibility(self):
+        """
+
+        Method to determine the accessibility of cells in the environmental mesh and remove inaccessible cells from the
+        neighbour graph.
+
+        """
         for cellbox in self.env_mesh.agg_cellboxes:
             access_values = self.vessel.model_accessibility(cellbox)
             self.env_mesh.update_cellbox(cellbox.id, access_values)
@@ -17,12 +35,25 @@ class VesselPerformanceModeller:
         self.env_mesh.neighbour_graph = remove_nodes(self.env_mesh.neighbour_graph, inaccessible_nodes)
 
     def model_performance(self):
+        """
+
+        Method to calculate the relevant vessel performance values for each cell in the environmental mesh and update
+        the mesh accordingly.
+
+        """
         for cellbox in self.env_mesh.agg_cellboxes:
             performance_values = self.vessel.model_performance(cellbox)
             self.env_mesh.update_cellbox(cellbox.id, performance_values)
 
     def to_json(self):
-        pass
+        """
+            Method to return the modified mesh in json format.
+
+            Returns:
+                j_mesh (dict): a dictionary representation of the modified mesh.
+        """
+        j_mesh = json.loads(json.dumps(self.env_mesh))
+        return j_mesh
 
 def remove_nodes(neighbour_graph, inaccessible_nodes):
     """

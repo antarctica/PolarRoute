@@ -1,3 +1,4 @@
 class VesselFactory:
-    def get_vessel(self, config):
+    @classmethod
+    def get_vessel(cls, config):
         pass
