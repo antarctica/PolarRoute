@@ -53,14 +53,15 @@ class Mesh:
                         }\n
                     }\n
                }
+
     """
 
     def __init__(self, config, j_grid=False):
         """
-            Constructs a Mesh from a given config file.
+            Constructs a Mesh from a given config file. 
 
             Args:
-                config (dict): config file which defines the attributes of the Mesh
+                config (dict): config file which defines the attributes of the Mesh 
                     to be constructed. config is of the form - \n
                     \n
                     {\n
@@ -101,9 +102,11 @@ class Mesh:
                         }\n
                     }\n
 
-                j_grid (bool): True if the Mesh to be constructed should be of the same
-                    format as the original Java CellGrid, to be used for regression testing.
+                j_grid (bool): True if the Mesh to be constructed should be of the same 
+                    format as the original Java CellGrid, to be used for regression testing. 
+
         """
+
         self._config = config
 
         self._long_min = config['Mesh_info']['Region']['longMin']
@@ -328,11 +331,11 @@ class Mesh:
                     JSON object. The JSON object is of the form -
 
                     {
-                        "config": the config used to initialize the Mesh,
-                        "cellboxes": a list of CellBoxes contained within the Mesh,
-                        "neighbour_graph": a graph representing the adjacency of CellBoxes
-                            within the Mesh
+                    "config": the config used to initialize the Mesh,
+                    "cellboxes": a list of CellBoxes contained within the Mesh,
+                    "neighbour_graph": a graph representing the adjacency of CellBoxes within the Mesh
                     }
+
         """
         output = dict()
         output['config'] = self.config
