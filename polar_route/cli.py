@@ -87,7 +87,7 @@ def add_vehicle_cli():
     """
 
     """
-    from polar_route.vessel_performance import VesselPerformance
+    from polar_route.vessel_performance_old import VesselPerformance
 
     default_output = "add_vehicle.output.json"
     args = get_args(default_output, config_arg=True, mesh_arg=True)
