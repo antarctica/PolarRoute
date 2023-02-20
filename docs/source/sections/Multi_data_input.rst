@@ -1,9 +1,9 @@
-**********************
+*************************
 Input - Data Loaders
-**********************
+*************************
 
 Data sources
-##############
+#################
 
 The polar_route implements a variety of data-loaders to enable working with a 
 number of open-source datasets. Links to download some of these datasets and 
@@ -26,7 +26,7 @@ there implemented data-loaders are provided in the table below.
 
 
 Data Loading Overview
-########################
+##########################
 
 In this section we discuss functions for loading data into the PolarRoute Mesh.
 Data can be added to the Mesh using the *.add_data_points()* function of the Mesh.

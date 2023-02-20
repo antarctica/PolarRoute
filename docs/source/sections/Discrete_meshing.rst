@@ -1,9 +1,9 @@
-***************************
+********************************
 Methods - Mesh Construction
-***************************
+********************************
 
-Overview
-##############
+Mesh Construction Overview
+##############################
 
 Throughout this section we will outline the use case for the Discrete Meshing of the environment. The two main classes used are `Mesh` and `CellBox`, with a Mesh being composed of a series of CellBox objects.
 
