@@ -1,0 +1,2 @@
+class UnderwaterVessel:
+    pass
