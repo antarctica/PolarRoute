@@ -1,4 +1,4 @@
-from .AbstractScalar import ScalarDataLoader
+from polar_route.Dataloaders.Scalar.AbstractScalar import ScalarDataLoader
 
 import logging
 

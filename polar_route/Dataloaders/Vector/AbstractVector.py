@@ -117,7 +117,7 @@ class VectorDataLoader(DataLoaderInterface):
                 mask &= (data['time'] >= bounds.get_time_min()) & \
                         (data['time'] <= bounds.get_time_max())
             # Return column of data from within bounds
-            return data.loc[mask][names]
+            return data.loc[mask][names.split(',')]
         
         def get_datapoints_from_xr(data, names, bounds):
             '''
@@ -132,7 +132,7 @@ class VectorDataLoader(DataLoaderInterface):
             # Cast as a pd.DataFrame
             data = data.to_dataframe().reset_index()
             # Return column of data from within bounds
-            return data[names]
+            return data[names.split(',')]
             
         # Choose which method to retrieve data based on input type
         if type(self.data) == type(pd.DataFrame()):
@@ -179,13 +179,13 @@ class VectorDataLoader(DataLoaderInterface):
         # Remove lat, long and time column if they exist
         dps = self.get_datapoints(bounds)
         # Get list of variables that aren't coords
-        col_vars = self.get_data_col_name()
+        col_vars = self.get_data_col_name().split(',')
         # Create a magnitude column 
         dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
 
         # If no data
         if len(dps) == 0:
-            row = None
+            row = {col: np.nan for col in col_vars}
         # Return float of aggregated value
         elif agg_type == 'MIN': # Find min mag vector
             row = dps[dps.mag == dps.mag.min(skipna=skipna)]
@@ -340,7 +340,8 @@ class VectorDataLoader(DataLoaderInterface):
             filtered_cols = filter(lambda col: \
                                     col not in ['lat','long','time'], columns)
             data_names = list(filtered_cols)
-            return data_names
+            # Turn into comma seperated string and return
+            return ','.join(data_names)
         
         def get_data_names_from_xr(data):
             '''
@@ -348,7 +349,8 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Extract data variables from xr.Dataset
             data_names = list(data.keys())
-            return data_names
+            # Turn into comma seperated string and return
+            return ','.join(data_names)
         
         # Choose method of extraction based on data type
         if type(self.data) == type(pd.DataFrame()):
