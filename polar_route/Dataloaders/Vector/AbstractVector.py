@@ -117,7 +117,7 @@ class VectorDataLoader(DataLoaderInterface):
                 mask &= (data['time'] >= bounds.get_time_min()) & \
                         (data['time'] <= bounds.get_time_max())
             # Return column of data from within bounds
-            return data.loc[mask][names.split(',')]
+            return data.loc[mask][names.split(',')].dropna()
         
         def get_datapoints_from_xr(data, names, bounds):
             '''
@@ -130,7 +130,7 @@ class VectorDataLoader(DataLoaderInterface):
             if 'time' in data.coords.keys():
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
             # Cast as a pd.DataFrame
-            data = data.to_dataframe().reset_index()
+            data = data.to_dataframe().reset_index().dropna()
             # Return column of data from within bounds
             return data[names.split(',')]
             
@@ -197,7 +197,8 @@ class VectorDataLoader(DataLoaderInterface):
         elif agg_type == 'STD': # Std Dev each vector axis
             # TODO Needs a fix like above statement
             row = {col: dps[col].std(skipna=skipna) for col in col_vars}
-            
+        elif agg_type == 'COUNT':
+            row = {col: len(dps[col].dropna()) for col in col_vars}
         # Median of vectors does not make sense
         elif agg_type == 'MEDIAN':
             raise ArithmeticError('Cannot find median of multi-dimensional variable!')
