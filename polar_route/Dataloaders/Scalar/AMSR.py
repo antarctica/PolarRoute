@@ -289,6 +289,8 @@ class AMSRDataLoader:
             return {self.data_name :float(dps.median(skipna=skipna))}
         elif self.aggregate_type == 'STD':
             return {self.data_name :float(dps.std(skipna=skipna))}
+        elif self.aggregate_type =='COUNT':
+            return {self.data_name: len(dps)}
         # If aggregation_type not available
         else:
             raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
