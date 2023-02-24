@@ -1,5 +1,5 @@
 Welcome RoutePlanner Manual Pages
-=========================
+=====================================
 
 Contents:
 
@@ -9,7 +9,7 @@ Contents:
 
    ./sections/Code_structure
    ./sections/Installation
-   ./sections/running.rst
+   ./sections/running
    ./sections/Configuration
    ./sections/Multi_data_input
    ./sections/Outputs
