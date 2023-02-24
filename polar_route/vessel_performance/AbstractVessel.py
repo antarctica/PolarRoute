@@ -2,11 +2,16 @@ from polar_route.AggregatedCellBox import AggregatedCellBox
 from abc import ABCMeta, abstractmethod
 
 class AbstractVessel(metaclass=ABCMeta):
+    """
+    Interface to define the abstract methods required for any vessel class to work within the VesselPerformanceModeller.
+    """
 
     @abstractmethod
     def __init__(self, params: dict):
         """
         Initialise the vessel object with parameters from the config.
+        Args:
+            params (dict): vessel parameters from the vessel config file
         """
         raise NotImplementedError
 

@@ -8,12 +8,12 @@ class VesselFactory:
     @classmethod
     def get_vessel(cls, config_path):
         """
+            Method to return an initialised instance of a vessel class designed for performance modelling
+            Args:
+                config_path (str): a file path pointing to a vessel config json file
 
-        Args:
-            config_path (str): a file path pointing to a vessel config json file
-
-        Returns:
-            vessel: a vessel class for performance modelling
+            Returns:
+                vessel: an instance of a vessel class designed for performance modelling
         """
         vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceExtent", "MinDepth"])}
 
