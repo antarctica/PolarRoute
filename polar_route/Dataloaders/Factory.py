@@ -162,7 +162,7 @@ if __name__=='__main__':
 
     long_range = [-70, -50]
     lat_range = [-65, -60]
-    
+    factory = DataLoaderFactory()
     bounds = Boundary(lat_range, long_range, ['2019-01-01','2019-01-14'])
     # bad_lat_range, bad_long_range = polygon_str_to_boundaries(
     #     # "POLYGON ((-70 -61.9921875, -70 -61.953125, -69.921875 -61.953125,  -69.921875 -61.9921875, -70 -61.9921875))"                    # 1316
@@ -244,10 +244,10 @@ if __name__=='__main__':
     if False: # Run Dummy Scalar        - NEED DATA TO TEST
         pass
     # ............... VECTOR DATA LOADERS ............... #
-    if False: # Run SOSE
+    if True: # Run SOSE
         params = {
             'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc',
-            'aggregate_type': 'MEAN'
+            'aggregate_type': 'COUNT'
         }
         sose = factory.get_dataloader('SOSE', bounds, params, min_dp = 5)
         print(sose.get_value(bounds))
@@ -270,14 +270,19 @@ if __name__=='__main__':
     if False: # Run ORAS5 Currents
         params = {
             'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/oras5/oras5_2019.nc',
-            'aggregate_type': 'MEAN'
+            'aggregate_type': 'COUNT'
         }
         oras5 = factory.get_dataloader('oras5_currents', bounds, params, min_dp = 5)
         print(oras5.get_value(bounds))
-    if False: # Run Dummy Vector
-        pass
+    if True: # Run Dummy Vector
+        params = {
+            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/currents/dummy/vectors_south.csv',
+            'aggregate_type': 'COUNT'
+        }
+        dummy = factory.get_dataloader('VectorCSV', bounds, params, min_dp = 5)
+        print(dummy.get_value(bounds))
     # ............... LOOKUP TABLE DATA LOADERS ............... #
-    if True: # Run Thickness
+    if False: # Run Thickness
         params = {
             'data_name': 'thickness',
         }
@@ -291,7 +296,7 @@ if __name__=='__main__':
         thickness = DataLoaderFactory().get_dataloader('thickness', bounds, params, min_dp = 5)
         print(thickness.get_value(bounds))
         print(thickness.get_hom_condition(bounds, split_conds))
-    if True: # Run Density
+    if False: # Run Density
         params = {
             'data_name': 'density',
         }

@@ -46,6 +46,10 @@ def frac_of_month(year, month, start_date=None, end_date=None):
     # Return fraction
     return days_overlap / days_in_month
     
+def boundary_to_coords(bounds):
+    min_coords = (bounds.get_lat_min(), bounds.get_long_min())
+    max_coords = (bounds.get_lat_max(), bounds.get_long_max())
+    return (min_coords, max_coords)
     
 def str_to_datetime(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d')
