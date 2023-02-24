@@ -177,9 +177,7 @@ class MeshBuilder:
           
             meta_data_obj = Metadata ( loader, updated_splitiing_cond ,  value_fill_type)
             meta_data_list.append(meta_data_obj)
-            if self.is_jgrid_mesh():#TODO check if we really need to have a case for that? or it will already be added as the other loaders fron the config
-                loader = DataLoaderFactory().get_dataloader("LandFromSOSE", bounds ,data_source['params'] , min_datapoints)  
-                meta_data_list.append( Metadata (loader)) #TODO: if this loader would need any splitting conds, value_fill_type
+
         return meta_data_list
 
 
@@ -200,7 +198,7 @@ class MeshBuilder:
         for lat in np.arange(bounds.get_lat_min(), bounds.get_lat_max(), cell_height):
             for long in np.arange(bounds.get_long_min(), bounds.get_long_max(), cell_width):
                 cell_lat_range = [lat, lat+cell_height]
-                cell_long_range = [long , long+cell_width]
+                cell_long_range = [long , long+cell_width]SOSEFromLand
                 cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
                 cell_id = str(len (cellboxes))
                 if self.is_jgrid_mesh():
