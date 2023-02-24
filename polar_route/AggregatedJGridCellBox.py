@@ -98,7 +98,8 @@ def mesh_dump(self):
             loader = source.get_data_loader()
             if loader.get_data_name() =='SIC':
                 value = self.agg_data ['SIC']
-                number_of_points = loader.get_datapoints (self.bounds).size
+                # call the data_loader with COUNT as the agg_type to get the number of datapoints
+                number_of_points = loader.get_value (self.bounds , "COUNT")
                 if value != None:
                    ice_area = value
       
