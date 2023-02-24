@@ -117,7 +117,8 @@ class VectorDataLoader(DataLoaderInterface):
                 mask &= (data['time'] >= bounds.get_time_min()) & \
                         (data['time'] <= bounds.get_time_max())
             # Return column of data from within bounds
-            return data.loc[mask][names.split(',')].dropna()
+            # TODO add dropna() when merged, standard didn't have it 
+            return data.loc[mask][names.split(',')]#.dropna()
         
         def get_datapoints_from_xr(data, names, bounds):
             '''
@@ -130,7 +131,8 @@ class VectorDataLoader(DataLoaderInterface):
             if 'time' in data.coords.keys():
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
             # Cast as a pd.DataFrame
-            data = data.to_dataframe().reset_index().dropna()
+            # TODO add dropna() when merged, standard didn't have it
+            data = data.to_dataframe().reset_index()#.dropna()
             # Return column of data from within bounds
             return data[names.split(',')]
             
@@ -389,14 +391,3 @@ class VectorDataLoader(DataLoaderInterface):
             return set_names_df(self.data, name_dict)
         elif type(self.data) == type(xr.Dataset()):
             return set_names_xr(self.data, name_dict)
-
-    def col_names_to_str(self):
-        '''
-        Turns list of col names into comma seperated string
-        '''
-        # Get col names
-        col_names = self.get_data_col_name()
-        # Join all cols into single string, seperated by commas
-        cols_as_str = ','.join(col_names)
-        return cols_as_str
-    
