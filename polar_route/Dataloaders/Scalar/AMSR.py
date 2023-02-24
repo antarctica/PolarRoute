@@ -256,7 +256,7 @@ class AMSRDataLoader:
         data_name = list(filtered_cols)[0]
         return data_name
 
-    def get_value(self, bounds, skipna=True):
+    def get_value(self, bounds, agg_type=None, skipna=True):
         '''
         Retrieve aggregated value from within bounds
         
@@ -272,28 +272,30 @@ class AMSRDataLoader:
             aggregate_value (float): Aggregated value within bounds following
                 aggregation_type
         '''
-
+        # Set to params if no specific aggregate type specified
+        if agg_type is None:
+            agg_type = self.aggregate_type
         # Remove lat, long and time column if they exist
         dps = self.get_datapoints(bounds).dropna()
         # If no data
         if len(dps) == 0:
             return {self.data_name :np.nan}
         # Return float of aggregated value
-        elif self.aggregate_type == 'MIN':
+        elif agg_type == 'MIN':
             return {self.data_name :float(dps.min(skipna=skipna))}
-        elif self.aggregate_type == 'MAX':
+        elif agg_type == 'MAX':
             return {self.data_name :float(dps.max(skipna=skipna))}
-        elif self.aggregate_type == 'MEAN':
+        elif agg_type == 'MEAN':
             return {self.data_name :float(dps.mean(skipna=skipna))}
-        elif self.aggregate_type == 'MEDIAN':
+        elif agg_type == 'MEDIAN':
             return {self.data_name :float(dps.median(skipna=skipna))}
-        elif self.aggregate_type == 'STD':
+        elif agg_type == 'STD':
             return {self.data_name :float(dps.std(skipna=skipna))}
-        elif self.aggregate_type =='COUNT':
+        elif agg_type =='COUNT':
             return {self.data_name: len(dps)}
         # If aggregation_type not available
         else:
-            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
+            raise ValueError(f'Unknown aggregation type {agg_type}')
 
     def get_hom_condition(self, bounds, splitting_conds):
         '''
