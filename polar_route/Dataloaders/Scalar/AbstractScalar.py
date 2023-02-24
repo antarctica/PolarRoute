@@ -176,6 +176,8 @@ class ScalarDataLoader(DataLoaderInterface):
             return {self.data_name :float(dps.median(skipna=skipna))}
         elif agg_type == 'STD':
             return {self.data_name :float(dps.std(skipna=skipna))}
+        elif agg_type =='COUNT':
+            return {self.data_name: len(dps)}
         # If aggregation_type not available
         else:
             raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
@@ -298,9 +300,9 @@ class ScalarDataLoader(DataLoaderInterface):
             '''
             # TODO Replace with coarsen when refactor passes regression tests
             # Better method of downsampling
-            # data = data.coarsen(lat=self.ds[1]).max()
-            # data = data.coarsen(lon=self.ds[0]).max()
-            
+            # data = data.coarsen(lat=ds[1]).max()
+            # data = data.coarsen(long=ds[0]).max()
+            # return data
             # Old method of downsampling
             return downsample_df(data.to_dataframe().reset_index(), ds, agg)
         

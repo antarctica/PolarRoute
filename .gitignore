@@ -22,3 +22,4 @@ datastore/*
 configs/*
 waypoints/*
 outputs/*
+docs_builder/*
