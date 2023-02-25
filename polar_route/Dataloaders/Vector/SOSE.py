@@ -12,7 +12,7 @@ class SOSEDataLoader(VectorDataLoader):
             setattr(self, key, val)
         
         self.data = self.import_data(bounds)
-        self.data_name = self.col_names_to_str()
+        self.data_name = self.get_data_col_name()
         
     def import_data(self, bounds):
         '''
