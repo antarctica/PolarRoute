@@ -1,16 +1,10 @@
 """
-<<<<<<< HEAD
+
 Outlined in this section we will discuss the usage of the CellBox functionality
 of the PolarRoute package. In this series of class distributions we house our discrete
 representation of input data. In each CellBox, we represent a way of accessing the information governing our numerical world, this includes and is not limited to:
 Ocean Currents, Sea Ice Concentration and Bathymetric depth.
-=======
-Outlined in this section we will discuss the usage of the CellBox functionality 
-of the PolarRoute package. In this series of class distributions we house our discrete 
-representation of input data. In each CellBox we determine the mean and variance of 
-the information governing our numerical world, this includes and is not limited to: 
-Ocean Currents, Sea Ice Concentration and Bathymetric depth. 
->>>>>>> 72c566e70263c83d1197c870806948602cc8a6a3
+
 
 Example:
     An example of running this code can be executed by running the following 

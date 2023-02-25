@@ -194,11 +194,11 @@ class MeshBuilder:
     def initialize_cellboxes(self, bounds, cell_width, cell_height):
         cellboxes= []
         grid_width = (bounds.get_long_max() - bounds.get_long_min()) / cell_width
-        grid_height = (bounds.get_lat_max() - bounds.get_lat_min()) / self._cell_height
+        grid_height = (bounds.get_lat_max() - bounds.get_lat_min()) / cell_height
         for lat in np.arange(bounds.get_lat_min(), bounds.get_lat_max(), cell_height):
             for long in np.arange(bounds.get_long_min(), bounds.get_long_max(), cell_width):
                 cell_lat_range = [lat, lat+cell_height]
-                cell_long_range = [long , long+cell_width]SOSEFromLand
+                cell_long_range = [long , long+cell_width]
                 cell_bounds = Boundary (cell_lat_range , cell_long_range , bounds.get_time_range())
                 cell_id = str(len (cellboxes))
                 if self.is_jgrid_mesh():
@@ -448,7 +448,7 @@ if __name__=='__main__':
     from memory_profiler import profile
     start = time.time()
     conf = None
-    with open ("create_mesh.output2019_6_80_new_format _AMSR_SOSE.json" , "r") as config_file:
+    with open ("create_mesh.output2013_4_80_new_format.json" , "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder (conf)
