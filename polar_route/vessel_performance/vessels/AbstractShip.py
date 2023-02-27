@@ -13,6 +13,7 @@ class AbstractShip(AbstractVessel):
                 params (dict): vessel parameters from the vessel config file
         """
         self.vessel_params = params
+        logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
 
     def model_performance(self, cellbox):
         """
@@ -22,7 +23,6 @@ class AbstractShip(AbstractVessel):
 
             Returns:
                 performance_values (dict): the value of the modelled performance characteristics for the ship
-
         """
         performance_values = dict()
 
@@ -39,7 +39,6 @@ class AbstractShip(AbstractVessel):
 
             Returns:
                 access_values (dict): boolean values for the modelled accessibility criteria
-
         """
         access_values = dict()
 
@@ -50,7 +49,8 @@ class AbstractShip(AbstractVessel):
 
         return access_values
 
-    def model_speed(self, cellbox):
+    @abstractmethod
+    def model_speed(self, cellbox: AggregatedCellBox):
         """
             Method to determine the maximum speed that the ship can traverse the given cell
             Args:
@@ -58,13 +58,19 @@ class AbstractShip(AbstractVessel):
 
             Returns:
                 speed (float): the maximum speed that the ship can traverse the given cell
-
         """
-        speed = self.vessel_params['MaxSpeed']
-        return speed
+        raise NotImplementedError
 
     @abstractmethod
     def model_fuel(self, cellbox: AggregatedCellBox):
+        """
+            Method to determine the fuel consumption rate of the ship in a given cell
+            Args:
+                cellbox (AggregatedCellBox): input cell from environmental mesh
+
+            Returns:
+                fuel (float): the rate of fuel consumption for a ship traversing the input cell
+        """
         raise NotImplementedError
 
     def land(self, cellbox):
@@ -100,9 +106,20 @@ class AbstractShip(AbstractVessel):
         return ext_ice
 
     @abstractmethod
-    def model_resistance(self):
+    def model_resistance(self, cellbox: AggregatedCellBox):
+        """
+            Method to determine the resistance force acting on the ship in a given cell
+            Args:
+                cellbox (AggregatedCellBox): input cell from environmental mesh
+
+            Returns:
+                resistance (float): the resistance force acting on a ship traversing the input cell
+        """
         pass
 
     @abstractmethod
     def invert_resistance(self):
+        """
+            Method to determine the speed that reduces the resistance force on the ship to an acceptable value
+        """
         pass

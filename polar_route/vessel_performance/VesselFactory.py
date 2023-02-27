@@ -1,4 +1,5 @@
 from polar_route.vessel_performance.vessels.SDA import SDA
+from polar_route.vessel_performance.vessels.UnderwaterVessel import UnderwaterVessel
 import json
 
 class VesselFactory:
@@ -15,7 +16,8 @@ class VesselFactory:
             Returns:
                 vessel: an instance of a vessel class designed for performance modelling
         """
-        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceExtent", "MinDepth"])}
+        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceExtent", "MinDepth"]),
+                               "Underwater": (UnderwaterVessel, ["MaxSpeed", "MaxIceExtent", "MinDepth"])}
 
         with open(config_path, 'r') as f:
             config = json.load(f)
