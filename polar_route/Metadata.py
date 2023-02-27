@@ -43,13 +43,7 @@ class Metadata:
 
     def set_data_loader(self , data_loader): 
         self.data_loader = data_loader
-
-    # def get_aggregate_type(self): 
-    #     return self.aggregate_type
-
-
-    # def set_aggregate_type(self , agg_type): 
-    #     self.aggregate_type = agg_type  
+ 
 
     def set_splitting_conditions(self ,  splitting_conditions):
         self.splitting_conditions = splitting_conditions

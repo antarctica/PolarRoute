@@ -326,3 +326,21 @@ class CellBox:
             del parent
             parent = grandparent
         del self
+    
+    
+    def contains_point(self, lat, long):
+        """
+            Returns true if a given lat/long coordinate is contained within this cellBox.
+
+            Args:
+                lat (float): latitude of a given point
+                long (float): longitude of a given point
+
+            Returns:
+                contains_points (bool): True if this CellBox contains a point given by
+                    parameters (lat, long)
+        """
+        if (lat >= self.bounds.get_lat_min()) & (lat <= self.bounds.get_lat_max()):
+            if (long >= self.bounds.get_long_min()) & (long <= self.bounds.get_long_max()):
+                return True
+        return False

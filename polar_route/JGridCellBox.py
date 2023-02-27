@@ -67,6 +67,7 @@ class JGridCellBox (CellBox):
         # create focus for split boxes.
             split_box.set_focus(self.get_focus().copy())
             split_box.add_to_focus(split_boxes.index(split_box))
+            
         return split_boxes
 
 #TODO: figure out the difference between this and cellbox aggregate??? use of Land_loader?
@@ -101,8 +102,6 @@ class JGridCellBox (CellBox):
         agg_cellbox.set_node_string(self.node_string())
 
         return agg_cellbox 
-
-
  
 
 def set_grid_coord(self, xpos, ypos):

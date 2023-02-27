@@ -154,8 +154,6 @@ class MeshBuilder:
         self.mesh.set_config (config)
 
 
-
-
     def initialize_meta_data(self, bounds, min_datapoints):
         meta_data_list = []
         splitting_conds = []

@@ -81,18 +81,6 @@ def mesh_dump(self):
         uc = None
         vc = None
         mesh_dump += str(self.bounds.getcy()) + ", " + str(self.bounds.getcx()) + "; "  # add lat,long
-        # for source in self.get_data_sources():
-        #     loader = source.get_data_loader()
-        #     if loader.get_data_name() =='SIC':
-        #         value = loader.get_value(self.bounds)
-        #         number_of_points = loader.get_datapoints (self.bounds).size
-        #         if value['SIC']!= None:
-        #            ice_area = value['SIC']
-        #     if loader.get_data_name() == 'current':
-        #         current_data = loader.get_value (self.bounds)
-        #         uc = current_data['uc']
-        #         vc = current_data['vc']
-
 
         for source in self.get_data_sources():
             loader = source.get_data_loader()
