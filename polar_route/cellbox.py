@@ -1,20 +1,23 @@
 """
+
 Outlined in this section we will discuss the usage of the CellBox functionality
 of the PolarRoute package. In this series of class distributions we house our discrete
 representation of input data. In each CellBox, we represent a way of accessing the information governing our numerical world, this includes and is not limited to:
 Ocean Currents, Sea Ice Concentration and Bathymetric depth.
 
-Example:
-    An example of running this code can be executed by running the following
-    in a ipython/Jupyter Notebook::
 
-        from polar_route import cellbox
-        ....
+Example:
+    An example of running this code can be executed by running the following 
+    in a ipython/Jupyter Notebook:: 
+
+        from polar_route import cellbox 
+        .... 
 
 Note:
-    CellBoxes are intended to be constructed by and used within a Mesh
-    object. The methods provided are to extract information for CellBoxes
-    contained within a Mesh.
+    CellBoxes are intended to be constructed by and used within a Mesh 
+    object. The methods provided are to extract information for CellBoxes 
+    contained within a Mesh. 
+
 """
 from memory_profiler import profile
 from shapely.geometry import Polygon
@@ -32,12 +35,15 @@ class CellBox:
     between the newly created CellBoxes so as to construct a non-uniform mesh
     of CellBoxes, such as within a Mesh.
 
+        Attributes: 
+            lat (float): The latitude of the top-left corner of the CellBox 
+            long (float): The longitude of the top-left corner of the CellBox 
+            width (float): The width of the CellBox, given in degrees longitude 
+            height (float): The height of the CellBox, given in degrees latitude 
 
     Attributes:
         Bounds (Boundary): object that contains the latitude and logtitute range and the time range
 
-    Note:
-        All geospatial boundaries of a CellBox are given in a 'EPSG:4326' projection
     """
     
 

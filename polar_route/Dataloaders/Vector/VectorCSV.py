@@ -1,4 +1,4 @@
-from .AbstractVector import VectorDataLoader
+from polar_route.Dataloaders.Vector.AbstractVector import VectorDataLoader
 
 import logging
 
@@ -12,6 +12,8 @@ class VectorCSVDataLoader(VectorDataLoader):
         
         # Set up data
         self.data = self.import_data(bounds)
+        self.data = self.downsample()
+        
         self.data_name = self.get_data_col_name() # 'dummy_data'
         
     def import_data(self, bounds):
@@ -25,7 +27,8 @@ class VectorCSVDataLoader(VectorDataLoader):
                                          bounds.get_long_max())]
         data = data[data['lat'].between(bounds.get_lat_min(), 
                                         bounds.get_lat_max())]
-        data = data[data['time'].between(bounds.get_time_min(), 
-                                         bounds.get_time_max())]
+        if 'time' in data.columns:
+            data = data[data['time'].between(bounds.get_time_min(), 
+                                            bounds.get_time_max())]
         
         return data

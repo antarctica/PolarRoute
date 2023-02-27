@@ -35,6 +35,7 @@ class Mesh:
                         }\n
                     }\n
                }
+
     """
 
     def __init__(self, boundary , cellboxes , neighbour_graph , max_split_depth):

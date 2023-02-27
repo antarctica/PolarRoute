@@ -117,7 +117,8 @@ class VectorDataLoader(DataLoaderInterface):
                 mask &= (data['time'] >= bounds.get_time_min()) & \
                         (data['time'] <= bounds.get_time_max())
             # Return column of data from within bounds
-            return data.loc[mask][names]
+            # TODO add dropna() when merged, standard didn't have it 
+            return data.loc[mask][names.split(',')]#.dropna()
         
         def get_datapoints_from_xr(data, names, bounds):
             '''
@@ -130,9 +131,10 @@ class VectorDataLoader(DataLoaderInterface):
             if 'time' in data.coords.keys():
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
             # Cast as a pd.DataFrame
-            data = data.to_dataframe().reset_index()
+            # TODO add dropna() when merged, standard didn't have it
+            data = data.to_dataframe().reset_index()#.dropna()
             # Return column of data from within bounds
-            return data[names]
+            return data[names.split(',')]
             
         # Choose which method to retrieve data based on input type
         if type(self.data) == type(pd.DataFrame()):
@@ -179,13 +181,13 @@ class VectorDataLoader(DataLoaderInterface):
         # Remove lat, long and time column if they exist
         dps = self.get_datapoints(bounds)
         # Get list of variables that aren't coords
-        col_vars = self.get_data_col_name()
+        col_vars = self.get_data_col_name().split(',')
         # Create a magnitude column 
         dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
 
         # If no data
         if len(dps) == 0:
-            row = None
+            row = {col: np.nan for col in col_vars}
         # Return float of aggregated value
         elif agg_type == 'MIN': # Find min mag vector
             row = dps[dps.mag == dps.mag.min(skipna=skipna)]
@@ -197,7 +199,8 @@ class VectorDataLoader(DataLoaderInterface):
         elif agg_type == 'STD': # Std Dev each vector axis
             # TODO Needs a fix like above statement
             row = {col: dps[col].std(skipna=skipna) for col in col_vars}
-            
+        elif agg_type == 'COUNT':
+            row = {col: len(dps[col].dropna()) for col in col_vars}
         # Median of vectors does not make sense
         elif agg_type == 'MEDIAN':
             raise ArithmeticError('Cannot find median of multi-dimensional variable!')
@@ -340,7 +343,8 @@ class VectorDataLoader(DataLoaderInterface):
             filtered_cols = filter(lambda col: \
                                     col not in ['lat','long','time'], columns)
             data_names = list(filtered_cols)
-            return data_names
+            # Turn into comma seperated string and return
+            return ','.join(data_names)
         
         def get_data_names_from_xr(data):
             '''
@@ -348,7 +352,8 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Extract data variables from xr.Dataset
             data_names = list(data.keys())
-            return data_names
+            # Turn into comma seperated string and return
+            return ','.join(data_names)
         
         # Choose method of extraction based on data type
         if type(self.data) == type(pd.DataFrame()):
@@ -386,14 +391,3 @@ class VectorDataLoader(DataLoaderInterface):
             return set_names_df(self.data, name_dict)
         elif type(self.data) == type(xr.Dataset()):
             return set_names_xr(self.data, name_dict)
-
-    def col_names_to_str(self):
-        '''
-        Turns list of col names into comma seperated string
-        '''
-        # Get col names
-        col_names = self.get_data_col_name()
-        # Join all cols into single string, seperated by commas
-        cols_as_str = ','.join(col_names)
-        return cols_as_str
-    
