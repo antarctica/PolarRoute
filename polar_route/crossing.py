@@ -90,6 +90,9 @@ class NewtonianDistance:
         iterartion_num = 0
         while improving:
             F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
+            if F==np.inf:
+                return np.nan,np.inf  
+
             if self.debugging:
                 print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'\
                       .format(iterartion_num,y0,F,dF))
@@ -98,6 +101,8 @@ class NewtonianDistance:
             iterartion_num+=1
             if iterartion_num>1000:
                 raise Exception('Newton not able to converge')
+            
+
         return y0,self._unit_time(np.array([t1,t2]))
 
     def _unit_speed(self,val):
@@ -147,6 +152,9 @@ class NewtonianDistance:
         else:
             X2 = np.sqrt(X2ns)
 
+        if X1 < 0 or X2 < 0:
+            return np.inf,np.inf,np.inf,np.inf,np.inf,np.inf
+
         F  = X2*(y-((v1*(X1-D1))/C1)) + X1*(y-Y+((v2*(X2-D2))/C2))
 
         dD1 = v1
@@ -193,7 +201,8 @@ class NewtonianDistance:
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
         if traveltime < 0:
             traveltime = np.inf
-            #raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
+            # print(traveltime,xdist,ydist,U,V,S)
+            # raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
         return traveltime
 
     def waypoint_correction(self,Wp,Cp):
@@ -244,9 +253,31 @@ class NewtonianDistance:
 
         # Optimising to determine the y-value of the crossing point
         y,TravelTime = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
+        if np.isnan(y) or TravelTime[0] < 0 or TravelTime[1] < 0:
+            TravelTime  = [np.inf,np.inf]
+            CrossPoints = [np.nan,np.nan]
+            CellPoints  = [np.nan,np.nan]
+            return TravelTime,CrossPoints,CellPoints
+
+        
         CrossPoints = (s_cx+ptvl*s_dcx,\
                        s_cy+ptvl*y/self.m_lat)
         CellPoints  = [n_cx,n_cy]
+
+
+        # Checking Crossing Ponint possible
+        # Defining the min and max of the start and end cells
+        smin = s_cy-s_dcy 
+        smax = s_cy+s_dcy 
+        emin = n_cy-n_dcy
+        emax = n_cy+n_dcy
+        vmin = np.max([smin,emin])
+        vmax = np.min([smax,emax])
+        if (CrossPoints [1] < vmin) or (CrossPoints[1] > vmax):
+            TravelTime  = [np.inf,np.inf]
+            CrossPoints = [np.nan,np.nan]
+            CellPoints  = [np.nan,np.nan]
+
 
         return TravelTime,CrossPoints,CellPoints
 
@@ -259,6 +290,7 @@ class NewtonianDistance:
             ptvl = 1.0
         else:
             ptvl = -1.0
+
 
         s_cx  = self.source_graph['cx']
         s_cy  = self.source_graph['cy']
@@ -275,19 +307,49 @@ class NewtonianDistance:
         Nu = -1*ptvl*self.neighbour_graph['Vector_y']*self.zero_current_factor
         Nv = ptvl*self.neighbour_graph['Vector_x']*self.zero_current_factor
 
+
         Ssp=self.source_speed
         Nsp=self.neighbour_speed
 
         x = s_dcy*self.m_lat
         a = n_dcy*self.m_lat
         Y = ptvl*(n_cx-s_cx)*self.m_long*np.cos((n_cy+s_cy)*(np.pi/180)/2.0)
-
+        
+        
         y,TravelTime   = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
+        if np.isnan(y) or TravelTime[0] < 0 or TravelTime[1] < 0:
+            TravelTime  = [np.inf,np.inf]
+            CrossPoints = [np.nan,np.nan]
+            CellPoints  = [np.nan,np.nan]
+            return TravelTime,CrossPoints,CellPoints
+
+
         clon = s_cx  + ptvl*y/(self.m_long*np.cos((n_cy+s_cy)*(np.pi/180)/2.0))
         clat = s_cy + -1*ptvl*s_dcy
 
         CrossPoints = (clon,clat)
         CellPoints  = [n_cx,n_cy]
+
+
+        # Checking Crossing Ponint possible
+        # Defining the min and max of the start and end cells
+        smin = s_cx-s_dcx 
+        smax = s_cx+s_dcx 
+        emin = n_cx-n_dcx
+        emax = n_cx+n_dcx
+        vmin = np.max([smin,emin])
+        vmax = np.min([smax,emax])
+        if (CrossPoints [0] < vmin) or (CrossPoints[0] > vmax):
+            TravelTime  = [np.inf,np.inf]
+            CrossPoints = [np.nan,np.nan]
+            CellPoints  = [np.nan,np.nan]
+
+        # if TravelTime[0] < 0 or TravelTime[1] < 0:
+        #     TravelTime  = [np.inf,np.inf]
+        #     CrossPoints = [np.nan,np.nan]
+        #     CellPoints  = [np.nan,np.nan]
+        #     return TravelTime,CrossPoints,CellPoints
+
 
         return TravelTime,CrossPoints,CellPoints
 
@@ -323,16 +385,30 @@ class NewtonianDistance:
             ptvX = -1.0
             ptvY = 1.0
 
-        dx1 = s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
-        dx2 = n_dcx*self.m_long*np.cos(n_cy*(np.pi/180))
-        dy1 = s_dcy*self.m_lat
-        dy2 = n_dcy*self.m_lat
+        # dx1 = s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
+        # dx2 = n_dcx*self.m_long*np.cos(n_cy*(np.pi/180))
+        # dy1 = s_dcy*self.m_lat
+        # dy2 = n_dcy*self.m_lat
+
+        # # Currents in Cells
+        # Su = ptvX*self.source_graph['Vector_x']*self.zero_current_factor
+        # Sv = ptvY*self.source_graph['Vector_y']*self.zero_current_factor
+        # Nu = ptvX*self.neighbour_graph['Vector_x']*self.zero_current_factor
+        # Nv = ptvY*self.neighbour_graph['Vector_y']*self.zero_current_factor
+
+
+        dx1 = ptvX*s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
+        dx2 = ptvX*n_dcx*self.m_long*np.cos(n_cy*(np.pi/180))
+        dy1 = ptvY*s_dcy*self.m_lat
+        dy2 = ptvY*n_dcy*self.m_lat
 
         # Currents in Cells
-        Su = ptvX*self.source_graph['Vector_x']*self.zero_current_factor
-        Sv = ptvY*self.source_graph['Vector_y']*self.zero_current_factor
-        Nu = ptvX*self.neighbour_graph['Vector_x']*self.zero_current_factor
-        Nv = ptvY*self.neighbour_graph['Vector_y']*self.zero_current_factor
+        Su = self.source_graph['Vector_x']*self.zero_current_factor
+        Sv = self.source_graph['Vector_y']*self.zero_current_factor
+        Nu = self.neighbour_graph['Vector_x']*self.zero_current_factor
+        Nv = self.neighbour_graph['Vector_y']*self.zero_current_factor
+
+
 
         # Vehicles Speeds in Cells
         Ssp = self.source_speed; Nsp = self.neighbour_speed
@@ -346,6 +422,13 @@ class NewtonianDistance:
         t1 = self._traveltime_in_cell(dx1,dy1,Su,Sv,Ssp)
         t2 = self._traveltime_in_cell(dx2,dy2,Nu,Nv,Nsp)
         TravelTime  = self._unit_time(np.array([t1,t2]))
+
+        if TravelTime[0] < 0 or TravelTime[1] < 0:
+            TravelTime  = [np.inf,np.inf]
+            CrossPoints = [np.nan,np.nan]
+            CellPoints  = [np.nan,np.nan]
+            return TravelTime,CrossPoints,CellPoints
+
 
         return TravelTime,CrossPoints,CellPoints
 
@@ -629,7 +712,7 @@ class NewtonianCurve:
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
             ρ = (λ_s+φ_r)/2.0
             ϕ_min = min(λ_s,φ_r) 
-            if λ_s < φ_r:
+            if λ_s > φ_r:
                 ϕ_l   = ρ
                 ϕ_r   = (ϕ_min+ρ)/2
             else:
@@ -830,8 +913,8 @@ class NewtonianCurve:
             mid_lat = lonlats[np.argmin(diff),1]
             return mid_lat,np.min(diff)
         Y_line,diff = great_circle_lat(Ys,Xs,Ye,Xe,Xc)
-        if diff > 1e-3:
-            raise Exception('Corner Case Issue - Great-Circle Crossing too coarse')
+        # if diff > 1e-3:
+        #     raise Exception('Corner Case Issue - Great-Circle Crossing too coarse')
 
 
         try:
@@ -848,33 +931,57 @@ class NewtonianCurve:
             firstCrossingPoint  = np.array(sourceNeighbourIndices['neighbourCrossingPoints'])[np.where(np.array(sourceNeighbourIndices['neighbourIndex'])==newCell.name)[0][0],:]
             secondCrossingPoint = np.array(newCell['neighbourCrossingPoints'])[np.where(np.array(newCell['neighbourIndex'])==endNeighbourIndices.name)[0][0],:]
         except:
-            self.triplet = copy.deepcopy(self.org_points)
+            return
+        
+        if np.isnan(np.concatenate([firstCrossingPoint,secondCrossingPoint]).astype(float)).any():
             return
 
-        # Adding in the new crossing Point
-        newP = pd.Series(name=self.triplet.iloc[1].name+1,dtype='object')
-        newP['cx']        = secondCrossingPoint[0]
-        newP['cy']        = secondCrossingPoint[1]
-        newP['cellStart'] = newCell
-        newP['cellEnd']   = copy.deepcopy(self.triplet['cellEnd'].iloc[1])
-        newP['case']      = newP['cellStart']['case'][np.where(np.array(newP['cellStart']['neighbourIndex'])==newP['cellEnd'].name)[0][0]]
+
+        # Crossing point 1
+        Pcrp1 = copy.deepcopy(self.triplet.iloc[0])
+        # Crossing point 2
+        Pcrp2 = pd.Series(name=self.triplet.iloc[1].name,dtype='object')
+        Pcrp2['cx']        = firstCrossingPoint[0]
+        Pcrp2['cy']        = firstCrossingPoint[1]
+        Pcrp2['cellStart'] = copy.deepcopy(self.triplet['cellStart'].iloc[1])
+        Pcrp2['cellEnd']   = copy.deepcopy(newCell)
+        Pcrp2['case']      = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==newCell.name)[0][0]]
+
+        # Crossing point 3
+        Pcrp3 = pd.Series(name=self.triplet.iloc[1].name+1,dtype='object')
+        Pcrp3['cx']        = secondCrossingPoint[0]
+        Pcrp3['cy']        = secondCrossingPoint[1]
+        Pcrp3['cellStart'] = copy.deepcopy(newCell)
+        Pcrp3['cellEnd']   = copy.deepcopy(self.triplet['cellEnd'].iloc[1])
+        Pcrp3['case']      = Pcrp3['cellStart']['case'][np.where(np.array(Pcrp3['cellStart']['neighbourIndex'])==Pcrp3['cellEnd'].name)[0][0]]
+        # Crossing point 4
+        Pcrp4 = copy.deepcopy(self.triplet.iloc[2])
+
+        self.horshoe_points = pd.concat([Pcrp1.to_frame().transpose(),Pcrp2.to_frame().transpose(),Pcrp3.to_frame().transpose(),Pcrp4.to_frame().transpose()], sort=True).sort_index()
+
+        # Smoothing these points
+        tmp_id=0
+        self.org_triplet = copy.copy(self.triplet)
+        while tmp_id <= (len(self.horshoe_points) - 3):
+            self.triplet = self.horshoe_points.iloc[tmp_id:tmp_id+3]
+            self._crossing_point_optimisation()
+            _,_ = self._checking_crossing()
+            if not self._trigger_horeshoe:
+                self.horshoe_points.iloc[tmp_id:tmp_id+3] = self.triplet
+            else:
+                if abs(self.triplet.iloc[1]['case']) == 2:
+                    self.triplet['cy'].iloc[1] = np.clip(self.triplet.iloc[1]['cy'],self._vmin+1e-9,self._vmax-1e-9)
+                if abs(self.triplet.iloc[1]['case']) == 4:
+                    self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],self._vmin+1e-9,self._vmax-1e-9)  
+                self.horshoe_points.iloc[tmp_id:tmp_id+3] = self.triplet  
+            tmp_id+=1
+        self.triplet = copy.copy(self.org_triplet)
+        self._corner_created = True
+        return
 
 
-        # Updating the origional crossing point
-        self.triplet['cx'].iloc[1]      = firstCrossingPoint[0]
-        self.triplet['cy'].iloc[1]      = firstCrossingPoint[1]
-        self.triplet['cellEnd'].iloc[1] = newCell 
-        self.triplet['case'].iloc[1]    = self.triplet['cellStart'].iloc[1]['case'][np.where(np.array(self.triplet['cellStart'].iloc[1]['neighbourIndex'])==newCell.name)[0][0]]
 
-
-        # Adding the new crossing point to the triplet
-        self.newP = newP
-
-        self.CrossingDF = pd.concat([self.CrossingDF,newP.to_frame().transpose()]).sort_index().reset_index(drop=True) #self.CrossingDF.append(newP,sort=True).sort_index().reset_index(drop=True)
-        self.CrossingDF.index = np.arange(int(self.CrossingDF.index.min()),int(self.CrossingDF.index.max()*1e3 + 1e3),int(1e3))
-
-
-    def _mergePoint(self,merge_distance = 1e-3):
+    def _mergePoint(self,merge_distance = 1e-4):
         '''
             Merging two points into a corner case if their distance is small enough.
         '''
@@ -950,6 +1057,8 @@ class NewtonianCurve:
         cellStartGraph = self.triplet.iloc[1]['cellStart']
         cellEndGraph   = self.triplet.iloc[1]['cellEnd']        
         case           = self.triplet['case'].iloc[1]        
+
+        orgtriplet = copy.copy(self.triplet)
 
         # Returning if corner horseshoe case type
         if abs(case)==1 or abs(case)==3 or abs(case)==0:
@@ -1040,7 +1149,15 @@ class NewtonianCurve:
 
             self.triplet['cx'].iloc[1] = np.clip(self.triplet.iloc[1]['cx'],vmin+1e-9,vmax-1e-9)        
             
-        return hrshCaseStart,hrshCaseEnd
+
+        if ('hrshCaseStart' in locals()) and ('hrshCaseEnd' in locals()):
+            return hrshCaseStart,hrshCaseEnd
+        else:
+            print(orgtriplet)
+            print(self.triplet)
+            raise Exception ('Issues')
+            return None,None
+
 
 
     def _horseshoe(self):
@@ -1055,7 +1172,7 @@ class NewtonianCurve:
         self._horseshoe_created = False
 
         # Defining if horseshoe is created
-        hrshCaseStart,hrshCaseEnd = self. _checking_crossing()
+        hrshCaseStart,hrshCaseEnd = self._checking_crossing()
 
         # If not creating a horeshoe return
         if (type(hrshCaseStart) == type(None)) or (type(hrshCaseEnd) == type(None)):
@@ -1075,6 +1192,7 @@ class NewtonianCurve:
                         # Determining the additional cellbox information to add
                         sGNGraph = self.neighbour_graph.loc[sGN]
                         eGNGraph = self.neighbour_graph.loc[eGN]
+
                         try:
                             Crp1 = np.array(cellStartGraph['neighbourCrossingPoints'])[np.where(np.array(cellStartGraph['neighbourIndex']) == sGN)[0][0],:]
                             Crp2 = np.array(sGNGraph['neighbourCrossingPoints'])[np.where(np.array(sGNGraph['neighbourIndex']) == eGN)[0][0],:]
@@ -1243,7 +1361,8 @@ class NewtonianCurve:
 
 
     def _crossing_point_optimisation(self):
-        
+        self._corner_created = False
+
         # ------ Case Deginitions & Dealing
         if self.debugging:
             print('===========================================================')
@@ -1256,7 +1375,8 @@ class NewtonianCurve:
         # Determining if crossing point lies outside of interface between two cellboxes
         
 
-    def _updateCrossingPoint(self):
+    def _updateCrossingPoint(self,iter):
+
         self.org_points = copy.deepcopy(self.triplet) 
         self.speed_s = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellStart']['speed']))
         self.speed_e = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellEnd']['speed']))
@@ -1267,17 +1387,19 @@ class NewtonianCurve:
         # --- Additional Cells & Reverse Edges
         self._horseshoe()
 
-        if self._horseshoe_created == True:
+        if (self._horseshoe_created == True) or (self._corner_created==True):
             org_variables = self.objective_function(self.org_points)
             new_variables = self.objective_function(self.horshoe_points)
-            if ((new_variables[self.objective_func]['path_values'][-1] - org_variables[self.objective_func]['path_values'][-1])/org_variables[self.objective_func]['path_values'][-1])*100 > -5:
+
+            self._horshoe_percentage_improvement = ((new_variables[self.objective_func]['path_values'][-1] - org_variables[self.objective_func]['path_values'][-1])/org_variables[self.objective_func]['path_values'][-1])*100
+
+            if  self._horshoe_percentage_improvement > -10:
                 horeshoe_points     = self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy()
-                same_horseshoes_num = count_similarities(horeshoe_points,self.previous_horeshoes)
-                if same_horseshoes_num <=5:
+                same_horseshoes_num = count_similarities(horeshoe_points.tolist(),self.previous_horeshoes)
+                if same_horseshoes_num <=3:
                     self.CrossingDF = self.CrossingDF.drop(self.triplet.index)
                     self.CrossingDF = pd.concat([self.CrossingDF, self.horshoe_points]).sort_index().reset_index(drop=True)
-                self.previous_horeshoes += [horeshoe_points]
-
+                    self.previous_horeshoes += [[iter,self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy().tolist(),self._horshoe_percentage_improvement]]
 
         self._reverseCase()
         self.CrossingDF = self.CrossingDF.reset_index(drop=True)
@@ -1286,17 +1408,14 @@ class NewtonianCurve:
 
 
 def count_similarities(horshoe_points,previous_horeshoes):
-
     comparison = []
-
     if len(previous_horeshoes) == 0:
         return 0
-
     for entry in previous_horeshoes:
-        similar = (horshoe_points == entry)
+        old_horeshoes = entry[1]
+        similar = (horshoe_points == old_horeshoes)
         if type(similar) == bool:
             comparison += [similar]
         else:
-
-            comparison += [similar.any()]
+            comparison += [similar.all()]
     return len(np.where(comparison)[0])

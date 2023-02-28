@@ -1011,13 +1011,46 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
 
 
 
+    def scalar_field_mixedgaussians(size=128,max_val = 26.5,threshold_value=[0.5,0.8],alpha=3.2,min_val=2.5,multiplication=1.0,offset=0.0,mask_threshold=[None,'lower'],variance = 0.0005,samples = 12,xrange = [0.3,0.7],yrange = [0.3,0.7]):
+
+
+        from scipy.stats import multivariate_normal
+        x, y = np.mgrid[0:1:(1/size), 0:1:(1/size)]
+        pos = np.dstack((x, y))
+
+        for ii in range(samples):
+
+
+            position = np.random.rand(2)
+            position[0] = position[0]*(xrange[1]-xrange[0]) + xrange[0]
+            position[1] = position[1]*(yrange[1]-yrange[0]) + yrange[0]
+
+            rv = multivariate_normal(position, [[variance, 0.], [0., variance]])
+
+
+            if ii==0:
+                field = rv.pdf(pos)
+            else:
+                field += rv.pdf(pos)
+
+
+        field /= np.max(field)
+
+        GRF = max_val*field
+        if type(min_val) != type(None):
+            GRF[(GRF<=min_val)&(GRF!=0)] = min_val
+        GRF = GRF*multiplication + offset
+
+        return GRF
+
     def vector_field(size = 128, field_min = 1.0, field_max=10.0, alpha=1.0):
-        magntiude = gaussian_random_field(size=size, alpha=alpha) * \
-                    (field_max-field_min) + field_min
+        magnitude = gaussian_random_field(size=size, alpha=alpha)
+        magnitude = magnitude/(np.max(magnitude)-np.min(magnitude)) - np.min(magnitude)
+        magnitude = magnitude*(field_max-field_min) + field_min
         direction = gaussian_random_field(size=size, alpha=alpha) * 360
 
-        dY = np.cos(direction*(np.pi/180))*magntiude
-        dX = np.sin(direction*(np.pi/180))*magntiude
+        dY = np.cos(direction*(np.pi/180))*magnitude
+        dX = np.sin(direction*(np.pi/180))*magnitude
 
         return dX,dY
 
@@ -1041,7 +1074,7 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
     np.random.seed(seed)
 
     # Define all names of fields that can be generated
-    scalars = ['cloud', 'SIC', 'elevation', 'thickness', 'density','speed']
+    scalars = ['cloud', 'SIC', 'elevation', 'thickness', 'density','speed','elevation_mixedgaussians']
     vectors = ['currents', 'winds']
     masks   = ['land']
 
@@ -1052,8 +1085,12 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
 
     # Create scalar field if config calls for it
     if name in scalars:
-        scalar = scalar_field(size = size, alpha = alpha,
-                            min_val = min_val, max_val = max_val, threshold_value=threshold_value,multiplication=multiplication,offset=offset,mask_threshold=mask_threshold)
+        if name=='elevation_mixedgaussians':
+            scalar = scalar_field_mixedgaussians(size = size, alpha = alpha,
+                    min_val = min_val, max_val = max_val, threshold_value=threshold_value,multiplication=multiplication,offset=offset,mask_threshold=mask_threshold)
+        else:
+            scalar = scalar_field(size = size, alpha = alpha,
+                                min_val = min_val, max_val = max_val, threshold_value=threshold_value,multiplication=multiplication,offset=offset,mask_threshold=mask_threshold)
     # Create vector field if config calls for it
     elif name in vectors:
         vec_x, vec_y = vector_field(size = size, alpha = alpha,
@@ -1081,6 +1118,10 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
             # Retrieve scalar data and add to row
             if name in scalars:
                 data      = scalar[i,j]
+
+                if name == 'elevation_mixedgaussians':
+                    name = 'elevation'
+
                 new_lines.append({'lat': lat, 'long': long, f'{name}': data})
             # Vectors are split into two columns for x and y components
             elif name in vectors:
@@ -1094,6 +1135,5 @@ def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, 
                 
     # Add all rows to dataframe
     dummy_df = pd.DataFrame(new_lines)
-    print(dummy_df)
 
     return dummy_df

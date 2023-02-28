@@ -493,6 +493,7 @@ class RoutePlanner:
             `paths` will be updated in the output JSON
         """
         maxiter     = self.config['smooth_path']['max_iteration_number']
+        minimum_iterations     = self.config['smooth_path']['minimum_iterations']
         minimumDiff = self.config['smooth_path']['minimum_difference']
 
         # 
@@ -545,11 +546,11 @@ class RoutePlanner:
 
                 # Determining the computational time averaged across all pairs
                 self.allDist = []
-                self.allDist2 = []
 
                 self.nc = nc
                 self.all_crossing_points = []
                 for iter in pbar:
+                    self.all_crossing_points += [nc.CrossingDF]
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0
                     while id <= (len(nc.CrossingDF) - 3):
@@ -557,7 +558,7 @@ class RoutePlanner:
                         
                         # -- Updating the crossing point
                         nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                        nc._updateCrossingPoint()
+                        nc._updateCrossingPoint(iter)
                         self.nc = nc
                         id += 1
 
@@ -567,18 +568,18 @@ class RoutePlanner:
 
                     self.nc = nc
 
-                    nc._mergePoint()
+                    #nc._mergePoint()
                     self.nc = nc
                     iter+=1
 
-                    self.all_crossing_points += [nc.CrossingDF]
+                    
                         
                     # Stop optimisation if the points are within some minimum difference
                     if len(nc.previousDF) == len(nc.CrossingDF):
                         Dist = np.max(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
                         self.allDist.append(Dist)
                         pbar.set_description("Mean Difference = {}".format(Dist))
-                        if (Dist < minimumDiff) and (iter>=50):
+                        if (Dist < minimumDiff) and (iter>=minimum_iterations):
                             logging.info('{} iterations - dDist={}'.format(iter, Dist))
                             break
 
