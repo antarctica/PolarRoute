@@ -140,18 +140,22 @@ class ScalarDataLoader(DataLoaderInterface):
         
         
 
-    def get_datapoints(self, bounds):
+    def get_datapoints(self, bounds, return_coords=False):
         '''
         Extracts datapoints from self.data within boundary defined by 'bounds'.
         self.data can be pd.DataFrame or xr.Dataset
         
         Args:
             bounds (Boundary): Limits of lat/long/time to select data from
+            return_coords (boolean): 
+                Flag to determine if coordinates are provided for each 
+                datapoint found. Default is False.
+                            
             
         Returns:
             data (pd.Series): Column of data values within selected region 
         '''
-        def get_datapoints_from_df(data, name, bounds):
+        def get_datapoints_from_df(data, name, bounds, return_coords):
             '''
             Extracts data from a pd.DataFrame
             '''
@@ -165,10 +169,16 @@ class ScalarDataLoader(DataLoaderInterface):
             if 'time' in data.columns:
                 mask &= (data['time'] >= bounds.get_time_min()) & \
                         (data['time'] <= bounds.get_time_max())
+            # Extract lat/long/time if requested
+            if return_coords:   
+                columns = ['lat', 'long', name]
+                if 'time' in data.columns:
+                    columns += ['time']
+            else:               columns = [name]
             # Return column of data from within bounds
-            return data.loc[mask][name]
+            return data.loc[mask][columns]
         
-        def get_datapoints_from_xr(data, name, bounds):
+        def get_datapoints_from_xr(data, name, bounds, return_coords):
             '''
             Extracts data from a xr.Dataset
             '''
@@ -180,17 +190,24 @@ class ScalarDataLoader(DataLoaderInterface):
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
             # Cast as a pd.DataFrame
             data = data.to_dataframe().reset_index().dropna()
+            
+            # Extract lat/long/time if requested
+            if return_coords:   
+                columns = ['lat', 'long', name]
+                if 'time' in data.columns:
+                    columns += ['time']
+            else:               columns = [name]
             # Return column of data from within bounds
-            return data[name]
+            return data.loc[columns]
             
         # Choose which method to retrieve data based on input type
         if hasattr(self, 'data_name'): data_name = self.data_name
         else:                          data_name = self.get_data_col_name()
         
         if type(self.data) == type(pd.DataFrame()):
-            return get_datapoints_from_df(self.data, data_name, bounds)
+            return get_datapoints_from_df(self.data, data_name, bounds, return_coords)
         elif type(self.data) == type(xr.Dataset()):
-            return get_datapoints_from_xr(self.data, data_name, bounds)
+            return get_datapoints_from_xr(self.data, data_name, bounds, return_coords)
 
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
@@ -212,7 +229,8 @@ class ScalarDataLoader(DataLoaderInterface):
         if agg_type is None:
             agg_type = self.aggregate_type
         # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds).dropna().sort_values()
+        dps = self.get_datapoints(bounds)[self.data_name]
+        dps = dps.dropna().sort_values()
         # If no data
         if len(dps) == 0:
             return {self.data_name: np.nan}

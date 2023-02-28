@@ -241,7 +241,7 @@ class AMSRDataLoader:
             return get_dp_from_coord_xr(self.data, data_name, long, lat)
         
 
-    def get_datapoints(self, bounds):
+    def get_datapoints(self, bounds, return_coords=False):
         '''
         Extracts datapoints from self.data within boundary defined by 'bounds'.
         self.data can be pd.DataFrame or xr.Dataset
@@ -252,7 +252,7 @@ class AMSRDataLoader:
         Returns:
             data (pd.Series): Column of data values within selected region 
         '''
-        def get_datapoints_from_df(data, name, bounds):
+        def get_datapoints_from_df(data, name, bounds, return_coords):
             '''
             Extracts data from a pd.DataFrame
             '''
@@ -266,10 +266,16 @@ class AMSRDataLoader:
             if 'time' in data.columns:
                 mask &= (data['time'] >= bounds.get_time_min()) & \
                         (data['time'] <= bounds.get_time_max())
+            # Extract lat/long/time if requested
+            if return_coords:   
+                columns = ['lat', 'long', name]
+                if 'time' in data.columns:
+                    columns += ['time']
+            else:               columns = [name]
             # Return column of data from within bounds
-            return data.loc[mask][name]
+            return data.loc[mask][columns]
         
-        def get_datapoints_from_xr(data, name, bounds):
+        def get_datapoints_from_xr(data, name, bounds, return_coords):
             '''
             Extracts data from a xr.Dataset
             '''
@@ -281,14 +287,20 @@ class AMSRDataLoader:
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
             # Cast as a pd.DataFrame
             data = data.to_dataframe().reset_index().dropna()
+            # Extract lat/long/time if requested
+            if return_coords:   
+                columns = ['lat', 'long', name]
+                if 'time' in data.columns:
+                    columns += ['time']
+            else:               columns = [name]
             # Return column of data from within bounds
-            return data[name]
+            return data.loc[columns]
             
         # Choose which method to retrieve data based on input type
         if type(self.data) == type(pd.DataFrame()):
-            return get_datapoints_from_df(self.data, 'SIC', bounds)
+            return get_datapoints_from_df(self.data, 'SIC', bounds, return_coords)
         elif type(self.data) == type(xr.Dataset()):
-            return get_datapoints_from_xr(self.data, 'SIC', bounds)
+            return get_datapoints_from_xr(self.data, 'SIC', bounds, return_coords)
 
 
     def get_data_name(self):
