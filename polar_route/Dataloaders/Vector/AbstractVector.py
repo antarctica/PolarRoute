@@ -141,7 +141,7 @@ class VectorDataLoader(DataLoaderInterface):
             return get_dp_from_coord_xr(self.data, data_name, long, lat)
         
 
-    def get_datapoints(self, bounds):
+    def get_datapoints(self, bounds, return_coords=False):
         '''
         Extracts datapoints from self.data within boundary defined by 'bounds'.
         self.data can be pd.DataFrame or xr.Dataset
@@ -152,7 +152,7 @@ class VectorDataLoader(DataLoaderInterface):
         Returns:
             data (pd.Series): Column of data values within selected region 
         '''
-        def get_datapoints_from_df(data, names, bounds):
+        def get_datapoints_from_df(data, names, bounds, return_coords):
             '''
             Extracts data from a pd.DataFrame
             '''
@@ -168,9 +168,18 @@ class VectorDataLoader(DataLoaderInterface):
                         (data['time'] <= bounds.get_time_max())
             # Return column of data from within bounds
             # TODO add dropna() when merged, standard didn't have it 
-            return data.loc[mask][names.split(',')]#.dropna()
+            # Extract lat/long/time if requested
+            if return_coords:   
+                columns = ['lat', 'long']
+                columns += names.split(',')
+                if 'time' in data.columns:
+                    columns += ['time']
+            else:
+                columns = names.split(',')
+            # Return column of data from within bounds
+            return data.loc[mask][columns]
         
-        def get_datapoints_from_xr(data, names, bounds):
+        def get_datapoints_from_xr(data, names, bounds, return_coords):
             '''
             Extracts data from a xr.Dataset
             '''
@@ -183,8 +192,17 @@ class VectorDataLoader(DataLoaderInterface):
             # Cast as a pd.DataFrame
             # TODO add dropna() when merged, standard didn't have it
             data = data.to_dataframe().reset_index()#.dropna()
+            # Extract lat/long/time if requested
+            if return_coords:   
+                columns = ['lat', 'long']
+                columns += names.split(',')
+                if 'time' in data.columns:
+                    columns += ['time']
+            else:               
+                columns = names.split(',')
             # Return column of data from within bounds
-            return data[names.split(',')]
+            return data.loc[columns]
+
             
         # Choose which method to retrieve data based on input type
         if hasattr(self, 'data_name'): data_name = self.data_name
@@ -192,9 +210,9 @@ class VectorDataLoader(DataLoaderInterface):
         
         # Choose which method to retrieve data based on input type
         if type(self.data) == type(pd.DataFrame()):
-            return get_datapoints_from_df(self.data, data_name, bounds)
+            return get_datapoints_from_df(self.data, data_name, bounds, return_coords)
         elif type(self.data) == type(xr.Dataset()):
-            return get_datapoints_from_xr(self.data, data_name, bounds)
+            return get_datapoints_from_xr(self.data, data_name, bounds, return_coords)
 
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
@@ -232,10 +250,10 @@ class VectorDataLoader(DataLoaderInterface):
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
-        # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds)
         # Get list of variables that aren't coords
         col_vars = self.get_data_col_name().split(',')
+        # Remove lat, long and time column if they exist
+        dps = self.get_datapoints(bounds)[col_vars]
         # Create a magnitude column 
         dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
 
