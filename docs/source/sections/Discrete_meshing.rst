@@ -23,13 +23,13 @@ CellBox
 
 .. autoclass:: polar_route.cellbox.CellBox
    :special-members: __init__
-   :members: getcx, getcy, getdcx, getdcy, get_data_points, get_value, get_bounds, add_data_points, add_splitting_condition, value_should_be_split, value_hom_condition, hom_condition, should_split, split, contains_point, to_json
+   :members:  get_bounds, should_split, split, contains_point, to_json
 
-Mesh
+MeshBuilder
 ##############
 
-.. automodule:: polar_route.mesh
+.. automodule:: polar_route.MeshBuilder
 
-.. autoclass:: polar_route.mesh.Mesh 
+.. autoclass:: polar_route.MeshBuilder.MeshBuilder
    :special-members: __init__  
-   :members: add_data_points, get_cellbox, get_cellboxes, get_neighbour_case, split_and_replace, split_to_depth, to_json
+   :members: build_environmental_mesh , split_and_replace, split_to_depth, to_json

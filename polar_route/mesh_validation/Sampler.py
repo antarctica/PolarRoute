@@ -3,21 +3,20 @@ import numpy
 
 class Sampler:
 
-    def __init__(self ):
-        self.samples= []
-        self.mapped_samples= []
+    def __init__(self, d , n ):
+      
+        self.dimensions = d
+        self.number_of_samples = n
 
 
-    def generate_samples ( self, d , n):
-        self.samples = sobol.sample(dimension=d, n_points=n)
-        # print (self.samples)
-
-    def map_samples_to_range (self, ranges):
-        
-        for sample in self.samples:
+    def generate_samples ( self, ranges):
+        samples = sobol.sample(dimension=self.dimensions, n_points=self.number_of_samples)
+        mapped_samples = []
+        # map samples to ranges
+        for sample in samples:
             for i in range (len(ranges)):
-                self.mapped_samples. append (ranges [i] [0] + sample[i]* (ranges[i] [1] - ranges [i][0]))
-        self.mapped_samples = numpy.array(self.mapped_samples).reshape ( len (self.samples), len(ranges))
+                mapped_samples. append (ranges [i] [0] + sample[i]* (ranges[i] [1] - ranges [i][0]))
+        return numpy.array(mapped_samples).reshape ( len (samples), len(ranges))
         
        
 

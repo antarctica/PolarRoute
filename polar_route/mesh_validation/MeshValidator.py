@@ -26,14 +26,14 @@ class MeshValidator:
         # read the mesh bounds then generate samples of lat and long within bounds
         SAMPLE_DIM = 2  # each sample contains lat and long
     
-        bounds = self.mesh.bounds
+        bounds = self.mesh.get_bounds()
         samples = Sampler(SAMPLE_DIM , number_of_samples).generate_samples([bounds.lat_range , bounds.long_range])
         # compare the sampled lat and long values in data_file to the values obtained by mesh ( agg_values returned by  get_value)
         actual_value = np.array([])
         mesh_value = np.array([])
         for sample in samples:
-            actual_value.append (self.get_value_from_data (sample))
-            mesh_value.append (self.get_values_from_mesh(sample))
+            np.append (actual_value ,self.get_value_from_data (sample))
+            np.append ( mesh_value ,self.get_values_from_mesh(sample))
             
         # calculate the RMSE over the samples.
         MSE = np.square(np.subtract(actual_value,mesh_value)).mean()
@@ -44,11 +44,11 @@ class MeshValidator:
         values =[]
         for source in self.mesh.cellboxes[0].get_data_source():
             data_loader = source.get_data_loader() 
-            data_name = data_loader.get_data_name ()
+            data_name = data_loader.data_name
         # select sample lat and long
             value = self.data[data_name].sel(lat=sample[0])
             value = value.sel(long=sample[1])
-            values.append (value)
+            np.append (values , value)
         return values
 
 
@@ -58,7 +58,7 @@ class MeshValidator:
                  if cellbox.contains_point(sample[0] , sample[1]):
                     for source in cellbox.get_data_source():
                       data_loader = source.get_data_loader()
-                      values.append (data_loader.get_value (cellbox.bounds)[data_loader.get_data_name()] )#get the agg_value 
+                      np.append ( values , data_loader.get_value (cellbox.bounds)[data_loader.get_data_name()] )#get the agg_value 
 
             return values
     
@@ -73,8 +73,8 @@ class MeshValidator:
           
             #TODO check if we can merge datasets better
             # Limit to initial boundary
-            data = data.sel(lat=slice(self.mesh.bounds.get_lat_min(),self.mesh.bounds.get_lat_max()))
-            self.data[data_loader.get_data_name()] = data.sel(long=slice(self.mesh.bounds.get_long_min(),self.mesh.bounds.get_long_max()))
+            data = data.sel(lat=slice(self.mesh.get_bounds().get_lat_min(),self.mesh.get_bounds().get_lat_max()))
+            self.data[data_loader.data_name] = data.sel(long=slice(self.mesh.get_bounds().get_long_min(),self.mesh.get_bounds().get_long_max()))
         
         
 

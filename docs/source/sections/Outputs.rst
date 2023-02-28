@@ -1,10 +1,10 @@
-********
+********************
 Outputs - Data Types
-********
+********************
 
-#####
+##################
 Mesh construction
-#####
+##################
 
 The first stage in the route planning pipeline is constructing a discrete 
 mesh of the environment in which the route planner can operate. Once this
@@ -14,13 +14,13 @@ of mesh construction and json object generation are as follows:
 
 ::
 
-    from polar_route.mesh import Mesh
+    from polar_route.MeshBuilder import MeshBuilder
 
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    mesh = Mesh(config)
-    mesh_json = mesh.to_json()
+    env_mesh = MeshBuilder(config).build_environmental_mesh()
+    mesh_json = env_mesh.to_json()
 
 .. note:: 
     Examples and a description of the configuration files can be found in
@@ -135,23 +135,23 @@ where each of the values represent the following:
    :align: center
    :width: 700
 
-#####
+##################
 Vehicle specifics
-#####
+##################
 
 Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
 which applies transformations which are specific to a given vehicle.
 
 :: 
 
-    from polar_route.mesh import Mesh
+    from polar_route.MeshBuilder import MeshBuilder
     from polar_route.vessel_performance import VesselPerformance
 
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    mesh = Mesh(config)
-    mesh_json = mesh.to_json()
+    env_mesh = MeshBuilder(config).build_environmental_mesh()
+    mesh_json = env_mesh.to_json()
 
     vp = VesselPerformance(mesh_json)
     vessel_mesh_json = vp.to_json()
@@ -175,9 +175,9 @@ TODO - Description of transformation applied to the mesh json object by Vessel P
 ................................................................................................................
 ................................................................................................................
 
-#####
+##############
 Route planning
-#####
+##############
 
 During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:
 
@@ -226,6 +226,7 @@ where each of the values represent the following:
 
 This output can be converted to a pandas dataframe by running
 ::
+    
     waypoints_dataframe = pd.DataFrame(waypoints) 
 
 

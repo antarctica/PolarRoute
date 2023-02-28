@@ -45,11 +45,11 @@ The data loaders provided collect or create data from heterogeneous data sources
 and transform them into the correct format for use by the *.add_data_points()*
 function of the Mesh.
 
-Data loader functions located in the file **./polar_route/data_loaders.py** can
+Data loader functions located in the file **./polar_route/Dataloaders/*.py** can
 be referenced in a configuration file and called in the initialisation of the Mesh.
 See the :ref:`Input - Configuration` section of this document for further details. 
 
 
 
-.. automodule:: polar_route.data_loaders
+.. automodule:: polar_route.Dataloaders
     :members:

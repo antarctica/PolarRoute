@@ -1,10 +1,10 @@
 """
-In this section we will discuss the usage of the Mesh
-functionality of PolarRoute.
+In this section we will discuss the usage of the MeshBuilder
+functionality of PolarRoute.\n
 
 Example:
     An example of how to run this code can be executed by running the
-    following in an ipython/Jupyter Notebook::
+    following in an ipython/Jupyter Notebook::\n
 
         from polar_route import MeshBuilder
 
@@ -13,7 +13,7 @@ Example:
             config = json.load(f)
 
         mesh_builder = MeshBuilder(config)
-        mesh_builder.build_environmental_mesh()
+        mesh_builder.build_environmental_mesh()\n
 """
 
 import logging
@@ -41,7 +41,7 @@ class MeshBuilder:
 
             neighbour_graph (dict): A graphical representation of the adjacency
                 relationship between CellBoxes in the Mesh. The neighbour_graph is
-                of the form
+                of the form\n
 
                {\n
                     <CellBox id_1>: {\n
