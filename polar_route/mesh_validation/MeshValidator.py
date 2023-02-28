@@ -13,13 +13,14 @@ class MeshValidator:
     def __init__ (self , mesh_config_file):
         self.conf = None
         self.data = {}
-       
+        self.validation_length = 2 # the legnth of the validation square used for each sample, all the data_points contained within this square wil be validated. Higher values would incur higher processing cost
+
         with open (mesh_config_file , "r") as config_file:
             self.conf = json.load(config_file)['config']
 
         mesh_builder = MeshBuilder (self.conf)
         self.mesh = mesh_builder.mesh
-        self.load_data()
+    
        
 
     def validate_mesh (self , number_of_samples=10):
@@ -32,8 +33,10 @@ class MeshValidator:
         actual_value = np.array([])
         mesh_value = np.array([])
         for sample in samples:
-            np.append (actual_value ,self.get_value_from_data (sample))
-            np.append ( mesh_value ,self.get_values_from_mesh(sample))
+           actual_value =  np.append (actual_value ,self.get_value_from_data (sample))
+           mesh_value =  np.append ( mesh_value ,self.get_values_from_mesh(sample))
+        print (actual_value)
+        print (mesh_value)
             
         # calculate the RMSE over the samples.
         MSE = np.square(np.subtract(actual_value,mesh_value)).mean()
@@ -42,39 +45,41 @@ class MeshValidator:
 
     def get_value_from_data (self , sample):
         values =[]
+        lat_range = [sample[0] , sample[0] + self.validation_length]
+        long_range = [sample[1] , sample[1] + self.validation_length]
+        time_range = self.mesh.get_bounds().get_time_range()
         for source in self.mesh.cellboxes[0].get_data_source():
             data_loader = source.get_data_loader() 
-            data_name = data_loader.data_name
-        # select sample lat and long
-            value = self.data[data_name].sel(lat=sample[0])
-            value = value.sel(long=sample[1])
-            np.append (values , value)
+            print (sample)
+            dp = data_loader.get_datapoints( Boundary (lat_range , long_range , time_range))
+            print (">>> value >> " , dp)
+            values = np.append (values , dp)
         return values
 
 
     def get_values_from_mesh (self , sample):
+            #TODO make sure to handle the vector data
             values = []
-            for cellbox in self.mesh:
-                 if cellbox.contains_point(sample[0] , sample[1]):
-                    for source in cellbox.get_data_source():
-                      data_loader = source.get_data_loader()
-                      np.append ( values , data_loader.get_value (cellbox.bounds)[data_loader.get_data_name()] )#get the agg_value 
+            lat_range = [sample[0] , sample[0] + self.validation_length]
+            long_range = [sample[1] , sample[1] + self.validation_length]
+            time_range = self.mesh.get_bounds().get_time_range()
+
+        
+            for source in self.mesh.cellboxes[0].get_data_source():
+                data_loader = source.get_data_loader()
+                dp = data_loader.get_datapoints( Boundary (lat_range , long_range , time_range), with_coord = True)
+                for point in dp :
+                    lat = data_loader.data.loc[point.index].lat
+                    long = data_loader.data.loc[point.index].long
+                    for cellbox in self.mesh.cellboxes:
+                        if cellbox.contains_point(lat , long):
+                             values = np.append ( values , data_loader.get_value (cellbox.bounds)[data_loader.data_name] )#get the agg_value 
+                             break  # break to make sure we avoid getting multiple values (for lat and long on bounds of multiple cellboxes)
+
 
             return values
     
-    def load_data (self):
-        for source in self.mesh.cellboxes[0].get_data_source():
-            data_loader = source.get_data_loader()
-            data_file = data_loader.file
 
-             # Open Dataset
-            data = xr.open_dataset(data_file)
-            data = data.rename({'lon':'long'})
-          
-            #TODO check if we can merge datasets better
-            # Limit to initial boundary
-            data = data.sel(lat=slice(self.mesh.get_bounds().get_lat_min(),self.mesh.get_bounds().get_lat_max()))
-            self.data[data_loader.data_name] = data.sel(long=slice(self.mesh.get_bounds().get_long_min(),self.mesh.get_bounds().get_long_max()))
         
         
 
