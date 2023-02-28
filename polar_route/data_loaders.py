@@ -19,6 +19,7 @@ from datetime import datetime
 import xarray as xr
 import pandas as pd
 import numpy as np
+from scipy.fftpack import fftshift
 
 from pyproj import Transformer
 from pyproj import CRS
@@ -859,4 +860,280 @@ def load_dummy_data(params, long_min, long_max, lat_min, lat_max, time_start, ti
     dummy_df = dummy_df.replace("False", 0)
     
     logging.debug("returned {} datapoints".format(len(dummy_df.index)))
+    return dummy_df
+
+
+@timed_call
+def generate_GRF_data(params, long_min, long_max, lat_min, lat_max, time_start, time_end):
+    """
+        Args:
+            long_min (float): The minimum longitude of the data to be retrieved
+            long_max (float): The maximum longitude of the data to be retrieved
+            lat_min (float): The minimum latitude of the data to be retrieved
+            lat_max (float): The maximum latitude of the data to be retrieved
+            time_start (string): The start time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+            time_end (string): The end time of the data to be retrieved,
+                must be given in the format "YYYY-MM-DD"
+
+            params (dict): A dictionary containing generation parameters. This
+                function requires -
+                params['name'] (str) : 
+                    Name of data being generated. Generates scalar or vector 
+                    GRF based on this
+                    Scalars: 'cloud', 'SIC', 'elevation', 'thickness', 'density'
+                    Vectors: 'currents', 'winds'
+                    Masks:   'land'
+                params['seed'] (int) : 
+                    (OPTIONAL) Seed to feed random number generator
+                               Default: Unset
+                params['size'] (int) : 
+                    (OPTIONAL) Size of array in pixels (side length of square)
+                               Default: 128
+                params['alpha'] (float) : 
+                    (OPTIONAL) The power of the power-law momentum distribution
+                               Default: 5.0
+                params['min'] (float) : 
+                    (OPTIONAL) Min value of array
+                               Default: 1.0
+                params['max'] (float) : 
+                    (OPTIONAL) Max value of array
+                               Default: 10.0
+                params['threshold'] (float) : 
+                    (OPTIONAL) Cutoff for mask generation. 
+                               0 = all land, 1 = no land
+                               Default: 0.8
+                params['vec_x'] (str) :
+                    (OPTIONAL) x column name if generating a vector field
+                               Default: 'uC'
+                params['vec_y'] (str) :
+                    (OPTIONAL) x column name if generating a vector field
+                               Default: 'vC'
+
+        Returns:
+            bc_df (Dataframe): A dataframe containing dummy datapoints
+                used for unit testing
+                The dataframe is of the format -
+
+                lat | long | (time)* | name
+    """
+    def fftind(size):
+        """ Returns a numpy array of shifted Fourier coordinates k_x k_y.
+            
+            Input args:
+                size (integer): The size of the coordinate array to create
+            Returns:
+                k_ind, numpy array of shape (2, size, size) with:
+                    k_ind[0,:,:]:  k_x components
+                    k_ind[1,:,:]:  k_y components
+                    
+            Example:
+            
+                print(fftind(5))
+                
+                [[[ 0  1 -3 -2 -1]
+                [ 0  1 -3 -2 -1]
+                [ 0  1 -3 -2 -1]
+                [ 0  1 -3 -2 -1]
+                [ 0  1 -3 -2 -1]]
+                [[ 0  0  0  0  0]
+                [ 1  1  1  1  1]
+                [-3 -3 -3 -3 -3]
+                [-2 -2 -2 -2 -2]
+                [-1 -1 -1 -1 -1]]]
+                
+            """
+        k_ind = np.mgrid[:size, :size] - int( (size + 1)/2 )
+        k_ind = fftshift(k_ind)
+        return( k_ind )
+    def gaussian_random_field(size = 128, alpha=1.0):
+        """ Returns a numpy array of shifted Fourier coordinates k_x k_y.
+            Code from https://github.com/bsciolla/gaussian-random-fields/blob/master/gaussian_random_fields.py
+            Input args:
+                alpha (double, default = 3.0): 
+                    The power of the power-law momentum distribution
+                size (integer, default = 128):
+                    The size of the square output Gaussian Random Fields
+            Returns:
+                gfield (numpy array of shape (size, size)):
+                    The random gaussian random field
+                    
+            Example:
+            import matplotlib
+            import matplotlib.pyplot as plt
+            example = gaussian_random_field()
+            plt.imshow(example)
+            """
+            
+            # Defines momentum indices
+        k_idx = fftind(size)
+
+            # Defines the amplitude as a power law 1/|k|^(alpha/2)
+        amplitude = np.power( k_idx[0]**2 + k_idx[1]**2 + 1e-10, -alpha/4.0 )
+        amplitude[0,0] = 0
+        
+            # Draws a complex gaussian random noise with normal
+            # (circular) distribution
+        noise = np.random.normal(size = (size, size)) \
+            + 1j * np.random.normal(size = (size, size))
+        
+            # To real space
+        gfield = np.fft.ifft2(noise * amplitude).real
+        
+        #     # Sets the standard deviation to one
+        # if flag_normalize:
+        gfield = gfield - np.min(gfield)
+        gfield = gfield/(np.max(gfield)-np.min(gfield))
+            
+        return gfield
+    def binary_mask(size = 128, threshold_value = 0.8, alpha=1.0):
+        GRF = gaussian_random_field(size=size, alpha=alpha)
+        GRF[GRF>=threshold_value] = 1.0
+        GRF[GRF<threshold_value] = 0.0
+        GRF = (GRF == True)
+        return GRF
+    # def scalar_field(size = 128, field_min = 0, field_max = 26.5, alpha=1.0):
+    #     GRF = gaussian_random_field(size=size, alpha=alpha)
+    #     scaling_factor = field_min - field_max
+    #     GRF = field_max + GRF*scaling_factor
+    #     return GRF
+
+    def scalar_field(size=128,max_val = 26.5,threshold_value=[0.5,0.8],alpha=3.2,min_val=2.5,multiplication=1.0,offset=0.0,mask_threshold=[None,'lower']):
+        GRF = gaussian_random_field(alpha=alpha,size=size)
+        GRF[GRF>=threshold_value[1]] = threshold_value[1]
+        GRF[GRF<(threshold_value[0])] = threshold_value[0]
+        GRF = (GRF-GRF.min())/(GRF.max()-GRF.min())
+        GRF = max_val*GRF
+        if type(min_val) != type(None):
+            GRF[(GRF<=min_val)&(GRF!=0)] = min_val
+        GRF = GRF*multiplication + offset
+        return GRF
+
+
+
+    def scalar_field_mixedgaussians(size=128,max_val = 26.5,threshold_value=[0.5,0.8],alpha=3.2,min_val=2.5,multiplication=1.0,offset=0.0,mask_threshold=[None,'lower'],variance = 0.0005,samples = 12,xrange = [0.3,0.7],yrange = [0.3,0.7]):
+
+
+        from scipy.stats import multivariate_normal
+        x, y = np.mgrid[0:1:(1/size), 0:1:(1/size)]
+        pos = np.dstack((x, y))
+
+        for ii in range(samples):
+
+
+            position = np.random.rand(2)
+            position[0] = position[0]*(xrange[1]-xrange[0]) + xrange[0]
+            position[1] = position[1]*(yrange[1]-yrange[0]) + yrange[0]
+
+            rv = multivariate_normal(position, [[variance, 0.], [0., variance]])
+
+
+            if ii==0:
+                field = rv.pdf(pos)
+            else:
+                field += rv.pdf(pos)
+
+
+        field /= np.max(field)
+
+        GRF = max_val*field
+        if type(min_val) != type(None):
+            GRF[(GRF<=min_val)&(GRF!=0)] = min_val
+        GRF = GRF*multiplication + offset
+
+        return GRF
+
+    def vector_field(size = 128, field_min = 1.0, field_max=10.0, alpha=1.0):
+        magnitude = gaussian_random_field(size=size, alpha=alpha)
+        magnitude = magnitude/(np.max(magnitude)-np.min(magnitude)) - np.min(magnitude)
+        magnitude = magnitude*(field_max-field_min) + field_min
+        direction = gaussian_random_field(size=size, alpha=alpha) * 360
+
+        dY = np.cos(direction*(np.pi/180))*magnitude
+        dX = np.sin(direction*(np.pi/180))*magnitude
+
+        return dX,dY
+
+    # Set values to defaults if not defined in params
+    name      = params['name']  # Only field with no default value
+    seed      = params['seed']  if ( 'seed' in params) else None
+    size      = params['size']  if ( 'size' in params) else 512
+    alpha     = params['alpha'] if ('alpha' in params) else 3.2
+    min_val   = params['min']   if (  'min' in params) else 1.0
+    max_val   = params['max']   if (  'max' in params) else 10.0
+    threshold_value = params['threshold value scalar'] if ( 'threshold value scalar' in params) else [0.5,0.8]
+    threshold = params['max']   if (  'max' in params) else 0.8
+    multiplication = params['multiplication']   if (  'multiplication' in params) else 1.0
+    offset = params['offset']   if (  'offset' in params) else 0.0
+    mask_threshold = params['mask_threshold'] if ('mask_threshold' in params) else [None,'upper']
+    vec_col_x = params['vec_x'] if ( 'cols' in params) else 'uC'
+    vec_col_y = params['vec_y'] if ( 'cols' in params) else 'vC'
+    vec_cols  = (vec_col_x, vec_col_y) 
+
+    # Set seed for generation
+    np.random.seed(seed)
+
+    # Define all names of fields that can be generated
+    scalars = ['cloud', 'SIC', 'elevation', 'thickness', 'density','speed','elevation_mixedgaussians']
+    vectors = ['currents', 'winds']
+    masks   = ['land']
+
+    # Set up domain of field
+    lat_array  = np.linspace(lat_min, lat_max, size)
+    long_array = np.linspace(long_min, long_max, size)
+    latv, longv = np.meshgrid(lat_array, long_array, indexing='ij')
+
+    # Create scalar field if config calls for it
+    if name in scalars:
+        if name=='elevation_mixedgaussians':
+            scalar = scalar_field_mixedgaussians(size = size, alpha = alpha,
+                    min_val = min_val, max_val = max_val, threshold_value=threshold_value,multiplication=multiplication,offset=offset,mask_threshold=mask_threshold)
+        else:
+            scalar = scalar_field(size = size, alpha = alpha,
+                                min_val = min_val, max_val = max_val, threshold_value=threshold_value,multiplication=multiplication,offset=offset,mask_threshold=mask_threshold)
+    # Create vector field if config calls for it
+    elif name in vectors:
+        vec_x, vec_y = vector_field(size = size, alpha = alpha,
+                                    field_min = min_val, field_max = max_val)
+    # Create mask field if config calls for it
+    elif name in masks:
+        mask = binary_mask(size = size, alpha = alpha,
+                        threshold_value = threshold)
+    # Otherwise name is not recognised field type
+    else:
+        raise ValueError(f''' Field type "{name}" not recognised. Must be one of the following
+        \t Scalar fields: 'cloud', 'SIC', 'elevation', 'thickness', 'density'
+        \t Vector fields: 'currents', 'winds'
+        \t Mask fields:   'land'
+        ''')
+
+    # Rows to add to output dataframe
+    new_lines = []
+
+    # For each pair of coordinates
+    for i in range(size):
+        for j in range(size):
+            lat = latv[i,j]
+            long = longv[i,j]
+            # Retrieve scalar data and add to row
+            if name in scalars:
+                data      = scalar[i,j]
+
+                if name == 'elevation_mixedgaussians':
+                    name = 'elevation'
+
+                new_lines.append({'lat': lat, 'long': long, f'{name}': data})
+            # Vectors are split into two columns for x and y components
+            elif name in vectors:
+                vx = vec_x[i,j]
+                vy = vec_y[i,j]
+                new_lines.append({'lat': lat, 'long': long, vec_cols[0]: vx,  vec_cols[1]:vy})
+            # Mask is same as scalar, no other options
+            else:
+                data = mask[i,j]
+                new_lines.append({'lat': lat, 'long': long, f'{name}': data})
+                
+    # Add all rows to dataframe
+    dummy_df = pd.DataFrame(new_lines)
+
     return dummy_df

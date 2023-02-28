@@ -230,8 +230,12 @@ class RoutePlanner:
         self.unit_time       = self.config['time_unit']
         self.zero_currents   = self.config['zero_currents']
         self.variable_speed  = self.config['variable_speed']
-        if type(self.variable_speed) == type(float):
+        if type(self.variable_speed) == float:
+            logging.info(' Defining a constant speed map = {}'.format(self.variable_speed))
             self.neighbour_graph['speed'] = self.variable_speed
+            cbxs = pd.DataFrame(self.mesh['cellboxes'])
+            cbxs['speed'] = self.variable_speed
+            self.mesh['cellboxes'] = cbxs.to_dict('records')
 
         # ====== Waypoints ======
         self.mesh['waypoints'] = waypoints_df
@@ -488,8 +492,29 @@ class RoutePlanner:
             Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
             `paths` will be updated in the output JSON
         """
-        maxiter     = self.config['smooth_path']['max_iteration_number']
-        minimumDiff = self.config['smooth_path']['minimum_difference']
+        if 'max_iteration_number' not in self.config['smooth_path']:
+            maxiter = 1e4
+        else:
+            maxiter     = self.config['smooth_path']['max_iteration_number']
+
+        if 'minimum_iterations' not in self.config['smooth_path']:
+            minimum_iterations = 50
+        else:
+            minimum_iterations = self.config['smooth_path']['minimum_iterations']
+
+
+        if 'minimum_difference' not in self.config['smooth_path']:
+            minimumDiff = 1e-4
+        else: 
+            minimumDiff = self.config['smooth_path']['minimum_difference']
+
+        # Minimum Difference = 1e-4
+        # Minimum Iterations = 50
+        # Max Iteration Number = 1e4
+
+
+
+        # 
 
         # 
         SmoothedPaths = []
@@ -541,20 +566,19 @@ class RoutePlanner:
 
                 # Determining the computational time averaged across all pairs
                 self.allDist = []
-                self.allDist2 = []
 
                 self.nc = nc
                 self.all_crossing_points = []
-
                 for iter in pbar:
+                    self.all_crossing_points += [nc.CrossingDF]
                     nc.previousDF = copy.deepcopy(nc.CrossingDF)
                     id = 0
                     while id <= (len(nc.CrossingDF) - 3):
                         
-                        previous_horeshoes = []
+                        
                         # -- Updating the crossing point
                         nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                        nc._updateCrossingPoint(previous_horeshoes)
+                        nc._updateCrossingPoint(iter)
                         self.nc = nc
                         id += 1
 
@@ -563,21 +587,25 @@ class RoutePlanner:
                         break
 
                     self.nc = nc
-                    nc._mergePoint()
+
+                    #nc._mergePoint()
                     self.nc = nc
                     iter+=1
 
-                    # self.all_crossing_points += [nc.CrossingDF]
+                    
                         
                     # Stop optimisation if the points are within some minimum difference
                     if len(nc.previousDF) == len(nc.CrossingDF):
                         Dist = np.max(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
                         self.allDist.append(Dist)
                         pbar.set_description("Mean Difference = {}".format(Dist))
-                        if (Dist < minimumDiff) and (Dist != 0.0):
+                        if (Dist < minimumDiff) and (iter>=minimum_iterations):
                             logging.info('{} iterations - dDist={}'.format(iter, Dist))
                             break
 
+                if iter == nc.pathIter:
+                    logging.info('Maximum Iteration Met - Returning Last Path'.format(iter, Dist))
+                    nc.CrossingDF = self.all_crossing_points[-1]
 
 
 
