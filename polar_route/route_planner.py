@@ -492,9 +492,29 @@ class RoutePlanner:
             Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
             `paths` will be updated in the output JSON
         """
-        maxiter     = self.config['smooth_path']['max_iteration_number']
-        minimum_iterations     = self.config['smooth_path']['minimum_iterations']
-        minimumDiff = self.config['smooth_path']['minimum_difference']
+        if 'max_iteration_number' not in self.config['smooth_path']:
+            maxiter = 1e4
+        else:
+            maxiter     = self.config['smooth_path']['max_iteration_number']
+
+        if 'minimum_iterations' not in self.config['smooth_path']:
+            minimum_iterations = 50
+        else:
+            minimum_iterations = self.config['smooth_path']['minimum_iterations']
+
+
+        if 'minimum_difference' not in self.config['smooth_path']:
+            minimumDiff = 1e-4
+        else: 
+            minimumDiff = self.config['smooth_path']['minimum_difference']
+
+        # Minimum Difference = 1e-4
+        # Minimum Iterations = 50
+        # Max Iteration Number = 1e4
+
+
+
+        # 
 
         # 
         SmoothedPaths = []
