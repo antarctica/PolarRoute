@@ -90,6 +90,56 @@ class VectorDataLoader(DataLoaderInterface):
                 Downsampling and reprojecting happen in __init__() method
         '''
         pass
+    
+    def get_dp_from_coord(self, long=None, lat=None):
+        '''
+        Extracts datapoint from self.data with lat and long specified in kwargs.
+        self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            long (float): Longitude coordinate to search for
+            lat (float) : Latitude coordinate to search for
+            
+        Returns:
+            data (pd.Series): Column of data values with chosen lat/long
+                              Could be many datapoints because either bad data
+                              or multiple time steps 
+        '''
+        def get_dp_from_coord_df(data, names, long, lat):
+            '''
+            Extracts data from a pd.DataFrame
+            '''
+            # Mask off any positions not within spatial bounds
+            mask = (data['lat']  == lat)  & \
+                   (data['long'] == long) 
+
+            # Return column of data from within bounds
+            return data.loc[mask][names.split(',')]
+        
+        def get_dp_from_coord_xr(data, names, long, lat):
+            '''
+            Extracts data from a xr.Dataset
+            '''
+            # Select data region within spatial bounds
+            data = data.sel(lat=lat, long=long)
+            # Cast as a pd.DataFrame
+            data = data.to_dataframe().reset_index()
+            # Return column of data from within bounds
+            return data[names.split(',')]
+        
+        # Ensure that lat and long provided
+        assert (lat is not None) and (long) is not None, \
+            'Must provide lat and long to this method!'
+            
+        # Choose which method to retrieve data based on input type
+        if hasattr(self, 'data_name'): data_name = self.data_name
+        else:                          data_name = self.get_data_col_name()
+        
+        if type(self.data) == type(pd.DataFrame()):
+            return get_dp_from_coord_df(self.data, data_name, long, lat)
+        elif type(self.data) == type(xr.Dataset()):
+            return get_dp_from_coord_xr(self.data, data_name, long, lat)
+        
 
     def get_datapoints(self, bounds):
         '''
@@ -137,10 +187,14 @@ class VectorDataLoader(DataLoaderInterface):
             return data[names.split(',')]
             
         # Choose which method to retrieve data based on input type
+        if hasattr(self, 'data_name'): data_name = self.data_name
+        else:                          data_name = self.get_data_col_name()
+        
+        # Choose which method to retrieve data based on input type
         if type(self.data) == type(pd.DataFrame()):
-            return get_datapoints_from_df(self.data, self.get_data_col_name(), bounds)
+            return get_datapoints_from_df(self.data, data_name, bounds)
         elif type(self.data) == type(xr.Dataset()):
-            return get_datapoints_from_xr(self.data, self.get_data_col_name(), bounds)
+            return get_datapoints_from_xr(self.data, data_name, bounds)
 
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
