@@ -106,7 +106,7 @@ class DataLoaderFactory:
             params['downsample_factors'] = (1,1)
 
         if 'data_name' not in params:
-            params['data_name'] = name
+            params['data_name'] = None
 
         if 'aggregate_type' not in params: 
             params['aggregate_type']  = 'MEAN'
@@ -178,7 +178,7 @@ if __name__=='__main__':
     
     # ............... SCALAR DATA LOADERS ............... #
     
-    if False: # Run GEBCO
+    if True: # Run GEBCO
         params = {
             'file': '/home/habbot/Documents/Work/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
             'downsample_factors': (5,5),
@@ -193,7 +193,7 @@ if __name__=='__main__':
         gebco = factory.get_dataloader('GEBCO', bounds, params, min_dp = 5)
         print(gebco.get_value(bounds))
         print(gebco.get_hom_condition(bounds, split_conds))
-    if False: # Run AMSR
+    if True: # Run AMSR
         params = {
             'folder': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
             # 'file': 'PolarRoute/datastore/sic/amsr_south/asi-AMSR2-s6250-20201110-v5.4.nc',

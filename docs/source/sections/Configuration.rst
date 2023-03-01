@@ -213,7 +213,7 @@ where the variables are as follows:
 
 
 * **loader** *(string)* : The name of the data loader to be used to add this data source to the mesh
-      see section 'Multi Data Input' for further information about the available data loaders.
+      see section :ref:`abstractScalar doc page<dataloaders-overview>`for further information about the available data loaders.
 * **params** *(dict)* : A dictionary containing optional parameters which may be required by the specified data loader in 'loader'. These parameters include the following:
 
    * **splitting_conditions** *(list)* : The conditions which determine if a cellbox should be split.
