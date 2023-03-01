@@ -11,7 +11,7 @@ Contents:
    ./sections/Installation
    ./sections/running
    ./sections/Configuration
-   ./sections/Multi_data_input
+   ./sections/Dataloaders/overview
    ./sections/Outputs
    ./sections/Examples
    ./sections/Discrete_meshing
