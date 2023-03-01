@@ -67,7 +67,7 @@ def create_mesh_cli():
     """
 
     """
-    from polar_route.mesh import Mesh
+    from polar_route.MeshBuilder import MeshBuilder
     default_output = "create_mesh.output.json"
     args = get_args(default_output)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
@@ -75,7 +75,7 @@ def create_mesh_cli():
     config = json.load(args.config)
 
     # Discrete Meshing
-    cg = Mesh(config)
+    cg = MeshBuilder(config).build_environmental_mesh()
 
     logging.info("Saving mesh to {}".format(args.output))
     info = cg.to_json()

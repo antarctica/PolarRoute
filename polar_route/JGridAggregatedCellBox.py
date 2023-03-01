@@ -6,7 +6,7 @@ import pandas as pd
 from polar_route.Boundary import Boundary
 from polar_route.AggregatedCellBox import AggregatedCellBox
 
-class AggregatedJGridCellBox (AggregatedCellBox):
+class JGridAggregatedCellBox (AggregatedCellBox):
     """
     a class represnts an aggrgated information within a geo-spatial/temporal boundary. 
 
