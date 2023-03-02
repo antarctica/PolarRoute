@@ -266,8 +266,6 @@ class RoutePlanner:
         self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
         self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
 
-        logging.info(self.mesh['waypoints'])
-
         # ==== Printing Configuration and Information
         self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
 
@@ -345,8 +343,6 @@ class RoutePlanner:
                         path['properties']['CellIndices'] = path_indices.tolist()
 
                         cases = []
-
-                        logging.info(cellIndices)
 
                         # Determine cases for cell pairs along the path
                         for idx in range(len(cellIndices) -1):
