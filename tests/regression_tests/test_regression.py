@@ -264,6 +264,14 @@ def compare_cellbox_values(mesh_a, mesh_b):
                     if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):
                         value_b = np.round(float(cellbox_b[key]), decimals=5)
                         value_a = np.round(float(cellbox_a[key]), decimals=5)
+                    # We also want to round float values for comparison when contained inside a list
+                    elif (type(cellbox_a[key]) is list) and (type(cellbox_b[key]) is list):
+                        if any(isinstance(val, float) for val in cellbox_a[key]) and any(isinstance(val, float) for val in cellbox_b[key]):
+                            value_b = [np.round(float(v), decimals=5) for v in cellbox_b[key]]
+                            value_a = [np.round(float(v), decimals=5) for v in cellbox_a[key]]
+                        else:
+                            value_b = cellbox_b[key]
+                            value_a = cellbox_a[key]
                     # Otherwise just extract values
                     else:
                         value_b = cellbox_b[key]  
