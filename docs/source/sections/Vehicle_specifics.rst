@@ -1,9 +1,9 @@
-********
+**************************
 Methods - Vessel Specifics
-********
+**************************
 
 Overview
-##############
+########
 
 All of the functionality that relates to the specific vehicle traversing our meshed environment model is contained within the vessel_performance module.
 This module contains a `VesselPerformance` class that determines which cells in the mesh are inaccessible for that particular vessel and what its performance will be in each of the accessible cells.
@@ -19,7 +19,7 @@ This module contains a `VesselPerformance` class that determines which cells in 
 
 
 Vessel Performance
-##############
+##################
 
 .. automodule:: polar_route.vessel_performance
 

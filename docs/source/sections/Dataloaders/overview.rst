@@ -75,13 +75,11 @@ To read more on how to implement these, follow instructions in `Implementing New
 ^^^^^^^^^^^^^^^^^^^^
 Abstract Dataloaders
 ^^^^^^^^^^^^^^^^^^^^
-.. toctree::
-   :maxdepth: 1
-   :glob:
+To look at specific abstract dataloaders, use the following links:
 
-   ./scalar/abstractScalar
-   ./vector/abstractVector
-   ./lut/abstractLUT
+- :ref:`abstract-scalar-dataloader`
+- :ref:`abstract-vector-dataloader`
+- :ref:`abstract-lut-dataloader`
 
 These are the templates to be used when implementing new dataloaders into PolarRoute. 
 They have been split into three seperate categories: Scalar, Vector, and LUT, detailed in `Dataloader Types`_.

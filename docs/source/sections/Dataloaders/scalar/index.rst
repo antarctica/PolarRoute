@@ -1,4 +1,5 @@
 .. _abstract-scalar-dataloader-index:
+
 ******************
 Scalar Dataloaders
 ******************
@@ -19,7 +20,7 @@ functionality that would be needed to manipulate the data to work
 with the mesh. When creating a new dataloader, the user must define
 how to open the data files, and what methods are required to manipulate
 the data into a standard format. More details are provided on the 
-:ref:`abstractScalar doc page<abstract-scalar-dataloader>`.
+:ref:`abstractScalar doc page<abstract-scalar-dataloader>`
 
 ^^^^^^^^
 Examples

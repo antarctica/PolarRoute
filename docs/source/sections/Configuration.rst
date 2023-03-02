@@ -1,14 +1,16 @@
-""""""""""""
+.. _configuration:
+
+"""""""""""""""""""""
 Input - Configuration
-""""""""""""
+"""""""""""""""""""""
 
 In this section we will outline the standard structure for a configuration file used in all portions of the PolarRoute software package.
 
 Outlined below is an example configuration file for running PolarRoute. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.
 
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Mesh Contruction configuration file example.
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ::
 
    {
@@ -91,9 +93,9 @@ output mesh titled 'Mesh_info'
 
 The 'Mesh_info' section of the configuration file contains three primary sections:
 
-################
+######
 Region
-################
+######
 The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (`longMin`, `latMin`, `longMax`, `latMax`, `startTime`, `endTime`), but also the starting shape of the spatial grid cell boxes (`cellWidth`, `cellHeight`) is defined before splitting is applied . Further detail on each parameter is given below:
 
 ::
@@ -120,9 +122,9 @@ where the variables are as follows:
 * **cellWidth**    *(float, degrees)*      : Initial Cell Box Width prior to splitting 
 * **cellHeight**   *(float, degrees)*      : Initial Cell Box Height prior to splitting 
 
-#################
+############
 Data_sources
-#################
+############
 
 The 'Data_sources' section of the configuration file dictates which information will be added to the
 mesh when constructed. Each item in the list of data sources represents a single data set to be added
@@ -171,9 +173,9 @@ where the variables are as follows:
 * **params** *(dict)* : A dictionary containing optional parameters which may be required by data loader function
       named in variable 'loader'.
 
-##############
+#########
 splitting
-##############
+#########
 
 The splitting section of the Configuration file determines how the CellBoxes that form the
 Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
@@ -186,10 +188,10 @@ of interest such as SIC or ocean depth. For example, considering SIC, we define 
 of the ice measurements in that cell are at *t%* or higher.  If the proportion of ice in the cell above the 
 *t%* concentration is below *lb%*, we consider the cell to be homogeneous open water: such a cell can be navigated 
 through so does not require splitting based on this homogeneity condition (though may still be split based on others).
- At the other end of the range, if the proportion is greater than *ub%*, then the cell is considered 
+At the other end of the range, if the proportion is greater than *ub%*, then the cell is considered 
 homogeneous ice: such a cell cannot be navigated through all will not be split on this or any subsequent splitting conditions. 
 If the proportion is between these bounds, then the cell is inhomogeneous and must be split so that the homogeneous sub-cells
- can be found.
+can be found.
 
 ::
 
@@ -227,13 +229,14 @@ where the variables are as follows:
 * **value_fill_types** *(dict)* : Determines the actions taken if a cellbox is generated with no data for a given value type
    * **<value_name>** *(string)* : The name of the value which the fill type will be applied to.
    * **<fill_type>** *(string)* : <parent | zero | nan>
+   
 .. note:: 
    splitting conditions are applied in the order they are specified in the configuration file.
 
 
-#############
+#############################
 value_output_types (optional)
-#############
+#############################
 
 The value_output_types section is an optional section which may be added to Mesh_info. This dictates how data
 of each value of a cellbox is returned when outputting the (CellBox) or (Mesh). By default values associated
@@ -248,9 +251,9 @@ with a (CellBox) are calculated by taking the mean of all data points of a given
 
 * **<value_name>** *(string)* : The name of the value which the output type change will be applied to 
 
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Vessel Performance configuration file example.
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Vessel configuration file provides all the necessary information about the vessel that will execute
 the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the `VesselPerformance`
@@ -280,9 +283,9 @@ Above are a typical set of configuration parameters used for a vessel where the 
 * **MaxIceExtent** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
 * **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through in metres. Negative values correspond to a depth below sea level.
 
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Route Planning configuration file example.
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ::
 
    {

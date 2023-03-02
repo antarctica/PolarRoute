@@ -23,8 +23,8 @@ CellBox
 
 .. autoclass:: polar_route.cellbox.CellBox
    :special-members: __init__
-   :members: getcx, getcy, getdcx, getdcy, get_data_points, get_value, get_bounds, add_data_points, add_splitting_condition, value_should_be_split, value_hom_condition, hom_condition, should_split, split, contains_point, to_json
-
+   :members: 
+   
 Mesh
 ##############
 
@@ -32,4 +32,4 @@ Mesh
 
 .. autoclass:: polar_route.mesh.Mesh 
    :special-members: __init__  
-   :members: add_data_points, get_cellbox, get_cellboxes, get_neighbour_case, split_and_replace, split_to_depth, to_json
+   :members: 

@@ -1,3 +1,5 @@
+.. _dataloader-factory:
+
 ******************
 Dataloader Factory
 ******************
@@ -49,6 +51,7 @@ The only parameter required by this dataloader is a file to read data from::
 
 To call this dataloader, add an entry in the :code:`config.json` 
 file used to generate the mesh::
+   
    {
          "loader": "myscalar",
          "params": {
