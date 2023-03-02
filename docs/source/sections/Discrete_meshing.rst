@@ -28,7 +28,19 @@ The below UML diagram describes how the Environment Mesh Construction module is 
 
 Mesh Construction Use case
 ###################################
-The below sequence diagram illustrates a use case for the Discrete Meshing of the environment
+This sequence diagram illustrates a use case for the Discrete Meshing of the environment, where the module's client starts by initializing the MeshBuilder with a certain mesh configuration (see Input-Configuration section for more details about the configuration format) then calls build_environment_mesh method.
+
+.. figure:: ./Figures/mesh-build-sequence-diagram.drawio.png
+   :align: center
+   :width: 1000
+
+
+
+The following diagram depicts the sequence of events that take place inside build_environment_mesh method into details
+
+.. figure:: ./Figures/build-env-mesh.drawio.png
+   :align: center
+   :width: 1000
 
 
 Classes
