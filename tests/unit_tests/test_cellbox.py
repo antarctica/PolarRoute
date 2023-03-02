@@ -1,7 +1,7 @@
 
 import unittest
 from polar_route.Metadata import Metadata
-from polar_route.DataLoader import DataLoaderFactory
+from polar_route.Dataloaders.Factory import DataLoaderFactory
 from polar_route.cellbox import CellBox
 
 from polar_route.Boundary import Boundary

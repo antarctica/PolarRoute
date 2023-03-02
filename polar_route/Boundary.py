@@ -41,7 +41,7 @@ class Boundary:
 
 
 
-    def __init__(self, lat_range , long_range , time_range=[]):
+    def __init__(self, lat_range , long_range , time_range=None):
         """
 
             Args:
@@ -50,7 +50,8 @@ class Boundary:
                time_range(Date[]): array contains the start and end of time range 
                 
         """
-
+        if time_range == None:
+            time_range=[]
         self.validate_bounds(lat_range , long_range , time_range)
         # Boundary information 
         self.lat_range = lat_range

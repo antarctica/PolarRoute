@@ -6,47 +6,19 @@ from abc import abstractmethod
 import xarray as xr
 import pandas as pd
 import numpy as np
+import logging
 
 class ScalarDataLoader(DataLoaderInterface):
     '''
-    Abstract class for all scalar Datasets
-
-    Methods:
-        __init__:
-            User defined. This is where large-scale operations are performed, 
-            e.g.
-                - params are set as object attributes
-                - self.data set
-                - self.data downsampled
-                - self.data reprojected
-                - self.data_name set
-                
-        import_data:
-            User defined. Must return either pd.DataFrame or xarray.Dataset
-            with lat, long, (time), data
-        get_datapoints:
-            Returns pd.DataFrame of datapoints within Boundary object
-        get_value:
-            Returns aggregated value of data within Boundary. 
-            Returns as dict {data_name: data_value}
-        get_hom_condition:
-            Retrieves homogeneity condition of dataset within boundary. This
-            defines how cellboxes are split in the mesh.
-        reproject:
-            Reprojects dataset from imported projection to desired projection
-            Default desired projection is mercator
-        downsample:
-            Bins data to be more sparse if input dataset too large to handle
-            Will use aggregation method defined in 'params' to bin data
-        get_data_col_name:
-            Returns label of data from column name in 'self.data'
-        set_data_col_name:
-            Changes column/data variable name in self.data to a user defined
-            string. 
+    Abstract class for all scalar Datasets. Has the following methods
     '''
     @abstractmethod
     def __init__(self, bounds, params, min_dp):
         '''
+        User defined. This is where large-scale operations are performed, 
+        such as importing data, downsampling, reprojecting, and renaming 
+        variables
+        
         Args:
             bounds (Boundary): 
                 Initial mesh boundary to limit scope of data ingest
@@ -56,16 +28,14 @@ class ScalarDataLoader(DataLoaderInterface):
             min_dp (int): 
                 Minimum datapoints required to get homogeneity condition
                 
-        User defines:
-            self.data = self.import_data(bounds)
-            self.data = self.downsample() [OPTIONAL]
-            self.data = self.reproject(   [OPTIONAL]
-                                in_proj= Current projection e.g. 'EPSG:3412',
-                                out_proj= Desired projection e.g. 'EPSG:4326',
-                                x_col= Name of position column 1 e.g. 'x',
-                                y_col= Name of position column 2 e.g. 'y'
-                                )
-            self.data_name = self.get_data_col_name() [OPTIONAL]
+        Attributes:
+            self.data (pd.DataFrame or xr.Dataset): 
+                Data stored by dataloader to use when called upon by the mesh.
+                Must be saved in mercator projection (EPSG:4326), with 
+                coordinates names 'lat', 'long', and 'time' (if applicable).
+            self.data_name (str): 
+                Name of scalar variable. Must be the column name if self.data
+                is pd.DataFrame. Must be variable if self.data is xr.Dataset
         '''
         pass
 
@@ -89,23 +59,84 @@ class ScalarDataLoader(DataLoaderInterface):
         '''
         pass
 
-    def get_datapoints(self, bounds):
+    def get_dp_from_coord(self, long=None, lat=None, return_coords=False):
+        '''
+        Extracts datapoint from self.data with lat and long specified in kwargs.
+        self.data can be pd.DataFrame or xr.Dataset. Will return multiple values
+        if one set of coordinates have multiple entries (e.g. time series data)
+        
+        Args:
+            long (float): Longitude coordinate to search for
+            lat (float) : Latitude coordinate to search for
+            
+        Returns:
+            pd.Series:  Column of data values with chosen lat/long. Could be many 
+                datapoints because either bad data or multiple time steps 
+        '''
+        def get_dp_from_coord_df(data, name, long, lat, return_coords):
+            '''
+            Extracts data from a pd.DataFrame
+            '''
+            # Mask off any positions not within spatial bounds
+            mask = (data['lat']  == lat)  & \
+                   (data['long'] == long) 
+                   
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = [name]
+            # Return column of data from within bounds
+            return data.loc[mask][columns]
+        
+        def get_dp_from_coord_xr(data, name, long, lat, return_coords):
+            '''
+            Extracts data from a xr.Dataset
+            '''
+            # Select data region within spatial bounds
+            data = data.sel(lat=lat, long=long)
+            # Cast as a pd.DataFrame
+            data = data.to_dataframe().reset_index()
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = [name]
+            # Return column of data from within bounds
+            return data[columns]
+        
+        # Ensure that lat and long provided
+        assert (lat is not None) and (long) is not None, \
+            'Must provide lat and long to this method!'
+            
+        # Choose which method to retrieve data based on input type
+        if hasattr(self, 'data_name'): data_name = self.data_name
+        else:                          data_name = self.get_data_col_name()
+        
+        logging.debug(f'- Retrieving datapoint from a {type(self.data)}')
+        if type(self.data) == type(pd.DataFrame()):
+            return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
+        elif type(self.data) == type(xr.Dataset()):
+            return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
+        
+        
+
+    def get_datapoints(self, bounds, return_coords=False):
         '''
         Extracts datapoints from self.data within boundary defined by 'bounds'.
         self.data can be pd.DataFrame or xr.Dataset
         
         Args:
             bounds (Boundary): Limits of lat/long/time to select data from
+            return_coords (boolean): 
+                Flag to determine if coordinates are provided for each 
+                datapoint found. Default is False.
+                            
             
         Returns:
             data (pd.Series): Column of data values within selected region 
         '''
-        def get_datapoints_from_df(data, name, bounds):
+        def get_datapoints_from_df(data, name, bounds, return_coords):
             '''
             Extracts data from a pd.DataFrame
             '''
             # Mask off any positions not within spatial bounds
-            # TODO Change <= to < after regression tests pass
             mask = (data['lat']  > bounds.get_lat_min())  & \
                    (data['lat']  <= bounds.get_lat_max())  & \
                    (data['long'] > bounds.get_long_min()) & \
@@ -114,14 +145,20 @@ class ScalarDataLoader(DataLoaderInterface):
             if 'time' in data.columns:
                 mask &= (data['time'] >= bounds.get_time_min()) & \
                         (data['time'] <= bounds.get_time_max())
+                        
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = [name]
+            
             # Return column of data from within bounds
-            return data.loc[mask][name]
+            return data.loc[mask][columns]
         
-        def get_datapoints_from_xr(data, name, bounds):
+        def get_datapoints_from_xr(data, name, bounds, return_coords):
             '''
             Extracts data from a xr.Dataset
             '''
             # Select data region within spatial bounds
+            # TODO make sure boundaries act same as df
             data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
             data = data.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
             # Select data region within temporal bounds if time exists as a coordinate
@@ -129,17 +166,23 @@ class ScalarDataLoader(DataLoaderInterface):
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
             # Cast as a pd.DataFrame
             data = data.to_dataframe().reset_index().dropna()
+            
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = [name]
+            
             # Return column of data from within bounds
-            return data[name]
+            return data[columns]
             
         # Choose which method to retrieve data based on input type
         if hasattr(self, 'data_name'): data_name = self.data_name
         else:                          data_name = self.get_data_col_name()
         
+        logging.debug(f'- Retrieving datapoint from a {type(self.data)}')
         if type(self.data) == type(pd.DataFrame()):
-            return get_datapoints_from_df(self.data, data_name, bounds)
+            return get_datapoints_from_df(self.data, data_name, bounds, return_coords)
         elif type(self.data) == type(xr.Dataset()):
-            return get_datapoints_from_xr(self.data, data_name, bounds)
+            return get_datapoints_from_xr(self.data, data_name, bounds, return_coords)
 
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
@@ -148,7 +191,7 @@ class ScalarDataLoader(DataLoaderInterface):
         Args:
             aggregation_type (str): Method of aggregation of datapoints within
                 bounds. Can be upper or lower case. 
-                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD'
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD', 'CLEAR'
             bounds (Boundary): Boundary object with limits of lat/long
             skipna (bool): Defines whether to propogate NaN's or not
                 Default = True (ignore's NaN's)
@@ -160,8 +203,10 @@ class ScalarDataLoader(DataLoaderInterface):
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
-        # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds).dropna().sort_values()
+        # Limit data series to just the data, excluding coords/index
+        dps = self.get_datapoints(bounds)[self.data_name]
+        dps = dps.dropna().sort_values()
+        logging.debug(f"- {len(dps)} datapoints found within bounds")
         # If no data
         if len(dps) == 0:
             return {self.data_name: np.nan}
@@ -180,7 +225,7 @@ class ScalarDataLoader(DataLoaderInterface):
             return {self.data_name: len(dps)}
         # If aggregation_type not available
         else:
-            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
+            raise ValueError(f'Unknown aggregation type {agg_type}')
 
     def get_hom_condition(self, bounds, splitting_conds):
         '''
@@ -202,18 +247,18 @@ class ScalarDataLoader(DataLoaderInterface):
         Returns:
             hom_condition (string): The homogeniety condtion of this CellBox by 
                 given parameters hom_condition is of the form -
-            CLR = the proportion of data points within this cellbox over a given
-                threshold is lower than the lowerbound
-            HOM = the proportion of data points within this cellbox over a given
-                threshold is higher than the upperbound
-            MIN = the cellbox contains less than a minimum number of data points
-
-            HET = the proportion of data points within this cellbox over a given
-                threshold if between the upper and lower bound
+                CLR = the proportion of data points within this cellbox over a 
+                given threshold is lower than the lowerbound
+                HOM = the proportion of data points within this cellbox over a
+                given threshold is higher than the upperbound
+                MIN = the cellbox contains less than a minimum number of 
+                data points
+                HET = the proportion of data points within this cellbox over a
+                given threshold if between the upper and lower bound
         '''
         # Retrieve datapoints to analyse
-        dps = self.get_datapoints(bounds)
-        
+        dps = self.get_datapoints(bounds)[self.data_name]
+        logging.debug(f"- {len(dps)} datapoints found within bounds")
         # If not enough datapoints
         if len(dps) < self.min_dp: return 'MIN'
         # Otherwise, extract the homogeneity condition
@@ -221,7 +266,7 @@ class ScalarDataLoader(DataLoaderInterface):
         # Calculate fraction over threshold
         num_over_threshold = dps[dps > splitting_conds['threshold']]
         frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
-
+        
         # Return homogeneity condition
         if   frac_over_threshold <= splitting_conds['lower_bound']: return 'CLR'
         elif frac_over_threshold >= splitting_conds['upper_bound']: return 'HOM'
@@ -277,22 +322,35 @@ class ScalarDataLoader(DataLoaderInterface):
         
         # If no reprojection to do
         if in_proj == out_proj:
+            logging.debug("- self.reproject() called but don't need to")
             return self.data
+        else:
+            logging.info(f"- Reprojecting data from {in_proj} to {out_proj}")
         # Choose appropriate method of reprojection based on data type
-        elif type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == type(pd.DataFrame()):
             return reproject_df(self.data, in_proj, out_proj, x_col, y_col)
         elif type(self.data) == type(xr.Dataset()):
             return reproject_xr(self.data, in_proj, out_proj, x_col, y_col)
     
     def downsample(self, agg_type=None):
         '''
-        Downsamples imported data to be more easily manipulated
+        Downsamples imported data to be more easily manipulated. Data size 
+        should be reduced by a factor of m*n, where (m,n) are the 
+        downsample_factors defined in the params.        
         self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            agg_type (str): 
+                Method of aggregation to bin data by to downsample. Default is
+                same method used for homogeneity condition.            
 
         Returns:
             data (xr.Dataset or pd.DataFrame): 
-                Dataset downsampled by factors defined in params, 
-                and binned via aggregation method defined in params
+                Downsampled data
+                
+        Todo:
+            Fix downsampling to work with aggregation type as intended. Right now 
+            it just takes every m'th and n'th datapoint in each coord axis
         '''
         def downsample_xr(data, ds, agg):
             '''
@@ -329,19 +387,28 @@ class ScalarDataLoader(DataLoaderInterface):
         
         # If no downsampling
         if self.downsample_factors == (1,1):
+            logging.debug("- self.downsample() called but don't have to")
             return self.data
+        else:
+            logging.info(f"- Downsampling data by {self.downsample_factors}")
         # Otherwise, downsample appropriately
-        elif type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == type(pd.DataFrame()):
             return downsample_df(self.data, self.downsample_factors, agg_type)
         elif type(self.data) == type(xr.Dataset()):
             return downsample_xr(self.data, self.downsample_factors, agg_type)
         
     def get_data_col_name(self):
         '''
-        Retrieve name of data column
+        Retrieve name of data column (for pd.DataFrame), or variable 
+        (for xr.Dataset). Used for when data_name not defined in params.
 
         Returns:
             data_name (str): Name of data column
+            
+        Raises:
+            ValueError: 
+                If multiple possible data columns found, can't retrieve data 
+                name
         '''
         def get_data_name_from_df(data):
             '''
@@ -352,8 +419,13 @@ class ScalarDataLoader(DataLoaderInterface):
             # Filter out lat, long, time columns leaves us with data column name
             filtered_cols = filter(lambda col: \
                                     col not in ['lat','long','time'], columns)
-            data_name = list(filtered_cols)[0]
-            return data_name
+            name = list(filtered_cols)
+            if len(name) != 1:
+                raise ValueError(
+                f'More than 1 data column detected, cannot retrieve data \
+                    name! Found columns: {",".join(name)}'
+                                 )
+            return name[0]
         
         def get_data_name_from_xr(data):
             '''
@@ -362,9 +434,14 @@ class ScalarDataLoader(DataLoaderInterface):
             # Extract data variables from xr.Dataset
             name = list(data.keys())
             # Ensure there's only 1 data column to read name from
-            assert len(name) == 1, \
-                'More than 1 data column detected, cannot retrieve data name!'
+            if len(name) != 1:
+                raise ValueError(
+                f'More than 1 data column detected, cannot retrieve data \
+                    name! Found columns: {",".join(name)}'
+                                 )
             return name[0]
+        
+        logging.info(f"- Retrieving data name from {type(self.data)}")
         # Choose method of extraction based on data type
         if type(self.data) == type(pd.DataFrame()):
             return get_data_name_from_df(self.data)
@@ -395,8 +472,10 @@ class ScalarDataLoader(DataLoaderInterface):
             # Rename data variable to new name
             return data.rename({old_name: new_name})
         
+        old_name = self.get_data_col_name()
+        logging.info(f"- Changing data name from {old_name} to {new_name}")
         # Change data name depending on data type
         if type(self.data) == type(pd.DataFrame()):
-            return set_name_df(self.data, self.get_data_col_name(), new_name)
+            return set_name_df(self.data, old_name, new_name)
         elif type(self.data) == type(xr.Dataset()):
-            return set_name_xr(self.data, self.get_data_col_name(), new_name)
+            return set_name_xr(self.data, old_name, new_name)

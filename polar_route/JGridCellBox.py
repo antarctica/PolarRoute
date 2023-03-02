@@ -4,7 +4,7 @@ from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
 from polar_route.Boundary import Boundary
-from polar_route.AggregatedJGridCellBox import AggregatedJGridCellBox
+from polar_route.JGridAggregatedCellBox import JGridAggregatedCellBox
 from polar_route.cellbox import CellBox
 
 class JGridCellBox (CellBox):
@@ -67,6 +67,7 @@ class JGridCellBox (CellBox):
         # create focus for split boxes.
             split_box.set_focus(self.get_focus().copy())
             split_box.add_to_focus(split_boxes.index(split_box))
+            
         return split_boxes
 
 #TODO: figure out the difference between this and cellbox aggregate??? use of Land_loader?
@@ -79,6 +80,7 @@ class JGridCellBox (CellBox):
         agg_dict = {}
         for source in self.get_data_source():
             loader = source.get_data_loader()
+           
            
             data_name = loader.data_name
             parent = self.get_parent()
@@ -97,12 +99,10 @@ class JGridCellBox (CellBox):
              
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
-        agg_cellbox = AggregatedJGridCellBox (self.bounds , agg_dict , self.get_id())
+        agg_cellbox = JGridAggregatedCellBox (self.bounds , agg_dict , self.get_id())
         agg_cellbox.set_node_string(self.node_string())
 
         return agg_cellbox 
-
-
  
 
 def set_grid_coord(self, xpos, ypos):

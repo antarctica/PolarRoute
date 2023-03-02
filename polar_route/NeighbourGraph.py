@@ -5,7 +5,7 @@
 from polar_route.Direction import Direction
 class NeighbourGraph:
     """
-    A NeighbourGraph is a class that defines the  graphical representation of the adjacency \n relationship between CellBoxes in the Mesh.
+    A NeighbourGraph is a class that defines the  graphical representation of the adjacency \n relationship between CellBoxes in the Mesh.\n
 
 
     Attributes:
@@ -102,11 +102,12 @@ class NeighbourGraph:
     def update_neighbours(self,cellbox_indx, new_neighbours_indx, direction, cellboxes):
         '''
             method that updates the neighbour of a certain cellbox in a specific direction. It removes cellbox_indx from the neighbour_map of its neighbours in a specific direction and add new_neighbour_indx
+            
             Args: 
-            cellbox_index (int): index of the cellbox that its neighbour will be updated
-            new_neighbour_indx (int): the index of the new neighbour that will replace cellbox_index
-            direction (int): an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)
-            cellboxes(list<CellBox>): the list that contains all the cellboxes of the mesh
+                cellbox_index (int): index of the cellbox that its neighbour will be updated
+                new_neighbour_indx (int): the index of the new neighbour that will replace cellbox_index
+                direction (int): an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)
+                cellboxes(list<CellBox>): the list that contains all the cellboxes of the mesh
 
         '''
 
@@ -235,6 +236,10 @@ class NeighbourGraph:
 
 
     def initialise_map (self, cellbox_indx , grid_width , cellboxes_length):
+            """
+                initialse the neighbour map of a cellbox with the given cellbox_index
+            """
+            
             neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
 
             # add east neighbours to neighbour graph

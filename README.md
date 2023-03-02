@@ -11,7 +11,7 @@
 > PolarRoute is a long-distance maritime polar route planning, taking into account complex changing environmental conditions. The codebase allows the construction of optimised routes through three main stages: discrete modelling of the environmental conditions using a non-uniform mesh, the construction of mesh-optimal paths, and physics informed path smoothing. In order to account for different vehicle properties we construct a series of data driven functions that can be applied to the environmental mesh to determine the speed limitations and fuel requirements for a given vessel and mesh cell, representing these quantities graphically and geospatially.
 
 ## Installation
-The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running the required wheels for GDAL and FIONA. MOre information can be found in the manual pages linked above. Once these requirements are met then the software can be installed by:
+The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running the required wheels for GDAL and FIONA. More information can be found in the manual pages linked above. Once these requirements are met then the software can be installed by:
 
 Github:
 ```
@@ -28,8 +28,23 @@ Polar-route has been built to work with a variety of open-source climactic data 
 A list of supported data sources and there associated data-loaders is given in the 
 'Data Loaders' section of the manual
 
+## Documentation
+Sphinx is used to generate documentation for this project. The dependancies can be installed through pip:
+```
+pip install sphinx sphinx_markdown_builder sphinx_rtd_theme rinohtype
+```
+
+When updating the docs, run the following command within the PolarRoute directory to recompile.
+```
+sphinx-build -b html ./docs/source ./docs/build
+```
+
+Sometimes the cache needs to be cleared for internal links to update. If facing this problem, run this from the PolarRoute directory.
+```
+rm -r docs/build/.doctrees/
+```
 ## Developers
-Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
+Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox, Harrison Abbot, Ayat Fekry
 
 ## License
 This software is licensed under a MIT license. For more information please see the attached ``LICENSE`` file.
