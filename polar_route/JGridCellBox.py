@@ -4,7 +4,7 @@ from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
 from polar_route.Boundary import Boundary
-from PolarRoute.polar_route.JGridAggregatedCellBox import JGridAggregatedCellBox
+from polar_route.JGridAggregatedCellBox import JGridAggregatedCellBox
 from polar_route.cellbox import CellBox
 
 class JGridCellBox (CellBox):
