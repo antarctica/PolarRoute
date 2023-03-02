@@ -176,6 +176,9 @@ class RoutePlanner:
         self.source_waypoints = list(source_waypoints_df['Name'])
         self.end_waypoints    = list(des_waypoints_df['Name'])
 
+        # Case indices
+        self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
+
         # Creating a blank path construct
         self.paths          = None
         self.smoothed_paths = None
@@ -310,6 +313,8 @@ class RoutePlanner:
         paths = []
         wpts_s = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(start_waypoints)]
         wpts_e = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(end_waypoints)]
+
+
         for _, wpt_a in wpts_s.iterrows():
             wpt_a_name  = wpt_a['Name']
             wpt_a_index = int(wpt_a['index'])
@@ -337,35 +342,59 @@ class RoutePlanner:
                         path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]])
                         path['properties']['CellIndices'] = path_indices.tolist()
 
+                        cases = []
+
+                        # Determine cases for cell pairs along the path
+                        for idx in range(len(cellIndices) -1):
+                            cellStart = graph.loc[cellIndices[idx]]
+                            cellEnd = graph.loc[cellIndices[idx+1]]
+                            case = cellStart['case'][np.where(np.array(cellStart['neighbourIndex']) == cellEnd.name)[0][0]]
+                            cases+=[case]
+
+                        start_case = cases[0]
+                        end_case = cases[-1]
+
+                        # Full list of cases for each leg (centre to crossing point and crossing point to centre)
+                        path_cases = list(np.repeat(cases, 2))
+
                         # Applying in-cell correction for travel-time
                         cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
                                                       neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents)
+                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents,
+                                                      case=start_case)
                         tt_start = cost_func.waypoint_correction(path_points[0, :], path_points[1, :])
                         cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[-1]],
                                                       neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents)
+                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents,
+                                                      case=end_case)
+
                         tt_end = cost_func.waypoint_correction(path_points[-1, :], path_points[-2, :])
                         path['properties']['traveltime']     = np.array(graph['path_traveltime'].loc[wpt_b_index])
                         path['properties']['traveltime']     = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
                         path['properties']['traveltime'][-1] = (path['properties']['traveltime'][-2] + tt_end)
+                        path['properties']['cases'] = [int(p) for p in path_cases]
 
                         for vrbl in self.config['path_variables']:
                             if vrbl == 'traveltime':
                                 continue
-                            path['properties'][vrbl] = np.cumsum(np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]*self.dijkstra_info[wpt_a_name].loc[path_indices,'{}'.format(vrbl)].to_numpy()).tolist()
+                            traveltime_diff = np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]
+                            variable_vals = graph.loc[path_indices, '{}'.format(vrbl)]
+                            case_vals = pd.Series(data=[v[np.where(self.indx_type==path_cases[i])[0][0]] for i, v in enumerate(variable_vals)],
+                                                  index=variable_vals.index)
+                            variable_diff = traveltime_diff*case_vals
+                            path['properties'][vrbl] = np.cumsum(variable_diff.to_numpy()).tolist()
                         path['properties']['traveltime'] = path['properties']['traveltime'].tolist()
                         paths.append(path)
 
                     except:
-                        logging.warning('{} to {} - Failured to construct path direct in the dijkstra information'.format(wpt_a_name,wpt_b_name))
+                        logging.warning('{} to {} - Failed to construct path direct in the dijkstra information'.format(wpt_a_name,wpt_b_name))
 
         geojson['features'] = paths
         return geojson
 
 
 
-    def _objective_value(self, variable, source_graph, neighbour_graph, traveltime,case):
+    def _objective_value(self, variable, source_graph, neighbour_graph, traveltime, case):
         """
             Hidden variable. Returns the objective value between two cellboxes.
         """
@@ -373,9 +402,8 @@ class RoutePlanner:
             objs = np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
             return objs
         else:
-            if type('{}'.format(variable)) == list and len(source_graph['{}'.format(variable)]) != 1:
-                indx_type = np.array([1,2,3,4,-1,-2,-3,-4])
-                idx = np.where(indx_type==case)[0][0]
+            if type(source_graph['{}'.format(variable)]) == list and len(source_graph['{}'.format(variable)]) != 1:
+                idx = np.where(self.indx_type==case)[0][0]
                 objs = np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx],source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx] + traveltime[1]*neighbour_graph['{}'.format(variable)][idx]])
                 return objs
             else:
@@ -384,7 +412,7 @@ class RoutePlanner:
 
     def _neighbour_cost(self, wpt_name, minimum_objective_index):
         """
-            Determines the neighbour cost from a source cellbox to all of its neighbouts.
+            Determines the neighbour cost from a source cellbox to all of its neighbours.
             These are then used to update the edge values in the dijkstra graph.
         """
         # Determining the nearest neighbour index for the cell
@@ -468,7 +496,7 @@ class RoutePlanner:
             self.dijkstra_info[wpt] = copy.copy(self.neighbour_graph)
 
         # 
-        logging.info('============= Dijkstr Path Creation ============')
+        logging.info('============= Dijkstra Path Creation ============')
         logging.info(' - Objective = {} '.format(self.config['objective_function']))
 
         for wpt in self.source_waypoints:

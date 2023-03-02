@@ -295,9 +295,9 @@ class VesselPerformance:
                         self.mesh_df.loc[idx, 'ice resistance'] = rp
         else:
             logging.info("No resistance data available, no speed adjustment necessary")
-        if 'wind resistance' in self.mesh_df:
-            logging.debug("Creating speed array")
-            self.mesh_df['speed'] = self.mesh_df.apply(lambda r: [r['speed'] for x in r['wind resistance']], axis=1)
+
+        logging.debug("Creating speed array")
+        self.mesh_df['speed'] = self.mesh_df.apply(lambda r: [r['speed'] for x in range(8)], axis=1)
 
     def speed_simple(self):
         """
@@ -332,13 +332,11 @@ class VesselPerformance:
                                                                   for i, r in enumerate(row['wind resistance'])], axis=1)
         elif 'ice resistance' in self.mesh_df:
             logging.debug("Determining fuel requirements using ice resistance")
-            self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
-                                    self.mesh_df['speed'] + 0.25290433
-                                    + 7.75218178e-11 * self.mesh_df['ice resistance'] ** 2
-                                    + 6.48113363e-06 * self.mesh_df['ice resistance']) * 24.0
+            self.mesh_df['fuel'] = self.mesh_df.apply(lambda row: [self.fuel_eq(row['speed'][i], row['ice resistance'])
+                                                                   for i, r in enumerate(range(8))], axis=1)
         else:
-            self.mesh_df['fuel'] = (0.00137247 * self.mesh_df['speed'] ** 2 - 0.0029601 *
-                                    self.mesh_df['speed'] + 0.25290433) * 24.0
+            self.mesh_df['fuel'] = self.mesh_df.apply(lambda row: [self.fuel_eq(row['speed'][i], r)
+                                                                   for i, r in enumerate([0,0,0,0,0,0,0,0])], axis=1)
 
     def remove_nodes(self, neighbour_graph, inaccessible_nodes):
         """
