@@ -53,11 +53,15 @@ class NewtonianDistance:
         self.source_graph     = source_graph
         self.neighbour_graph  = neighbour_graph
 
+        # Case indices
+        self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
+
         # Inside the code the base units are m/s. Changing the units of the inputs to match
+        indx = np.where(self.indx_type==case)[0][0]
         self.unit_shipspeed  = unit_shipspeed
         self.unit_time       = unit_time
-        self.source_speed    = self._unit_speed(self.source_graph['speed'])
-        self.neighbour_speed = self._unit_speed(self.neighbour_graph['speed'])
+        self.source_speed    = self._unit_speed(self.source_graph['speed'][indx])
+        self.neighbour_speed = self._unit_speed(self.neighbour_graph['speed'][indx])
         self.case            = case
 
         if zerocurrents:
@@ -371,7 +375,7 @@ class NewtonianDistance:
 
 
 
-        # Given the determine the postive and negative position relative to centre
+        # Given the case determine the postive and negative position relative to centre
         if self.case==1:
             ptvX = 1.0
             ptvY = 1.0
@@ -500,6 +504,9 @@ class NewtonianCurve:
         # Information for distance metrics
         self.R              = 6371.*1000
 
+        # Case indices
+        self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
+
         # Optimisation Information
         self.maxiter       = maxiter
         self.minimumDiff   = minimumDiff
@@ -587,17 +594,56 @@ class NewtonianCurve:
             traveltime = np.inf
         return self._unit_time(traveltime), dist
 
+
+    def _case_from_angle(self,start,end):
+        """
+            Determine the direction of travel between two points in the same cell and return the associated case
+
+            Args:
+                start (list): the coordinates of the start point within the cell
+                end (list):  the coordinates of the end point within the cell
+
+            Returns:
+                case (int): the case to use to select variable values from a list
+        """
+
+        direct_vec = [end[0]-start[0], end[1]-start[1]]
+        direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
+
+        case = None
+
+        if -22.5 <= direct_ang < 22.5:
+            case = -4
+        elif 22.5 <= direct_ang < 67.5:
+            case = 1
+        elif 67.5 <= direct_ang < 112.5:
+            case = 2
+        elif 112.5 <= direct_ang < 157.5:
+            case = 3
+        elif 157.5 <= abs(direct_ang) <= 180:
+            case = 4
+        elif -67.5 <= direct_ang < -22.5:
+            case = -3
+        elif -112.5 <= direct_ang < -67.5:
+            case = -2
+        elif -157.5 <= direct_ang < -112.5:
+            case = -1
+
+        return case
+
+
     def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
         '''
-            Determine within cell parmeters for a source and end point on the edge
+            Determine within cell parameters for a source and end point on the edge
         '''
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
         x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*m_lat
+        case = self._case_from_angle(Cp,Wp)
         Su  = source_graph['Vector_x']*self.zc
         Sv  = source_graph['Vector_y']*self.zc
-        Ssp = self._unit_speed(source_graph['speed'])
+        Ssp = self._unit_speed(source_graph['speed'][case])
         traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
 
 
@@ -612,14 +658,16 @@ class NewtonianCurve:
             else:
                 if var in source_graph.keys():
                     # Determining the objective value information
-                    objective_rate_value = source_graph[var]
-                    # -- Correction needed for when there is case dependent values
-                    if path_requested_variables[var]['processing']==None:
+                    if type(source_graph[var]) == list:
+                        objective_rate_value = source_graph[var][case]
+                    else:
+                        objective_rate_value = source_graph[var]
+                    if path_requested_variables[var]['processing'] is None:
                         segment_values[var] = objective_rate_value
                     else:
                         segment_values[var] = traveltime*objective_rate_value
 
-        return segment_values
+        return segment_values, case
 
     def objective_function(self,Points):
         '''
@@ -633,7 +681,7 @@ class NewtonianCurve:
                                    'cell_index':{'processing':None},
                                    'speed':{'processing':None},
                                    'fuel':{'processing':'cumsum'}}
-        path_requested_variables = {}#self.config['Route_Info']['path_variables']
+        path_requested_variables = {} #self.config['Route_Info']['path_variables']
         path_requested_variables.update(required_path_variables)
 
 
@@ -648,17 +696,20 @@ class NewtonianCurve:
         # Looping over the path and determining the variable information
         for ii in range(len(Points)-1):
 
-            # Determining the cellbox to determinine path values from
+            # Determining the cellbox to determine path values from
             cellbox = Points.iloc[ii]['cellEnd']
             Wp = Points.iloc[ii][['cx','cy']].to_numpy()
             Cp = Points.iloc[ii+1][['cx','cy']].to_numpy()
             
-            # Determining the value for the variable for the segment of the path
-            segment_variable = self._waypoint_correction(path_requested_variables,cellbox,Wp,Cp)
+            # Determining the value for the variable for the segment of the path and the corresponding case
+            segment_variable, segment_case = self._waypoint_correction(path_requested_variables,cellbox,Wp,Cp)
 
             # Adding that value for the segment along the paths
             for var in segment_variable:
-                variables[var]['path_values'][ii+1] = segment_variable[var]
+                if type(segment_variable[var]) == list:
+                    variables[var]['path_values'][ii+1] = segment_variable[var][segment_case]
+                else:
+                    variables[var]['path_values'][ii+1] = segment_variable[var]
 
 
         # Applying processing to all path values
@@ -786,7 +837,7 @@ class NewtonianCurve:
 
     def _lat_case(self):
         '''
-            Latitutde based smoothing
+            Latitude based smoothing
         '''
         def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
                 tryNum=1
@@ -1363,7 +1414,7 @@ class NewtonianCurve:
     def _crossing_point_optimisation(self):
         self._corner_created = False
 
-        # ------ Case Deginitions & Dealing
+        # ------ Case Definitions & Dealing
         if self.debugging:
             print('===========================================================')
         if abs(self.triplet.iloc[1].case)==2:
@@ -1377,9 +1428,13 @@ class NewtonianCurve:
 
     def _updateCrossingPoint(self,iter):
 
-        self.org_points = copy.deepcopy(self.triplet) 
-        self.speed_s = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellStart']['speed']))
-        self.speed_e = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellEnd']['speed']))
+        self.org_points = copy.deepcopy(self.triplet)
+
+        case = self.triplet.iloc[1].case
+        indx = np.where(self.indx_type==case)[0][0]
+
+        self.speed_s = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellStart']['speed'][indx]))
+        self.speed_e = self._unit_speed(copy.copy(self.triplet.iloc[1]['cellEnd']['speed'][indx]))
 
         # --- Updating the crossing point
         self._crossing_point_optimisation()
