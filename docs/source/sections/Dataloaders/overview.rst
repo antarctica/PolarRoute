@@ -28,6 +28,14 @@ however this can be whatever the user needs, so long as they are cast into eithe
 :code:`pandas.DataFrame`'s or :code:`xarray.Dataset`'s for the 
 `Abstract Dataloaders`_ to work with.
 
+.. figure:: ../Figures/DataloaderUML.png
+   :align: center
+   :width: 700
+
+   *UML Diagram detailing the dataloader subsystem*
+
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Implementing New Dataloaders
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
