@@ -172,7 +172,7 @@ class ScalarDataLoader(DataLoaderInterface):
             else:             columns = [name]
             
             # Return column of data from within bounds
-            return data.loc[columns]
+            return data[columns]
             
         # Choose which method to retrieve data based on input type
         if hasattr(self, 'data_name'): data_name = self.data_name
@@ -257,7 +257,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 given threshold if between the upper and lower bound
         '''
         # Retrieve datapoints to analyse
-        dps = self.get_datapoints(bounds)
+        dps = self.get_datapoints(bounds)[self.data_name]
         logging.debug(f"- {len(dps)} datapoints found within bounds")
         # If not enough datapoints
         if len(dps) < self.min_dp: return 'MIN'
@@ -266,7 +266,7 @@ class ScalarDataLoader(DataLoaderInterface):
         # Calculate fraction over threshold
         num_over_threshold = dps[dps > splitting_conds['threshold']]
         frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
-
+        
         # Return homogeneity condition
         if   frac_over_threshold <= splitting_conds['lower_bound']: return 'CLR'
         elif frac_over_threshold >= splitting_conds['upper_bound']: return 'HOM'
@@ -423,7 +423,7 @@ class ScalarDataLoader(DataLoaderInterface):
             if len(name) != 1:
                 raise ValueError(
                 f'More than 1 data column detected, cannot retrieve data \
-                    name! Found columns: {name.join(", ")}'
+                    name! Found columns: {",".join(name)}'
                                  )
             return name[0]
         
@@ -437,7 +437,7 @@ class ScalarDataLoader(DataLoaderInterface):
             if len(name) != 1:
                 raise ValueError(
                 f'More than 1 data column detected, cannot retrieve data \
-                    name! Found columns: {name.join(", ")}'
+                    name! Found columns: {",".join(name)}'
                                  )
             return name[0]
         

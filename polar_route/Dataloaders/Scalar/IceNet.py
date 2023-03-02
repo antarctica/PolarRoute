@@ -73,7 +73,7 @@ class IceNetDataLoader(ScalarDataLoader):
         # rather than date on which prediction made
         df.time = df.time + to_timedelta(df.leadtime, unit='d')
         # Remove unwanted columns
-        df = df.drop(columns=['yc','xc','leadtime', 'Lambert_Azimuthal_Grid'])
+        df = df.drop(columns=['yc','xc','leadtime', 'Lambert_Azimuthal_Grid', 'sic_stddev'])
         # Remove rows outside of spatial boundary
         mask = (df['lat']  >  bounds.get_lat_min())  & \
                (df['lat']  <= bounds.get_lat_max())  & \
