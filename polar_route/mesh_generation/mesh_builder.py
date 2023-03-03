@@ -5,7 +5,7 @@ In this section we will discuss the usage of the MeshBuilder functionality of Po
 Example:
     An example of how to run this code can be executed by running the following in an ipython/Jupyter Notebook::\n
 
-        from polar_route import MeshBuilder
+        from polar_route.mesh_generation.mesh_builder import MeshBuilder
 
         import json
         with open('./config.json', 'r') as f:
@@ -20,14 +20,14 @@ import logging
 import math
 import json
 import numpy as np
-from polar_route.JGridCellBox import JGridCellBox
-from polar_route.Boundary import Boundary
-from polar_route.cellbox import CellBox
-from polar_route.Direction import Direction
-from polar_route.EnvironmentMesh import EnvironmentMesh
-from polar_route.Metadata import Metadata
-from polar_route.NeighbourGraph import NeighbourGraph
-from polar_route.mesh import Mesh
+from polar_route.mesh_generation.jgrid_cellbox import JGridCellBox
+from polar_route.mesh_generation.boundary import Boundary
+from polar_route.mesh_generation.cellbox import CellBox
+from polar_route.mesh_generation.direction import Direction
+from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from polar_route.mesh_generation.metadata import Metadata
+from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
+from polar_route.mesh_generation.mesh import Mesh
 from polar_route.Dataloaders.Factory import DataLoaderFactory
 
 
@@ -85,16 +85,17 @@ class MeshBuilder:
         self.validate_bounds(bounds, cell_width, cell_height)
 
         logging.info("Initialising mesh...")
+        logging.info("Initialising cellboxes...")
+     
 
-        logging.debug("Initialise cellBoxes...")
+        logging.debug("Initialising cellBoxes...")
         cellboxes = []
         cellboxes = self.initialize_cellboxes(bounds, cell_width, cell_height)
 
         grid_width = (bounds.get_long_max() -
                       bounds.get_long_min()) / cell_width
 
-        logging.debug("Initialise neighbours graph...")
-        self.neighbour_graph = NeighbourGraph(cellboxes, grid_width)
+  
 
         min_datapoints = 5
         if 'splitting' in self.config['Mesh_info']:
@@ -102,11 +103,16 @@ class MeshBuilder:
         meta_data_list = self.initialize_meta_data(bounds, min_datapoints)
 
         # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
+        logging.info("Assigning data source to cellboxes...")
         for cellbox in cellboxes:
             if isinstance(cellbox, CellBox):
                 cellbox.set_minimum_datapoints(min_datapoints)
                 # assign meta data to each cellbox
                 cellbox.set_data_source(meta_data_list)
+
+        
+        logging.info("Initialise neighbours graph...")
+        self.neighbour_graph = NeighbourGraph(cellboxes, grid_width)
 
         max_split_depth = 0
         if 'splitting' in self.config['Mesh_info']:
@@ -121,7 +127,6 @@ class MeshBuilder:
         if 'Data_sources' in self.config['Mesh_info'].keys():
             for data_source in self.config['Mesh_info']['Data_sources']:
                 loader_name = data_source['loader']
-                print("creating data loader {}".format(data_source['loader']))
                 loader = DataLoaderFactory().get_dataloader(
                     loader_name, bounds, data_source['params'], min_datapoints)
 
@@ -392,6 +397,7 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
+        logging.info ("splitting cellboxes ...")
         # loop over the data_sources then cellboxes to implement depth-first splitting. should be simpler and loop over cellboxes only once we switch to breadth-first splitting
         # this impl assumws all the cellboxes have the same data sources. should not be the caase once we switch to breadth-first splitting.
         data_sources = self.mesh.cellboxes[0].get_data_source()

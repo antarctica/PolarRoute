@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import json
 
-from polar_route.cellbox import CellBox
+from polar_route.mesh_generation.cellbox import CellBox
 
 
 class Mesh:

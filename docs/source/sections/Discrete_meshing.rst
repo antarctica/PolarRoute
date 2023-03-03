@@ -49,43 +49,43 @@ This section describes the main classes of the Mesh Construction module in detai
 
 CellBox
 ***************
-.. automodule:: polar_route.cellbox
+.. automodule:: polar_route.mesh_generation.cellbox
 
-.. autoclass:: polar_route.cellbox.CellBox
+.. autoclass:: polar_route.mesh_generation.cellbox.CellBox
    :special-members: __init__
    :members:  set_data_source, should_split, split, set_parent, aggregate
 
 MetaData
 ***********
 
-.. automodule:: polar_route.Metadata
+.. automodule:: polar_route.mesh_generation.metadata
 
-.. autoclass:: polar_route.Metadata.Metadata
+.. autoclass:: polar_route.mesh_generation.metadata.Metadata
    :special-members: __init__
   
 
 MeshBuilder
 ************
 
-.. automodule:: polar_route.MeshBuilder
+.. automodule:: polar_route.mesh_generation.mesh_builder
 
-.. autoclass:: polar_route.MeshBuilder.MeshBuilder
+.. autoclass:: polar_route.mesh_generation.mesh_builder.MeshBuilder
    :special-members: __init__  
    :members: build_environmental_mesh , split_and_replace, split_to_depth
 
 AggregatedCellBox
 ******************
-.. automodule:: polar_route.AggregatedCellBox
+.. automodule:: polar_route.mesh_generation.aggregated_cellBox
 
-.. autoclass:: polar_route.AggregatedCellBox.AggregatedCellBox
+.. autoclass:: polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox
    :special-members: __init__
    :members:  contains_point, to_json
 
 EnvironmentMesh
 ****************
-.. automodule:: polar_route.EnvironmentMesh
+.. automodule:: polar_route.mesh_generation.environment_mesh
 
-.. autoclass:: polar_route.EnvironmentMesh.EnvironmentMesh
+.. autoclass:: polar_route.mesh_generation.environment_mesh.EnvironmentMesh
    :special-members: __init__  
    :members: load_from_json, update_cellbox , to_json, save
 
@@ -93,7 +93,7 @@ EnvironmentMesh
 NeighbourGraph
 ***************
 
-.. automodule:: polar_route.NeighbourGraph
+.. automodule:: polar_route.mesh_generation.neighbour_graph
 
-.. autoclass:: polar_route.NeighbourGraph.NeighbourGraph
+.. autoclass:: polar_route.mesh_generation.neighbour_graph.NeighbourGraph
    :members: initialise_neighbour_graph, get_neighbour_case, update_neighbours

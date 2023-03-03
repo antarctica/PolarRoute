@@ -1,15 +1,14 @@
 """
-
 Outlined in this section we will discuss the usage of the CellBox functionality of the PolarRoute package. 
 In this series of class distributions we house our discrete representation of input data. In each CellBox,
- we represent a way of accessing the information governing our numerical world, 
- this includes and is not limited to: Ocean Currents, Sea Ice Concentration and Bathymetric depth.\n
+we represent a way of accessing the information governing our numerical world, 
+this includes and is not limited to: Ocean Currents, Sea Ice Concentration and Bathymetric depth.\n
 
 
     Example:\n
     An example of running this code can be executed by running the following in a ipython/Jupyter Notebook:: \n
 
-            from polar_route import cellbox \n
+            from polar_route.mesh_generation.cellbox import cellbox \n
             .... \n
 
     Note:\n
@@ -20,8 +19,8 @@ In this series of class distributions we house our discrete representation of in
 
 
 import numpy as np
-from polar_route.Boundary import Boundary
-from polar_route.AggregatedCellBox import AggregatedCellBox
+from polar_route.mesh_generation.boundary import Boundary
+from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
 
 
 class CellBox:
@@ -29,7 +28,7 @@ class CellBox:
     A CellBox represnts a geo-spatial/temporal boundary that enables projecting to information within. 
     Information about any given value of a CellBox is calculated from aggregating all data points of within those bounds. 
     CellBoxes may  be split into smaller CellBoxes and the data points within distributed  between the newly created
-      CellBoxes so as to construct a non-uniform mesh of CellBoxes, such as within a Mesh.\n
+    CellBoxes so as to construct a non-uniform mesh of CellBoxes, such as within a Mesh.\n
 
     Attributes:
         Bounds (Boundary): object that contains the latitude and logtitute range and the time range \n

@@ -2,7 +2,7 @@
 
 
 
-from polar_route.Direction import Direction
+from polar_route.mesh_generation.direction import Direction
 class NeighbourGraph:
     """
     A NeighbourGraph is a class that defines the  graphical representation of the adjacency relationship between CellBoxes in the Mesh.\n

@@ -1,9 +1,9 @@
 
 import json
-from polar_route.JGridAggregatedCellBox import JGridAggregatedCellBox
-from polar_route.Boundary import Boundary
-from polar_route.AggregatedCellBox import AggregatedCellBox
-from polar_route.NeighbourGraph import NeighbourGraph
+from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
+from polar_route.mesh_generation.boundary import Boundary
+from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
+from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
 
 class EnvironmentMesh:
@@ -183,6 +183,7 @@ class EnvironmentMesh:
 
     def save(self, path):
 
+        logging.info(f"- saving the environment mesh to {path}")
         with open(path, 'w') as f:
             json.dump(self.to_json(), f)
             if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):

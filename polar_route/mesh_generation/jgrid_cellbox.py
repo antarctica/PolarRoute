@@ -1,7 +1,7 @@
 
-from polar_route.Boundary import Boundary
-from polar_route.JGridAggregatedCellBox import JGridAggregatedCellBox
-from polar_route.cellbox import CellBox
+from polar_route.mesh_generation.boundary import Boundary
+from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
+from polar_route.mesh_generation.cellbox import CellBox
 import numpy as np
 
 class JGridCellBox (CellBox):

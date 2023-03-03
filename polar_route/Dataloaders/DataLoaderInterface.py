@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from polar_route.Boundary import Boundary
+from polar_route.mesh_generation.boundary import Boundary
 
 class DataLoaderInterface(metaclass=ABCMeta):
     '''

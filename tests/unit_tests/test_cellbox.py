@@ -1,10 +1,10 @@
 
 import unittest
-from polar_route.Metadata import Metadata
+from polar_route.mesh_generation.metadata import Metadata
 from polar_route.Dataloaders.Factory import DataLoaderFactory
-from polar_route.cellbox import CellBox
+from polar_route.mesh_generation.cellbox import CellBox
 
-from polar_route.Boundary import Boundary
+from polar_route.mesh_generation.boundary import Boundary
 class TestCellBox (unittest.TestCase):
    def setUp(self):
          boundary = Boundary([-85,-84.9], [-135,-134.9], ['1970-01-01','2021-12-31'])
