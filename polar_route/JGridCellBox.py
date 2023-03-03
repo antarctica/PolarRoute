@@ -4,7 +4,7 @@ from shapely.geometry import Polygon
 import numpy as np
 import pandas as pd
 from polar_route.Boundary import Boundary
-from polar_route.AggregatedJGridCellBox import AggregatedJGridCellBox
+from polar_route.JGridAggregatedCellBox import JGridAggregatedCellBox
 from polar_route.cellbox import CellBox
 
 class JGridCellBox (CellBox):
@@ -81,6 +81,7 @@ class JGridCellBox (CellBox):
         for source in self.get_data_source():
             loader = source.get_data_loader()
            
+           
             data_name = loader.data_name
             parent = self.get_parent()
             if ',' in data_name: # check if the data name has many entries (ex. uC,vC)
@@ -98,7 +99,7 @@ class JGridCellBox (CellBox):
              
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
-        agg_cellbox = AggregatedJGridCellBox (self.bounds , agg_dict , self.get_id())
+        agg_cellbox = JGridAggregatedCellBox (self.bounds , agg_dict , self.get_id())
         agg_cellbox.set_node_string(self.node_string())
 
         return agg_cellbox 

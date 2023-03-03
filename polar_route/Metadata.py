@@ -11,7 +11,6 @@ class Metadata:
     Attributes:
        data_loader : object of the DataLoader class that enable projecting to the cellBox data
        splitting_conditions: list of conditions that determine how to split the data accessed by data_loader 
-       aggregate_type (string): the type of aggrgation applied to CellBox data (ex. Min, Max ,..)
        value_fill_type (string): indicates how to fill a CellBox if it has void data (ex. use the data in the parent cellbox or assign 0 to the data)
 
     """

@@ -96,5 +96,4 @@ NeighbourGraph
 .. automodule:: polar_route.NeighbourGraph
 
 .. autoclass:: polar_route.NeighbourGraph.NeighbourGraph
-  
-   :members: initialise_neighbour_graph, update_neighbours
+   :members: initialise_neighbour_graph, get_neighbour_case, update_neighbours

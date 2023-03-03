@@ -40,7 +40,7 @@ class Mesh:
 
     def __init__(self, boundary , cellboxes , neighbour_graph , max_split_depth):
         """
-            Constructs a Mesh from a given parameters.
+            Constructs a Mesh object from a given parameters.
 
             Args:
                 boundary (Boundary): the geo-spatial/temporal boundaries (longtitude, latitude and time) of the Mesh \n
