@@ -28,8 +28,21 @@ Polar-route has been built to work with a variety of open-source climactic data 
 A list of supported data sources and there associated data-loaders is given in the 
 'Data Loaders' section of the manual
 
+## Documentation
+Sphinx is used to generate documentation for this project. The dependancies can be installed through pip:
+```
+pip install sphinx sphinx_markdown_builder sphinx_rtd_theme rinohtype
+```
+When updating the docs, run the following command within the PolarRoute directory to recompile.
+```
+sphinx-build -b html ./docs/source ./docs/build
+```
+Sometimes the cache needs to be cleared for internal links to update. If facing this problem, run this from the PolarRoute directory.
+```
+rm -r docs/build/.doctrees/
+```
 ## Developers
-Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox
+Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox, Harrison Abbot, Ayat Fekry
 
 ## License
 This software is licensed under a MIT license. For more information please see the attached ``LICENSE`` file.
