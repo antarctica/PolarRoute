@@ -4,6 +4,6 @@
 Abstract Vector Dataloader
 **************************
 
-.. automodule:: polar_route.Dataloaders.Vector.AbstractVector
+.. automodule:: polar_route.dataloaders.vector.abstractVector
    :special-members: __init__
    :members:

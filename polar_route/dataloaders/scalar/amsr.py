@@ -1,5 +1,5 @@
+from polar_route.dataloaders.scalar.abstractScalar import ScalarDataLoader
 from datetime import datetime
-from polar_route.Dataloaders.Scalar.AbstractScalar import ScalarDataLoader
 
 import logging
 import glob

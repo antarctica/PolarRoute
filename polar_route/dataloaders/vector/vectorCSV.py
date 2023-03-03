@@ -1,4 +1,4 @@
-from polar_route.Dataloaders.Vector.AbstractVector import VectorDataLoader
+from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
 
 import logging
 

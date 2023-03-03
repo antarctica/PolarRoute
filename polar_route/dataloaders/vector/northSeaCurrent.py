@@ -1,22 +1,22 @@
-from polar_route.Dataloaders.Scalar.AbstractScalar import ScalarDataLoader
+from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
 
 import logging
+
 import xarray as xr
 
-
-class MODISDataLoader(ScalarDataLoader):
+class NorthSeaCurrentDataLoader(VectorDataLoader):
     def __init__(self, bounds, params):
         '''
-        Initialises MODIS dataset. Does no post-processing
+        Initialises North Sea currents dataset. Does no post-processing
         
-       Args:
+        Args:
             bounds (Boundary): 
                 Initial boundary to limit the dataset to
             params (dict):
                 Dictionary of {key: value} pairs. Keys are attributes 
                 this dataloader requires to function
         '''
-        logging.info("Initalising MODIS dataloader")
+        logging.info("Initalising North Sea currents dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
             logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
@@ -34,30 +34,34 @@ class MODISDataLoader(ScalarDataLoader):
             logging.debug(f'- Setting data column name to {self.data_name}')
             self.data = self.set_data_col_name(self.data_name)
         
+        
     def import_data(self, bounds):
         '''
-        Reads in data from a MODIS NetCDF file. 
-        Renames variable to 'SIC'
+        Reads in data from a BSOSE Depth NetCDF file. 
+        Renames coordinates to 'lat', 'long', 'time', and renames variable to 
+        'uC, vC'
         
         Args:
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
             xr.Dataset: 
-                MODIS dataset within limits of bounds. 
-                Dataset has coordinates 'lat', 'long', and variable 'SIC'
+                North Sea currents dataset within limits of bounds. 
+                Dataset has coordinates 'lat', 'long', and variable 'uC', 'vC'
         '''
         logging.info(f"- Opening file {self.file}")
         # Open Dataset
         data = xr.open_dataset(self.file)
-        # Change column name
-        data = data.rename({'iceArea': 'SIC'})
-
-        # Set areas obscured by cloud to NaN values
-        data = data.where(data.cloud != 1, drop=True)
+        # Change column names
+        data = data.rename({'lon': 'long',
+                            'times': 'time',
+                            'U': 'uC',
+                            'V': 'vC'})
+        # Limit to just these coords and variables
+        data = data[['uC','vC']]
         
-        logging.info('- Limiting to initial bounds')
         # Limit to initial boundary
+        logging.info('- Limiting to initial bounds')
         data = data.sel(lat=slice(bounds.get_lat_min(),
                                   bounds.get_lat_max()))
         data = data.sel(long=slice(bounds.get_long_min(),

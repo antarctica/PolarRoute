@@ -63,5 +63,5 @@ file used to generate the mesh::
 Dataloader Factory Object
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: polar_route.Dataloaders.Factory
+.. automodule:: polar_route.dataloaders.factory
    :members:

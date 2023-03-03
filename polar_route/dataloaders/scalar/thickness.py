@@ -1,4 +1,4 @@
-from polar_route.Dataloaders.Scalar.AbstractScalar import ScalarDataLoader
+from polar_route.dataloaders.scalar.abstractScalar import ScalarDataLoader
 from polar_route.utils import date_range
 
 from datetime import datetime

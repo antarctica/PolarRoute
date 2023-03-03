@@ -1,13 +1,14 @@
-from polar_route.Dataloaders.Vector.AbstractVector import VectorDataLoader
+from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
 
 import logging
 
 import xarray as xr
 
-class NorthSeaCurrentDataLoader(VectorDataLoader):
+class SOSEDataLoader(VectorDataLoader):
+
     def __init__(self, bounds, params):
         '''
-        Initialises North Sea currents dataset. Does no post-processing
+        Initialises Baltic currents dataset. Does no post-processing
         
         Args:
             bounds (Boundary): 
@@ -16,7 +17,7 @@ class NorthSeaCurrentDataLoader(VectorDataLoader):
                 Dictionary of {key: value} pairs. Keys are attributes 
                 this dataloader requires to function
         '''
-        logging.info("Initalising North Sea currents dataloader")
+        logging.info("Initalising SOSE currents dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
             logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
@@ -33,12 +34,11 @@ class NorthSeaCurrentDataLoader(VectorDataLoader):
         else:
             logging.debug(f'- Setting data column name to {self.data_name}')
             self.data = self.set_data_col_name(self.data_name)
-        
-        
+            
     def import_data(self, bounds):
         '''
-        Reads in data from a BSOSE Depth NetCDF file. 
-        Renames coordinates to 'lat', 'long', 'time', and renames variable to 
+        Reads in data from a SOSE Currents NetCDF file. 
+        Renames coordinates to 'lat' and 'long', and renames variable to 
         'uC, vC'
         
         Args:
@@ -46,27 +46,23 @@ class NorthSeaCurrentDataLoader(VectorDataLoader):
             
         Returns:
             xr.Dataset: 
-                North Sea currents dataset within limits of bounds. 
+                SOSE currents dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', and variable 'uC', 'vC'
         '''
+
+        # Open dataset and cast to pandas df
         logging.info(f"- Opening file {self.file}")
-        # Open Dataset
         data = xr.open_dataset(self.file)
-        # Change column names
-        data = data.rename({'lon': 'long',
-                            'times': 'time',
-                            'U': 'uC',
-                            'V': 'vC'})
-        # Limit to just these coords and variables
-        data = data[['uC','vC']]
+
+        df = data.to_dataframe().reset_index()
         
-        # Limit to initial boundary
+        # Change long coordinate to be in [-180,180) domain rather than [0,360)
+        df['long'] = df['lon'].apply(lambda x: x-360 if x>180 else x)
+        # Extract relevant columns
+        df = df[['lat','long','uC','vC']]
         logging.info('- Limiting to initial bounds')
-        data = data.sel(lat=slice(bounds.get_lat_min(),
-                                  bounds.get_lat_max()))
-        data = data.sel(long=slice(bounds.get_long_min(),
-                                   bounds.get_long_max()))
-        data = data.sel(time=slice(bounds.get_time_min(), 
-                                   bounds.get_time_max()))
-        
-        return data
+        # Limit to  values between lat/long boundaries
+        df = df[df['long'].between(bounds.get_long_min(), bounds.get_long_max())]
+        df = df[df['lat'].between(bounds.get_lat_min(), bounds.get_lat_max())]
+
+        return df

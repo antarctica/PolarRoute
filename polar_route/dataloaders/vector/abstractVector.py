@@ -1,4 +1,4 @@
-from polar_route.Dataloaders.DataLoaderInterface import DataLoaderInterface
+from polar_route.dataloaders.dataLoaderInterface import DataLoaderInterface
 from abc import abstractmethod
 
 from pyproj import Transformer, CRS

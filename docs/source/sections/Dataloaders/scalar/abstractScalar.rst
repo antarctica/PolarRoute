@@ -4,6 +4,6 @@
 Abstract Scalar Dataloader
 **************************
 
-.. automodule:: polar_route.Dataloaders.Scalar.AbstractScalar
+.. automodule:: polar_route.dataloaders.scalar.abstractScalar
    :special-members: __init__
    :members:

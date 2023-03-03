@@ -5,9 +5,9 @@ Vector Dataloaders
 ******************
 
 
-^^^^^^^^^^^^^^^^^^^
-Abstract Base Class
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Abstract Vector Base Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. toctree::
    :maxdepth: 1
    :glob:
@@ -22,9 +22,9 @@ the data into a standard format. More details are provided on the
 :ref:`abstractVector doc page<abstract-vector-dataloader>`
 
 
-^^^^^^^^
-Examples
-^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Vector Dataloader Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 Creating a vector dataloader is almost identical to creating a 
 :ref:`scalar dataloader<abstract-scalar-dataloader>`. The key differences 
 are that the `VectorDataLoader` abstract base class must be used, and that
@@ -117,9 +117,9 @@ if the dataset is very large. The following code handles both of these cases::
             # Can't easily determine bounds of data in wrong projection, so skipping for now
             return data
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Implemented Dataloaders
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Implemented Vector Dataloaders
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1

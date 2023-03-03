@@ -1,22 +1,22 @@
-from polar_route.Dataloaders.Scalar.AbstractScalar import ScalarDataLoader
+from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
 
 import logging
-
+ 
 import xarray as xr
 
-class BSOSEDepthDataLoader(ScalarDataLoader):
+class BalticCurrentDataLoader(VectorDataLoader):
     def __init__(self, bounds, params):
         '''
-        Initialises BSOSE depth dataset. Does no post-processing
+        Initialises Baltic currents dataset. Does no post-processing
         
-       Args:
+        Args:
             bounds (Boundary): 
                 Initial boundary to limit the dataset to
             params (dict):
                 Dictionary of {key: value} pairs. Keys are attributes 
                 this dataloader requires to function
         '''
-        logging.info("Initalising BSOSE Depth dataloader")
+        logging.info("Initalising Baltic currents dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
             logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
@@ -38,26 +38,25 @@ class BSOSEDepthDataLoader(ScalarDataLoader):
         '''
         Reads in data from a BSOSE Depth NetCDF file. 
         Renames coordinates to 'lat' and 'long', and renames variable to 
-        'elevation'
+        'uC, vC'
         
         Args:
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
             xr.Dataset: 
-                BSOSE Depth dataset within limits of bounds. 
-                Dataset has coordinates 'lat', 'long', and variable 'elevation'
+                Baltic currents dataset within limits of bounds. 
+                Dataset has coordinates 'lat', 'long', and variable 'uC', 'vC'
         '''
         logging.info(f"- Opening file {self.file}")
         # Open Dataset
         data = xr.open_dataset(self.file)
         # Change column names
-        data = data.rename({'Depth': 'elevation',
-                            'YC': 'lat',
-                            'XC': 'long'})
-        # Change domain of dataset from [0:360) to [-180:180)
-        data = data.assign_coords(long=((da.lon + 180) % 360) - 180)
-        
+        data = data.rename({'latitude': 'lat',
+                            'longitude': 'long',
+                            'uo': 'uC',
+                            'vo': 'vC'})
+
         # Limit to initial boundary
         logging.info('- Limiting to initial bounds')
         data = data.sel(lat=slice(bounds.get_lat_min(),

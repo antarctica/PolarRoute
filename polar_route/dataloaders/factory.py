@@ -1,23 +1,23 @@
-from polar_route.Dataloaders.Scalar.AMSR import AMSRDataLoader
-from polar_route.Dataloaders.Scalar.BalticSeaIce import BalticSeaIceDataLoader
-from polar_route.Dataloaders.Scalar.BSOSEDepth import BSOSEDepthDataLoader
-from polar_route.Dataloaders.Scalar.BSOSESeaIce import BSOSESeaIceDataLoader
-from polar_route.Dataloaders.Scalar.BalticSeaIce import BalticSeaIceDataLoader
-from polar_route.Dataloaders.Scalar.GEBCO import GEBCODataLoader
-from polar_route.Dataloaders.Scalar.IceNet import IceNetDataLoader
-from polar_route.Dataloaders.Scalar.MODIS import MODISDataLoader
-from polar_route.Dataloaders.Scalar.ScalarCSV import ScalarCSVDataLoader
-from polar_route.Dataloaders.Scalar.Shape import ShapeDataLoader
+from polar_route.dataloaders.scalar.amsr import AMSRDataLoader
+from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.bsoseDepth import BSOSEDepthDataLoader
+from polar_route.dataloaders.scalar.bsoseSeaIce import BSOSESeaIceDataLoader
+from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.gebco import GEBCODataLoader
+from polar_route.dataloaders.scalar.icenet import IceNetDataLoader
+from polar_route.dataloaders.scalar.modis import MODISDataLoader
+from polar_route.dataloaders.scalar.scalarCSV import ScalarCSVDataLoader
+from polar_route.dataloaders.scalar.shape import ShapeDataLoader
 
-from polar_route.Dataloaders.Vector.BalticCurrent import BalticCurrentDataLoader
-from polar_route.Dataloaders.Vector.ERA5Wind import ERA5WindDataLoader
-from polar_route.Dataloaders.Vector.NorthSeaCurrent import NorthSeaCurrentDataLoader
-from polar_route.Dataloaders.Vector.ORAS5Current import ORAS5CurrentDataLoader
-from polar_route.Dataloaders.Vector.SOSE import SOSEDataLoader
-from polar_route.Dataloaders.Vector.VectorCSV import VectorCSVDataLoader
+from polar_route.dataloaders.vector.balticCurrent import BalticCurrentDataLoader
+from polar_route.dataloaders.vector.era5Wind import ERA5WindDataLoader
+from polar_route.dataloaders.vector.northSeaCurrent import NorthSeaCurrentDataLoader
+from polar_route.dataloaders.vector.oras5Current import ORAS5CurrentDataLoader
+from polar_route.dataloaders.vector.sose import SOSEDataLoader
+from polar_route.dataloaders.vector.vectorCSV import VectorCSVDataLoader
 
-from polar_route.Dataloaders.Scalar.Density import DensityDataLoader
-from polar_route.Dataloaders.Scalar.Thickness import ThicknessDataLoader
+from polar_route.dataloaders.scalar.density import DensityDataLoader
+from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
 
 
 
@@ -63,22 +63,23 @@ class DataLoaderFactory:
             'gebco':       (GEBCODataLoader, ['file']),
             'icenet':      (IceNetDataLoader, ['file']),
             'modis':       (MODISDataLoader, ['file']),
+            # TODO Make these LUT dataloaders
+            'thickness': (ThicknessDataLoader, []),
+            'density':   (DensityDataLoader, []),
             # Scalar - Abstract shapes
             'circle':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'radius', 'centre']),
             'square':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'side_length', 'centre']),
             'gradient':     (ShapeDataLoader, ['shape', 'nx', 'ny', 'vertical']),
             'checkerboard': (ShapeDataLoader, ['shape', 'nx', 'ny', 'gridsize']),
             # Vector
-            'vectorcsv':     (VectorCSVDataLoader, ['file']),
+            'vectorcsv':        (VectorCSVDataLoader, ['file']),
             'baltic_currents':  (BalticCurrentDataLoader, ['file']),
             'era5_wind':        (ERA5WindDataLoader, ['file']),
             'northsea_currents':(NorthSeaCurrentDataLoader, ['file']),
             'oras5_currents':   (ORAS5CurrentDataLoader, ['file_u', 'file_v']),
-            'sose':             (SOSEDataLoader, ['file']),
+            'sose':             (SOSEDataLoader, ['file'])
             # Lookup Table
-            # TODO actually make these LUT
-            'thickness': (ThicknessDataLoader, []),
-            'density':   (DensityDataLoader, [])
+            # TODO
         }
         # If name is recognised as a dataloader
         if name in dataloader_requirements:

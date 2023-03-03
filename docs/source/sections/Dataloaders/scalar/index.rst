@@ -6,9 +6,9 @@ Scalar Dataloaders
 
 
 
-^^^^^^^^^^^^^^^^^^^
-Abstract Base Class
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Abstract Scalar Base Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. toctree::
    :maxdepth: 1
    :glob:
@@ -22,9 +22,9 @@ how to open the data files, and what methods are required to manipulate
 the data into a standard format. More details are provided on the 
 :ref:`abstractScalar doc page<abstract-scalar-dataloader>`
 
-^^^^^^^^
-Examples
-^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Scalar Dataloader Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 Data must be imported and saved as an xarray.Dataset, or a pandas.DataFrame object.
 Below is a simple example of how to load in a NetCDF file::
     
@@ -111,9 +111,9 @@ The following code handles both of these cases::
             # Can't easily determine bounds of data in wrong projection, so skipping for now
             return data
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Implemented Dataloaders
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Implemented Scalar Dataloaders
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1
