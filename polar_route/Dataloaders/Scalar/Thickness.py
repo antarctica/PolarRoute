@@ -1,26 +1,57 @@
-from .AbstractScalar import ScalarDataLoader
+from polar_route.Dataloaders.Scalar.AbstractScalar import ScalarDataLoader
 from polar_route.utils import date_range
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 import numpy as np
 import xarray as xr
 
 class ThicknessDataLoader(ScalarDataLoader):
-    
     def __init__(self, bounds, params):
+        '''
+        Initialises thickness dataset. Initialises from values in a lookup table
+        This will eventually be deprecated and replaced with a 
+        'Lookup Table Dataloader'
+        
+       Args:
+            bounds (Boundary): 
+                Initial boundary to limit the dataset to
+            params (dict):
+                Dictionary of {key: value} pairs. Keys are attributes 
+                this dataloader requires to function
+        '''
+        logging.info("Initalising BSOSE Depth dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
+            logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
             setattr(self, key, val)
         
+        # Import data
         self.data = self.import_data(bounds)
-        # self.data_name = self.get_data_col_name()
-        self.data_name = 'thickness'
+        
+        # Get data name from column name if not set in params
+        if self.data_name is None:
+            logging.debug('- Setting self.data_name from column name')
+            self.data_name = self.get_data_col_name()
+        # or if set in params, set col name to data name
+        else:
+            logging.debug(f'- Setting data column name to {self.data_name}')
+            self.data = self.set_data_col_name(self.data_name)
                     
     def import_data(self, bounds):
         '''
-        Placeholder until lookup-table dataloader class implemented
+        Creates a simulated dataset of sea ice thickness based on 
+        scientific literature.
+        
+        Args:
+            bounds (Boundary): Initial boundary to limit the dataset to
+            
+        Returns:
+            data (pd.DataFrame): 
+                Sea Ice Density dataset within limits of bounds. 
+                Dataset has coordinates 'lat', 'long', and variable 'thickness'
         '''
+        # Look up table parameters hardcoded
         thicknesses = {'Ross': {'w': 0.72, 'sp': 0.67, 'su': 1.32, 'a': 0.82, 'y': 1.07},
                     'Bellinghausen': {'w': 0.65, 'sp': 0.79, 'su': 2.14, 'a': 0.79, 'y': 0.90},
                     'Weddell E': {'w': 0.54, 'sp': 0.89, 'su': 0.87, 'a': 0.44, 'y': 0.73},
@@ -33,7 +64,10 @@ class ThicknessDataLoader(ScalarDataLoader):
 
         def ice_thickness(d, long):
             """
-                Returns ice thickness. Data taken from Table 3 in: doi:10.1029/2007JC004254
+                Returns ice thickness. Data taken from 
+                Table 3 in: doi:10.1029/2007JC004254
+                Values don't extend to the northern hemisphere, 
+                but are used for the time being as a placeholder
             """
             # The table has missing data points for Bellinghausen Autumn and Weddell W Winter, may require further thought
             month = d.month
@@ -57,6 +91,7 @@ class ThicknessDataLoader(ScalarDataLoader):
 
             return thicknesses[sea][season]
 
+        logging.info("- Setting boundaries for simulated dataset")
         start_date = datetime.strptime(bounds.get_time_min(), "%Y-%m-%d").date()
         end_date = datetime.strptime(bounds.get_time_max(), "%Y-%m-%d").date()
 
@@ -64,6 +99,7 @@ class ThicknessDataLoader(ScalarDataLoader):
         lons = [lon for lon in np.arange(bounds.get_long_min(), bounds.get_long_max(), 0.05)]
         dates = [single_date for single_date in date_range(start_date, end_date)]
 
+        logging.info("- Generating dataset from boundaries")
         thick_data = xr.DataArray(
             data=[[[ice_thickness(dt, lng)
                     for lng in lons]

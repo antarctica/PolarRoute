@@ -97,6 +97,7 @@ The following code handles both of these cases::
             
             # Manually overwriting data name
             self.data_name = "my_variable"
+            self.data = self.set_data_col_name(self.data_name)
 
             logging.info(f"Successfully loaded {self.data_name} from {self.file}")
             

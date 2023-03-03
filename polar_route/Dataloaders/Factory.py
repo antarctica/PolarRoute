@@ -24,7 +24,8 @@ from polar_route.Dataloaders.Scalar.Thickness import ThicknessDataLoader
 
 class DataLoaderFactory:
     '''
-    Produces initialised DataLoader objects
+    Produces initialised DataLoader objects that can be used by the mesh to 
+    quickly retrieve values within a boundary.
     '''    
     def get_dataloader(self, name, bounds, params, min_dp=5):
         '''
@@ -43,7 +44,7 @@ class DataLoaderFactory:
                 Minimum datapoints required to get homogeneity condition
 
         Returns:
-            data_loader (Scalar/Vector/LUT DataLoader): 
+            (Scalar/Vector/LUT DataLoader): 
                 DataLoader object of correct type, with required params set 
         '''
         # Cast name to lowercase to make case insensitive
@@ -96,7 +97,23 @@ class DataLoaderFactory:
     
     def set_default_params(self, name, params, min_dp):
         '''
-        Set default values for all dataloaders
+        Set default values for all dataloaders. 
+        
+        Args:
+            name (str):
+                Name of dataloader entry in dataloader_requirements. Used to
+                specify default parameters for a specific dataloader.
+            params (dict): 
+                Dictionary containing attributes that are required for each 
+                dataloader. 
+            min_dp (int):
+                Minimum number of datapoints required to return a homogeneity 
+                condition. Passed in here so it can be added to params
+            
+        Returns:
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
         '''
         
         if 'downsample_factors' not in params:
@@ -119,7 +136,22 @@ class DataLoaderFactory:
     
     def set_default_shape_params(self, name, params):
         '''
-        Set default values for abstract shape dataloaders
+        Set default values for abstract shape dataloaders. This function is
+        seperated out from set_default_params() simply to reduce cognitive
+        complexity, but is otherwise in the same format.
+        
+        Args:
+            name (str):
+                Name of shape entry in dataloader_requirements. Used to
+                specify default parameters for the shape dataloader.
+            params (dict): 
+                Dictionary containing attributes that are required for the
+                shape being loaded.
+            
+        Returns:
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
         '''
         # Number of datapoints to populate per axis
         if 'nx' not in params:

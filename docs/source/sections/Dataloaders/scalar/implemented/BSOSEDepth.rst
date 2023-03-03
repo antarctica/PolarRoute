@@ -3,4 +3,5 @@ BSOSE Depth Dataloader
 **********************
 
 .. automodule:: polar_route.Dataloaders.Scalar.BSOSEDepth
+   :special-members: __init__
    :members:

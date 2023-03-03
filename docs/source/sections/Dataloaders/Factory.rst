@@ -32,7 +32,7 @@ is located at :code:`polar_route/Dataloaders/Scalar/myScalarDataloader.py`.
 The only parameter required by this dataloader is a file to read data from::
 
    # Add new import statement for Factory to read
-   from polar_route.Dataloaders/Scalar/myScalarDataloader import myScalarDataloader
+   from polar_route.Dataloaders.Scalar.myScalarDataloader import myScalarDataloader
 
    ...
 
