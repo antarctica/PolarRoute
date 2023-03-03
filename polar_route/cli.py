@@ -3,6 +3,7 @@ import json
 import inspect
 import logging
 from multiprocessing.connection import wait
+from polar_route.MeshBuilder import MeshBuilder
 
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call
@@ -75,7 +76,7 @@ def create_mesh_cli():
     config = json.load(args.config)
 
     # Discrete Meshing
-    cg = Mesh(config)
+    cg = MeshBuilder(config).build_environmental_mesh()
 
     logging.info("Saving mesh to {}".format(args.output))
     info = cg.to_json()
