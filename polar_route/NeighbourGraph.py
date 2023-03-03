@@ -31,11 +31,11 @@ class NeighbourGraph:
                }
 
     """
-
-
-    def __init__(self , cellboxes=[] ,grid_width=0):
+    def __init__(self , cellboxes=None ,grid_width=0):
         # initialize graph with an empty one
         self.neighbour_graph = {}
+        if cellboxes is None:
+            cellboxes = []
         self.initialise_neighbour_graph(cellboxes ,grid_width)
 
     @classmethod
@@ -54,11 +54,16 @@ class NeighbourGraph:
 
 
     def get_graph(self):
-
+        """
+        returns the graph dict
+        """
         return self.neighbour_graph
 
 
     def update_neighbour(self, index, direction, neighbours):
+        """
+        updates the neighbour in a certain direction
+        """
         self.neighbour_graph [index][direction] = neighbours
     
         
@@ -78,6 +83,9 @@ class NeighbourGraph:
         
 
     def get_neighbours(self ,cellbox_indx , direction):
+        """
+        returns neighbour in a certain direction
+        """
         return self.neighbour_graph [cellbox_indx][direction]
 
 
@@ -110,7 +118,6 @@ class NeighbourGraph:
                 cellboxes(list<CellBox>): the list that contains all the cellboxes of the mesh
 
         '''
-
         self.remove_node_from_neighbours (cellbox_indx, direction)
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
         for indx in neighbour_indx_list:
@@ -133,7 +140,6 @@ class NeighbourGraph:
             cellbox_indx (int): the index of the cellbox that we will go through its neighbours and remove this index from their neighbour_map
             directio (int): an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)
         '''
-
         neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
         for indx in neighbour_indx_list:
             self.neighbour_graph[indx][-1*direction].remove(cellbox_indx)
@@ -183,7 +189,6 @@ class NeighbourGraph:
                         case -3 -> cellbox_b is the North-West corner of cellbox_a\n
                         case -4 -> cellbox_b is North of cellbox_a\n
         """
-
         long_a = cellbox_a.bounds.get_long_min()
         lat_a = cellbox_a.bounds.get_lat_min()
         long_b = cellbox_b.bounds.get_long_min()
@@ -222,10 +227,15 @@ class NeighbourGraph:
 
 
     def remove_neighbour(self ,  index ,  direction , neighbour_index):
+        """ 
+            remove certain neighbour in a specific direction
+        """
         self.neighbour_graph [index][direction].remove (neighbour_index)
 
     def initialise_neighbour_graph (self , cellboxes ,grid_width):
-
+        """
+         initialize the neighbour graph
+        """
         for cellbox in cellboxes:
             cellbox_indx = cellboxes.index(cellbox)
             neighbour_map = self.initialise_map (cellbox_indx , grid_width , len(cellboxes))
@@ -237,7 +247,6 @@ class NeighbourGraph:
             """
                 initialse the neighbour map of a cellbox with the given cellbox_index
             """
-            
             neighbour_map = {1: [], 2: [], 3: [], 4: [], -1: [], -2: [], -3: [], -4: []}
 
             # add east neighbours to neighbour graph

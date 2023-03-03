@@ -1,11 +1,8 @@
 
-
-from shapely.geometry import Polygon
-import numpy as np
-import pandas as pd
 from polar_route.Boundary import Boundary
 from polar_route.JGridAggregatedCellBox import JGridAggregatedCellBox
 from polar_route.cellbox import CellBox
+import numpy as np
 
 class JGridCellBox (CellBox):
     """
@@ -39,10 +36,6 @@ class JGridCellBox (CellBox):
         self.land_locked = False
         self.initial_bounds = None
  
-
-######################################################
-# methods used for splitting and aggregating JGridCellBox
-
     def split(self , start_id):
         """
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
@@ -53,7 +46,7 @@ class JGridCellBox (CellBox):
                     this current cellboxes and dividing the data_points contained between.
         """
         # split using the CellBox method then perform the extra JGridCellBox logic
-        split_boxes = CellBox.split(self) 
+        split_boxes = CellBox.split(self, start_id) 
 
         # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
@@ -70,13 +63,11 @@ class JGridCellBox (CellBox):
             
         return split_boxes
 
-#TODO: figure out the difference between this and cellbox aggregate??? use of Land_loader?
     def aggregate(self):
         '''
             aggregates JGridCellBox data using the associated data_source's aggregate type and returns AggregatedJGridCellBox object
             
         '''
-     
         agg_dict = {}
         for source in self.get_data_source():
             loader = source.get_data_loader()
@@ -92,7 +83,7 @@ class JGridCellBox (CellBox):
                 if np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
                     agg_value[data_name] = 0 
                 elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='parent': 
-                  while parent !=None and np.isnan(agg_value[data_name]):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                  while parent is not None and np.isnan(agg_value[data_name]):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
                         agg_value = loader.get_value( parent.bounds) 
                         parent = parent.get_parent()
                
@@ -155,9 +146,17 @@ def node_string(self):
         return node_string + " " + focus_string
 
 def set_initial_bounds(self, bounds):
-     self.initial_bounds= bounds
+    """
+            returns a string representation of the grid_coord of this cellbox
+
+            for use in j_grid regression testing
+    """
+    self.initial_bounds= bounds
 
 def is_land(self):
+    """
+    checks if the current cellbox is land using the loader
+    """
     is_land = False
     for source in self.data_source:
         loader = source.get_data_loader()

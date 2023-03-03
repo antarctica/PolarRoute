@@ -119,8 +119,7 @@ class EnvironmentMesh:
             Returns this Mesh converted to a JSON object.
 
             Returns:
-                json: a string representation of the CellGird parseable as a
-                    JSON object. The JSON object is of the form -
+                json: a string representation of the CellGird parseable as a JSON object. The JSON object is of the form -
 
                     {\n
                         "config": the config used to initialize the Mesh,\n

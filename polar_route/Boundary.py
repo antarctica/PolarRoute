@@ -17,8 +17,7 @@ class Boundary:
 
     Note:
         All geospatial boundaries are given in a 'EPSG:4326' projection
-    """
-   
+    """ 
     @classmethod
     def from_json(cls, config):
         """
@@ -50,7 +49,7 @@ class Boundary:
                time_range(Date[]): array contains the start and end of time range 
                 
         """
-        if time_range == None:
+        if time_range is None:
             time_range=[]
         self.validate_bounds(lat_range , long_range , time_range)
         # Boundary information 
@@ -60,8 +59,6 @@ class Boundary:
 
 
     def validate_bounds (self, lat_range , long_range , time_range):
-
-        
         """
             method to check the bounds are valid
             Args:
@@ -70,14 +67,14 @@ class Boundary:
                time_range(Date[]): array contains the start and end of time range 
                 
         """
-        if (len(lat_range) < 2 or len (long_range)<2 ):
+        if len(lat_range) < 2 or len (long_range)<2 :
             raise ValueError(f'Boundary: range should contain two values')
-        if (lat_range[0] > lat_range [1]):
+        if lat_range[0] > lat_range [1]:
              raise ValueError(f'Boundary: Latitude start range should be smaller than range end')
-        if (long_range[0] > long_range [1]):
+        if long_range[0] > long_range [1]:
              raise ValueError(f'Boundary: Longtitude start range should be smaller than range end')
-        if (len (time_range) > 0):
-             if (datetime.strptime(time_range[0], '%Y-%m-%d') >= datetime.strptime(time_range[1], '%Y-%m-%d')):
+        if len (time_range) > 0:
+            if datetime.strptime(time_range[0], '%Y-%m-%d') >= datetime.strptime(time_range[1], '%Y-%m-%d'):
                      raise ValueError(f'Boundary: Start time range should be smaller than range end')
 
     # Functions used for getting data from a cellBox
@@ -89,10 +86,7 @@ class Boundary:
                 cx (float): the x-position of the top-left corner of the CellBox
                     given in degrees longitude.
         """
-        
         return self.long_range[0] + self.get_width()/2
-
-
     def getcy(self):
         """
             returns y-position of the centroid of the cellbox
@@ -100,10 +94,8 @@ class Boundary:
             Returns:
                 cy (float): the y-position of the top-left corner of the CellBox
                     given in degrees latitude.
-        """
-        
+        """ 
         return self.lat_range[0] + self.get_height()/2
-
     def get_height(self):
         """
             returns height of the cellbox
@@ -114,7 +106,6 @@ class Boundary:
         """
         height = self.lat_range[1] - self.lat_range[0]
         return height
-
     def get_width(self):
         """
             returns width of the cellbox
@@ -125,11 +116,11 @@ class Boundary:
         """
         width = self.long_range[1] - self.long_range[0]
         return width
-
     def get_time_range (self):
+        """
+            returns the time range
+        """
         return self.time_range
-
-
     def getdcx(self):
         """
             returns x-distance from the edge to the centroid of the cellbox
@@ -139,7 +130,6 @@ class Boundary:
                     centroid of the CellBox. Given in degrees longitude
         """
         return self.get_width()/2
-
     def getdcy(self):
         """
             returns y-distance from the edge to the centroid of the cellbox
@@ -149,25 +139,38 @@ class Boundary:
                     centroid of the CellBox. Given in degrees latitude
         """
         return self.get_height()/2
-
     def get_lat_min(self):
+        """
+            returns the min latitude
+        """
         return self.lat_range[0]
-
     def get_lat_max(self):
+        """
+            returns the max latitude
+        """
         return self.lat_range[1]   
-
     def get_long_min(self):
+        """
+            returns the min longtitude
+        """
         return self.long_range[0]
-
     def get_long_max(self):
+        """
+            returns the max longtitude
+        """
         return self.long_range[1]  
-    
     def get_time_min(self):
+        """
+            returns the min of time range
+        """
         return self.time_range[0]
 
     def get_time_max(self):
-        return self.time_range[1] 
+        """
+            returns the max of time range
+        """
 
+        return self.time_range[1] 
     def get_bounds(self):
         """
             returns the bounds of this cellbox
@@ -175,15 +178,6 @@ class Boundary:
             Returns:
                 bounds (list<tuples>): The geo-spatial boundaries of this CellBox.
         """
-
-
-        # TODO: see if we should have lat then long back
-        # bounds = [[self.lat_range[0] , self.long_range[0]],
-                #    [self.lat_range[1], self.long_range[0]],
-                #     [self.lat_range[1], self.long_range[1]],
-                #     [self.lat_range[0], self.long_range[1]],
-                #     [self.lat_range[0], self.long_range[0]]]
-        
         bounds = [[ self.long_range[0], self.lat_range[0] ],
                    [ self.long_range[0], self.lat_range[1]],
                     [ self.long_range[1], self.lat_range[1]],

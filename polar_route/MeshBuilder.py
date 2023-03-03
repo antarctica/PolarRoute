@@ -18,12 +18,8 @@ Example:
 
 import logging
 import math
-import numpy as np
-import matplotlib.pyplot as plt
-from memory_profiler import profile
 import json
-
-from matplotlib.patches import Polygon as MatplotPolygon
+import numpy as np
 from polar_route.JGridCellBox import JGridCellBox
 from polar_route.Boundary import Boundary
 from polar_route.cellbox import CellBox
@@ -112,7 +108,6 @@ class MeshBuilder:
                 # assign meta data to each cellbox
                 cellbox.set_data_source(meta_data_list)
 
-    #######################
         max_split_depth = 0
         if 'splitting' in self.config['Mesh_info']:
             max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
@@ -173,7 +168,6 @@ class MeshBuilder:
                     y_coord = abs(math.floor(
                         cellbox_indx / grid_width) - (grid_height - 1))
                     cellbox.set_grid_coord(x_coord, y_coord)
-                    # TODO: check that initial_bounds should be grid_bounds
                     cellbox.set_initial_bounds(bounds)
 
                 else:
@@ -189,8 +183,6 @@ class MeshBuilder:
         assert (bounds.get_lat_max() - bounds.get_lat_min()) % cell_height == 0, \
             f"""The defined longitude region <{bounds.get_lat_min()} :{bounds.get_lat_max()}>
             is not divisable by the initial cell width <{cell_height}>"""
-
- ###############################
 
     def to_json(self):
         """
@@ -210,10 +202,6 @@ class MeshBuilder:
         output["cellboxes"] = self.mesh.get_cellboxes()
         output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
-
-##############################
-
-    # Functions for splitting cellboxes within the Mesh
 
     def split_and_replace(self, cellbox):
         """
@@ -326,9 +314,11 @@ class MeshBuilder:
         cellboxes[cellbox_indx] = None
 
  ############################## methods to fill the neighbour maps of the splitted cells ########################
-    # method that fills the South east neighbours
-
+ 
     def fill_se_map(self, south_east_indx, south_neighbour_indx, east_neighbour_indx, se_neighbour_map):
+        """
+             method that fills the South east neighbours
+        """
         cellboxes = self.mesh.cellboxes
         for indx in south_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == 4:
@@ -341,8 +331,11 @@ class MeshBuilder:
             if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == 1:
                 se_neighbour_map[1].append(indx)
 
-    # method that fills the North east neighbours
+   
     def fill_ne_map(self, north_east_indx, north_neighbour_indx, east_neighbour_indx, ne_neighbour_map):
+        """
+             method that fills the North east neighbours
+        """
         cellboxes = self.mesh.cellboxes
         for indx in north_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == -4:
@@ -355,8 +348,11 @@ class MeshBuilder:
             if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == 3:
                 ne_neighbour_map[3].append(indx)
 
-    # method that fills the North west neighbours
+    
     def fill_nw_map(self,  north_west_indx, north_neighbour_indx, west_neighbour_indx, nw_neighbour_map):
+        """
+             method that fills the North west neighbours
+        """
         cellboxes = self.mesh.cellboxes
         for indx in north_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == -4:
@@ -369,8 +365,11 @@ class MeshBuilder:
             if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == -1:
                 nw_neighbour_map[-1].append(indx)
 
-    # method that fills the South west neighbours
+  
     def fill_sw_neighbour_map(self, south_west_indx, south_neighbour_indx, west_neighbour_indx, sw_neighbour_map):
+        """
+             method that fills the South west neighbours
+        """
         cellboxes = self.mesh.cellboxes
         for indx in south_neighbour_indx:
             if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == 3:
@@ -383,7 +382,6 @@ class MeshBuilder:
             if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == -3:
                 sw_neighbour_map[-3].append(indx)
 
-###################################################################################################
 
     def split_to_depth(self, split_depth):
         """
@@ -404,8 +402,6 @@ class MeshBuilder:
                         should_split = cellbox.should_split(index+1)
                         if (cellbox.get_split_depth() < split_depth) & should_split:
                             self.split_and_replace(cellbox)
-#################################################################################################
-    # @profile
 
     def build_environmental_mesh(self):
         """
@@ -425,23 +421,21 @@ class MeshBuilder:
 
         return env_mesh
 
-#################################################################################################
-
     def get_config(self):
+        """
+        returns the config
+        """
         return self.config
 
 
 if __name__ == '__main__':
     import time
-    import timeit
-    from memory_profiler import profile
     start = time.time()
     conf = None
     with open("create_mesh.output2013_4_80_new_format.json", "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder(conf)
-    # print (timeit.Timer(mesh_builder.build_environmental_mesh).timeit(number=1))
     env_mesh = mesh_builder.build_environmental_mesh()
     print(conf)
     with open("output2019_6_80_new_format_SOSE.json", 'w') as file:

@@ -1,6 +1,4 @@
 from shapely.geometry import Polygon
-import numpy as np
-import pandas as pd
 from polar_route.Boundary import Boundary
 import shapely.wkt
 
@@ -69,11 +67,15 @@ class AggregatedCellBox:
         self.boundary = boundary
 
     def set_agg_data (self, agg_data):
-      
+        """
+        sets the agg_data
+        """
         self.agg_data = agg_data
     
     def set_id (self, id):
-      
+        """
+        sets the cellbox id
+        """
         self.id = id
     
     def get_boundary(self):
@@ -83,11 +85,15 @@ class AggregatedCellBox:
         return self.boundary 
 
     def get_agg_data (self):
-      
+        """
+        returns the agg_data
+        """
         return self.agg_data
 
     def get_id (self):
-      
+        """
+        returns the id
+        """
         return self.id
 
 

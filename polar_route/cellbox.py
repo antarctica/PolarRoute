@@ -1,6 +1,9 @@
 """
 
-Outlined in this section we will discuss the usage of the CellBox functionality of the PolarRoute package. In this series of class distributions we house our discrete representation of input data. In each CellBox, we represent a way of accessing the information governing our numerical world, this includes and is not limited to: Ocean Currents, Sea Ice Concentration and Bathymetric depth.\n
+Outlined in this section we will discuss the usage of the CellBox functionality of the PolarRoute package. 
+In this series of class distributions we house our discrete representation of input data. In each CellBox,
+ we represent a way of accessing the information governing our numerical world, 
+ this includes and is not limited to: Ocean Currents, Sea Ice Concentration and Bathymetric depth.\n
 
 
     Example:\n
@@ -10,20 +13,23 @@ Outlined in this section we will discuss the usage of the CellBox functionality 
             .... \n
 
     Note:\n
-        CellBoxes are intended to be constructed by and used within a Mesh object. The methods provided are to extract information for CellBoxes contained within a Mesh. \n
+        CellBoxes are intended to be constructed by and used within a Mesh object.
+          The methods provided are to extract information for CellBoxes contained within a Mesh. \n
 
 """
 
-from shapely.geometry import Polygon
+
 import numpy as np
-import pandas as pd
 from polar_route.Boundary import Boundary
 from polar_route.AggregatedCellBox import AggregatedCellBox
 
 
 class CellBox:
     """
-    A CellBox represnts a geo-spatial/temporal boundary that enables projecting to information within. Information about any given value of a CellBox is calculated from aggregating all data points of within those bounds. CellBoxes may  be split into smaller CellBoxes and the data points within distributed  between the newly created CellBoxes so as to construct a non-uniform mesh of CellBoxes, such as within a Mesh.\n
+    A CellBox represnts a geo-spatial/temporal boundary that enables projecting to information within. 
+    Information about any given value of a CellBox is calculated from aggregating all data points of within those bounds. 
+    CellBoxes may  be split into smaller CellBoxes and the data points within distributed  between the newly created
+      CellBoxes so as to construct a non-uniform mesh of CellBoxes, such as within a Mesh.\n
 
     Attributes:
         Bounds (Boundary): object that contains the latitude and logtitute range and the time range \n
@@ -51,17 +57,19 @@ class CellBox:
         """
             set the minimum number of data contained within CellBox boundaries
         """
-        if (minimum_datapoints < 0):
+        if minimum_datapoints < 0:
             raise ValueError(
                 f'CellBox: minimum number of data contained can not be negative')
         self.minimum_datapoints = minimum_datapoints
 
     def set_data_source(self, data_source):
         """
-            a method that sets the data source of the cellbox ( which includes the data loaders, splitting conditions and aggregation type)
+            a method that sets the data source of the cellbox ( which includes the data loaders,
+              splitting conditions and aggregation type)
 
             Args:
-                data_source (List <MetaData>): a list of MetaData objects, each object represents a source of this CellBox data (where the data comes from, how it is spitted and aggregated)  
+                data_source (List <MetaData>): a list of MetaData objects, each object represents a source of this CellBox data
+                  (where the data comes from, how it is spitted and aggregated)  
         """
         self.data_source = data_source
 
@@ -75,16 +83,23 @@ class CellBox:
 
     def set_split_depth(self, split_depth):
         """
-            set the split depth of a CellBox, which represents is the number of times the CellBox has been split to reach it's current size.
+            set the split depth of a CellBox, which represents is the number of times the CellBox 
+            has been split to reach it's current size.
         """
-        if (split_depth < 0):
+        if split_depth < 0:
             raise ValueError(f'CellBox: split depth can not be negative')
         self.split_depth = split_depth
 
     def set_id(self, id):
+        """
+        method ssts cellbox id
+        """
         self.id = id
 
     def get_id(self):
+        """
+        method returns cellbox cell id
+        """
         return self.id
 
     def get_minimum_datapoints(self):
@@ -95,9 +110,11 @@ class CellBox:
 
     def get_data_source(self):
         """
-            a method that gets the data source of the cellbox (the data loaders, splitting conditions and aggregation type)
+            a method that gets the data source of the cellbox
+              (the data loaders, splitting conditions and aggregation type)
             returns:
-            data_source (List <MetaData>): a list of MetaData objects, each object represents a source of this CellBox data (where the data comes from, how it is spitted and aggregated)  
+            data_source (List <MetaData>): a list of MetaData objects, each object represents a source 
+            of this CellBox data (where the data comes from, how it is spitted and aggregated)  
         """
         return self.data_source
 
@@ -115,7 +132,8 @@ class CellBox:
 
     def get_split_depth(self):
         """
-            get the split depth of a CellBox, which represents is the number of times the CellBox has been split to reach it's current size.
+            get the split depth of a CellBox, which represents is the number of times the CellBox
+              has been split to reach it's current size.
         """
         return self.split_depth
 
@@ -138,7 +156,9 @@ class CellBox:
             else (mixture of CLR & HET):
                 split\n
             Args:
-                stop_index: the index of the data source at which checking the splitting conditions stops. Implemented like this to perform depth-first splitting. Should be deprecated once we switch to breadth-first splitting
+                stop_index: the index of the data source at which checking the splitting conditions stops. 
+                Implemented like this to perform depth-first splitting. 
+                Should be deprecated once we switch to breadth-first splitting
             Returns:
                  bool: True if the splitting_conditions of this CellBox
                     will result in the CellBox being split.
@@ -205,12 +225,12 @@ class CellBox:
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
 
             Args:
-                start_id : represenst the start of the splitted cellboxes ids, usuallly it is the number of the existing cellboxes
+                start_id : represenst the start of the splitted cellboxes ids,
+                  usuallly it is the number of the existing cellboxes
             Returns:
                  list<CellBox>: The 4 corner cellboxes generated by splitting
                  the cellbox uniformly.
         """
-
         split_boxes = self.create_splitted_cell_boxes(start_id)
 
         # set CellBox split_depth, data_source and parent
@@ -222,6 +242,9 @@ class CellBox:
         return split_boxes
 
     def create_splitted_cell_boxes(self, index):
+        """
+        method that creates 4 splitted cellbox 
+        """
         half_width = self.bounds.get_width() / 2
         half_height = self.bounds.get_height() / 2
 
@@ -257,12 +280,12 @@ class CellBox:
 
     def aggregate(self):
         '''
-            aggregates CellBox data using the associated data_sources' aggregate type (ex. MEAN, MAX) and returns AggregatedCellBox object
+            aggregates CellBox data using the associated data_sources' aggregate type (ex. MEAN, MAX) 
+            and returns AggregatedCellBox object
 
             Returns:
                 AggregatedCellbox: object contains the aggregated data within cellbox bounds.
         '''
-
         agg_dict = {}
         for source in self.get_data_source():
             loader = source.get_data_loader()
@@ -280,7 +303,7 @@ class CellBox:
                 agg_value[data_name] = 0
             elif np.isnan(agg_value[data_name]) and source.get_value_fill_type() == 'parent':
                 # if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                while parent != None and np.isnan(agg_value[data_name]):
+                while parent is not None and np.isnan(agg_value[data_name]):
                     agg_value = loader.get_value(parent.bounds)
                     parent = parent.get_parent()
 
@@ -293,6 +316,9 @@ class CellBox:
         return agg_cellbox
 
     def check_vector_data(self, source, loader, agg_value, data_name):
+        """
+        method that checks if the vector data is None and calls the parent get value
+        """
         data_name_list = data_name.split(',')
         for name in data_name_list:
             parent = self.get_parent()
@@ -301,14 +327,15 @@ class CellBox:
                 agg_value[name] = 0
             elif np.isnan(agg_value[name]) and source.get_value_fill_type() == 'parent':
                 # if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                while parent != None and np.isnan(agg_value[name]):
+                while parent is not None and np.isnan(agg_value[name]):
                     agg_value[name] = loader.get_value(parent.bounds)[name]
                     parent = parent.get_parent()
         return agg_value
 
-# Method to free up the memory space allocated by the cellbox
-
     def deallocate_cellbox(self):
+        """
+        Method to free up the memory space allocated by the cellbox
+        """
         for source in self.get_data_source():
             loader = source.get_data_loader()
             del loader
