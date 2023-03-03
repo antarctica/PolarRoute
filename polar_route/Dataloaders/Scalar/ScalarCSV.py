@@ -41,7 +41,7 @@ class ScalarCSVDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-            data (pd.DataFrame): 
+            pd.DataFrame: 
                 Scalar dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', potentially 'time',
                 and variable defined by column heading in csv file

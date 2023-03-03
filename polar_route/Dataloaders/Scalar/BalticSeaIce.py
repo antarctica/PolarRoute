@@ -43,7 +43,7 @@ class BalticSeaIceDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-            data (xr.Dataset): 
+            xr.Dataset: 
                 Baltic Sea Ice dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', and variable 'SIC'         
         '''

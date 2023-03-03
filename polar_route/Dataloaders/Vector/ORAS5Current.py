@@ -1,4 +1,4 @@
-from .AbstractVector import VectorDataLoader
+from polar_route.Dataloaders.Vector.AbstractVector import VectorDataLoader
 
 import logging
 
@@ -8,43 +8,55 @@ import numpy as np
 #TODO Read in 2 files, combine to one object
 class ORAS5CurrentDataLoader(VectorDataLoader):
     def __init__(self, bounds, params):
+        '''
+        Initialises ORAS5 currents dataset. Does no post-processing.
+        NOTE - This dataloader uses a NetCDF file that has been pre-processed
+        to include both zonal and meridional velocities! Additional work 
+        needed to make it work with data straight from the website
+        
+        Args:
+            bounds (Boundary): 
+                Initial boundary to limit the dataset to
+            params (dict):
+                Dictionary of {key: value} pairs. Keys are attributes 
+                this dataloader requires to function
+        '''
+        
+        logging.info("Initalising ORAS5 currents dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
+            logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
             setattr(self, key, val)
         
-        # Set up data
+        # Import data
         self.data = self.import_data(bounds)
-        self.data_name = self.col_names_to_str() # = 'SIC'
         
-    def import_data(self, bounds, binsize=0.25):
-        logging.debug("Importing ORAS5 Current data...")
-        
-        # Open Dataset
-        logging.debug(f"- Opening zonal velocity file {self.file_u}")
-        data_u = xr.open_dataset(self.file_u)
-        
-        
-        logging.debug(f"- Opening meridional velocity file {self.file_v}")
-        data_v = xr.open_dataset(self.data_v)
-        
-        # Ensure time frame of both zonal/meridional components match
-        assert (data_u.time_counter.values == data_v.time_counter.values), \
-            'Timestamp of input files do not match!'
+        # Get data name from column name if not set in params
+        if self.data_name is None:
+            logging.debug('- Setting self.data_name from column name')
+            self.data_name = self.get_data_col_name()
+        # or if set in params, set col name to data name
+        else:
+            logging.debug(f'- Setting data column name to {self.data_name}')
+            self.data = self.set_data_col_name(self.data_name)
             
-        # Set domain of new coordinates to bin within
-        lat_min = np.floor(min(data_u.nav_lat.min(), data_v.nav_lat.min()))
-        lat_max = np.ceil(max(data_u.nav_lat.max(), data_v.nav_lat.max()))
-        lat_range = np.arange(lat_min, lat_max, binsize)
-        lon_min = np.floor(min(data_u.nav_lon.min(), data_v.nav_lon.min()))
-        lon_max = np.ceil(max(data_u.nav_lon.max(), data_v.nav_lon.max()))
-        lon_range = np.arange(lon_min, lon_max, binsize)
-        time = data_u.time_counter.values
         
+    def import_data(self, bounds):
+        '''
+        Reads in data from a ORAS5 Depth NetCDF files. 
+        Renames coordinates to 'lat' and 'long', and renames variable to 
+        'uC, vC'
         
-        
-        # TODO
-        
-
+        Args:
+            bounds (Boundary): Initial boundary to limit the dataset to
+            
+        Returns:
+            xr.Dataset: 
+                ORAS5 currents dataset within limits of bounds. 
+                Dataset has coordinates 'lat', 'long', and variable 'uC', 'vC'
+        '''
+        logging.info(f"- Opening file {self.file}")
+        # Open Dataset
         data = xr.open_dataset(self.file)
         
         # Change column names
@@ -56,6 +68,7 @@ class ORAS5CurrentDataLoader(VectorDataLoader):
         data = data[['lat','long','uC','vC']]
         
         # Limit to initial boundary
+        logging.info('- Limiting to initial bounds')
         data = data.sel(lat=slice(bounds.get_lat_min(),
                                   bounds.get_lat_max()))
         data = data.sel(long=slice(bounds.get_long_min(),

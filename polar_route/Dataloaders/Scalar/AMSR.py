@@ -25,8 +25,17 @@ class AMSRDataLoader:
             self.get_hom_condition()
     '''
     def __init__(self, bounds, params):
-
-    # def __init__(self, file_location, bounds, min_dp=5, ds=None, data_name=None, aggregate_type="MEAN"):
+        '''
+        Initialises AMSR dataset. Reprojects data.
+        
+       Args:
+            bounds (Boundary): 
+                Initial boundary to limit the dataset to
+            params (dict):
+                Dictionary of {key: value} pairs. Keys are attributes 
+                this dataloader requires to function
+        '''
+        logging.info("Initalising AMSR dataloader")
         self.file_location  = params['folder']
         self.min_dp         = params['min_dp']
         self.ds             = params['downsample_factors']
@@ -42,10 +51,18 @@ class AMSRDataLoader:
         logging.debug(f'- Successfully extracted {self.data_name}')    
 
     def import_data(self, bounds):
-        
         '''
-        Load AMSR netCDF, either as single '.nc' file, 
-        or from a folder of '.nc' files
+        Reads in data from a AMSR NetCDF file, or folder of files. 
+        Renames coordinates to 'lat' and 'long', and renames variable to 
+        'elevation'
+        
+        Args:
+            bounds (Boundary): Initial boundary to limit the dataset to
+            
+        Returns:
+            xr.Dataset: 
+                BSOSE Depth dataset within limits of bounds. 
+                Dataset has coordinates 'lat', 'long', and variable 'elevation'
         '''
         def retrieve_date(filename):
             '''
@@ -103,9 +120,9 @@ class AMSRDataLoader:
         else:
             raise ValueError('File or folder not specified in params!')
 
-#         # Remove unnecessary column
+        # Remove unnecessary column
+        # Below line was causing regression tests to fail!
         # data = data.drop(labels='polar_stereographic')
-        
         
         raw_df = data.to_dataframe().reset_index().dropna()
         
@@ -122,7 +139,7 @@ class AMSRDataLoader:
 
         reprojected_df = self.reproject(raw_df, in_proj=in_proj, out_proj=out_proj, 
                                         x_col='x', y_col='y')
-        
+        logging.info('- Limiting to initial bounds')
         mask = (reprojected_df['lat']  >= bounds.get_lat_min())  & \
                (reprojected_df['lat']  <= bounds.get_lat_max())  & \
                (reprojected_df['long'] > bounds.get_long_min()) & \
@@ -152,7 +169,8 @@ class AMSRDataLoader:
                 reprojection 
             
         Returns:
-            data (pd.DataFrame): Reprojected data with 'lat', 'long' columns 
+            pd.DataFrame: 
+                Reprojected data with 'lat', 'long' columns 
                 replacing 'x_col' and 'y_col'
         '''
         def reproject_df(data, in_proj, out_proj, x_col, y_col):
@@ -198,9 +216,15 @@ class AMSRDataLoader:
         
         Args:
             bounds (Boundary): Limits of lat/long/time to select data from
+            return_coords (boolean): 
+                Flag to determine if coordinates are provided for each 
+                datapoint found. Default is False.
+                            
             
         Returns:
-            data (pd.Series): Column of data values within selected region 
+            pd.DataFrame: 
+                Column of data values within selected region. If return_coords
+                is true, also returns with coordinate columns 
         '''
         def get_datapoints_from_df(data, name, bounds):
             '''
@@ -243,10 +267,17 @@ class AMSRDataLoader:
 
     def get_data_name(self):
         '''
-        Retrieve name of data column
+        Retrieve name of data column (for pd.DataFrame), or variable 
+        (for xr.Dataset). Used for when data_name not defined in params.
 
         Returns:
-            data_name (str): Name of data column
+            str: 
+                Name of data column
+            
+        Raises:
+            ValueError: 
+                If multiple possible data columns found, can't retrieve data 
+                name
         '''
         # Store name of data column for future reference
         
@@ -263,14 +294,17 @@ class AMSRDataLoader:
         Args:
             aggregation_type (str): Method of aggregation of datapoints within
                 bounds. Can be upper or lower case. 
-                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD'
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD', 'CLEAR'
             bounds (Boundary): Boundary object with limits of lat/long
             skipna (bool): Defines whether to propogate NaN's or not
                 Default = True (ignore's NaN's)
 
         Returns:
-            aggregate_value (float): Aggregated value within bounds following
-                aggregation_type
+            float: 
+                Aggregated value within bounds following aggregation_type
+                
+        Raises:
+            ValueError: aggregation type not in list of available methods
         '''
         # Set to params if no specific aggregate type specified
         if agg_type is None:
@@ -299,32 +333,37 @@ class AMSRDataLoader:
 
     def get_hom_condition(self, bounds, splitting_conds):
         '''
-        Retrieve homogeneity condition
-        
+        Retrieves homogeneity condition of data within
+        boundary.
+         
         Args: 
             bounds (Boundary): Boundary object with limits of datarange to analyse
-            splitting_conds (dict):
-                ['threshold'] (float):  The threshold at which data points of 
+            splitting_conds (dict): Containing the following keys: \n
+                'threshold':  
+                    `(float)` The threshold at which data points of 
                     type 'value' within this CellBox are checked to be either 
                     above or below
-                ['upper_bound'] (float): The lowerbound of acceptable percentage 
-                    of data_points of type value within this CellBox that are 
+                'upper_bound': 
+                    `(float)` The lowerbound of acceptable percentage 
+                    of data_points of type value within this boundary that are 
                     above 'threshold'
-                ['lower_bound'] (float): the upperbound of acceptable percentage 
-                    of data_points of type value within this CellBox that are 
+                'lower_bound': 
+                    `(float)` The upperbound of acceptable percentage 
+                    of data_points of type value within this boundary that are 
                     above 'threshold'
 
         Returns:
-            hom_condition (string): The homogeniety condtion of this CellBox by 
-                given parameters hom_condition is of the form -
-            CLR = the proportion of data points within this cellbox over a given
-                threshold is lower than the lowerbound
-            HOM = the proportion of data points within this cellbox over a given
-                threshold is higher than the upperbound
-            MIN = the cellbox contains less than a minimum number of data points
-
-            HET = the proportion of data points within this cellbox over a given
-                threshold if between the upper and lower bound
+            str:
+                The homogeniety condtion returned is of the form: \n
+                'CLR' = the proportion of data points within this cellbox over a 
+                given threshold is lower than the lowerbound \n
+                'HOM' = the proportion of data points within this cellbox over a
+                given threshold is higher than the upperbound \n
+                'MIN' = the cellbox contains less than a minimum number of 
+                data points \n
+                'HET' = the proportion of data points within this cellbox over a
+                given threshold if between the upper and lower bound
+                
         '''
         # Retrieve datapoints to analyse
         dps = self.get_datapoints(bounds)

@@ -44,7 +44,7 @@ class ShapeDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-            data (pd.DataFrane): 
+            pd.DataFrame: 
                 DataFrame with coordinates within bounds, and values between
                 [0:1]. Dataframe has columns 'lat', 'long', 'time', and
                 'dummy_data' (by default)

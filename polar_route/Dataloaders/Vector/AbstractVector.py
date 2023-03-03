@@ -3,52 +3,22 @@ from abc import abstractmethod
 
 from pyproj import Transformer, CRS
 
+import logging
 import numpy as np
 import xarray as xr
 import pandas as pd
 
 class VectorDataLoader(DataLoaderInterface):
     '''
-    Abstract class for all vector Datasets
-
-    Methods:
-        __init__:
-            User defined. This is where large-scale operations are performed, 
-            e.g.
-                - params are set as object attributes
-                - self.data set
-                - self.data downsampled
-                - self.data reprojected
-                - self.data_name set
-                
-        import_data:
-            User defined. Must return either pd.DataFrame or xarray.Dataset
-            with lat, long, (time), data
-        get_datapoints:
-            Returns pd.DataFrame of datapoints within Boundary object
-        get_value:
-            Returns aggregated value of data within Boundary. 
-            Returns as dict {data_name: data_value}
-        get_hom_condition:
-            Retrieves homogeneity condition of dataset within boundary. This
-            defines how cellboxes are split in the mesh.
-        reproject:
-            Reprojects dataset from imported projection to desired projection
-            Default desired projection is mercator
-        downsample:
-            Bins data to be more sparse if input dataset too large to handle
-            Will use aggregation method defined in 'params' to bin data
-        get_data_col_name:
-            Returns label of data from column name in 'self.data'
-        set_data_col_name:
-            Changes column/data variable name in self.data to a user defined
-            string. 
-        col_names_to_str:
-            Creates a string combining all data column names, comma seperated 
+    Abstract class for all vector Datasets.
     '''
     @abstractmethod
     def __init__(self, bounds, params, min_dp):
         '''
+        User defined. This is where large-scale operations are performed, 
+        such as importing data, downsampling, reprojecting, and renaming 
+        variables
+        
         Args:
             bounds (Boundary): 
                 Initial mesh boundary to limit scope of data ingest
@@ -58,16 +28,14 @@ class VectorDataLoader(DataLoaderInterface):
             min_dp (int): 
                 Minimum datapoints required to get homogeneity condition
                 
-        User defines:
-            self.data = self.import_data(bounds)
-            self.data = self.downsample() [OPTIONAL]
-            self.data = self.reproject(   [OPTIONAL]
-                                in_proj= Current projection e.g. 'EPSG:3412',
-                                out_proj= Desired projection e.g. 'EPSG:4326',
-                                x_col= Name of position column 1 e.g. 'x',
-                                y_col= Name of position column 2 e.g. 'y'
-                                )
-            self.data_name = self.get_data_col_name() [OPTIONAL]
+        Attributes:
+            self.data (pd.DataFrame or xr.Dataset): 
+                Data stored by dataloader to use when called upon by the mesh.
+                Must be saved in mercator projection (EPSG:4326), with 
+                coordinates names 'lat', 'long', and 'time' (if applicable).
+            self.data_name (str): 
+                Name of scalar variable. Must be the column name if self.data
+                is pd.DataFrame. Must be variable if self.data is xr.Dataset
         '''
         pass
 
@@ -78,34 +46,36 @@ class VectorDataLoader(DataLoaderInterface):
         data from scratch
                 
         Returns:
-            data (xr.Dataset or pd.DataFrame):
+            xr.Dataset or pd.DataFrame:
+                Coordinates and data being imported from file \n
                 if xr.Dataset, 
                     - Must have coordinates 'lat' and 'long'
-                    - Must have single data variable
-                    - Useful methods include 
+                    - Should have multiple data variables
+                    
                 if pd.DataFrame, 
                     - Must have columns 'lat' and 'long'
-                    - Must have single data column
+                    - Should have multiple data columns
                     
                 Downsampling and reprojecting happen in __init__() method
         '''
         pass
     
-    def get_dp_from_coord(self, long=None, lat=None):
+    def get_dp_from_coord(self, long=None, lat=None, return_coords=False):
         '''
         Extracts datapoint from self.data with lat and long specified in kwargs.
-        self.data can be pd.DataFrame or xr.Dataset
+        self.data can be pd.DataFrame or xr.Dataset. Will return multiple values
+        if one set of coordinates have multiple entries (e.g. time series data)
         
         Args:
             long (float): Longitude coordinate to search for
             lat (float) : Latitude coordinate to search for
             
         Returns:
-            data (pd.Series): Column of data values with chosen lat/long
-                              Could be many datapoints because either bad data
-                              or multiple time steps 
+            pd.Series:  
+                Column of data values with chosen lat/long. Could be many 
+                datapoints because either bad data or multiple time steps 
         '''
-        def get_dp_from_coord_df(data, names, long, lat):
+        def get_dp_from_coord_df(data, names, long, lat, return_coords):
             '''
             Extracts data from a pd.DataFrame
             '''
@@ -113,10 +83,13 @@ class VectorDataLoader(DataLoaderInterface):
             mask = (data['lat']  == lat)  & \
                    (data['long'] == long) 
 
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = [names.split(',')]
             # Return column of data from within bounds
-            return data.loc[mask][names.split(',')]
+            return data.loc[mask][columns]
         
-        def get_dp_from_coord_xr(data, names, long, lat):
+        def get_dp_from_coord_xr(data, names, long, lat, return_coords):
             '''
             Extracts data from a xr.Dataset
             '''
@@ -124,8 +97,11 @@ class VectorDataLoader(DataLoaderInterface):
             data = data.sel(lat=lat, long=long)
             # Cast as a pd.DataFrame
             data = data.to_dataframe().reset_index()
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = [names.split(',')]
             # Return column of data from within bounds
-            return data[names.split(',')]
+            return data[columns]
         
         # Ensure that lat and long provided
         assert (lat is not None) and (long) is not None, \
@@ -136,9 +112,9 @@ class VectorDataLoader(DataLoaderInterface):
         else:                          data_name = self.get_data_col_name()
         
         if type(self.data) == type(pd.DataFrame()):
-            return get_dp_from_coord_df(self.data, data_name, long, lat)
+            return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
         elif type(self.data) == type(xr.Dataset()):
-            return get_dp_from_coord_xr(self.data, data_name, long, lat)
+            return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
         
 
     def get_datapoints(self, bounds, return_coords=False):
@@ -148,16 +124,21 @@ class VectorDataLoader(DataLoaderInterface):
         
         Args:
             bounds (Boundary): Limits of lat/long/time to select data from
+            return_coords (boolean): 
+                Flag to determine if coordinates are provided for each 
+                datapoint found. Default is False.
+                            
             
         Returns:
-            data (pd.Series): Column of data values within selected region 
+            pd.DataFrame: 
+                Column of data values within selected region. If return_coords
+                is true, also returns with coordinate columns 
         '''
         def get_datapoints_from_df(data, names, bounds, return_coords):
             '''
             Extracts data from a pd.DataFrame
             '''
             # Mask off any positions not within spatial bounds
-            # TODO Change <= to < after regression tests pass
             mask = (data['lat']  >= bounds.get_lat_min())  & \
                    (data['lat']  <= bounds.get_lat_max())  & \
                    (data['long'] > bounds.get_long_min()) & \
@@ -168,14 +149,9 @@ class VectorDataLoader(DataLoaderInterface):
                         (data['time'] <= bounds.get_time_max())
             # Return column of data from within bounds
             # TODO add dropna() when merged, standard didn't have it 
-            # Extract lat/long/time if requested
-            if return_coords:   
-                columns = ['lat', 'long']
-                columns += names.split(',')
-                if 'time' in data.columns:
-                    columns += ['time']
-            else:
-                columns = names.split(',')
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = names.split(',')
             # Return column of data from within bounds
             return data.loc[mask][columns]
         
@@ -184,6 +160,7 @@ class VectorDataLoader(DataLoaderInterface):
             Extracts data from a xr.Dataset
             '''
             # Select data region within spatial bounds
+            # TODO make sure boundaries act same as df
             data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
             data = data.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
             # Select data region within temporal bounds if time exists as a coordinate
@@ -192,16 +169,12 @@ class VectorDataLoader(DataLoaderInterface):
             # Cast as a pd.DataFrame
             # TODO add dropna() when merged, standard didn't have it
             data = data.to_dataframe().reset_index()#.dropna()
-            # Extract lat/long/time if requested
-            if return_coords:   
-                columns = ['lat', 'long']
-                columns += names.split(',')
-                if 'time' in data.columns:
-                    columns += ['time']
-            else:               
-                columns = names.split(',')
+            # Include lat/long/time if requested
+            if return_coords: columns = list(data.columns)
+            else:             columns = names.split(',')
+            
             # Return column of data from within bounds
-            return data.loc[columns]
+            return data[columns]
 
             
         # Choose which method to retrieve data based on input type
@@ -228,8 +201,12 @@ class VectorDataLoader(DataLoaderInterface):
                 Default = True (ignore's NaN's)
 
         Returns:
-            aggregate_value (float): Aggregated value within bounds following
-                aggregation_type
+            float: 
+                Aggregated value within bounds following aggregation_type
+                
+        Raises:
+            ValueError: aggregation type 'MEDIAN' not valid for vectors
+            ValueError: aggregation type not in list of available methods
         '''
         def extract_vals(row, col_vars):
             '''
@@ -266,12 +243,14 @@ class VectorDataLoader(DataLoaderInterface):
         elif agg_type == 'MAX': # Find max mag vector
            row = dps[dps.mag == dps.mag.max(skipna=skipna)]
         elif agg_type == 'MEAN': # Average each vector axis
-            # TODO below is a workaround to make this work like standard code. Needs a fix
+            # TODO below is a workaround to make this work like standard code. 
+            # Needs to do a mean on only vectors that have both x,y components
             row = {col: dps[col].mean(skipna=skipna) for col in col_vars}
         elif agg_type == 'STD': # Std Dev each vector axis
             # TODO Needs a fix like above statement
             row = {col: dps[col].std(skipna=skipna) for col in col_vars}
         elif agg_type == 'COUNT':
+            # TODO Needs a fix like above statement
             row = {col: len(dps[col].dropna()) for col in col_vars}
         # Median of vectors does not make sense
         elif agg_type == 'MEDIAN':
@@ -284,10 +263,46 @@ class VectorDataLoader(DataLoaderInterface):
         return extract_vals(row, col_vars)
 
     # TODO get_hom_condition()
-    def get_hom_condition(self, bounds, splitting_conds, agg_type):
-        pass
     # Using Curl / Divergence / Vorticity
     # Reynolds number?
+    def get_hom_condition(self, bounds, splitting_conds, agg_type):
+        '''
+        Not implemented yet. Retrieves homogeneity condition of data within
+        boundary.
+         
+        Args: 
+            bounds (Boundary): Boundary object with limits of datarange to analyse
+            splitting_conds (dict): Containing the following keys: \n
+                'threshold':  
+                    `(float)` The threshold at which data points of 
+                    type 'value' within this CellBox are checked to be either 
+                    above or below
+                'upper_bound': 
+                    `(float)` The lowerbound of acceptable percentage 
+                    of data_points of type value within this boundary that are 
+                    above 'threshold'
+                'lower_bound': 
+                    `(float)` The upperbound of acceptable percentage 
+                    of data_points of type value within this boundary that are 
+                    above 'threshold'
+
+        Returns:
+            str:
+                The homogeniety condtion returned is of the form: \n
+                'CLR' = the proportion of data points within this cellbox over a 
+                given threshold is lower than the lowerbound \n
+                'HOM' = the proportion of data points within this cellbox over a
+                given threshold is higher than the upperbound \n
+                'MIN' = the cellbox contains less than a minimum number of 
+                data points \n
+                'HET' = the proportion of data points within this cellbox over a
+                given threshold if between the upper and lower bound
+                
+        Raises:
+            NotImplementedError: 
+                This method hasn't been defined for a vector field yet
+        '''
+        raise NotImplementedError
         
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
@@ -309,7 +324,8 @@ class VectorDataLoader(DataLoaderInterface):
                 reprojection 
             
         Returns:
-            data (pd.DataFrame): Reprojected data with 'lat', 'long' columns 
+            pd.DataFrame: 
+                Reprojected data with 'lat', 'long' columns 
                 replacing 'x_col' and 'y_col'
         '''
         def reproject_df(data, in_proj, out_proj, x_col, y_col):
@@ -336,25 +352,38 @@ class VectorDataLoader(DataLoaderInterface):
             # Cannot reproject directly as memory usage skyrockets
             df = data.to_dataframe().reset_index()
             return reproject_df(df, in_proj, out_proj, x_col, y_col)
-        
+
         # If no reprojection to do
         if in_proj == out_proj:
+            logging.debug("- self.reproject() called but don't need to")
             return self.data
+        else:
+            logging.info(f"- Reprojecting data from {in_proj} to {out_proj}")
         # Choose appropriate method of reprojection based on data type
-        elif type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == type(pd.DataFrame()):
             return reproject_df(self.data, in_proj, out_proj, x_col, y_col)
         elif type(self.data) == type(xr.Dataset()):
             return reproject_xr(self.data, in_proj, out_proj, x_col, y_col)
     
     def downsample(self, agg_type=None):
         '''
-        Downsamples imported data to be more easily manipulated
+        Downsamples imported data to be more easily manipulated. Data size 
+        should be reduced by a factor of m*n, where (m,n) are the 
+        downsample_factors defined in the params.        
         self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            agg_type (str): 
+                Method of aggregation to bin data by to downsample. Default is
+                same method used for homogeneity condition.            
 
         Returns:
-            data (xr.Dataset or pd.DataFrame): 
-                Dataset downsampled by factors defined in params, 
-                and binned via aggregation method defined in params
+            xr.Dataset or pd.DataFrame: 
+                Downsampled data
+                
+        Todo:
+            Fix downsampling to work with aggregation type as intended. Right now 
+            it just takes every m'th and n'th datapoint in each coord axis
         '''
         def downsample_xr(data, ds, agg):
             '''
@@ -391,19 +420,25 @@ class VectorDataLoader(DataLoaderInterface):
             
         # If no downsampling
         if self.downsample_factors == (1,1):
+            logging.debug("- self.downsample() called but don't have to")
             return self.data
+        else:
+            logging.info(f"- Downsampling data by {self.downsample_factors}")
         # Otherwise, downsample appropriately
-        elif type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == type(pd.DataFrame()):
             return downsample_df(self.data, self.downsample_factors, agg_type)
         elif type(self.data) == type(xr.Dataset()):
             return downsample_xr(self.data, self.downsample_factors, agg_type)
         
     def get_data_col_name(self):
         '''
-        Retrieve name of data column
+        Retrieve name of data column (for pd.DataFrame), or variable 
+        (for xr.Dataset). Used for when data_name not defined in params.
+        Variable names are appended and comma seperated
 
         Returns:
-            data_names [str]: List of strings of the column names
+            str: 
+                Name of data columns, comma seperated
         '''
         def get_data_names_from_df(data):
             '''
@@ -433,16 +468,17 @@ class VectorDataLoader(DataLoaderInterface):
         elif type(self.data) == type(xr.Dataset()):
             return get_data_names_from_xr(self.data)
 
-    def set_data_col_name(self, name_dict):
+    def set_data_col_name(self, new_names):
         '''
-        Sets name of data column/data variable
+        Sets name of data column/data variables
         
         Args:
-            name_dict {str:str}: 
-                Dictionary mapping old variable names to new variable names
+            name_dict (dict): 
+                Dictionary mapping old variable names to new variable names,
+                of the form {old_name (str): new_name (str)}
 
         Returns:
-            data (xr.Dataset or pd.DataFrame): 
+            xr.Dataset or pd.DataFrame: 
                 Data with variable name changed
         '''
         def set_names_df(data, name_dict):
@@ -457,7 +493,16 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Rename data variable to new name
             return data.rename(name_dict)
-        
+        # Split string into column names
+        new_col_names = new_names.split(',')
+        # Get existing column names
+        old_col_names = self.get_data_col_name().split(',')
+        # Ensure that can do replacement of columns
+        assert len(old_col_names) == len(new_col_names)
+        # Set up mapping of old names to new names
+        name_dict = {old_col: new_col_names[i] 
+                     for i, old_col in enumerate(old_col_names)}
+        # Change names
         # Change data name depending on data type
         if type(self.data) == type(pd.DataFrame()):
             return set_names_df(self.data, name_dict)

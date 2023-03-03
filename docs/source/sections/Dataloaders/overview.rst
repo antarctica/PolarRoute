@@ -10,9 +10,9 @@ Dataloader Overview
 
    ./DataLoaderInterface
    ./Factory
-   ./lut/index
    ./scalar/index
    ./vector/index
+   
 
 
 Overview
@@ -45,7 +45,7 @@ The general workflow for creating a new dataloader is as follows:
 
 #. Choose an approriate dataloader type (see `Dataloader Types`_).
 #. Create a new file under :code:`polar_route/DataLoaders/{dataloader-type}` with an appropriate name.
-#. Create :code:`__init__()` and :code:`import_data()` methods. Examples of how to do this are shown on the :ref:`abstractScalar<abstract-scalar-dataloader-index>`, :ref:`abstractVector<abstract-vector-dataloader-index>`, and :ref:`abstractLUT<abstract-lut-dataloader-index>` pages.
+#. Create :code:`__init__()` and :code:`import_data()` methods. Examples of how to do this are shown on the :ref:`abstractScalar<abstract-scalar-dataloader-index>` and :ref:`abstractVector<abstract-vector-dataloader-index>` pages.
 #. Add a new entry to the dataloader factory object, within :code:`polar_route/Dataloaders/Factory.py`. Instructions on how to do so are shown in :ref:`dataloader-factory`
 
 After performing these actions, the dataloader should be ready to go. It is useful for debugging purposes 
@@ -56,7 +56,8 @@ to create the dataloader object from within :code:`polar_route/Dataloaders/Facto
 Dataloader Types
 ^^^^^^^^^^^^^^^^
 
-There are three main types of dataloaders that are implemented as abstract classes: Scalar, Vector and Look-up-table.
+There are two main types of dataloaders that are implemented as abstract classes: Scalar and Vector.
+
 
 **Scalar dataloaders** are to be used on scalar datasets; i.e. variables with a single value
 per latitude/longitude(/time) coordinate. Examples of this are bathymetry, sea ice concentration, etc... 
@@ -72,11 +73,11 @@ however the :ref:`abstractVector<abstract-vector-dataloader>` dataloader should 
 Rigor should be taken when testing these dataloaders to ensure that the outputs of :code:`get_value()` method of these dataloaders produces outputs that make sense.
 To read more on how to implement these, follow instructions in `Implementing New Dataloaders`_ and :ref:`abstract vector dataloader page<abstract-vector-dataloader-index>`.
 
-**Look-up Table Dataloaders** are to be used on datasets where boundaries define a value.
-Real data is always prefered to this method, however in the case where there is no data, the LUT
-can provide an alternative. Examples of this include ice density, and ice thickness. For these examples,
-weather conditions dictate their values, and these weather conditions can be localised to specific areas.
-To read more on how to implement these, follow instructions in `Implementing New Dataloaders`_ and :ref:`abstract LUT dataloader page<abstract-lut-dataloader-index>`.
+.. **Look-up Table Dataloaders** are to be used on datasets where boundaries define a value.
+.. Real data is always prefered to this method, however in the case where there is no data, the LUT
+.. can provide an alternative. Examples of this include ice density, and ice thickness. For these examples,
+.. weather conditions dictate their values, and these weather conditions can be localised to specific areas.
+.. To read more on how to implement these, follow instructions in `Implementing New Dataloaders`_ and :ref:`abstract LUT dataloader page<abstract-lut-dataloader-index>`.
 
 
 
@@ -87,10 +88,9 @@ To look at specific abstract dataloaders, use the following links:
 
 - :ref:`abstract-scalar-dataloader`
 - :ref:`abstract-vector-dataloader`
-- :ref:`abstract-lut-dataloader`
 
 These are the templates to be used when implementing new dataloaders into PolarRoute. 
-They have been split into three seperate categories: Scalar, Vector, and LUT, detailed in `Dataloader Types`_.
+They have been split into two seperate categories: Scalar and Vector, detailed in `Dataloader Types`_.
 The abstract classes generalise the methods used by each dataloader type to produce outputs
 that the Environmental Mesh can retrieve via the  :ref:`dataloader interface<dataloader-interface>`. 
 They are flexible in that they can store and process data as both :code:`pandas.DataFrame`'s or 

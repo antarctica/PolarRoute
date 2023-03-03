@@ -10,7 +10,7 @@ import logging
 
 class ScalarDataLoader(DataLoaderInterface):
     '''
-    Abstract class for all scalar Datasets. Has the following methods
+    Abstract class for all scalar Datasets.
     '''
     @abstractmethod
     def __init__(self, bounds, params, min_dp):
@@ -46,11 +46,12 @@ class ScalarDataLoader(DataLoaderInterface):
         data from scratch
                 
         Returns:
-            data (xr.Dataset or pd.DataFrame):
+            xr.Dataset or pd.DataFrame:
+                Coordinates and data being imported from file \n
                 if xr.Dataset, 
                     - Must have coordinates 'lat' and 'long'
                     - Must have single data variable
-                    - Useful methods include 
+                    
                 if pd.DataFrame, 
                     - Must have columns 'lat' and 'long'
                     - Must have single data column
@@ -109,7 +110,6 @@ class ScalarDataLoader(DataLoaderInterface):
         if hasattr(self, 'data_name'): data_name = self.data_name
         else:                          data_name = self.get_data_col_name()
         
-        logging.debug(f'- Retrieving datapoint from a {type(self.data)}')
         if type(self.data) == type(pd.DataFrame()):
             return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
         elif type(self.data) == type(xr.Dataset()):
@@ -130,7 +130,9 @@ class ScalarDataLoader(DataLoaderInterface):
                             
             
         Returns:
-            data (pd.Series): Column of data values within selected region 
+            pd.DataFrame: 
+                Column of data values within selected region. If return_coords
+                is true, also returns with coordinate columns 
         '''
         def get_datapoints_from_df(data, name, bounds, return_coords):
             '''
@@ -178,7 +180,6 @@ class ScalarDataLoader(DataLoaderInterface):
         if hasattr(self, 'data_name'): data_name = self.data_name
         else:                          data_name = self.get_data_col_name()
         
-        logging.debug(f'- Retrieving datapoint from a {type(self.data)}')
         if type(self.data) == type(pd.DataFrame()):
             return get_datapoints_from_df(self.data, data_name, bounds, return_coords)
         elif type(self.data) == type(xr.Dataset()):
@@ -197,8 +198,11 @@ class ScalarDataLoader(DataLoaderInterface):
                 Default = True (ignore's NaN's)
 
         Returns:
-            aggregate_value (float): Aggregated value within bounds following
-                aggregation_type
+            float: 
+                Aggregated value within bounds following aggregation_type
+                
+        Raises:
+            ValueError: aggregation type not in list of available methods
         '''
         # Set to params if no specific aggregate type specified
         if agg_type is None:
@@ -229,32 +233,37 @@ class ScalarDataLoader(DataLoaderInterface):
 
     def get_hom_condition(self, bounds, splitting_conds):
         '''
-        Retrieve homogeneity condition
-        
+        Retrieves homogeneity condition of data within
+        boundary.
+         
         Args: 
             bounds (Boundary): Boundary object with limits of datarange to analyse
-            splitting_conds (dict):
-                ['threshold'] (float):  The threshold at which data points of 
+            splitting_conds (dict): Containing the following keys: \n
+                'threshold':  
+                    `(float)` The threshold at which data points of 
                     type 'value' within this CellBox are checked to be either 
                     above or below
-                ['upper_bound'] (float): The lowerbound of acceptable percentage 
-                    of data_points of type value within this CellBox that are 
+                'upper_bound': 
+                    `(float)` The lowerbound of acceptable percentage 
+                    of data_points of type value within this boundary that are 
                     above 'threshold'
-                ['lower_bound'] (float): the upperbound of acceptable percentage 
-                    of data_points of type value within this CellBox that are 
+                'lower_bound': 
+                    `(float)` The upperbound of acceptable percentage 
+                    of data_points of type value within this boundary that are 
                     above 'threshold'
 
         Returns:
-            hom_condition (string): The homogeniety condtion of this CellBox by 
-                given parameters hom_condition is of the form -
-                CLR = the proportion of data points within this cellbox over a 
-                given threshold is lower than the lowerbound
-                HOM = the proportion of data points within this cellbox over a
-                given threshold is higher than the upperbound
-                MIN = the cellbox contains less than a minimum number of 
-                data points
-                HET = the proportion of data points within this cellbox over a
+            str:
+                The homogeniety condtion returned is of the form: \n
+                'CLR' = the proportion of data points within this cellbox over a 
+                given threshold is lower than the lowerbound \n
+                'HOM' = the proportion of data points within this cellbox over a
+                given threshold is higher than the upperbound \n
+                'MIN' = the cellbox contains less than a minimum number of 
+                data points \n
+                'HET' = the proportion of data points within this cellbox over a
                 given threshold if between the upper and lower bound
+                
         '''
         # Retrieve datapoints to analyse
         dps = self.get_datapoints(bounds)[self.data_name]
@@ -292,7 +301,8 @@ class ScalarDataLoader(DataLoaderInterface):
                 reprojection 
             
         Returns:
-            data (pd.DataFrame): Reprojected data with 'lat', 'long' columns 
+            pd.DataFrame: 
+                Reprojected data with 'lat', 'long' columns 
                 replacing 'x_col' and 'y_col'
         '''
         def reproject_df(data, in_proj, out_proj, x_col, y_col):
@@ -345,7 +355,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 same method used for homogeneity condition.            
 
         Returns:
-            data (xr.Dataset or pd.DataFrame): 
+            xr.Dataset or pd.DataFrame: 
                 Downsampled data
                 
         Todo:
@@ -403,7 +413,8 @@ class ScalarDataLoader(DataLoaderInterface):
         (for xr.Dataset). Used for when data_name not defined in params.
 
         Returns:
-            data_name (str): Name of data column
+            str: 
+                Name of data column
             
         Raises:
             ValueError: 
@@ -456,7 +467,7 @@ class ScalarDataLoader(DataLoaderInterface):
             name (str): Name to replace currently stored name with
 
         Returns:
-            data (xr.Dataset or pd.DataFrame): 
+            xr.Dataset or pd.DataFrame: 
                 Data with variable name changed
         '''
         def set_name_df(data, old_name, new_name):

@@ -44,7 +44,7 @@ class BSOSEDepthDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-            data (xr.Dataset): 
+            xr.Dataset: 
                 BSOSE Depth dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', and variable 'elevation'
         '''

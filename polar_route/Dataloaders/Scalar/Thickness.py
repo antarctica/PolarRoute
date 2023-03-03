@@ -47,7 +47,7 @@ class ThicknessDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-            data (pd.DataFrame): 
+            pd.DataFrame: 
                 Sea Ice Density dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', and variable 'thickness'
         '''
