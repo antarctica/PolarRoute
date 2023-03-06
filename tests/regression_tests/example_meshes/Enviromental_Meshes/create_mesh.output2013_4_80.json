@@ -13,13 +13,16 @@
             },
             "Data_sources": [
                 {
+
                     "loader": "GEBCO",
+
                     "params": {
                         "downsample_factors": [
                             5,
                             5
                         ],
                         "file": "../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
+
                         "data_name": "elevation",
                         "value_fill_types": "parent",
                         "aggregate_type": "MAX",
@@ -73,11 +76,13 @@
                         "file": "",
                         "value_fill_types": "parent"
                     }
+
                 }
             ],
             "splitting": {
                 "split_depth": 4,
                 "minimum_datapoints": 5
+
             }
         }
     },

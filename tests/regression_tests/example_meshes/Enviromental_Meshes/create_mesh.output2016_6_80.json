@@ -13,12 +13,15 @@
             },
             "Data_sources": [
                 {
+
                     "loader": "GEBCO",
+
                     "params": {
                         "file": "../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
                         "downsample_factors": [
                             5,
                             5
+
                         ],
                         "splitting_conditions": [
                             {
@@ -75,11 +78,13 @@
                         "file": "",
                         "value_fill_types": ""
                     }
+
                 }
             ],
             "splitting": {
                 "split_depth": 6,
                 "minimum_datapoints": 5
+
             }
         }
     },
