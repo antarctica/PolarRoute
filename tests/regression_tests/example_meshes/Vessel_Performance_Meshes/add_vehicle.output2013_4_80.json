@@ -78,28 +78,7 @@
             "splitting": {
                 "split_depth": 4,
                 "minimum_datapoints": 5
-            }
-          },
-          {
-            "SIC": {
-              "threshold": 35,
-              "upperBound": 0.9,
-              "lowerBound": 0.1
-            }
-          }
-        ],
-        "value_fill_types": {
-          "SIC": "parent",
-          "uC": "parent",
-          "vC": "parent",
-          "thickness": "parent",
-          "density": "parent"
-        }
-      },
-      "value_output_types": {
-        "elevation": "MAX"
-      }
-    },
+            },
     "Vessel": {
       "Speed": 26.5,
       "Unit": "km/hr",
