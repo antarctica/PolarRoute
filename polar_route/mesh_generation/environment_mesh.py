@@ -1,5 +1,6 @@
 
 import json
+import logging
 from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
 from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
@@ -187,7 +188,9 @@ class EnvironmentMesh:
         with open(path, 'w') as f:
             json.dump(self.to_json(), f)
             if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
-                self.dump_mesh(f)
+               dump_path = path.replace (".json" , ".dump")
+               with open(dump_path, 'w') as dump_f:
+                self.dump_mesh(dump_f)
 
     def dump_mesh(self, file):
         """

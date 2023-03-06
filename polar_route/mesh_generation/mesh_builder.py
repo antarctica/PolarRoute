@@ -438,14 +438,15 @@ if __name__ == '__main__':
     import time
     start = time.time()
     conf = None
-    with open("create_mesh.output2013_4_80_new_format.json", "r") as config_file:
+    with open("../feb_2013_Jgrid_config.json", "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder(conf)
     env_mesh = mesh_builder.build_environmental_mesh()
     print(conf)
-    with open("output2019_6_80_new_format_SOSE.json", 'w') as file:
-        json.dump(env_mesh.to_json(), file)
+    # with open("feb_2013_Jgrid_.json", 'w') as file:
+    #     json.dump(env_mesh.to_json(), file)
+    env_mesh.save ("feb_2013_Jgrid_.json")
     end = time.time()
     elapsed_seconds = float("%.2f" % (end - start))
     print(elapsed_seconds)

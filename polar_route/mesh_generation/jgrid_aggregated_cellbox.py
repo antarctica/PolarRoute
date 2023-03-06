@@ -66,7 +66,7 @@ class JGridAggregatedCellBox (AggregatedCellBox):
       
         return self.id
 
-def mesh_dump(self):
+    def mesh_dump(self):
         """
             returns a string representing all the information stored in the mesh
             of this cellbox
@@ -80,16 +80,14 @@ def mesh_dump(self):
         ice_area = 0
         uc = None
         vc = None
-        mesh_dump += str(self.bounds.getcy()) + ", " + str(self.bounds.getcx()) + "; "  # add lat,long
+        mesh_dump += str(self.boundary.getcy()) + ", " + str(self.boundary.getcx()) + "; "  # add lat,long
 
-        for source in self.get_data_sources():
-            loader = source.get_data_loader()
-            if loader.get_data_name() =='SIC':
-                value = self.agg_data ['SIC']
-                # call the data_loader with COUNT as the agg_type to get the number of datapoints
-                number_of_points = loader.get_value (self.bounds , "COUNT")['SIC']
-                if value != None:
-                   ice_area = value
+     
+        value = self.agg_data ['SIC']
+               
+        number_of_points = self.agg_data["SIC_COUNT"]
+        if value != None:
+            ice_area = value
       
         uc = self.agg_data['uC']
         vc = self.agg_data['vC']

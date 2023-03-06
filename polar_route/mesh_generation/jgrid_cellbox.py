@@ -76,7 +76,7 @@ class JGridCellBox (CellBox):
             data_name = loader.data_name
             parent = self.get_parent()
             if ',' in data_name: # check if the data name has many entries (ex. uC,vC)
-              agg_value = loader.get_value( self.initial_bounds) # get uC, vC using the initial bounds   
+                agg_value = loader.get_value( self.initial_bounds) # get uC, vC using the initial bounds   
 
             else: 
                 agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
@@ -87,7 +87,9 @@ class JGridCellBox (CellBox):
                         agg_value = loader.get_value( parent.bounds) 
                         parent = parent.get_parent()
                
-             
+            if data_name == "SIC":
+                number_of_points = loader.get_value (self.bounds , "COUNT")['SIC']
+                agg_dict.update ({"SIC_COUNT": number_of_points})
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = JGridAggregatedCellBox (self.bounds , agg_dict , self.get_id())
@@ -96,7 +98,7 @@ class JGridCellBox (CellBox):
         return agg_cellbox 
  
 
-def set_grid_coord(self, xpos, ypos):
+    def set_grid_coord(self, xpos, ypos):
         """
             sets up initial grid-coordinate when creating a j_grid
 
@@ -105,7 +107,7 @@ def set_grid_coord(self, xpos, ypos):
         self.x_coord = xpos
         self.y_coord = ypos
 
-def get_focus(self):
+    def get_focus(self):
         """
             returns the focus of this cellbox
 
@@ -113,7 +115,7 @@ def get_focus(self):
         """
         return self.focus
 
-def add_to_focus(self, focus):
+    def add_to_focus(self, focus):
         """
             append additional information to the focus of this cellbox
             to be used when splitting.
@@ -122,7 +124,7 @@ def add_to_focus(self, focus):
         """
         self.focus.append(focus)
 
-def grid_coord(self):
+    def grid_coord(self):
         """
             returns a string representation of the grid_coord of this cellbox
 
@@ -130,7 +132,7 @@ def grid_coord(self):
         """
         return "(" + str(int(self.x_coord)) + "," + str(int(self.y_coord)) + ")"
 
-def node_string(self):
+    def node_string(self):
         """
             returns a string representing the node of this cellbox
 
@@ -145,24 +147,24 @@ def node_string(self):
         focus_string += "]"
         return node_string + " " + focus_string
 
-def set_initial_bounds(self, bounds):
-    """
-            returns a string representation of the grid_coord of this cellbox
+    def set_initial_bounds(self, bounds):
+        """
+                returns a string representation of the grid_coord of this cellbox
 
-            for use in j_grid regression testing
-    """
-    self.initial_bounds= bounds
+                for use in j_grid regression testing
+        """
+        self.initial_bounds= bounds
 
-def is_land(self):
-    """
-    checks if the current cellbox is land using the loader
-    """
-    is_land = False
-    for source in self.data_source:
-        loader = source.get_data_loader()
-        data_name = 'is_land'
-        if loader.data_name == data_name:
-            is_land = loader.get_value (self.bounnds)[data_name]  
-    return is_land
+    def is_land(self):
+        """
+        checks if the current cellbox is land using the loader
+        """
+        is_land = False
+        for source in self.data_source:
+            loader = source.get_data_loader()
+            data_name = 'is_land'
+            if loader.data_name == data_name:
+                is_land = loader.get_value (self.bounnds)[data_name]  
+        return is_land
 
 
