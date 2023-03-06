@@ -17,8 +17,8 @@ class DataLoaderInterface(metaclass=ABCMeta):
     
     @abstractmethod  
     def get_value(self, bounds: Boundary, agg_type: str):
-        ''' Reads values within boundary and 
-        returns aggregated value as np.float64'''
+        ''' Reads values within boundary and returns aggregated value as 
+        a dictionary in the form {data_name (str): value (np.float64)}'''
         raise NotImplementedError
 
     @abstractmethod  

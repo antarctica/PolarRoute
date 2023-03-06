@@ -28,7 +28,7 @@ from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
 from polar_route.mesh_generation.metadata import Metadata
 from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 from polar_route.mesh_generation.mesh import Mesh
-from polar_route.Dataloaders.Factory import DataLoaderFactory
+from polar_route.dataloaders.factory import DataLoaderFactory
 
 
 class MeshBuilder:

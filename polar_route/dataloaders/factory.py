@@ -1,30 +1,31 @@
-from polar_route.Dataloaders.Scalar.AMSR import AMSRDataLoader
-from polar_route.Dataloaders.Scalar.BalticSeaIce import BalticSeaIceDataLoader
-from polar_route.Dataloaders.Scalar.BSOSEDepth import BSOSEDepthDataLoader
-from polar_route.Dataloaders.Scalar.BSOSESeaIce import BSOSESeaIceDataLoader
-from polar_route.Dataloaders.Scalar.BalticSeaIce import BalticSeaIceDataLoader
-from polar_route.Dataloaders.Scalar.GEBCO import GEBCODataLoader
-from polar_route.Dataloaders.Scalar.IceNet import IceNetDataLoader
-from polar_route.Dataloaders.Scalar.MODIS import MODISDataLoader
-from polar_route.Dataloaders.Scalar.ScalarCSV import ScalarCSVDataLoader
-from polar_route.Dataloaders.Scalar.Shape import ShapeDataLoader
+from polar_route.dataloaders.scalar.amsr import AMSRDataLoader
+from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.bsoseDepth import BSOSEDepthDataLoader
+from polar_route.dataloaders.scalar.bsoseSeaIce import BSOSESeaIceDataLoader
+from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.gebco import GEBCODataLoader
+from polar_route.dataloaders.scalar.icenet import IceNetDataLoader
+from polar_route.dataloaders.scalar.modis import MODISDataLoader
+from polar_route.dataloaders.scalar.scalarCSV import ScalarCSVDataLoader
+from polar_route.dataloaders.scalar.shape import ShapeDataLoader
 
-from polar_route.Dataloaders.Vector.BalticCurrent import BalticCurrentDataLoader
-from polar_route.Dataloaders.Vector.ERA5Wind import ERA5WindDataLoader
-from polar_route.Dataloaders.Vector.NorthSeaCurrent import NorthSeaCurrentDataLoader
-from polar_route.Dataloaders.Vector.ORAS5Current import ORAS5CurrentDataLoader
-from polar_route.Dataloaders.Vector.SOSE import SOSEDataLoader
-from polar_route.Dataloaders.Vector.VectorCSV import VectorCSVDataLoader
+from polar_route.dataloaders.vector.balticCurrent import BalticCurrentDataLoader
+from polar_route.dataloaders.vector.era5Wind import ERA5WindDataLoader
+from polar_route.dataloaders.vector.northSeaCurrent import NorthSeaCurrentDataLoader
+from polar_route.dataloaders.vector.oras5Current import ORAS5CurrentDataLoader
+from polar_route.dataloaders.vector.sose import SOSEDataLoader
+from polar_route.dataloaders.vector.vectorCSV import VectorCSVDataLoader
 
-from polar_route.Dataloaders.Scalar.Density import DensityDataLoader
-from polar_route.Dataloaders.Scalar.Thickness import ThicknessDataLoader
+from polar_route.dataloaders.scalar.density import DensityDataLoader
+from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
 
 
 
 
 class DataLoaderFactory:
     '''
-    Produces initialised DataLoader objects
+    Produces initialised DataLoader objects that can be used by the mesh to 
+    quickly retrieve values within a boundary.
     '''    
     def get_dataloader(self, name, bounds, params, min_dp=5):
         '''
@@ -43,7 +44,7 @@ class DataLoaderFactory:
                 Minimum datapoints required to get homogeneity condition
 
         Returns:
-            data_loader (Scalar/Vector/LUT DataLoader): 
+            (Scalar/Vector/LUT DataLoader): 
                 DataLoader object of correct type, with required params set 
         '''
         # Cast name to lowercase to make case insensitive
@@ -62,22 +63,23 @@ class DataLoaderFactory:
             'gebco':       (GEBCODataLoader, ['file']),
             'icenet':      (IceNetDataLoader, ['file']),
             'modis':       (MODISDataLoader, ['file']),
+            # TODO Make these LUT dataloaders
+            'thickness': (ThicknessDataLoader, []),
+            'density':   (DensityDataLoader, []),
             # Scalar - Abstract shapes
             'circle':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'radius', 'centre']),
             'square':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'side_length', 'centre']),
             'gradient':     (ShapeDataLoader, ['shape', 'nx', 'ny', 'vertical']),
             'checkerboard': (ShapeDataLoader, ['shape', 'nx', 'ny', 'gridsize']),
             # Vector
-            'vectorcsv':     (VectorCSVDataLoader, ['file']),
+            'vectorcsv':        (VectorCSVDataLoader, ['file']),
             'baltic_currents':  (BalticCurrentDataLoader, ['file']),
             'era5_wind':        (ERA5WindDataLoader, ['file']),
             'northsea_currents':(NorthSeaCurrentDataLoader, ['file']),
             'oras5_currents':   (ORAS5CurrentDataLoader, ['file_u', 'file_v']),
-            'sose':             (SOSEDataLoader, ['file']),
+            'sose':             (SOSEDataLoader, ['file'])
             # Lookup Table
-            # TODO actually make these LUT
-            'thickness': (ThicknessDataLoader, []),
-            'density':   (DensityDataLoader, [])
+            # TODO
         }
         # If name is recognised as a dataloader
         if name in dataloader_requirements:
@@ -96,7 +98,23 @@ class DataLoaderFactory:
     
     def set_default_params(self, name, params, min_dp):
         '''
-        Set default values for all dataloaders
+        Set default values for all dataloaders. 
+        
+        Args:
+            name (str):
+                Name of dataloader entry in dataloader_requirements. Used to
+                specify default parameters for a specific dataloader.
+            params (dict): 
+                Dictionary containing attributes that are required for each 
+                dataloader. 
+            min_dp (int):
+                Minimum number of datapoints required to return a homogeneity 
+                condition. Passed in here so it can be added to params
+            
+        Returns:
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
         '''
         
         if 'downsample_factors' not in params:
@@ -119,7 +137,22 @@ class DataLoaderFactory:
     
     def set_default_shape_params(self, name, params):
         '''
-        Set default values for abstract shape dataloaders
+        Set default values for abstract shape dataloaders. This function is
+        seperated out from set_default_params() simply to reduce cognitive
+        complexity, but is otherwise in the same format.
+        
+        Args:
+            name (str):
+                Name of shape entry in dataloader_requirements. Used to
+                specify default parameters for the shape dataloader.
+            params (dict): 
+                Dictionary containing attributes that are required for the
+                shape being loaded.
+            
+        Returns:
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
         '''
         # Number of datapoints to populate per axis
         if 'nx' not in params:
