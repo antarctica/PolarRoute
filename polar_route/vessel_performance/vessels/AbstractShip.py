@@ -15,6 +15,11 @@ class AbstractShip(AbstractVessel):
         self.vessel_params = params
         logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
 
+        self.max_speed = self.vessel_params['MaxSpeed']
+        self.speed_unit = self.vessel_params['Unit']
+        self.min_depth = self.vessel_params['MinDepth']
+        self.max_ice = self.vessel_params['MaxIceExtent']
+
     def model_performance(self, cellbox):
         """
             Method to determine the performance characteristics for the ship
@@ -24,10 +29,17 @@ class AbstractShip(AbstractVessel):
             Returns:
                 performance_values (dict): the value of the modelled performance characteristics for the ship
         """
-        performance_values = dict()
+        logging.info(f"Modelling performance for a vessel of type: {self.vessel_params['vessel_type']}")
+        # Check if the speed is defined in the input cellbox
+        if 'speed' not in cellbox.agg_data:
+            logging.debug(f'No speed in cell, assigning default value of {self.max_speed} '
+                          f'{self.speed_unit} from config')
+            cellbox.agg_data['speed'] = self.max_speed
 
-        performance_values['speed'] = self.model_speed(cellbox)
-        performance_values['fuel'] = self.model_fuel(cellbox)
+        perf_cellbox = self.model_speed(cellbox)
+        perf_cellbox = self.model_fuel(perf_cellbox)
+
+        performance_values = {k:v for k,v in perf_cellbox.agg_data.items() if k not in cellbox.agg_data}
 
         return performance_values
 
@@ -40,6 +52,7 @@ class AbstractShip(AbstractVessel):
             Returns:
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
+        logging.info(f"Modelling accessibility for a vessel of type: {self.vessel_params['vessel_type']}")
         access_values = dict()
 
         access_values['land'] = self.land(cellbox)
@@ -57,7 +70,7 @@ class AbstractShip(AbstractVessel):
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
             Returns:
-                speed (float): the maximum speed that the ship can traverse the given cell
+                cellbox (AggregatedCellBox): updated cell with speed values
         """
         raise NotImplementedError
 
@@ -69,7 +82,7 @@ class AbstractShip(AbstractVessel):
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
             Returns:
-                fuel (float): the rate of fuel consumption for a ship traversing the input cell
+                cellbox (AggregatedCellBox): updated cell with fuel consumption values
         """
         raise NotImplementedError
 
@@ -85,7 +98,7 @@ class AbstractShip(AbstractVessel):
             logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is land")
             land = False
         else:
-            land = cellbox.agg_data['elevation'] > self.vessel_params['MinDepth']
+            land = cellbox.agg_data['elevation'] > self.min_depth
 
         return land
 
@@ -97,11 +110,11 @@ class AbstractShip(AbstractVessel):
             Returns:
                 ext_ice (bool): boolean that is True if the cell is inaccessible due to ice
         """
-        if 'SIC' not in self.mesh_df:
+        if 'SIC' not in cellbox.agg_data:
             logging.debug(f"No sea ice concentration data in cell {cellbox.id}")
             ext_ice = False
         else:
-            ext_ice = cellbox.agg_data['SIC'] > self.vessel_params['MaxIceExtent']
+            ext_ice = cellbox.agg_data['SIC'] > self.max_ice
 
         return ext_ice
 
@@ -113,13 +126,17 @@ class AbstractShip(AbstractVessel):
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
             Returns:
-                resistance (float): the resistance force acting on a ship traversing the input cell
+                cellbox (AggregatedCellBox): updated cell with resistance values
         """
         pass
 
     @abstractmethod
-    def invert_resistance(self):
+    def invert_resistance(self, cellbox: AggregatedCellBox):
         """
             Method to determine the speed that reduces the resistance force on the ship to an acceptable value
+            Args:
+                cellbox (AggregatedCellBox): input cell from environmental mesh
+            Returns:
+                speed (float): Safe vessel speed in km/h
         """
         pass

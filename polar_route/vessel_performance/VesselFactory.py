@@ -16,7 +16,8 @@ class VesselFactory:
             Returns:
                 vessel: an instance of a vessel class designed for performance modelling
         """
-        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceExtent", "MinDepth"]),
+        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceExtent", "MinDepth",
+                                             "Unit"]),
                                "Underwater": (UnderwaterVessel, ["MaxSpeed", "MaxIceExtent", "MinDepth"])}
 
         with open(config_path, 'r') as f:

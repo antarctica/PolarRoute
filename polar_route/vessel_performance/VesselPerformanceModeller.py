@@ -1,7 +1,7 @@
 from polar_route.EnvironmentMesh import EnvironmentMesh
 from polar_route.vessel_performance.VesselFactory import VesselFactory
+import numpy as np
 import logging
-import json
 
 class VesselPerformanceModeller:
     """
@@ -21,6 +21,8 @@ class VesselPerformanceModeller:
         self.env_mesh = EnvironmentMesh.load_from_json(env_mesh_json)
         self.vessel = VesselFactory.get_vessel(vessel_config)
 
+        self.filter_nans()
+
     def model_accessibility(self):
         """
 
@@ -31,8 +33,9 @@ class VesselPerformanceModeller:
         for cellbox in self.env_mesh.agg_cellboxes:
             access_values = self.vessel.model_accessibility(cellbox)
             self.env_mesh.update_cellbox(cellbox.id, access_values)
-        inaccessible_nodes = [c.id for c in self.env_mesh.agg_cellboxes if not c.agg_data['accessible']]
-        self.env_mesh.neighbour_graph = remove_nodes(self.env_mesh.neighbour_graph, inaccessible_nodes)
+        inaccessible_nodes = [c.id for c in self.env_mesh.agg_cellboxes if c.agg_data['inaccessible']]
+        for in_node in inaccessible_nodes:
+            self.env_mesh.neighbour_graph.remove_node_and_update_neighbours(in_node)
 
     def model_performance(self):
         """
@@ -52,46 +55,14 @@ class VesselPerformanceModeller:
             Returns:
                 j_mesh (dict): a dictionary representation of the modified mesh.
         """
-        j_mesh = json.loads(json.dumps(self.env_mesh))
+        j_mesh = self.env_mesh.to_json()
         return j_mesh
 
-def remove_nodes(neighbour_graph, inaccessible_nodes):
-    """
-        Function to remove a list of inaccessible nodes from a given neighbour graph.
-
-        Args:
-            neighbour_graph (dict): A dictionary containing indexes of cellboxes and how they are connected
-
-            {
-                'index':{
-                    '1':[index,...],
-                    '2':[index,...],
-                    '3':[index,...],
-                    '4':[index,...],
-                    '-1':[index,...],
-                    '-2':[index,...],
-                    '-3':[index,...],
-                    '-4':[index,...]
-                },
-                'index':{...},
-                ...
-            }
-
-            inaccessible_nodes (list): A list of indexes to be removed from the neighbour_graph
-
-        Returns:
-            accessibility_graph (dict): A new neighbour graph with the inaccessible nodes removed
-    """
-    logging.debug(f"Removing {len(inaccessible_nodes)} nodes from the neighbour graph")
-    accessibility_graph = neighbour_graph.copy()
-
-    for node in inaccessible_nodes:
-        accessibility_graph.pop(node)
-
-    for node in accessibility_graph.keys():
-        for case in accessibility_graph[node].keys():
-            for inaccessible_node in inaccessible_nodes:
-                if int(inaccessible_node) in accessibility_graph[node][case]:
-                    accessibility_graph[node][case].remove(int(inaccessible_node))
-
-    return accessibility_graph
+    def filter_nans(self):
+        """
+            Method to check for NaNs in the input cell boxes and zero them if present
+        """
+        for cellbox in self.env_mesh.agg_cellboxes:
+            if any(np.isnan(val) for val in cellbox.agg_data.values()):
+                filtered_data = {k: 0 if np.isnan(v) else v for k, v in cellbox.agg_data.items()}
+                self.env_mesh.update_cellbox(cellbox.id, filtered_data)
