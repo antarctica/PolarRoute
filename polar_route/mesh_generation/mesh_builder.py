@@ -9,7 +9,7 @@ Example:
 
         import json
         with open('./config.json', 'r') as f:
-            config = json.load(f)
+            config = json.load(f)['config']
 
         mesh_builder = MeshBuilder(config)
         mesh_builder.build_environmental_mesh() \n
