@@ -1,10 +1,12 @@
+.. _outputs:
+
 ********************
 Outputs - Data Types
 ********************
 
-##################
+#################
 Mesh construction
-##################
+#################
 
 The first stage in the route planning pipeline is constructing a discrete 
 mesh of the environment in which the route planner can operate. Once this
@@ -14,13 +16,13 @@ of mesh construction and json object generation are as follows:
 
 ::
 
-    from polar_route.MeshBuilder import MeshBuilder
+    from polar_route.mesh import Mesh
 
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    env_mesh = MeshBuilder(config).build_environmental_mesh()
-    mesh_json = env_mesh.to_json()
+    mesh = Mesh(config)
+    mesh_json = mesh.to_json()
 
 .. note:: 
     Examples and a description of the configuration files can be found in
@@ -58,9 +60,9 @@ where the parts of the json object can be understood as follows:
 * **cellboxes** : A list of json representations of CellBox objects that form the Mesh.
 * **neighbour_graph** : A graphical representation of the adjacency of CellBoxes within the Mesh.
 
-=============
+=========
 cellboxes
-=============
+=========
 
 Each CellBox object within *cellboxes* in the outputted json object is of
 the following form:
@@ -93,9 +95,9 @@ Where the values within the CellBox represent the following:
    :width: 700
 
 
-==================
+===============
 neighbour_graph
-==================
+===============
 
 For each CellBox in the *cellboxes* section of the outputted json object, there will be a
 corresponding entry in the *neighbour_graph*.
@@ -135,23 +137,23 @@ where each of the values represent the following:
    :align: center
    :width: 700
 
-##################
+#################
 Vehicle specifics
-##################
+#################
 
 Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
 which applies transformations which are specific to a given vehicle.
 
 :: 
 
-    from polar_route.MeshBuilder import MeshBuilder
+    from polar_route.mesh import Mesh
     from polar_route.vessel_performance import VesselPerformance
 
     with open('config.json', 'r') as f:
         config = json.load(f)
 
-    env_mesh = MeshBuilder(config).build_environmental_mesh()
-    mesh_json = env_mesh.to_json()
+    mesh = Mesh(config)
+    mesh_json = mesh.to_json()
 
     vp = VesselPerformance(mesh_json)
     vessel_mesh_json = vp.to_json()
@@ -168,12 +170,6 @@ which applies transformations which are specific to a given vehicle.
 
 
 TODO - Description of transformation applied to the mesh json object by Vessel Performance.
-................................................................................................................
-................................................................................................................
-................................................................................................................
-................................................................................................................
-................................................................................................................
-................................................................................................................
 
 ##############
 Route planning
@@ -181,9 +177,9 @@ Route planning
 
 During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:
 
-==================
+=========
 waypoints
-==================
+=========
 
 An entry in the json including all the information of the waypoints defined by the user from the `waypoints_path` file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints are returned to this entry. The structure of the entry follows:
 
@@ -224,15 +220,13 @@ where each of the values represent the following:
     * **1**  : The cellbox index of waypoint for index row '1' etc
 * **<...>** : Any additional column names defined in the original .csv that was loaded
 
-This output can be converted to a pandas dataframe by running
-::
-    
-    waypoints_dataframe = pd.DataFrame(waypoints) 
+This output can be converted to a pandas dataframe by running::
+waypoints_dataframe = pd.DataFrame(waypoints) 
 
 
-==================
+=====
 paths
-==================
+=====
 An entry in the json, in a geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:
 
 :: 

@@ -1,12 +1,14 @@
+.. _abstract-scalar-dataloader-index:
+
 ******************
 Scalar Dataloaders
 ******************
 
 
 
-^^^^^^^^^^^^^^^^^^^
-Abstract Base Class
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Abstract Scalar Base Class
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. toctree::
    :maxdepth: 1
    :glob:
@@ -18,11 +20,11 @@ functionality that would be needed to manipulate the data to work
 with the mesh. When creating a new dataloader, the user must define
 how to open the data files, and what methods are required to manipulate
 the data into a standard format. More details are provided on the 
-:ref:`abstractScalar doc page<abstract-scalar-dataloader>`.
+:ref:`abstractScalar doc page<abstract-scalar-dataloader>`
 
-^^^^^^^^
-Examples
-^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Scalar Dataloader Examples
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 Data must be imported and saved as an xarray.Dataset, or a pandas.DataFrame object.
 Below is a simple example of how to load in a NetCDF file::
     
@@ -95,6 +97,7 @@ The following code handles both of these cases::
             
             # Manually overwriting data name
             self.data_name = "my_variable"
+            self.data = self.set_data_col_name(self.data_name)
 
             logging.info(f"Successfully loaded {self.data_name} from {self.file}")
             
@@ -108,9 +111,9 @@ The following code handles both of these cases::
             # Can't easily determine bounds of data in wrong projection, so skipping for now
             return data
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Implemented Dataloaders
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Implemented Scalar Dataloaders
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 1

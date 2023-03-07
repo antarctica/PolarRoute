@@ -8,32 +8,32 @@ import json
 import pytest
 
 # from polar_route.mesh import Mesh
-from polar_route.MeshBuilder import MeshBuilder
+from polar_route.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.vessel_performance import VesselPerformance
 
 #File locations of all vessel performance meshes to be recaculated for regression testing.
 TEST_VESSEL_MESHES = [
-    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80_new_format.json',
-    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80_new_format.json',
-    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80_new_format.json'
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80.json',
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80.json',
+    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80.json'
 ]
 
 #File locations of all enviromental meshes to be recaculated for regression testing.
 TEST_ENV_MESHES = [
-    './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json',
-    './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80_new_format.json',
-    './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80_new_format.json'
+    './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json',
+    './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80.json',
+    './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80.json'
 ]
 
 TEST_ABSTRACT_MESHES = [
-    './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh_new_format.json',
-    './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh_new_format.json',
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw2.5_gh2.5_mesh_new_format.json',
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw5_gh2.5_mesh_new_format.json',
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw6_gh3_mesh_new_format.json',
-    './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh_new_format.json',
-    './example_meshes/Abstract_Environmental_Meshes/cornercirclesplit_n201_r3_cy-65_cx-70_mesh_new_format.json',
-    './example_meshes/Abstract_Environmental_Meshes/cornercirclenosplit_n201_r3_cy-65_cx-70_mesh_new_format.json'
+    './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw2.5_gh2.5_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw5_gh2.5_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw6_gh3_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/cornercirclesplit_n201_r3_cy-65_cx-70_mesh.json',
+    './example_meshes/Abstract_Environmental_Meshes/cornercirclenosplit_n201_r3_cy-65_cx-70_mesh.json'
 ]
 
 @pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES)
@@ -259,6 +259,12 @@ def compare_cellbox_values(mesh_a, mesh_b):
                 # To prevent crashing if cellboxes have different attributes
                 # This error will be detected by the 'test_cellbox_attributes' test
                 if key in cellbox_b.keys():
+
+                    # handle the vector returned by vesel perf.
+                    if key =='speed':
+                        cellbox_a['speed'] = [cellbox_a['speed']]*8   
+                    elif key =='fuel':
+                        cellbox_a['fuel'] = [cellbox_a['fuel']]*8
 
                     # Round to 5 dec. pl if value is a float, high precision can be issue between OS's
                     if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):

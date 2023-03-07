@@ -3,6 +3,7 @@ import json
 import inspect
 import logging
 from multiprocessing.connection import wait
+from polar_route.mesh_generation.mesh_builder import MeshBuilder
 
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call
@@ -67,12 +68,12 @@ def create_mesh_cli():
     """
 
     """
-    from polar_route.MeshBuilder import MeshBuilder
+    
     default_output = "create_mesh.output.json"
     args = get_args(default_output)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    config = json.load(args.config)
+    config = json.load(args.config)['config']
 
     # Discrete Meshing
     cg = MeshBuilder(config).build_environmental_mesh()
@@ -87,7 +88,7 @@ def add_vehicle_cli():
     """
 
     """
-    from polar_route.vessel_performance_old import VesselPerformance
+    from polar_route.vessel_performance import VesselPerformance
 
     default_output = "add_vehicle.output.json"
     args = get_args(default_output, config_arg=True, mesh_arg=True)

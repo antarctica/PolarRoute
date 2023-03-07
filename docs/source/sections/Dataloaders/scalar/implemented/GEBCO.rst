@@ -8,6 +8,6 @@ ocean scientists, amongst others.
 
 Data can be downloaded from `here <https://download.gebco.net/>`_
 
-.. automodule:: polar_route.Dataloaders.Scalar.GEBCO
+.. automodule:: polar_route.dataloaders.scalar.gebco
    :special-members: __init__
    :members:

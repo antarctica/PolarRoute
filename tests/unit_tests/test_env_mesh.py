@@ -1,11 +1,11 @@
 
 import unittest
 import json
-from polar_route.EnvironmentMesh import EnvironmentMesh
-from polar_route.MeshBuilder import MeshBuilder
-from polar_route.NeighbourGraph import NeighbourGraph
+from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from PolarRoute.polar_route.mesh_builder import MeshBuilder
+from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
-from polar_route.Boundary import Boundary
+from polar_route.mesh_generation.boundary import Boundary
 class TestEnvMesh(unittest.TestCase):
    def setUp(self):
       self.config = None
