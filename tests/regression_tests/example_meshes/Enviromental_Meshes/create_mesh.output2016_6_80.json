@@ -13,63 +13,78 @@
             },
             "Data_sources": [
                 {
-                    "loader": "load_gebco",
+
+                    "loader": "GEBCO",
+
                     "params": {
                         "file": "../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
                         "downsample_factors": [
                             5,
                             5
-                        ]
+
+                        ],
+                        "splitting_conditions": [
+                            {
+                                "elevation": {
+                                    "threshold": -10,
+                                    "upper_bound": 1,
+                                    "lower_bound": 0
+                                }
+                            }
+                        ],
+                        "data_name": "elevation",
+                        "value_fill_types": "parent",
+                        "aggregate_type": "MAX"
                     }
                 },
                 {
-                    "loader": "load_amsr_folder",
+                    "loader": "AMSR_folder",
                     "params": {
-                        "folder": "../../datastore/sic/amsr_south"
+                        "folder": "../../datastore/sic/amsr_south/",
+                        "hemisphere": "south",
+                        "splitting_conditions": [
+                            {
+                                "SIC": {
+                                    "threshold": 35,
+                                    "upper_bound": 0.9,
+                                    "lower_bound": 0.1
+                                }
+                            }
+                        ],
+                        "data_name": "SIC",
+                        "value_fill_types": "parent"
                     }
                 },
                 {
-                    "loader": "load_sose_currents",
+                    "loader": "SOSE",
                     "params": {
-                        "file": "../../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc"
+                        "file": "../../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
+                        "value_fill_types": "parent",
+                        "data_name": "uC,vC"
                     }
                 },
                 {
-                    "loader": "load_thickness",
-                    "params": {}
+                    "loader": "thickness",
+                    "params": {
+                        "data_name": "thickness",
+                        "file": "",
+                        "value_fill_types": ""
+                    }
                 },
                 {
-                    "loader": "load_density",
-                    "params": {}
+                    "loader": "density",
+                    "params": {
+                        "data_name": "density",
+                        "file": "",
+                        "value_fill_types": ""
+                    }
+
                 }
             ],
             "splitting": {
                 "split_depth": 6,
-                "minimum_datapoints": 5,
-                "splitting_conditions": [
-                    {
-                        "elevation": {
-                            "threshold": -10,
-                            "upperBound": 1,
-                            "lowerBound": 0
-                        }
-                    },
-                    {
-                        "SIC": {
-                            "threshold": 35,
-                            "upperBound": 0.9,
-                            "lowerBound": 0.1
-                        }
-                    }
-                ],
-                "value_fill_types": {
-                    "SIC": "parent",
-                    "uC": "parent",
-                    "vC": "parent"
-                }
-            },
-            "value_output_types": {
-                "elevation": "MAX"
+                "minimum_datapoints": 5
+
             }
         }
     },

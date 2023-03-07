@@ -11,24 +11,33 @@
                 "cellWidth": 2.5,
                 "cellHeight": 2.5
             },
+
+            "Data_sources":[
+                {
+                    "loader": "circle",
+                    "params": {
+                        "data_name": "dummy_data",
+                        "value_fill_types": "parent",
+                        "nx": 201,
+                        "ny": 201,
+                        "radius": 3,
+                        "centre": [-65, -70],
+                        "splitting_conditions": [
+                            {
+                                "dummy_data": {
+                                    "threshold": 0.5,
+                                    "upper_bound": 0.8,
+                                    "lower_bound": 0.01
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
             "splitting": {
                 "split_depth": 6,
-                "minimum_datapoints": 5,
-                "splitting_conditions": [
-                    {
-                        "dummy_data": {
-                            "threshold": 0.5,
-                            "upperBound": 0.8,
-                            "lowerBound": 0.01
-                        }
-                    }
-                ],
-                "value_fill_types": {
-                    "dummy_data": "parent"
-                }
-            },
-            "value_output_types": {
-                "dummy_data": "MEAN"
+                "minimum_datapoints": 5
+
             }
         }
     },
