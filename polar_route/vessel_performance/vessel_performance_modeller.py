@@ -1,5 +1,5 @@
 from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
-from polar_route.vessel_performance.VesselFactory import VesselFactory
+from polar_route.vessel_performance.vessel_factory import VesselFactory
 import numpy as np
 import logging
 

@@ -1,4 +1,4 @@
-from polar_route.vessel_performance.AbstractVessel import AbstractVessel
+from polar_route.vessel_performance.abstract_vessel import AbstractVessel
 from polar_route.mesh_generation.environment_mesh import AggregatedCellBox
 from abc import abstractmethod
 import logging

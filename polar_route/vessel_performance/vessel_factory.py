@@ -1,5 +1,5 @@
 from polar_route.vessel_performance.vessels.SDA import SDA
-from polar_route.vessel_performance.vessels.UnderwaterVessel import UnderwaterVessel
+from polar_route.vessel_performance.vessels.underwater_vessel import UnderwaterVessel
 
 class VesselFactory:
     """
