@@ -61,19 +61,20 @@ class BSOSESeaIceDataLoader(ScalarDataLoader):
                             'YC': 'lat',
                             'XC': 'long'})
         
+        # Change domain of dataset from [0:360) to [-180:180)
+        data = data.assign_coords(long=((data.long + 180) % 360) - 180)
+        # Sort the 'long' axis so that sel() will work
+        data = data.sortby('long')
+        
         # Limit to initial boundary
         logging.info('- Limiting to initial bounds')
         data = data.sel(lat=slice(bounds.get_lat_min(),
                                   bounds.get_lat_max()))
-        # bounds%360 because dataset is from [0:360), and bounds in [-180:180]
-        data = data.sel(long=slice(bounds.get_long_min()%360,
-                                   bounds.get_long_max()%360))
+        data = data.sel(long=slice(bounds.get_long_min(),
+                                   bounds.get_long_max()))
         data = data.sel(time=slice(bounds.get_time_min(), 
                                    bounds.get_time_max()))
-        
-        # Change domain of dataset from [0:360) to [-180:180)
-        # NOTE: Must do this AFTER sel because otherwise KeyError
-        data = data.assign_coords(long=((data.long + 180) % 360) - 180)
+
         if hasattr(self, 'units'):
             logging.info(f'- Changing units of data to {self.units}')
             # Convert to percentage form if requested in params
@@ -82,7 +83,7 @@ class BSOSESeaIceDataLoader(ScalarDataLoader):
             elif self.units == 'fraction':
                 pass # BSOSE data already in fraction form
             else:
-                raise ValueError(f"Parameter 'units' not understood."\
-                                  "Expected 'percentage' or 'fraction',"\
-                                  "but recieved {self.units}")
+                raise ValueError("Parameter 'units' not understood."\
+                                 "Expected 'percentage' or 'fraction',"\
+                                f"but recieved {self.units}")
         return data
