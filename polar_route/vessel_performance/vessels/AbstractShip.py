@@ -1,5 +1,5 @@
 from polar_route.vessel_performance.AbstractVessel import AbstractVessel
-from polar_route.AggregatedCellBox import AggregatedCellBox
+from polar_route.mesh_generation.environment_mesh import AggregatedCellBox
 from abc import abstractmethod
 import logging
 
@@ -13,12 +13,12 @@ class AbstractShip(AbstractVessel):
                 params (dict): vessel parameters from the vessel config file
         """
         self.vessel_params = params
-        logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
+        logging.info(f"Initialising a vessel object of type: {self.vessel_params['VesselType']}")
 
         self.max_speed = self.vessel_params['MaxSpeed']
         self.speed_unit = self.vessel_params['Unit']
         self.min_depth = self.vessel_params['MinDepth']
-        self.max_ice = self.vessel_params['MaxIceExtent']
+        self.max_ice = self.vessel_params['MaxIceConc']
 
     def model_performance(self, cellbox):
         """
@@ -29,7 +29,7 @@ class AbstractShip(AbstractVessel):
             Returns:
                 performance_values (dict): the value of the modelled performance characteristics for the ship
         """
-        logging.info(f"Modelling performance for a vessel of type: {self.vessel_params['vessel_type']}")
+        logging.info(f"Modelling performance for a vessel of type: {self.vessel_params['VesselType']}")
         # Check if the speed is defined in the input cellbox
         if 'speed' not in cellbox.agg_data:
             logging.debug(f'No speed in cell, assigning default value of {self.max_speed} '
@@ -52,7 +52,7 @@ class AbstractShip(AbstractVessel):
             Returns:
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
-        logging.info(f"Modelling accessibility for a vessel of type: {self.vessel_params['vessel_type']}")
+        logging.info(f"Modelling accessibility for a vessel of type: {self.vessel_params['VesselType']}")
         access_values = dict()
 
         access_values['land'] = self.land(cellbox)

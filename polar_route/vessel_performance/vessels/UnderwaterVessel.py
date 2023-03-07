@@ -1,5 +1,5 @@
 from polar_route.vessel_performance.AbstractVessel import AbstractVessel
-from polar_route.AggregatedCellBox import AggregatedCellBox
+from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
 
 
 class UnderwaterVessel(AbstractVessel):

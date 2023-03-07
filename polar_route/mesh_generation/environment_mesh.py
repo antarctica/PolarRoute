@@ -1,4 +1,3 @@
-
 import json
 import logging
 from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
@@ -22,12 +21,12 @@ class EnvironmentMesh:
 
     """
     @classmethod
-    def load_from_json(cls, file_path):
+    def load_from_json(cls, mesh_json):
         """
             Constructs an Env.Mesh from a given env-mesh json file to be used by other modules (ex.Vessel Performance Modeller).
 
             Args:
-                file_path (string): a string that contains a path to Env-mesh json file of the following format - \n
+                mesh_json (dict): a dictionary loaded from an Env-mesh json file of the following format - \n
                     \n
                     {\n
                         "config": {\n
@@ -81,10 +80,6 @@ class EnvironmentMesh:
 
 
         """
-
-        mesh_json = None
-        with open(file_path, "r") as config_file:
-            mesh_json = json.load(config_file)
         config = mesh_json['config']
         cellboxes_json = mesh_json['cellboxes']
         agg_cellboxes = []

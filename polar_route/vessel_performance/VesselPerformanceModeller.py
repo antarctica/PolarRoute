@@ -1,4 +1,4 @@
-from polar_route.EnvironmentMesh import EnvironmentMesh
+from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
 from polar_route.vessel_performance.VesselFactory import VesselFactory
 import numpy as np
 import logging
@@ -13,8 +13,8 @@ class VesselPerformanceModeller:
         """
 
         Args:
-            env_mesh_json (str): a file path pointing to an environmental mesh json file
-            vessel_config (str): a file path pointing to a vessel config json file
+            env_mesh_json (dict): a dictionary loaded from an environmental mesh json file
+            vessel_config (dict): a dictionary loaded from a vessel config json file
         """
         logging.info("Initialising Vessel Performance Modeller")
 
@@ -30,9 +30,9 @@ class VesselPerformanceModeller:
         neighbour graph.
 
         """
-        for cellbox in self.env_mesh.agg_cellboxes:
+        for i, cellbox in enumerate(self.env_mesh.agg_cellboxes):
             access_values = self.vessel.model_accessibility(cellbox)
-            self.env_mesh.update_cellbox(cellbox.id, access_values)
+            self.env_mesh.update_cellbox(i, access_values)
         inaccessible_nodes = [c.id for c in self.env_mesh.agg_cellboxes if c.agg_data['inaccessible']]
         for in_node in inaccessible_nodes:
             self.env_mesh.neighbour_graph.remove_node_and_update_neighbours(in_node)
@@ -44,9 +44,9 @@ class VesselPerformanceModeller:
         the mesh accordingly.
 
         """
-        for cellbox in self.env_mesh.agg_cellboxes:
+        for i, cellbox in enumerate(self.env_mesh.agg_cellboxes):
             performance_values = self.vessel.model_performance(cellbox)
-            self.env_mesh.update_cellbox(cellbox.id, performance_values)
+            self.env_mesh.update_cellbox(i, performance_values)
 
     def to_json(self):
         """
@@ -62,7 +62,7 @@ class VesselPerformanceModeller:
         """
             Method to check for NaNs in the input cell boxes and zero them if present
         """
-        for cellbox in self.env_mesh.agg_cellboxes:
-            if any(np.isnan(val) for val in cellbox.agg_data.values()):
-                filtered_data = {k: 0 if np.isnan(v) else v for k, v in cellbox.agg_data.items()}
-                self.env_mesh.update_cellbox(cellbox.id, filtered_data)
+        for i, cellbox in enumerate(self.env_mesh.agg_cellboxes):
+            if any(np.isnan(val) for val in cellbox.agg_data.values() if type(val) == float):
+                filtered_data = {k: 0 if np.isnan(v) else v for k, v in cellbox.agg_data.items() if type(v) == float}
+                self.env_mesh.update_cellbox(i, filtered_data)

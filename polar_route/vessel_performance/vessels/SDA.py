@@ -1,4 +1,4 @@
-from polar_route.AggregatedCellBox import AggregatedCellBox
+from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
 from polar_route.vessel_performance.vessels.AbstractShip import AbstractShip
 import numpy as np
 import logging
