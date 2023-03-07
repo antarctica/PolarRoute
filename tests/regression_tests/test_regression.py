@@ -9,7 +9,7 @@ import pytest
 
 # from polar_route.mesh import Mesh
 from polar_route.mesh_generation.mesh_builder import MeshBuilder
-from polar_route.vessel_performance import VesselPerformance
+from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 
 #File locations of all vessel performance meshes to be recaculated for regression testing.
 TEST_VESSEL_MESHES = [
@@ -165,7 +165,9 @@ def calculate_vessel_mesh(mesh_location):
 
     regression_mesh = env_meshes[0]
 
-    new_mesh = VesselPerformance(env_meshes[1], env_meshes[1]['config']['Vessel'])
+    new_mesh = VesselPerformanceModeller(env_meshes[1], env_meshes[1]['config']['Vessel'])
+    new_mesh.model_accessibility()
+    new_mesh.model_performance()
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]

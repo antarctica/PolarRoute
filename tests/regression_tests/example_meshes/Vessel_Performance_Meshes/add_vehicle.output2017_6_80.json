@@ -83,13 +83,13 @@
           }
       },
       "Vessel": {
-          "Name": "SDA",
-          "Speed": 26.5,
+          "VesselType": "SDA",
+          "MaxSpeed": 26.5,
           "Unit": "km/hr",
           "Beam": 24.0,
           "HullType": "slender",
           "ForceLimit": 96634.5,
-          "MaxIceExtent": 80,
+          "MaxIceConc": 80,
           "MinDepth": -10
       }
   },
