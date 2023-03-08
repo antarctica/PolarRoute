@@ -5,6 +5,10 @@ import tracemalloc
 from datetime import datetime, timedelta
 from functools import wraps
 from calendar import monthrange
+
+import numpy as np
+from scipy.fftpack import fftshift
+
 """
 Utilities that might be of use
 """
@@ -58,6 +62,68 @@ def date_range(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
+
+
+# GRF functions
+def fftind(size):
+    '''
+    Creates a numpy array of shifted Fourier coordinates.
+    
+    Args:
+        size (int):
+            The size of the coordinate array to create
+    
+    Returns:
+        np.array:
+            Numpy array of shifted Fourier coordinates (k_x, k_y). 
+            Has shape (2, size, size), with:\n
+            array[0,:,:] = k_x components\n
+            array[1,:,:] = k_y components
+    '''
+    # Create array
+    k_ind = np.mgrid[:size, :size] - int( (size + 1)/2 )
+    # Fourier shift
+    k_ind = fftshift(k_ind)
+    return( k_ind )
+
+def gaussian_random_field(size, alpha):
+            '''
+            Creates a gaussian random field with normal (circular) distribution
+            Code from https://github.com/bsciolla/gaussian-random-fields/blob/master/gaussian_random_fields.py
+            
+            Args:
+                size (int):
+                   Default = 512; 
+                   The number of datapoints created per axis in the GRF
+                alpha (float):
+                    Default = 3.0;
+                    The power of the power-law momentum distribution
+            
+            Returns:
+                np.array:
+                    2D Array of datapoints, shape (size, size)
+            '''
+                
+            # Defines momentum indices
+            k_idx = fftind(size)
+
+            # Defines the amplitude as a power law 1/|k|^(alpha/2)
+            amplitude = np.power( k_idx[0]**2 + k_idx[1]**2 + 1e-10, -alpha/4.0 )
+            amplitude[0,0] = 0
+            
+            # Draws a complex gaussian random noise with normal
+            # (circular) distribution
+            noise = np.random.normal(size = (size, size)) \
+                + 1j * np.random.normal(size = (size, size))
+            
+            # To real space
+            grf = np.fft.ifft2(noise * amplitude).real
+            
+            # Normalise the GRF:
+            grf = grf - np.min(grf)
+            grf = grf/(np.max(grf)-np.min(grf))
+                
+            return grf
 
 def memory_trace(func):
     @wraps(func)
