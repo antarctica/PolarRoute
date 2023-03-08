@@ -139,13 +139,31 @@ class MeshBuilder:
                         cond = split_cond[loader.data_name]
                         updated_splitiing_cond.append(cond)
 
-                value_fill_type = data_source['params']['value_fill_types']
+                value_fill_type = self.check_value_fill_type(data_source)
+              
 
                 meta_data_obj = Metadata(
                     loader, updated_splitiing_cond,  value_fill_type)
                 meta_data_list.append(meta_data_obj)
 
         return meta_data_list
+        
+    def cehck_value_fill_type(self, data_source):
+    	def is_float(element: any) -> bool:
+   	 if element is None: 
+        	return False
+   	 try:
+        	float(element)
+      	 	return True
+    	except ValueError:
+        	return False
+
+    	  value_fill_type = "parent"
+    	  if 'value_fill_types' in data_source['params']:
+    	  	if is_float (data_source  ['params']['value_fill_types']) or   data_source['params']['value_fill_types'] is in ["parent" ,"Nan"]:
+    	  		value_fill_type = data_source  ['params']['value_fill_types']
+    	  	else:
+    	  		 logging.warning("Invalid value for value_fill_types, setting to the default(parent) instead.")
 
     def is_jgrid_mesh(self):
         if 'j_grid' in self.config['Mesh_info'].keys():
@@ -245,7 +263,7 @@ class MeshBuilder:
                             Direction.south_east: [],
                             Direction.south: [],
                             # update to use the NG class
-                            Direction.south_west: self.neighbour_graph.get_neighbours(cellbox_indx, -1),
+                            Direction.south_west: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.south_west),
                             Direction.west: [],
                             Direction.north_west: [],
                             Direction.north: [north_west_indx]}
@@ -261,7 +279,7 @@ class MeshBuilder:
                             Direction.south: [south_west_indx],
                             Direction.south_west: [],
                             Direction.west: [],
-                            Direction.north_west: self.neighbour_graph.get_neighbours(cellbox_indx, -3),
+                            Direction.north_west: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.north_west),
                             Direction.north: []}
 
         self.fill_nw_map(north_west_indx, north_neighbour_indx,
@@ -269,7 +287,7 @@ class MeshBuilder:
         self.neighbour_graph.add_node(north_west_indx, nw_neighbour_map)
 
         # Create neighbour map for NE split cell
-        ne_neighbour_map = {Direction.north_east: self.neighbour_graph.get_neighbours(cellbox_indx, 1),
+        ne_neighbour_map = {Direction.north_east: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.north_east),
                             Direction.east: [],
                             Direction.south_east: [],
                             Direction.south: [south_east_indx],
@@ -284,7 +302,7 @@ class MeshBuilder:
         # Create neighbour map for SE split cell
         se_neighbour_map = {Direction.north_east: [],
                             Direction.east: [],
-                            Direction.south_east: self.neighbour_graph.get_neighbours(cellbox_indx, 3),
+                            Direction.south_east: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.south_east),
                             Direction.south: [],
                             Direction.south_west: [],
                             Direction.west: [south_west_indx],
@@ -438,7 +456,7 @@ if __name__ == '__main__':
     import time
     start = time.time()
     conf = None
-    with open("../feb_2013_Jgrid_config.json", "r") as config_file:
+    with open("../../tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json", "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder(conf)

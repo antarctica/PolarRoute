@@ -277,7 +277,7 @@ class NeighbourGraph:
 
         # add north neighbours to neighbour graph
         if cellbox_indx - grid_width >= 0:
-            neighbour_map[Direction.south:].append(
+            neighbour_map[Direction.south].append(
                 int(cellbox_indx - grid_width))
 
         return neighbour_map
