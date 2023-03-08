@@ -9,7 +9,8 @@ class VectorGRFDataLoader(VectorDataLoader):
     def __init__(self, bounds, params):
         '''
         Generates a dataset using a gaussian random field
-       Args:
+        
+        Args:
             bounds (Boundary): 
                 Initial boundary to limit the dataset to
             params (dict):
@@ -44,7 +45,7 @@ class VectorGRFDataLoader(VectorDataLoader):
         Returns:
             pd.DataFrame: 
                 Scalar dataset within limits of bounds. Dataset has coordinates
-                'lat', 'long', and variable name 'data'. 
+                'lat', 'long', and variable name 'data'. \n
                 NOTE - In __init__, variable name will be set to data_name if 
                 defined in config
                 

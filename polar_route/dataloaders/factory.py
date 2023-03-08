@@ -211,10 +211,6 @@ class DataLoaderFactory:
             params['min'] = 1
         if 'max' not in params:
             params['max'] = 10
-        if 'multiplier' not in params:
-            params['multiplier'] = 1
-        if 'offset' not in params:
-            params['offset'] = 0
         # Specific GRF loaders
         # If making a mask (e.g. land)
         if name == 'binary_grf':
