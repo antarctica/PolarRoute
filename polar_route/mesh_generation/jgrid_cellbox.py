@@ -4,6 +4,7 @@ from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregated
 from polar_route.mesh_generation.cellbox import CellBox
 import numpy as np
 
+
 class JGridCellBox (CellBox):
     """
     A JGridCellBox represnts a subclass of CellBox tailored to guarantee compatability with the earlier Java implemnation (which is based on coordinates and focus).
@@ -15,9 +16,8 @@ class JGridCellBox (CellBox):
     Note:
         All geospatial boundaries of a CellBox are given in a 'EPSG:4326' projection
     """
-    
 
-    def __init__(self, bounds , id  ):
+    def __init__(self, bounds, id):
         """
 
             Args:
@@ -35,8 +35,8 @@ class JGridCellBox (CellBox):
         self.focus = ""
         self.land_locked = False
         self.initial_bounds = None
- 
-    def split(self , start_id):
+
+    def split(self, start_id):
         """
             splits the current cellbox into 4 corners, returns as a list of cellbox objects.
             args
@@ -46,7 +46,7 @@ class JGridCellBox (CellBox):
                     this current cellboxes and dividing the data_points contained between.
         """
         # split using the CellBox method then perform the extra JGridCellBox logic
-        split_boxes = CellBox.split(self, start_id) 
+        split_boxes = CellBox.split(self, start_id)
 
         # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
@@ -60,33 +60,37 @@ class JGridCellBox (CellBox):
         # create focus for split boxes.
             split_box.set_focus(self.get_focus().copy())
             split_box.add_to_focus(split_boxes.index(split_box))
-            
+
         return split_boxes
 
     def aggregate(self):
         '''
             aggregates JGridCellBox data using the associated data_source's aggregate type and returns AggregatedJGridCellBox object
-            
+
         '''
         agg_dict = {}
         for source in self.get_data_source():
             loader = source.get_data_loader()
-           
-           
+
             data_name = loader.data_name
             parent = self.get_parent()
-            if ',' in data_name: # check if the data name has many entries (ex. uC,vC)
-                agg_value = loader.get_value( self.initial_bounds) # get uC, vC using the initial bounds   
+            # check if the data name has many entries (ex. uC,vC)
+            if ',' in data_name:
+                # get uC, vC using the initial bounds
+                agg_value = loader.get_value(self.initial_bounds)
 
-            else: 
-                agg_value = loader.get_value( self.bounds) # get the aggregated value from the associated DataLoader
-                if np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='zero': #if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-                    agg_value[data_name] = 0 
-                elif np.isnan(agg_value [data_name]) and source.get_value_fill_type()=='parent': 
-                  while parent is not None and np.isnan(agg_value[data_name]):  #if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                        agg_value = loader.get_value( parent.bounds) 
-                        parent = parent.get_parent()
-               
+            else:
+                # get the aggregated value from the associated DataLoader
+                agg_value = loader.get_value(self.bounds)
+                if np.isnan(agg_value[data_name]):
+                     if source.get_value_fill_type() == 'parent':
+                  		# if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                        while parent is not None and np.isnan(agg_value[data_name]):
+                                     agg_value = loader.get_value(
+                                         parent.bounds)
+                                     parent = parent.get_parent()
+                     else:# not parent, so either float or Nan so set the agg_Data to value_fill_type
+                         agg_value[data_name] = source.get_value_fill_type()
             if data_name == "SIC":
                 number_of_points = loader.get_value (self.bounds , "COUNT")['SIC']
                 agg_dict.update ({"SIC_COUNT": number_of_points})

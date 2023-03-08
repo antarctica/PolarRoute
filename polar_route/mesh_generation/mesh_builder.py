@@ -148,22 +148,22 @@ class MeshBuilder:
 
         return meta_data_list
         
-    def cehck_value_fill_type(self, data_source):
-    	def is_float(element: any) -> bool:
-   	 if element is None: 
-        	return False
-   	 try:
-        	float(element)
-      	 	return True
-    	except ValueError:
-        	return False
-
-    	  value_fill_type = "parent"
-    	  if 'value_fill_types' in data_source['params']:
-    	  	if is_float (data_source  ['params']['value_fill_types']) or   data_source['params']['value_fill_types'] is in ["parent" ,"Nan"]:
-    	  		value_fill_type = data_source  ['params']['value_fill_types']
-    	  	else:
-    	  		 logging.warning("Invalid value for value_fill_types, setting to the default(parent) instead.")
+    def check_value_fill_type(self, data_source):
+        def is_float(element: any) -> bool:
+            if element is None: 
+                    return False
+            try:
+                    float(element)
+                    return True
+            except ValueError:
+                    return False
+        value_fill_type = "parent"
+        if 'value_fill_types' in data_source['params']:
+            if is_float (data_source  ['params']['value_fill_types']) or   data_source['params']['value_fill_types'] in ["parent" ,"Nan"]:
+                value_fill_type = data_source  ['params']['value_fill_types']
+            else:
+                logging.warning("Invalid value for value_fill_types, setting to the default(parent) instead.")
+        return value_fill_type
 
     def is_jgrid_mesh(self):
         if 'j_grid' in self.config['Mesh_info'].keys():
