@@ -64,5 +64,5 @@ class VesselPerformanceModeller:
         """
         for i, cellbox in enumerate(self.env_mesh.agg_cellboxes):
             if any(np.isnan(val) for val in cellbox.agg_data.values() if type(val) == float):
-                filtered_data = {k: 0 if np.isnan(v) else v for k, v in cellbox.agg_data.items() if type(v) == float}
+                filtered_data = {k: 0. if np.isnan(v) else v for k, v in cellbox.agg_data.items() if type(v) == float}
                 self.env_mesh.update_cellbox(i, filtered_data)
