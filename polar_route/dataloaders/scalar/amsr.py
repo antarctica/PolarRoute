@@ -38,13 +38,14 @@ class AMSRDataLoader:
         logging.info("Initalising AMSR dataloader")
         self.file_location  = params['folder']
         self.min_dp         = params['min_dp']
-        self.ds             = params['downsample_factors']
+        self.downsample_factors = params['downsample_factors']
         self.hemisphere     = params['hemisphere'].lower()
 
         # Cast string to uppercase to accept mismatched case
         self.aggregate_type = params['aggregate_type'].upper()
 
         self.data = self.import_data(bounds)
+        self.data = self.downsample()
         # If no data name specified, retrieve from self.data
         self.data_name = 'SIC' #data_name if data_name else self.get_data_name()
         
@@ -139,6 +140,8 @@ class AMSRDataLoader:
 
         reprojected_df = self.reproject(raw_df, in_proj=in_proj, out_proj=out_proj, 
                                         x_col='x', y_col='y')
+        
+        reprojected_df = reprojected_df[['lat', 'long', 'time', 'SIC']]
         logging.info('- Limiting to initial bounds')
         mask = (reprojected_df['lat']  >= bounds.get_lat_min())  & \
                (reprojected_df['lat']  <= bounds.get_lat_max())  & \
@@ -149,6 +152,120 @@ class AMSRDataLoader:
                
         return reprojected_df.loc[mask]
 
+    def downsample(self, agg_type=None):
+        '''
+        Downsamples imported data to be more easily manipulated. Data size 
+        should be reduced by a factor of m*n, where (m,n) are the 
+        downsample_factors defined in the params.        
+        self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            agg_type (str): 
+                Method of aggregation to bin data by to downsample. Default is
+                same method used for homogeneity condition.            
+
+        Returns:
+            xr.Dataset or pd.DataFrame: 
+                Downsampled data
+                
+        Todo:
+            Fix downsampling to work with aggregation type as intended. Right now 
+            it just takes every m'th and n'th datapoint in each coord axis
+        '''
+        def downsample_xr(data, ds, agg_type):
+            '''
+            Downsample xarray dataset
+            '''
+            if agg_type == 'MIN':
+                # Returns min of bin
+                data = data.coarsen(lat=ds[1]).min()
+                data = data.coarsen(long=ds[0]).min()
+            elif agg_type == 'MAX':
+                # Returns max of bin
+                data = data.coarsen(lat=ds[1]).max()
+                data = data.coarsen(long=ds[0]).max()
+            elif agg_type == 'MEAN':
+                # Returns mean of bin
+                data = data.coarsen(lat=ds[1]).mean()
+                data = data.coarsen(long=ds[0]).mean()
+            elif agg_type == 'MEDIAN':
+                # Returns median of bin
+                data = data.coarsen(lat=ds[1]).median()
+                data = data.coarsen(long=ds[0]).median()
+            elif agg_type == 'STD':
+                # Returns std_dev of range
+                data = data.coarsen(lat=ds[1]).std()
+                data = data.coarsen(long=ds[0]).std()
+            elif agg_type =='COUNT': 
+                # Returns every first element in bin
+                data = data.thin(lat=ds[1])
+                data = data.thin(long=ds[0])
+            return data
+    
+        def downsample_df(data, ds, agg_type):
+            '''
+            Downsample pandas dataframe
+            '''
+            # TODO NOT WORKING, TIME BEING DROPPED? DS FACTOR WRONG?
+            def bin_by_coord(name, data, ds_factor):
+                # Sort data to allow np.digitize to work
+                data = data.sort_values(by=[name])
+                # Retrieve unique lat/lon locations for binning
+                unique_dps = data[name].unique()
+                # Bin by factor of 'ds_factor'
+                bins = np.append(unique_dps[::ds_factor], unique_dps[-1])
+                # Digitize to get unique ID for each bin in each axis
+                new_col_name = name + '_bin'
+                data[new_col_name] = np.digitize(data[name], bins=bins)
+                return data, bins
+                
+            # Bin datapoints by coordinate                
+            data, lat_bins  = bin_by_coord('lat', data, ds[1])
+            data, long_bins = bin_by_coord('long', data, ds[0])
+
+            # Group by bin ID's
+            data = data.groupby(by=['long_bin', 'lat_bin'])
+
+            if agg_type == 'MIN':
+                # Returns min of bin
+                data = data.min()
+            elif agg_type == 'MAX':
+                # Returns max of bin
+                data = data.max()
+            elif agg_type == 'MEAN':
+                # Returns mean of bin
+                data = data.mean()
+            elif agg_type == 'MEDIAN':
+                # Returns median of bin
+                data = data.median()
+            elif agg_type == 'STD':
+                # Returns std_dev of range
+                data = data.std()
+            elif agg_type =='COUNT': 
+                # Returns every first element in bin
+                data = data[data.lat.isin(lat_bins)]
+                data = data[data.long.isin(long_bins)]
+                
+            # Remove group_by indexes
+            data = data.reset_index(drop=True)
+            return data
+        
+        # Set to params if no specific aggregate type specified
+        if agg_type is None:
+            agg_type = self.aggregate_type
+        
+        # If no downsampling
+        if self.downsample_factors == (1,1):
+            logging.debug("- self.downsample() called but don't have to")
+            return self.data
+        else:
+            logging.info(f"- Downsampling data by {self.downsample_factors}")
+        # Otherwise, downsample appropriately
+        if type(self.data) == type(pd.DataFrame()):
+            return downsample_df(self.data, self.downsample_factors, agg_type)
+        elif type(self.data) == type(xr.Dataset()):
+            return downsample_xr(self.data, self.downsample_factors, agg_type)
+        
     def reproject(self, data, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
         '''
