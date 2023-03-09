@@ -139,13 +139,31 @@ class MeshBuilder:
                         cond = split_cond[loader.data_name]
                         updated_splitiing_cond.append(cond)
 
-                value_fill_type = data_source['params']['value_fill_types']
+                value_fill_type = self.check_value_fill_type(data_source)
+              
 
                 meta_data_obj = Metadata(
                     loader, updated_splitiing_cond,  value_fill_type)
                 meta_data_list.append(meta_data_obj)
 
         return meta_data_list
+        
+    def check_value_fill_type(self, data_source):
+        def is_float(element: any) -> bool:
+            if element is None: 
+                    return False
+            try:
+                    float(element)
+                    return True
+            except ValueError:
+                    return False
+        value_fill_type = "parent"
+        if 'value_fill_types' in data_source['params']:
+            if is_float (data_source  ['params']['value_fill_types']) or   data_source['params']['value_fill_types'] in ["parent" ,"Nan"]:
+                value_fill_type = data_source  ['params']['value_fill_types']
+            else:
+                logging.warning("Invalid value for value_fill_types, setting to the default(parent) instead.")
+        return value_fill_type
 
     def is_jgrid_mesh(self):
         if 'j_grid' in self.config['Mesh_info'].keys():
@@ -240,56 +258,56 @@ class MeshBuilder:
             cellbox_indx, -2)
 
         # Create neighbour map for SW split cell.
-        sw_neighbour_map = {1: [north_east_indx],
-                            2: [south_east_indx],
-                            3: [],
-                            4: [],
+        sw_neighbour_map = {Direction.north_east: [north_east_indx],
+                            Direction.east: [south_east_indx],
+                            Direction.south_east: [],
+                            Direction.south: [],
                             # update to use the NG class
-                            -1: self.neighbour_graph.get_neighbours(cellbox_indx, -1),
-                            -2: [],
-                            -3: [],
-                            -4: [north_west_indx]}
+                            Direction.south_west: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.south_west),
+                            Direction.west: [],
+                            Direction.north_west: [],
+                            Direction.north: [north_west_indx]}
 
         self.fill_sw_neighbour_map(
             south_west_indx, south_neighbour_indx, west_neighbour_indx, sw_neighbour_map)
         self.neighbour_graph.add_node(south_west_indx, sw_neighbour_map)
 
         # Create neighbour map for NW split cell
-        nw_neighbour_map = {1: [],
-                            2: [north_east_indx],
-                            3: [south_east_indx],
-                            4: [south_west_indx],
-                            -1: [],
-                            -2: [],
-                            -3: self.neighbour_graph.get_neighbours(cellbox_indx, -3),
-                            -4: []}
+        nw_neighbour_map = {Direction.north_east: [],
+                            Direction.east: [north_east_indx],
+                            Direction.south_east: [south_east_indx],
+                            Direction.south: [south_west_indx],
+                            Direction.south_west: [],
+                            Direction.west: [],
+                            Direction.north_west: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.north_west),
+                            Direction.north: []}
 
         self.fill_nw_map(north_west_indx, north_neighbour_indx,
                          west_neighbour_indx, nw_neighbour_map)
         self.neighbour_graph.add_node(north_west_indx, nw_neighbour_map)
 
         # Create neighbour map for NE split cell
-        ne_neighbour_map = {1: self.neighbour_graph.get_neighbours(cellbox_indx, 1),
-                            2: [],
-                            3: [],
-                            4: [south_east_indx],
-                            -1: [south_west_indx],
-                            -2: [north_west_indx],
-                            -3: [],
-                            -4: []}
+        ne_neighbour_map = {Direction.north_east: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.north_east),
+                            Direction.east: [],
+                            Direction.south_east: [],
+                            Direction.south: [south_east_indx],
+                            Direction.south_west: [south_west_indx],
+                            Direction.west: [north_west_indx],
+                            Direction.north_west: [],
+                            Direction.north: []}
         self.fill_ne_map(north_east_indx, north_neighbour_indx,
                          east_neighbour_indx, ne_neighbour_map)
         self.neighbour_graph.add_node(north_east_indx, ne_neighbour_map)
 
         # Create neighbour map for SE split cell
-        se_neighbour_map = {1: [],
-                            2: [],
-                            3: self.neighbour_graph.get_neighbours(cellbox_indx, 3),
-                            4: [],
-                            -1: [],
-                            -2: [south_west_indx],
-                            -3: [north_west_indx],
-                            -4: [north_east_indx]}
+        se_neighbour_map = {Direction.north_east: [],
+                            Direction.east: [],
+                            Direction.south_east: self.neighbour_graph.get_neighbours(cellbox_indx, Direction.south_east),
+                            Direction.south: [],
+                            Direction.south_west: [],
+                            Direction.west: [south_west_indx],
+                            Direction.north_west: [north_west_indx],
+                            Direction.north: [north_east_indx]}
 
         self.fill_se_map(south_east_indx, south_neighbour_indx,
                          east_neighbour_indx, se_neighbour_map)
@@ -326,14 +344,14 @@ class MeshBuilder:
         """
         cellboxes = self.mesh.cellboxes
         for indx in south_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == 4:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == Direction.south:
                 se_neighbour_map[4].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == -1:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == Direction.south_west:
                 se_neighbour_map[-1].append(indx)
         for indx in east_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == 2:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == Direction.east:
                 se_neighbour_map[2].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == 1:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_east_indx], cellboxes[indx]) == Direction.north_east:
                 se_neighbour_map[1].append(indx)
 
    
@@ -343,14 +361,14 @@ class MeshBuilder:
         """
         cellboxes = self.mesh.cellboxes
         for indx in north_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == -4:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == Direction.north:
                 ne_neighbour_map[-4].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == -3:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == Direction.north_west:
                 ne_neighbour_map[-3].append(indx)
         for indx in east_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == 2:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == Direction.east:
                 ne_neighbour_map[2].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == 3:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_east_indx], cellboxes[indx]) == Direction.south_east:
                 ne_neighbour_map[3].append(indx)
 
     
@@ -360,14 +378,14 @@ class MeshBuilder:
         """
         cellboxes = self.mesh.cellboxes
         for indx in north_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == -4:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == Direction.north:
                 nw_neighbour_map[-4].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == 1:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == Direction.north_east:
                 nw_neighbour_map[1].append(indx)
         for indx in west_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == -2:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == Direction.west:
                 nw_neighbour_map[-2].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == -1:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[north_west_indx], cellboxes[indx]) == Direction.south_west:
                 nw_neighbour_map[-1].append(indx)
 
   
@@ -377,14 +395,14 @@ class MeshBuilder:
         """
         cellboxes = self.mesh.cellboxes
         for indx in south_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == 3:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == Direction.south_east:
                 sw_neighbour_map[3].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == 4:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == Direction.south:
                 sw_neighbour_map[4].append(indx)
         for indx in west_neighbour_indx:
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == -2:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == Direction.west:
                 sw_neighbour_map[-2].append(indx)
-            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == -3:
+            if self.neighbour_graph.get_neighbour_case(cellboxes[south_west_indx], cellboxes[indx]) == Direction.north_west:
                 sw_neighbour_map[-3].append(indx)
 
 
@@ -438,7 +456,7 @@ if __name__ == '__main__':
     import time
     start = time.time()
     conf = None
-    with open("../feb_2013_Jgrid_config.json", "r") as config_file:
+    with open("../../tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80.json", "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder(conf)
@@ -446,7 +464,7 @@ if __name__ == '__main__':
     print(conf)
     # with open("feb_2013_Jgrid_.json", 'w') as file:
     #     json.dump(env_mesh.to_json(), file)
-    env_mesh.save ("feb_2013_Jgrid_.json")
+    env_mesh.save ("create_mesh.output2016_6_80.json")
     end = time.time()
     elapsed_seconds = float("%.2f" % (end - start))
     print(elapsed_seconds)
