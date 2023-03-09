@@ -94,8 +94,6 @@ class MeshBuilder:
         logging.info("Initialising mesh...")
         logging.info("Initialising cellboxes...")
      
-
-        logging.debug("Initialising cellBoxes...")
         cellboxes = []
         cellboxes = self.initialize_cellboxes(bounds, cell_width, cell_height)
 
@@ -425,8 +423,12 @@ class MeshBuilder:
         """
         self.split_to_depth(self.mesh.get_max_split_depth())
         agg_cellboxes = []
+
+        agg_cell_count = 0
         for cellbox in self.mesh.cellboxes:
+            agg_cell_count += 1
             if isinstance(cellbox, CellBox):
+                logging.debug(f'aggregating cellbox ({agg_cell_count}/{len(self.mesh.cellboxes)})')
                 agg_cellboxes.append(cellbox.aggregate())
 
         env_mesh = EnvironmentMesh(self.mesh.get_bounds(

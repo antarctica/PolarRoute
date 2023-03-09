@@ -245,4 +245,15 @@ class Boundary:
                     [self.long_range[0], self.lat_range[0], ]]
         return bounds
 
+    def __str__(self):
+
+
+        lat_range = "lat range :[" + str(self.get_lat_min()) + \
+              "," + str(self.get_lat_max()) + "]"
+        long_range = "long range :[" + str(self.get_long_min()) + \
+              "," + str(self.get_long_max()) + "]"
+        time_range = "time range :" + str(self.get_time_range())
+
+        return "{"+ lat_range + ", " + long_range + ", " + time_range + "}"
+
 
