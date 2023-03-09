@@ -1,7 +1,7 @@
 """
-Outlined in this section we will discuss the usage of the CellBox functionality of the PolarRoute package. 
+Outlined in this section we will discuss the usage of the CellBox functionality of the PolarRoute package.
 In this series of class distributions we house our discrete representation of input data. In each CellBox,
-we represent a way of accessing the information governing our numerical world, 
+we represent a way of accessing the information governing our numerical world,
 this includes and is not limited to: Ocean Currents, Sea Ice Concentration and Bathymetric depth.\n
 
 
@@ -25,8 +25,8 @@ from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
 
 class CellBox:
     """
-    A CellBox represnts a geo-spatial/temporal boundary that enables projecting to information within. 
-    Information about any given value of a CellBox is calculated from aggregating all data points of within those bounds. 
+    A CellBox represnts a geo-spatial/temporal boundary that enables projecting to information within.
+    Information about any given value of a CellBox is calculated from aggregating all data points of within those bounds.
     CellBoxes may  be split into smaller CellBoxes and the data points within distributed  between the newly created
     CellBoxes so as to construct a non-uniform mesh of CellBoxes, such as within a Mesh.\n
 
@@ -68,7 +68,7 @@ class CellBox:
 
             Args:
                 data_source (List <MetaData>): a list of MetaData objects, each object represents a source of this CellBox data
-                  (where the data comes from, how it is spitted and aggregated)  
+                  (where the data comes from, how it is spitted and aggregated)
         """
         self.data_source = data_source
 
@@ -82,7 +82,7 @@ class CellBox:
 
     def set_split_depth(self, split_depth):
         """
-            set the split depth of a CellBox, which represents is the number of times the CellBox 
+            set the split depth of a CellBox, which represents is the number of times the CellBox
             has been split to reach it's current size.
         """
         if split_depth < 0:
@@ -112,8 +112,8 @@ class CellBox:
             a method that gets the data source of the cellbox
               (the data loaders, splitting conditions and aggregation type)
             returns:
-            data_source (List <MetaData>): a list of MetaData objects, each object represents a source 
-            of this CellBox data (where the data comes from, how it is spitted and aggregated)  
+            data_source (List <MetaData>): a list of MetaData objects, each object represents a source
+            of this CellBox data (where the data comes from, how it is spitted and aggregated)
         """
         return self.data_source
 
@@ -125,7 +125,7 @@ class CellBox:
 
     def get_bounds(self):
         """
-            get the spatial and temporal bounds (lat range, long range and time range) of this cellbox 
+            get the spatial and temporal bounds (lat range, long range and time range) of this cellbox
         """
         return self.bounds
 
@@ -155,8 +155,8 @@ class CellBox:
             else (mixture of CLR & HET):
                 split\n
             Args:
-                stop_index: the index of the data source at which checking the splitting conditions stops. 
-                Implemented like this to perform depth-first splitting. 
+                stop_index: the index of the data source at which checking the splitting conditions stops.
+                Implemented like this to perform depth-first splitting.
                 Should be deprecated once we switch to breadth-first splitting
             Returns:
                  bool: True if the splitting_conditions of this CellBox
@@ -242,7 +242,7 @@ class CellBox:
 
     def create_splitted_cell_boxes(self, index):
         """
-        method that creates 4 splitted cellbox 
+        method that creates 4 splitted cellbox
         """
         half_width = self.bounds.get_width() / 2
         half_height = self.bounds.get_height() / 2
@@ -279,7 +279,7 @@ class CellBox:
 
     def aggregate(self):
         '''
-            aggregates CellBox data using the associated data_sources' aggregate type (ex. MEAN, MAX) 
+            aggregates CellBox data using the associated data_sources' aggregate type (ex. MEAN, MAX)
             and returns AggregatedCellBox object
 
             Returns:
@@ -296,15 +296,14 @@ class CellBox:
             if ',' in data_name:
                 agg_value = self.check_vector_data(
                     source, loader, agg_value, data_name)
-
-            # if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-            elif np.isnan(agg_value[data_name]) and source.get_value_fill_type() == 'zero':
-                agg_value[data_name] = 0
-            elif np.isnan(agg_value[data_name]) and source.get_value_fill_type() == 'parent':
-                # if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                while parent is not None and np.isnan(agg_value[data_name]):
-                    agg_value = loader.get_value(parent.bounds)
-                    parent = parent.get_parent()
+            elif np.isnan(agg_value[data_name]):
+                if source.get_value_fill_type() == 'parent':
+                    # if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                    while parent is not None and np.isnan(agg_value[data_name]):
+                        agg_value = loader.get_value(parent.bounds)
+                        parent = parent.get_parent()
+                else:  # not parent, so either float or Nan so set the agg_Data to value_fill_type
+                    agg_value[data_name] = source.get_value_fill_type()
 
             # combine the aggregated values in one dict
             agg_dict.update(agg_value)
@@ -321,14 +320,14 @@ class CellBox:
         data_name_list = data_name.split(',')
         for name in data_name_list:
             parent = self.get_parent()
-            # if the agg_value empty and get_value_fill_type is 0, then set agg_value to 0
-            if np.isnan(agg_value[name]) and source.get_value_fill_type() == 'zero':
-                agg_value[name] = 0
-            elif np.isnan(agg_value[name]) and source.get_value_fill_type() == 'parent':
-                # if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
-                while parent is not None and np.isnan(agg_value[name]):
-                    agg_value[name] = loader.get_value(parent.bounds)[name]
-                    parent = parent.get_parent()
+            if np.isnan(agg_value[name]):
+                if source.get_value_fill_type() == 'parent':
+                    # if the agg_value empty and get_value_fill_type is parent, then use the parent bounds
+                    while parent is not None and np.isnan(agg_value[name]):
+                        agg_value[name] = loader.get_value(parent.bounds)[name]
+                        parent = parent.get_parent()
+                else:  # not parent, so either float or Nan so set the agg_Data to value_fill_type
+                    agg_value[data_name] = source.get_value_fill_type()
         return agg_value
 
     def deallocate_cellbox(self):
