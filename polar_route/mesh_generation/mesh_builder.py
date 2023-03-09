@@ -79,6 +79,13 @@ class MeshBuilder:
         self.config = config
         bounds = Boundary.from_json(config)
 
+        # Configs may contain reference to system time for startTime and endTime
+        # which are parsed to datetime format when initialising boundary.
+        # updates config startTime/ endTime once system time has been parsed.
+        self.config['Mesh_info']['Region']['startTime'] = bounds.get_time_min()
+        self.config['Mesh_info']['Region']['endTime'] = bounds.get_time_max()
+
+        
         cell_width = config['Mesh_info']['Region']['cellWidth']
         cell_height = config['Mesh_info']['Region']['cellHeight']
 
