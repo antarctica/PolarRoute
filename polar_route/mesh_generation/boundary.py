@@ -77,18 +77,19 @@ class Boundary:
             Raises:
                 ValueError : If given 'datetime_str' cannot be parsed, raises ValueError.
         """
+        DATE_FORMAT = "%Y-%m-%d"
         
         datetime_str = datetime_str.upper()
 
         # check if datetime_str is valid datetime format.
         try:
-            datetime_object = datetime.strptime(datetime_str, '%Y-%m-%d').date()
-            return datetime_object.strftime("%Y-%m-%d")
+            datetime_object = datetime.strptime(datetime_str, DATE_FORMAT).date()
+            return datetime_object.strftime(DATE_FORMAT)
         except ValueError:
             # check if datetime_str contains reference to system-time.
             if datetime_str.strip() == "TODAY":
                 today = datetime.today()
-                return today.strftime("%Y-%m-%d")
+                return today.strftime(DATE_FORMAT)
             elif "TODAY" not in datetime_str:
                 raise ValueError(f'Incorrect date format given. Cannot convert "{datetime_str}" to date.')
             
@@ -98,7 +99,7 @@ class Boundary:
                 try:
                     increment = float(increment)
                     datetime_object = datetime.today() + timedelta(days = increment)
-                    return datetime_object.strftime("%Y-%m-%d")
+                    return datetime_object.strftime(DATE_FORMAT)
                 except ValueError:
                     raise ValueError(f'Incorrect date format given. Cannot convert "{datetime_str}" to date. ' + \
                         f'Time increment "{increment}" cannot be cast to float')
@@ -109,7 +110,7 @@ class Boundary:
                 try:
                     decrement = float(decrement)
                     datetime_object = datetime.today() - timedelta(days = decrement)
-                    return datetime_object.strftime("%Y-%m-%d")
+                    return datetime_object.strftime(DATE_FORMAT)
                 except ValueError:
                     raise ValueError(f'Incorrect date format given. Cannot convert "{datetime_str}" to date. ' + \
                             f'Time decrement "{decrement}" cannot be cast to float')
