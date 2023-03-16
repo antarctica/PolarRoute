@@ -380,38 +380,47 @@ class VectorDataLoader(DataLoaderInterface):
         Returns:
             xr.Dataset or pd.DataFrame: 
                 Downsampled data
-                
-        Todo:
-            Fix downsampling to work with aggregation type as intended. Right now 
-            it just takes every m'th and n'th datapoint in each coord axis
         '''
-        def downsample_xr(data, ds, agg):
+        def downsample_xr(data, ds, agg_type):
             '''
             Downsample xarray dataset
             '''
-            # TODO Replace with coarsen when refactor passes regression tests
-            # Better method of downsampling
-            # data = data.coarsen(lat=self.ds[1]).max()
-            # data = data.coarsen(lon=self.ds[0]).max()
-            
-            # Old method of downsampling
-            return downsample_df(data.to_dataframe().reset_index(), ds, agg)
-        
-        def downsample_df(data, ds, agg):
+            if agg_type == 'MIN':
+                # Returns min of bin
+                data = data.coarsen(lat=ds[1]).min()
+                data = data.coarsen(long=ds[0]).min()
+            elif agg_type == 'MAX':
+                # Returns max of bin
+                data = data.coarsen(lat=ds[1]).max()
+                data = data.coarsen(long=ds[0]).max()
+            elif agg_type == 'MEAN':
+                # Returns mean of bin
+                data = data.coarsen(lat=ds[1]).mean()
+                data = data.coarsen(long=ds[0]).mean()
+            elif agg_type == 'MEDIAN':
+                # Returns median of bin
+                data = data.coarsen(lat=ds[1]).median()
+                data = data.coarsen(long=ds[0]).median()
+            elif agg_type == 'STD':
+                # Returns std_dev of range
+                data = data.coarsen(lat=ds[1]).std()
+                data = data.coarsen(long=ds[0]).std()
+            elif agg_type =='COUNT': 
+                # Returns every first element in bin
+                data = data.thin(lat=ds[1])
+                data = data.thin(long=ds[0])
+            return data
+    
+        def downsample_df(data, ds, agg_type):
             '''
             Downsample pandas dataframe
+            Not implemented as it just adds to processing time, 
+            defeating the purpose
             '''
-            # TODO Replace with aggregate type method of downsampling when
-            # refactor passes regression tests
-            
-            # Old method of downsampling just takes every nth column and row
-            # Retrieve each unique coordinate and downsample
-            ds_lats = data.lat.unique()[::ds[1]]
-            ds_lons = data.long.unique()[::ds[0]]
-            # Cut down dataset to only those values with downsampled coords
-            data = data[data.lat.isin(ds_lats)]
-            data = data[data.long.isin(ds_lons)]
-            
+            logging.warning(
+                '- Downsampling called on pd.DataFrame! Downsampling a df' \
+                'too computationally expensive, returning original df'
+                )
             return data
 
         # Set to params if no specific aggregate type specified

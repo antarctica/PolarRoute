@@ -357,10 +357,6 @@ class ScalarDataLoader(DataLoaderInterface):
         Returns:
             xr.Dataset or pd.DataFrame: 
                 Downsampled data
-                
-        Todo:
-            Fix downsampling to work with aggregation type as intended. Right now 
-            it just takes every m'th and n'th datapoint in each coord axis
         '''
         def downsample_xr(data, ds, agg_type):
             '''
@@ -395,49 +391,13 @@ class ScalarDataLoader(DataLoaderInterface):
         def downsample_df(data, ds, agg_type):
             '''
             Downsample pandas dataframe
+            Not implemented as it just adds to processing time, 
+            defeating the purpose
             '''
-            # TODO NOT WORKING, TIME BEING DROPPED? DS FACTOR WRONG?
-            def bin_by_coord(name, data, ds_factor):
-                # Sort data to allow np.digitize to work
-                data = data.sort_values(by=[name])
-                # Retrieve unique lat/lon locations for binning
-                unique_dps = data[name].unique()
-                # Bin by factor of 'ds_factor'
-                bins = np.append(unique_dps[::ds_factor], unique_dps[-1])
-                # Digitize to get unique ID for each bin in each axis
-                new_col_name = name + '_bin'
-                data[new_col_name] = np.digitize(data[name], bins=bins)
-                return data, bins
-                
-            # Bin datapoints by coordinate                
-            data, lat_bins  = bin_by_coord('lat', data, ds[1])
-            data, long_bins = bin_by_coord('long', data, ds[0])
-
-            # Group by bin ID's
-            data = data.groupby(by=['long_bin', 'lat_bin'])
-
-            if agg_type == 'MIN':
-                # Returns min of bin
-                data = data.min()
-            elif agg_type == 'MAX':
-                # Returns max of bin
-                data = data.max()
-            elif agg_type == 'MEAN':
-                # Returns mean of bin
-                data = data.mean()
-            elif agg_type == 'MEDIAN':
-                # Returns median of bin
-                data = data.median()
-            elif agg_type == 'STD':
-                # Returns std_dev of range
-                data = data.std()
-            elif agg_type =='COUNT': 
-                # Returns every first element in bin
-                data = data[data.lat.isin(lat_bins)]
-                data = data[data.long.isin(long_bins)]
-                
-            # Remove group_by indexes
-            data = data.reset_index(drop=True)
+            logging.warning(
+                '- Downsampling called on pd.DataFrame! Downsampling a df' \
+                'too computationally expensive, returning original df'
+                )
             return data
         
         # Set to params if no specific aggregate type specified
