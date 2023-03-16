@@ -210,8 +210,11 @@ class ScalarDataLoader(DataLoaderInterface):
         # Limit data series to just the data, excluding coords/index
         dps = self.get_datapoints(bounds)[self.data_name]
         dps = dps.dropna().sort_values()
-        logging.debug(f"- {len(dps)} datapoints found within bounds")
+
+        # TODO update log to include boundary and data_name
+        logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
         # If no data
+
         if len(dps) == 0:
             return {self.data_name: np.nan}
         # Return float of aggregated value
@@ -265,21 +268,26 @@ class ScalarDataLoader(DataLoaderInterface):
                 given threshold if between the upper and lower bound
                 
         '''
+        hom_type = "ERR"
+        
         # Retrieve datapoints to analyse
         dps = self.get_datapoints(bounds)[self.data_name]
-        logging.debug(f"- {len(dps)} datapoints found within bounds")
-        # If not enough datapoints
-        if len(dps) < self.min_dp: return 'MIN'
-        # Otherwise, extract the homogeneity condition
-
-        # Calculate fraction over threshold
-        num_over_threshold = dps[dps > splitting_conds['threshold']]
-        frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
         
-        # Return homogeneity condition
-        if   frac_over_threshold <= splitting_conds['lower_bound']: return 'CLR'
-        elif frac_over_threshold >= splitting_conds['upper_bound']: return 'HOM'
-        else: return 'HET'
+        # If not enough datapoints
+        if len(dps) < self.min_dp: hom_type = "MIN"
+        # Otherwise, extract the homogeneity condition
+        else:
+            # Calculate fraction over threshold
+            num_over_threshold = dps[dps > splitting_conds['threshold']]
+            frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
+            
+            # Return homogeneity condition
+            if   frac_over_threshold <= splitting_conds['lower_bound']: hom_type = "CLR"
+            elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
+            else: hom_type = "HET"
+
+        logging.debug(f"hom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+        return hom_type
         
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
