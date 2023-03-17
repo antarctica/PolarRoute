@@ -21,7 +21,6 @@
                         ],
                         "file": "../../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
                         "data_name": "elevation",
-                        "value_fill_types": "parent",
                         "aggregate_type": "MAX",
                         "splitting_conditions": [
                             {
@@ -31,8 +30,7 @@
                                     "lower_bound": 0
                                 }
                             }
-                        ],
-                        "min_dp": 5
+                        ]
                     }
                 },
                 {
@@ -40,7 +38,6 @@
                     "params": {
                         "folder": "../../datastore/sic/amsr_south/",
                         "hemisphere": "south",
-                        "value_fill_types": "parent",
                         "data_name": "SIC",
                         "splitting_conditions": [
                             {
@@ -50,55 +47,28 @@
                                     "lower_bound": 0.1
                                 }
                             }
-                        ],
-                        "downsample_factors": [
-                            1,
-                            1
-                        ],
-                        "aggregate_type": "MEAN",
-                        "min_dp": 5
+                        ]
                     }
                 },
                 {
                     "loader": "SOSE",
                     "params": {
                         "file": "../../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
-                        "value_fill_types": "parent",
-                        "data_name": "uC,vC",
-                        "downsample_factors": [
-                            1,
-                            1
-                        ],
-                        "aggregate_type": "MEAN",
-                        "min_dp": 5
+                        "data_name": "uC,vC"
                     }
                 },
                 {
                     "loader": "thickness",
                     "params": {
                         "data_name": "thickness",
-                        "file": "",
-                        "value_fill_types": "parent",
-                        "downsample_factors": [
-                            1,
-                            1
-                        ],
-                        "aggregate_type": "MEAN",
-                        "min_dp": 5
+                        "file": ""
                     }
                 },
                 {
                     "loader": "density",
                     "params": {
                         "data_name": "density",
-                        "file": "",
-                        "value_fill_types": "parent",
-                        "downsample_factors": [
-                            1,
-                            1
-                        ],
-                        "aggregate_type": "MEAN",
-                        "min_dp": 5
+                        "file": ""
                     }
                 }
             ],
