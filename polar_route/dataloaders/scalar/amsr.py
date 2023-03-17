@@ -170,7 +170,23 @@ class AMSRDataLoader:
         '''
         def downsample_xr(data, ds, agg_type):
             '''
-            Downsample xarray dataset
+            Downsample xarray dataset according to aggregation type
+            
+            Args:
+                data (xr.Dataset):
+                    Dataset containing data to be downsampled. Must have 
+                    coordinates 'lat' and 'long'
+                ds (int, int):
+                    Downsampling factors. 
+                    ds[0] is longitude
+                    ds[1] is latitude
+                agg_type (str):
+                    Aggregation method to use for binning. Default is same as 
+                    set in config, passed in by parent
+            
+            Returns:
+                xr.Dataset:
+                    Downsampled data
             '''
             if agg_type == 'MIN':
                 # Returns min of bin
