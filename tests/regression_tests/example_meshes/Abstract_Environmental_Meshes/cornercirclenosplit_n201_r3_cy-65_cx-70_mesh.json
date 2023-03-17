@@ -11,7 +11,8 @@
                 "cellWidth": 2.5,
                 "cellHeight": 2.5
             },
-            "Data_sources": [
+
+            "Data_sources":[
                 {
                     "loader": "circle",
                     "params": {
@@ -20,10 +21,7 @@
                         "nx": 201,
                         "ny": 201,
                         "radius": 3,
-                        "centre": [
-                            -65,
-                            -70
-                        ],
+                        "centre": [-65, -70],
                         "splitting_conditions": [
                             {
                                 "dummy_data": {
@@ -32,20 +30,14 @@
                                     "lower_bound": 0.4
                                 }
                             }
-                        ],
-                        "downsample_factors": [
-                            1,
-                            1
-                        ],
-                        "aggregate_type": "MEAN",
-                        "min_dp": 5,
-                        "shape": "circle"
+                        ]
                     }
                 }
             ],
             "splitting": {
                 "split_depth": 6,
                 "minimum_datapoints": 5
+
             }
         }
     },

@@ -11,7 +11,7 @@
                 "cellWidth": 5,
                 "cellHeight": 2.5
             },
-            "Data_sources": [
+            "Data_sources":[
                 {
                     "loader": "checkerboard",
                     "params": {
@@ -19,10 +19,7 @@
                         "value_fill_types": "parent",
                         "nx": 201,
                         "ny": 201,
-                        "gridsize": [
-                            2.5,
-                            2.5
-                        ],
+                        "gridsize": [2.5, 2.5],
                         "splitting_conditions": [
                             {
                                 "dummy_data": {
@@ -31,14 +28,7 @@
                                     "lower_bound": 0.15
                                 }
                             }
-                        ],
-                        "downsample_factors": [
-                            1,
-                            1
-                        ],
-                        "aggregate_type": "MEAN",
-                        "min_dp": 5,
-                        "shape": "checkerboard"
+                        ]
                     }
                 }
             ],
