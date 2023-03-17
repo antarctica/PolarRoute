@@ -38,13 +38,14 @@ class AMSRDataLoader:
         logging.info("Initalising AMSR dataloader")
         self.file_location  = params['folder']
         self.min_dp         = params['min_dp']
-        self.ds             = params['downsample_factors']
+        self.downsample_factors = params['downsample_factors']
         self.hemisphere     = params['hemisphere'].lower()
 
         # Cast string to uppercase to accept mismatched case
         self.aggregate_type = params['aggregate_type'].upper()
 
         self.data = self.import_data(bounds)
+        self.data = self.downsample()
         # If no data name specified, retrieve from self.data
         self.data_name = 'SIC' #data_name if data_name else self.get_data_name()
         
@@ -139,6 +140,8 @@ class AMSRDataLoader:
 
         reprojected_df = self.reproject(raw_df, in_proj=in_proj, out_proj=out_proj, 
                                         x_col='x', y_col='y')
+        
+        reprojected_df = reprojected_df[['lat', 'long', 'time', 'SIC']]
         logging.info('- Limiting to initial bounds')
         mask = (reprojected_df['lat']  >= bounds.get_lat_min())  & \
                (reprojected_df['lat']  <= bounds.get_lat_max())  & \
@@ -149,6 +152,96 @@ class AMSRDataLoader:
                
         return reprojected_df.loc[mask]
 
+    def downsample(self, agg_type=None):
+        '''
+        Downsamples imported data to be more easily manipulated. Data size 
+        should be reduced by a factor of m*n, where (m,n) are the 
+        downsample_factors defined in the params.        
+        self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            agg_type (str): 
+                Method of aggregation to bin data by to downsample. Default is
+                same method used for homogeneity condition.            
+
+        Returns:
+            xr.Dataset or pd.DataFrame: 
+                Downsampled data
+        '''
+        def downsample_xr(data, ds, agg_type):
+            '''
+            Downsample xarray dataset according to aggregation type
+            
+            Args:
+                data (xr.Dataset):
+                    Dataset containing data to be downsampled. Must have 
+                    coordinates 'lat' and 'long'
+                ds (int, int):
+                    Downsampling factors. 
+                    ds[0] is longitude
+                    ds[1] is latitude
+                agg_type (str):
+                    Aggregation method to use for binning. Default is same as 
+                    set in config, passed in by parent
+            
+            Returns:
+                xr.Dataset:
+                    Downsampled data
+            '''
+            if agg_type == 'MIN':
+                # Returns min of bin
+                data = data.coarsen(lat=ds[1]).min()
+                data = data.coarsen(long=ds[0]).min()
+            elif agg_type == 'MAX':
+                # Returns max of bin
+                data = data.coarsen(lat=ds[1]).max()
+                data = data.coarsen(long=ds[0]).max()
+            elif agg_type == 'MEAN':
+                # Returns mean of bin
+                data = data.coarsen(lat=ds[1]).mean()
+                data = data.coarsen(long=ds[0]).mean()
+            elif agg_type == 'MEDIAN':
+                # Returns median of bin
+                data = data.coarsen(lat=ds[1]).median()
+                data = data.coarsen(long=ds[0]).median()
+            elif agg_type == 'STD':
+                # Returns std_dev of range
+                data = data.coarsen(lat=ds[1]).std()
+                data = data.coarsen(long=ds[0]).std()
+            elif agg_type =='COUNT': 
+                # Returns every first element in bin
+                data = data.thin(lat=ds[1])
+                data = data.thin(long=ds[0])
+            return data
+    
+        def downsample_df(data, ds, agg_type):
+            '''
+            Downsample pandas dataframe
+            Not implemented as it just adds to processing time, 
+            defeating the purpose
+            '''
+            logging.warning(
+                '- Downsampling called on pd.DataFrame! Downsampling a df' \
+                'too computationally expensive, returning original df'
+                )
+            return data
+        
+        # Set to params if no specific aggregate type specified
+        if agg_type is None:
+            agg_type = self.aggregate_type
+        
+        # If no downsampling
+        if self.downsample_factors == (1,1):
+            logging.debug("- self.downsample() called but don't have to")
+            return self.data
+        else:
+            logging.info(f"- Downsampling data by {self.downsample_factors}")
+        # Otherwise, downsample appropriately
+        if type(self.data) == type(pd.DataFrame()):
+            return downsample_df(self.data, self.downsample_factors, agg_type)
+        elif type(self.data) == type(xr.Dataset()):
+            return downsample_xr(self.data, self.downsample_factors, agg_type)
+        
     def reproject(self, data, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
         '''
