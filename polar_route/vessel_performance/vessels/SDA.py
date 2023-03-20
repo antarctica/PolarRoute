@@ -29,12 +29,12 @@ class SDA(AbstractShip):
                 cellbox (AggregatedCellBox): updated cell with speed values
         """
 
-        logging.info("Calculating new speeds based on SDA resistance models")
+        logging.debug(f"Calculating new speed for cellbox {cellbox.id} based on SDA resistance models")
         speed = cellbox.agg_data['speed']
         ice_resistance = None
 
         if all(k in cellbox.agg_data for k in ("SIC", "thickness", "density")):
-            logging.info("Adjusting speed according to ice resistance model")
+            logging.debug("Adjusting speed according to ice resistance model")
             if cellbox.agg_data['SIC'] == 0.0:
                 ice_resistance = 0.
                 speed = self.max_speed
@@ -50,7 +50,7 @@ class SDA(AbstractShip):
                 else:
                     speed = self.max_speed
         else:
-            logging.info("No resistance data available, no speed adjustment necessary")
+            logging.debug("No resistance data available, no speed adjustment necessary")
 
         logging.debug("Creating speed array")
         cellbox.agg_data['speed'] = [speed for x in range(8)]
@@ -262,7 +262,7 @@ def calc_wind(cellbox):
             cellbox (AggregatedCellBox): updated cell with wind information
     """
 
-    logging.info("Calculating wind resistance")
+    logging.debug(f"Calculating wind resistance in cellbox {cellbox.id}")
 
     wind_res = [0, 0, 0, 0, 0, 0, 0, 0]
     rel_wind_speed = [0, 0, 0, 0, 0, 0, 0, 0]
