@@ -44,6 +44,7 @@ class ShapeDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
+        TODO CHANGE
             pd.DataFrame: 
                 DataFrame with coordinates within bounds, and values between
                 [0:1]. Dataframe has columns 'lat', 'long', 'time', and
@@ -60,8 +61,10 @@ class ShapeDataLoader(ScalarDataLoader):
     
         # Fill dummy time values
         data['time'] = bounds.get_time_min()
+
+        data_xr = data.set_index(['lat', 'long', 'time']).to_xarray()
     
-        return data
+        return data_xr
     
     def gen_circle(self, bounds):
         """
