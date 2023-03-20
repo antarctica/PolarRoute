@@ -54,7 +54,8 @@ def vessel_mesh_pair(request):
 @pytest.fixture(scope='session', autouse=False, params=TEST_ABSTRACT_MESHES)
 def abstract_mesh_pair(request):
     """
-        creates a mesh pair for circle meshes listed in TEST_ABSTRACT_MESHES
+        creates a mesh pair for absract shape meshes listed in 
+        array TEST_ABSTRACT_MESHES
     """
     return calculate_env_mesh(request.param)
 
