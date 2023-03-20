@@ -169,6 +169,9 @@ class ScalarDataLoader(DataLoaderInterface):
             # Cast as a pd.DataFrame
             data = data.to_dataframe().reset_index().dropna()
             
+            # to trims inclusive edges from a slice taken with xarray
+            data = get_datapoints_from_df(data, name, bounds, return_coords)
+            
             # Include lat/long/time if requested
             if return_coords: columns = list(data.columns)
             else:             columns = [name]
