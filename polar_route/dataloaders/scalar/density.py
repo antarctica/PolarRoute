@@ -23,7 +23,7 @@ class DensityDataLoader(ScalarDataLoader):
                 Dictionary of {key: value} pairs. Keys are attributes 
                 this dataloader requires to function
         '''
-        logging.info("Initalising BSOSE Depth dataloader")
+        logging.info("Initalising Sea Ice Density dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
             logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
@@ -105,6 +105,10 @@ class DensityDataLoader(ScalarDataLoader):
         density_df = density_data.\
             to_dataframe().\
             reset_index().\
-            set_index(['lat', 'long', 'time']).reset_index()
+            set_index(['lat', 'long', 'time'])
+        
+        density_xr = density_df.to_xarray()
 
-        return density_df
+        del density_df
+
+        return density_xr

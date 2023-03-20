@@ -20,7 +20,7 @@ class ThicknessDataLoader(ScalarDataLoader):
                 Dictionary of {key: value} pairs. Keys are attributes 
                 this dataloader requires to function
         '''
-        logging.info("Initalising BSOSE Depth dataloader")
+        logging.info("Initalising Sea Ice Thickness dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
             logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
@@ -117,7 +117,11 @@ class ThicknessDataLoader(ScalarDataLoader):
         thick_df = thick_data.\
             to_dataframe().\
             reset_index().\
-            set_index(['lat', 'long', 'time']).reset_index()
+            set_index(['lat', 'long', 'time'])
+        
+        thickness_xr = thick_df.to_xarray()
 
         logging.debug("returning {} datapoints".format(len(thick_df.index)))
-        return thick_df
+
+        del thick_df
+        return thickness_xr
