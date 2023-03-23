@@ -141,22 +141,23 @@ where each of the values represent the following:
 Vehicle specifics
 #################
 
-Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
+Once a discrete mesh environment is contracted, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle.
 
-:: 
+::
 
-    from polar_route.mesh import Mesh
-    from polar_route.vessel_performance import VesselPerformance
+    import json
+    from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 
-    with open('config.json', 'r') as f:
-        config = json.load(f)
+    with open('vessel_config.json', 'r') as f:
+        vessel_config = json.load(f)
 
-    mesh = Mesh(config)
-    mesh_json = mesh.to_json()
+    vpm = VesselPerformanceModeller(mesh_json, vessel_config)
 
-    vp = VesselPerformance(mesh_json)
-    vessel_mesh_json = vp.to_json()
+    vpm.model_accessibility()
+    vpm.model_performance()
+
+    vessel_mesh_json = vpm.to_json()
 
 .. note::
     To be compatible with vessel performance transformations, a Mesh must be constructed with
