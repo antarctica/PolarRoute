@@ -44,10 +44,9 @@ class ShapeDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-        TODO CHANGE
-            pd.DataFrame: 
-                DataFrame with coordinates within bounds, and values between
-                [0:1]. Dataframe has columns 'lat', 'long', 'time', and
+            data_xr (xarray): 
+                xarray with coordinates within bounds, and values between
+                [0:1]. xarray has dimensions 'lat', 'long', 'time', and
                 'dummy_data' (by default)
         '''
         # TODO Move self.lat/long = np.linspace here after reg tests pass

@@ -50,7 +50,7 @@ class DensityDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-            pd.DataFrame: 
+            density_xr (xarray): 
                 Sea Ice Density dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', and variable 'density'
         '''
