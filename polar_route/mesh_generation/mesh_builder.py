@@ -125,6 +125,8 @@ class MeshBuilder:
         self.mesh = Mesh(bounds, cellboxes,
                          self.neighbour_graph, max_split_depth)
         self.mesh.set_config(config)
+        if self.is_jgrid_mesh():
+            logging.warning("We're using the legacy Java style cell grid")
 
     def initialize_meta_data(self, bounds, min_datapoints):
         meta_data_list = []
@@ -172,8 +174,8 @@ class MeshBuilder:
 
     def is_jgrid_mesh(self):
         if 'j_grid' in self.config['Mesh_info'].keys():
-            logging.warning("We're using the legacy Java style cell grid")
-            return True
+            if  self.config['Mesh_info']['j_grid'] == "True":
+                return True
         return False
 
     def initialize_cellboxes(self, bounds, cell_width, cell_height):
@@ -196,7 +198,7 @@ class MeshBuilder:
                     y_coord = abs(math.floor(
                         cellbox_indx / grid_width) - (grid_height - 1))
                     cellbox.set_grid_coord(x_coord, y_coord)
-                    cellbox.set_initial_bounds(bounds)
+                    cellbox.set_initial_bounds(cell_bounds)
 
                 else:
                     cellbox = CellBox(cell_bounds, cell_id)

@@ -214,8 +214,9 @@ class ScalarDataLoader(DataLoaderInterface):
         # TODO update log to include boundary and data_name
         logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
         # If no data
-
-        if len(dps) == 0:
+        if agg_type =='COUNT':
+            return {self.data_name: len(dps)}
+        elif len(dps) == 0:
             return {self.data_name: np.nan}
         # Return float of aggregated value
         elif agg_type == 'MIN':
@@ -228,8 +229,6 @@ class ScalarDataLoader(DataLoaderInterface):
             return {self.data_name :float(dps.median(skipna=skipna))}
         elif agg_type == 'STD':
             return {self.data_name :float(dps.std(skipna=skipna))}
-        elif agg_type =='COUNT':
-            return {self.data_name: len(dps)}
         # If aggregation_type not available
         else:
             raise ValueError(f'Unknown aggregation type {agg_type}')
