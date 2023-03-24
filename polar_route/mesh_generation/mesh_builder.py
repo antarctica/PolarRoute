@@ -467,15 +467,13 @@ if __name__ == '__main__':
     import time
     start = time.time()
     conf = None
-    with open("../../tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80.json", "r") as config_file:
+    with open("feb_2013_Jgrid_config.json", "r") as config_file:
         conf = json.load(config_file)['config']
 
     mesh_builder = MeshBuilder(conf)
     env_mesh = mesh_builder.build_environmental_mesh()
     print(conf)
-    # with open("feb_2013_Jgrid_.json", 'w') as file:
-    #     json.dump(env_mesh.to_json(), file)
-    env_mesh.save ("create_mesh.output2016_6_80.json")
+    env_mesh.save ("feb_2013_Jgrid_output.json")
     end = time.time()
     elapsed_seconds = float("%.2f" % (end - start))
     print(elapsed_seconds)
