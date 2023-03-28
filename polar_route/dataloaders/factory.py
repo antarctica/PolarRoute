@@ -201,6 +201,8 @@ class DataLoaderFactory:
 
     def set_default_grf_params(self, name, params):
         # Params that all GRF dataloaders need
+        if 'data_name' not in params:
+            params['data_name'] = 'data'
         if 'seed' not in params:
             params['seed'] = None
         if 'size' not in params:
