@@ -98,8 +98,6 @@ class DataLoaderFactory:
         assert all(key in params for key in required_params), \
             f'Dataloader {name} is missing some parameters! Requires {required_params}. Has {list(params.keys())}'
 
-        print(name, params)
-        print('====')
         # Create instance of dataloader
         return data_loader(bounds, params)
     
@@ -246,3 +244,11 @@ class DataLoaderFactory:
                 params['vec_y'] = 'vC'
                 
         return params
+
+if __name__ == '__main__':
+    from polar_route.mesh_generation.boundary import Boundary
+    
+    bounds = Boundary([-10,10],[-10,10],['2000-01-01', '2000-01-31'])
+    
+    scalar = DataLoaderFactory().get_dataloader('scalar_grf', bounds, {})
+    print()
