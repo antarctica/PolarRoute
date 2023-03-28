@@ -209,29 +209,37 @@ class DataLoaderFactory:
             params['size'] = 512
         if 'alpha' not in params:
             params['alpha'] = 3
-        if 'min' not in params:
-            params['min'] = 1
-        if 'max' not in params:
-            params['max'] = 10
         # Specific GRF loaders
         # If making a mask (e.g. land)
         if name == 'binary_grf':
             params['binary'] = True
+            if 'min' not in params:
+                params['min'] = 0
+            if 'max' not in params:
+                params['max'] = 1
             # If threshold not set, make it average of min/max val
             if 'threshold' not in params:
                 params['threshold'] = 0.5
         # If making a scalar field
         elif name == 'scalar_grf':
             params['binary'] = False
+            if 'min' not in params:
+                params['min'] = -10
+            if 'max' not in params:
+                params['max'] = 10
             # If threshold not set, make it min/max vals
             if 'threshold' not in params:
-                params['threshold'] = [0, 1]
+                params['threshold'] = [0,1]
             if 'multiplier' not in params:
                 params['multiplier'] = 1
             if 'offset' not in params:
                 params['offset'] = 0
         # If making a vector field
         elif name == 'vector_grf':
+            if 'min' not in params:
+                params['min'] = 0
+            if 'max' not in params:
+                params['max'] = 10
             if 'vec_x' not in params:
                 params['vec_x'] = 'uC'
             if 'vec_y' not in params:
