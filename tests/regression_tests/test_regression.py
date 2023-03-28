@@ -54,7 +54,8 @@ def vessel_mesh_pair(request):
 @pytest.fixture(scope='session', autouse=False, params=TEST_ABSTRACT_MESHES)
 def abstract_mesh_pair(request):
     """
-        creates a mesh pair for circle meshes listed in TEST_ABSTRACT_MESHES
+        creates a mesh pair for absract shape meshes listed in 
+        array TEST_ABSTRACT_MESHES
     """
     return calculate_env_mesh(request.param)
 
@@ -259,13 +260,6 @@ def compare_cellbox_values(mesh_a, mesh_b):
                 # To prevent crashing if cellboxes have different attributes
                 # This error will be detected by the 'test_cellbox_attributes' test
                 if key in cellbox_b.keys():
-
-                    # handle the vector returned by vesel perf.
-                    if key =='speed':
-                        cellbox_a['speed'] = [cellbox_a['speed']]*8   
-                    elif key =='fuel':
-                        cellbox_a['fuel'] = [cellbox_a['fuel']]*8
-
                     # Round to 5 dec. pl if value is a float, high precision can be issue between OS's
                     if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):
                         value_b = np.round(float(cellbox_b[key]), decimals=5)

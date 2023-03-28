@@ -133,6 +133,14 @@ where the variables are as follows:
 * **cellWidth**    *(float, degrees)*      : Initial Cell Box Width prior to splitting 
 * **cellHeight**   *(float, degrees)*      : Initial Cell Box Height prior to splitting 
 
+.. note::
+    Variables **startTime** and **endTime** also support reference to system time using 
+    the keyword **TODAY** *e.g.* 
+
+    "startTime": "TODAY" ,  "endTime": "TODAY + 5"
+
+    "startTime": "TODAY - 3",  "endTime": "TODAY"
+
 #################
 Data_sources
 #################

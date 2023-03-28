@@ -96,7 +96,9 @@ class IceNetDataLoader(ScalarDataLoader):
             Leadtime ({max_leadtime}) days - Prediction({days_ago}) days ago = {max_leadtime-days_ago} days
             '''
         
-        logging.info(f"- Found date {datetime.strftime('%Y-%m-%d')}")
+        # TODO fix logging bug.
+        #logging.info(f"- Found date {datetime.strftime('%Y-%m-%d')}")
+
         # Choose predictions from earliest date before start_date
         ds = ds.sel(leadtime=range(days_ago, time_range.days + days_ago))
         # Set to pd.DataFrame so can limit by lat/long
@@ -105,7 +107,7 @@ class IceNetDataLoader(ScalarDataLoader):
         # rather than date on which prediction made
         df.time = df.time + to_timedelta(df.leadtime, unit='d')
         # Remove unwanted columns
-        df = df.drop(columns=['yc','xc','leadtime', 'Lambert_Azimuthal_Grid', 'sic_stddev'])
+        df = df.drop(columns=['yc','xc','leadtime', 'Lambert_Azimuthal_Grid', 'sic_stddev', 'forecast_date'])
         
         logging.info('- Limiting to initial bounds')
         # Remove rows outside of spatial boundary

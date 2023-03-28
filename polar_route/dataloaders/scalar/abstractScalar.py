@@ -169,6 +169,9 @@ class ScalarDataLoader(DataLoaderInterface):
             # Cast as a pd.DataFrame
             data = data.to_dataframe().reset_index().dropna()
             
+            # to trims inclusive edges from a slice taken with xarray
+            data = get_datapoints_from_df(data, name, bounds, return_coords)
+            
             # Include lat/long/time if requested
             if return_coords: columns = list(data.columns)
             else:             columns = [name]
@@ -210,8 +213,11 @@ class ScalarDataLoader(DataLoaderInterface):
         # Limit data series to just the data, excluding coords/index
         dps = self.get_datapoints(bounds)[self.data_name]
         dps = dps.dropna().sort_values()
-        logging.debug(f"- {len(dps)} datapoints found within bounds")
+
+        # TODO update log to include boundary and data_name
+        logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
         # If no data
+
         if len(dps) == 0:
             return {self.data_name: np.nan}
         # Return float of aggregated value
@@ -265,21 +271,26 @@ class ScalarDataLoader(DataLoaderInterface):
                 given threshold if between the upper and lower bound
                 
         '''
+        hom_type = "ERR"
+        
         # Retrieve datapoints to analyse
         dps = self.get_datapoints(bounds)[self.data_name]
-        logging.debug(f"- {len(dps)} datapoints found within bounds")
-        # If not enough datapoints
-        if len(dps) < self.min_dp: return 'MIN'
-        # Otherwise, extract the homogeneity condition
-
-        # Calculate fraction over threshold
-        num_over_threshold = dps[dps > splitting_conds['threshold']]
-        frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
         
-        # Return homogeneity condition
-        if   frac_over_threshold <= splitting_conds['lower_bound']: return 'CLR'
-        elif frac_over_threshold >= splitting_conds['upper_bound']: return 'HOM'
-        else: return 'HET'
+        # If not enough datapoints
+        if len(dps) < self.min_dp: hom_type = "MIN"
+        # Otherwise, extract the homogeneity condition
+        else:
+            # Calculate fraction over threshold
+            num_over_threshold = dps[dps > splitting_conds['threshold']]
+            frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
+            
+            # Return homogeneity condition
+            if   frac_over_threshold <= splitting_conds['lower_bound']: hom_type = "CLR"
+            elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
+            else: hom_type = "HET"
+
+        logging.debug(f"hom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+        return hom_type
         
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
@@ -357,38 +368,63 @@ class ScalarDataLoader(DataLoaderInterface):
         Returns:
             xr.Dataset or pd.DataFrame: 
                 Downsampled data
-                
-        Todo:
-            Fix downsampling to work with aggregation type as intended. Right now 
-            it just takes every m'th and n'th datapoint in each coord axis
         '''
-        def downsample_xr(data, ds, agg):
+        def downsample_xr(data, ds, agg_type):
             '''
-            Downsample xarray dataset
+            Downsample xarray dataset according to aggregation type
+            
+            Args:
+                data (xr.Dataset):
+                    Dataset containing data to be downsampled. Must have 
+                    coordinates 'lat' and 'long'
+                ds (int, int):
+                    Downsampling factors. 
+                    ds[0] is longitude
+                    ds[1] is latitude
+                agg_type (str):
+                    Aggregation method to use for binning. Default is same as 
+                    set in config, passed in by parent
+            
+            Returns:
+                xr.Dataset:
+                    Downsampled data
             '''
-            # TODO Replace with coarsen when refactor passes regression tests
-            # Better method of downsampling
-            # data = data.coarsen(lat=ds[1]).max()
-            # data = data.coarsen(long=ds[0]).max()
-            # return data
-            # Old method of downsampling
-            return downsample_df(data.to_dataframe().reset_index(), ds, agg)
-        
-        def downsample_df(data, ds, agg):
+            if agg_type == 'MIN':
+                # Returns min of bin
+                data = data.coarsen(lat=ds[1]).min()
+                data = data.coarsen(long=ds[0]).min()
+            elif agg_type == 'MAX':
+                # Returns max of bin
+                data = data.coarsen(lat=ds[1]).max()
+                data = data.coarsen(long=ds[0]).max()
+            elif agg_type == 'MEAN':
+                # Returns mean of bin
+                data = data.coarsen(lat=ds[1]).mean()
+                data = data.coarsen(long=ds[0]).mean()
+            elif agg_type == 'MEDIAN':
+                # Returns median of bin
+                data = data.coarsen(lat=ds[1]).median()
+                data = data.coarsen(long=ds[0]).median()
+            elif agg_type == 'STD':
+                # Returns std_dev of range
+                data = data.coarsen(lat=ds[1]).std()
+                data = data.coarsen(long=ds[0]).std()
+            elif agg_type =='COUNT': 
+                # Returns every first element in bin
+                data = data.thin(lat=ds[1])
+                data = data.thin(long=ds[0])
+            return data
+    
+        def downsample_df(data, ds, agg_type):
             '''
             Downsample pandas dataframe
+            Not implemented as it just adds to processing time, 
+            defeating the purpose
             '''
-            # TODO Replace with aggregate type method of downsampling when
-            # refactor passes regression tests
-            
-            # Old method of downsampling just takes every nth column and row
-            # Retrieve each unique coordinate and downsample
-            ds_lats = data.lat.unique()[::ds[1]]
-            ds_lons = data.long.unique()[::ds[0]]
-            # Cut down dataset to only those values with downsampled coords
-            data = data[data.lat.isin(ds_lats)]
-            data = data[data.long.isin(ds_lons)]
-            
+            logging.warning(
+                '- Downsampling called on pd.DataFrame! Downsampling a df' \
+                'too computationally expensive, returning original df'
+                )
             return data
         
         # Set to params if no specific aggregate type specified
