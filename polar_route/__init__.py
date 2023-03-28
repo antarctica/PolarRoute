@@ -1,4 +1,4 @@
-__version__ = "0.0.16"
+__version__ = "0.0.17"
 __description__ = "PolarRoute: Long-distance maritime polar route planning taking into account complex changing environmental conditions"
 __license__ = "MIT"
 __author__ = "Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox"
