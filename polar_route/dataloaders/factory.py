@@ -224,6 +224,10 @@ class DataLoaderFactory:
             # If threshold not set, make it min/max vals
             if 'threshold' not in params:
                 params['threshold'] = [0, 1]
+            if 'multiplier' not in params:
+                params['multiplier'] = 1
+            if 'offset' not in params:
+                params['offset'] = 0
         # If making a vector field
         elif name == 'vector_grf':
             if 'vec_x' not in params:
