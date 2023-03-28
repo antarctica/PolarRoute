@@ -283,7 +283,7 @@ the 'add_vehicle' entry point.
 
    {
       "Vessel": {
-         "VesselType": "SDA"
+         "VesselType": "SDA",
          "MaxSpeed": 26.5,
          "Unit": "km/hr",
          "Beam": 24.0,

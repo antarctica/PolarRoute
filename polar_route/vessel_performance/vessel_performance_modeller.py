@@ -2,6 +2,7 @@ from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
 from polar_route.vessel_performance.vessel_factory import VesselFactory
 import numpy as np
 import logging
+from polar_route.utils import timed_call
 
 class VesselPerformanceModeller:
     """
@@ -23,6 +24,7 @@ class VesselPerformanceModeller:
 
         self.filter_nans()
 
+    @timed_call
     def model_accessibility(self):
         """
 
@@ -37,6 +39,7 @@ class VesselPerformanceModeller:
         for in_node in inaccessible_nodes:
             self.env_mesh.neighbour_graph.remove_node_and_update_neighbours(in_node)
 
+    @timed_call
     def model_performance(self):
         """
 

@@ -97,7 +97,7 @@ class SDA(AbstractShip):
         # Calculate wind resistance if wind data present:
         if 'u10' in cellbox.agg_data and 'v10' in cellbox.agg_data:
             cellbox = calc_wind(cellbox)
-            cellbox.agg_data['resistance'] = [cellbox.agg_data['resistance'][i] + ice_resistance[i] for i in range(8)]
+            cellbox.agg_data['resistance'] = [cellbox.agg_data['wind resistance'][i] + ice_resistance[i] for i in range(8)]
         else:
             logging.debug("No wind data present, wind resistance will not be calculated")
             cellbox.agg_data['resistance'] = ice_resistance
@@ -125,6 +125,9 @@ class SDA(AbstractShip):
         thickness = cellbox.agg_data['thickness']
         density = cellbox.agg_data['density']
 
+        if not sic:
+            return 0.
+
         # Model parameters for different hull types
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
 
@@ -135,7 +138,7 @@ class SDA(AbstractShip):
 
         speed = velocity * (5. / 18.)  # assume km/h and convert to m/s
 
-        froude = speed / np.sqrt(gravity * sic / 100 * thickness)
+        froude = speed / np.sqrt(gravity * (sic / 100) * thickness)
         resistance = 0.5 * kparam * (froude ** bparam) * density * beam * thickness * (speed ** 2) * (
                     (sic / 100) ** nparam)
         return resistance
@@ -210,7 +213,7 @@ def wind_mag_dir(cellbox, va):
         Function that returns the relative wind speed and direction given the speed and heading of the vessel
         and the easterly and northerly components of the true wind vector. Speeds in m/s.
     """
-    vs = cellbox.agg_data['speed']*0.277778
+    vs = cellbox.agg_data['speed'][0]*0.277778
     uw = cellbox.agg_data['u10']
     vw = cellbox.agg_data['v10']
 
@@ -228,8 +231,14 @@ def wind_mag_dir(cellbox, va):
     ws = np.linalg.norm(aw_vec)
 
     # Define unit vectors for dot product
-    unit_v = v_vec / vs
-    unit_aw = aw_vec / ws
+    if vs:
+        unit_v = v_vec / vs
+    else:
+        unit_v = [0., 0.]
+    if ws:
+        unit_aw = aw_vec / ws
+    else:
+        return 0., 0.
 
     # Calculate dot product and find angle
     dp = np.dot(unit_v, unit_aw)
@@ -238,14 +247,14 @@ def wind_mag_dir(cellbox, va):
     return ws, ang
 
 
-def wind_resistance(self, v_speed, w_speed, rel_ang):
+def wind_resistance(v_speed, w_speed, rel_ang):
     """
         Function to calculate the wind resistance given the wind speed and direction and the vessel speed.
     """
     a = 750.
     rho = 1.225
 
-    wind_res = 0.5 * rho * (w_speed**2) * a * self.c_wind(rel_ang) - 0.5 * rho * (v_speed ** 2) * a * self.c_wind(0)
+    wind_res = 0.5 * rho * (w_speed**2) * a * c_wind(rel_ang) - 0.5 * rho * (v_speed ** 2) * a * c_wind(0)
 
     return wind_res
 
@@ -271,7 +280,7 @@ def calc_wind(cellbox):
     heads = [np.pi/4, np.pi/2, 3*np.pi/4, np.pi, 5*np.pi/4, 3*np.pi/2, 7*np.pi/4, 0.]
     for i, head in enumerate(heads):
         rel_wind_speed[i], rel_wind_angle[i] = wind_mag_dir(cellbox, head)
-        wind_res[i] = wind_resistance(cellbox.agg_data['speed']*0.277778, head, rel_wind_speed[i],
+        wind_res[i] = wind_resistance(cellbox.agg_data['speed'][i]*0.277778, rel_wind_speed[i],
                                            rel_wind_angle[i]) # assume km/h and convert to m/s
 
     cellbox.agg_data['wind resistance'] = wind_res
