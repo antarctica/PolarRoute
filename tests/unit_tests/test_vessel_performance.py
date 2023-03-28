@@ -172,7 +172,6 @@ class TestSDA(unittest.TestCase):
         }
 
         actual =self.SDA.model_fuel(cellbox).agg_data
-        print(actual)
 
         expected = {
             'speed': [7.842665122593933, 7.842665122593933, 7.842665122593933, 7.842665122593933, 7.842665122593933,
@@ -213,6 +212,32 @@ class TestSDA(unittest.TestCase):
 
         actual = self.SDA.ice_resistance(cellbox)
         expected = 64543.75549708632
+        self.assertAlmostEqual(actual, expected, places=5)
+
+    def test_invert_resistance_zero(self):
+        cellbox = copy(self.cellbox)
+        cellbox.agg_data = {
+            'speed': 26.5,
+            'SIC': 0.,
+            'thickness': 0.,
+            'density': 0.
+        }
+
+        actual = self.SDA.invert_resistance(cellbox)
+        expected = 26.5
+        self.assertAlmostEqual(actual, expected, places=5)
+
+    def test_invert_resistance_pos(self):
+        cellbox = copy(self.cellbox)
+        cellbox.agg_data = {
+            'speed': 26.5,
+            'SIC': 60.,
+            'thickness': 1.,
+            'density': 980.
+        }
+
+        actual = self.SDA.invert_resistance(cellbox)
+        expected = 7.842665122593933
         self.assertAlmostEqual(actual, expected, places=5)
 
     def test_fuel_eq_hotel(self):

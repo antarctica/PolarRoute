@@ -125,6 +125,7 @@ class SDA(AbstractShip):
         thickness = cellbox.agg_data['thickness']
         density = cellbox.agg_data['density']
 
+        # If there's no ice then return zero
         if not sic:
             return 0.
 
@@ -161,6 +162,10 @@ class SDA(AbstractShip):
         sic = cellbox.agg_data['SIC']
         thickness = cellbox.agg_data['thickness']
         density = cellbox.agg_data['density']
+
+        # If there's no ice then return max speed
+        if not sic:
+            return self.max_speed
 
         # Model parameters for different hull types
         hull_params = {'slender': [4.4, -0.8267, 2.0], 'blunt': [16.1, -1.7937, 3]}
