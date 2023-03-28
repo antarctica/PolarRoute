@@ -88,6 +88,8 @@ class VectorGRFDataLoader(VectorDataLoader):
             for j in range(self.size)
             ]
         # Cast to dataframe
-        data = pd.DataFrame(rows)
+        data = pd.DataFrame(rows).set_index(['lat','long'])
+        # Set to xarray dataset
+        data = data.to_xarray()
         
         return data
