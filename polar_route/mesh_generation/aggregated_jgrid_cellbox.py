@@ -1,7 +1,7 @@
 
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
 
-class JGridAggregatedCellBox (AggregatedCellBox):
+class AggregatedJGridCellBox (AggregatedCellBox):
     """
     a class represnts an aggrgated information within a geo-spatial/temporal boundary. 
 
