@@ -7,6 +7,7 @@ from polar_route.dataloaders.scalar.gebco import GEBCODataLoader
 from polar_route.dataloaders.scalar.icenet import IceNetDataLoader
 from polar_route.dataloaders.scalar.modis import MODISDataLoader
 from polar_route.dataloaders.scalar.scalarCSV import ScalarCSVDataLoader
+from polar_route.dataloaders.scalar.scalarGRF import ScalarGRFDataLoader
 from polar_route.dataloaders.scalar.shape import ShapeDataLoader
 
 from polar_route.dataloaders.vector.balticCurrent import BalticCurrentDataLoader
@@ -15,6 +16,7 @@ from polar_route.dataloaders.vector.northSeaCurrent import NorthSeaCurrentDataLo
 from polar_route.dataloaders.vector.oras5Current import ORAS5CurrentDataLoader
 from polar_route.dataloaders.vector.sose import SOSEDataLoader
 from polar_route.dataloaders.vector.vectorCSV import VectorCSVDataLoader
+from polar_route.dataloaders.vector.vectorGRF import VectorGRFDataLoader
 
 from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
@@ -54,7 +56,9 @@ class DataLoaderFactory:
         
         dataloader_requirements = {
             # Scalar
-            'scalarcsv':(ScalarCSVDataLoader, ['file']),
+            'scalar_csv':  (ScalarCSVDataLoader, ['file']),
+            'binary_grf':  (ScalarGRFDataLoader, []),
+            'scalar_grf':  (ScalarGRFDataLoader, []),
             'amsr':        (AMSRDataLoader, ['file', 'hemisphere']),
             'amsr_folder': (AMSRDataLoader, ['folder', 'hemisphere']),
             'bsose_sic':   (BSOSESeaIceDataLoader, ['file']),
@@ -73,6 +77,7 @@ class DataLoaderFactory:
             'checkerboard': (ShapeDataLoader, ['shape', 'nx', 'ny', 'gridsize']),
             # Vector
             'vectorcsv':        (VectorCSVDataLoader, ['file']),
+            'vector_grf':       (VectorGRFDataLoader, []),
             'baltic_currents':  (BalticCurrentDataLoader, ['file']),
             'era5_wind':        (ERA5WindDataLoader, ['file']),
             'northsea_currents':(NorthSeaCurrentDataLoader, ['file']),
@@ -129,10 +134,14 @@ class DataLoaderFactory:
         if 'min_dp' not in params:
             params['min_dp'] = min_dp
             
-        # Set defaults for abstract data generators
+        # Set defaults for abstract shape generators
         if name in ['circle', 'checkerboard', 'gradient']:
             params = self.set_default_shape_params(name, params)
-                
+        
+        # Set defaults for GRF generators
+        if name in ['binary_grf', 'scalar_grf', 'vector_grf']:
+            params = self.set_default_grf_params(name, params)
+        
         return params
     
     def set_default_shape_params(self, name, params):
@@ -187,4 +196,59 @@ class DataLoaderFactory:
         
         
         return params
+
+    def set_default_grf_params(self, name, params):
+        # Params that all GRF dataloaders need
+        if 'data_name' not in params:
+            params['data_name'] = 'data'
+        if 'seed' not in params:
+            params['seed'] = None
+        if 'size' not in params:
+            params['size'] = 512
+        if 'alpha' not in params:
+            params['alpha'] = 3
+        # Specific GRF loaders
+        # If making a mask (e.g. land)
+        if name == 'binary_grf':
+            params['binary'] = True
+            if 'min' not in params:
+                params['min'] = 0
+            if 'max' not in params:
+                params['max'] = 1
+            # If threshold not set, make it average of min/max val
+            if 'threshold' not in params:
+                params['threshold'] = 0.5
+        # If making a scalar field
+        elif name == 'scalar_grf':
+            params['binary'] = False
+            if 'min' not in params:
+                params['min'] = -10
+            if 'max' not in params:
+                params['max'] = 10
+            # If threshold not set, make it min/max vals
+            if 'threshold' not in params:
+                params['threshold'] = [0,1]
+            if 'multiplier' not in params:
+                params['multiplier'] = 1
+            if 'offset' not in params:
+                params['offset'] = 0
+        # If making a vector field
+        elif name == 'vector_grf':
+            if 'min' not in params:
+                params['min'] = 0
+            if 'max' not in params:
+                params['max'] = 10
+            if 'vec_x' not in params:
+                params['vec_x'] = 'uC'
+            if 'vec_y' not in params:
+                params['vec_y'] = 'vC'
+                
+        return params
+
+if __name__ == '__main__':
+    from polar_route.mesh_generation.boundary import Boundary
     
+    bounds = Boundary([-10,10],[-10,10],['2000-01-01', '2000-01-31'])
+    
+    scalar = DataLoaderFactory().get_dataloader('scalar_grf', bounds, {})
+    print()
