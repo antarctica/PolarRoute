@@ -9,7 +9,7 @@ In this section we will outline the standard structure for a configuration file 
 Outlined below is an example configuration file for running PolarRoute. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Mesh Contruction configuration file example.
+Mesh Construction configuration file example.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ::
 
@@ -98,9 +98,9 @@ Mesh Contruction configuration file example.
         }
     }
 
-The configuration file used for mesh contruction contains information required to build the discretised environment in which the route planner
+The configuration file used for mesh construction contains information required to build the discretised environment in which the route planner
 operates. Information here dictates the region in which the mesh is constructed, the data contained within
-the mesh and how the mesh is split to a non-uniform resolution. The configution file used to generate a mesh is stored in a section titled 'Mesh_info' 
+the mesh and how the mesh is split to a non-uniform resolution. The configuration file used to generate a mesh is stored in a section titled 'Mesh_info'
 
 The 'Mesh_info' section of the configuration file contains three primary sections:
 
@@ -275,19 +275,21 @@ Vessel Performance configuration file example.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Vessel configuration file provides all the necessary information about the vessel that will execute
-the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the `VesselPerformance`
-class for this vessel. A file of this structure is also used as a command line argument for the 'add_vehicle' entry point.
+the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the
+`VesselPerformanceModeller` class. A file of this structure is also used as a command line argument for
+the 'add_vehicle' entry point.
 
 ::
 
    {
       "Vessel": {
-         "Speed": 26.5,
+         "VesselType": "SDA",
+         "MaxSpeed": 26.5,
          "Unit": "km/hr",
          "Beam": 24.0,
          "HullType": "slender",
          "ForceLimit": 96634.5,
-         "MaxIceExtent": 80,
+         "MaxIceConc": 80,
          "MinDepth": -10
       }
 
@@ -295,12 +297,13 @@ class for this vessel. A file of this structure is also used as a command line a
 
 Above are a typical set of configuration parameters used for a vessel where the variables are as follows:
 
-* **Speed** *(float)* : The maximum speed of the vessel in open water.
+* **VesselType** *(string)* : The specific vessel class to use for performance modelling.
+* **MaxSpeed** *(float)* : The maximum speed of the vessel in open water.
 * **Unit** *(string)* : The units of measurement for the speed of the vessel (currently only "km/hr" is supported).
 * **Beam** *(float)* : The beam (width) of the ship in metres.
 * **HullType** *(string)* : The hull profile of the ship (should be one of either "slender" or "blunt").
 * **ForceLimit** *(float)* : The maximum allowed resistance force, specified in Newtons.
-* **MaxIceExtent** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
+* **MaxIceConc** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
 * **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through in metres. Negative values correspond to a depth below sea level.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
