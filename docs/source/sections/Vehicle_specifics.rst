@@ -1,3 +1,5 @@
+.. _vessel-performance:
+
 ****************************
 Methods - Vessel Performance
 ****************************
