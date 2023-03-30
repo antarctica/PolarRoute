@@ -10,36 +10,6 @@ from numpy import datetime64
 
 
 class IceNetDataLoader(ScalarDataLoader):
-    def __init__(self, bounds, params):
-        '''
-        Initialises IceNet 2 dataset. Does no post-processing
-        
-       Args:
-            bounds (Boundary): 
-                Initial boundary to limit the dataset to
-            params (dict):
-                Dictionary of {key: value} pairs. Keys are attributes 
-                this dataloader requires to function
-        '''
-        logging.info("Initalising IceNet dataloader")
-        # Creates a class attribute for all keys in params
-        for key, val in params.items():
-            logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
-            setattr(self, key, val)
-        
-        # Import data
-        self.data = self.import_data(bounds)
-        
-        # Get data name from column name if not set in params
-        if self.data_name is None:
-            logging.debug('- Setting self.data_name from column name')
-            self.data_name = self.get_data_col_name()
-        # or if set in params, set col name to data name
-        else:
-            logging.debug(f'- Setting data column name to {self.data_name}')
-            self.data = self.set_data_col_name(self.data_name)
-        
-        
     def import_data(self, bounds):
         '''
         Reads in data from a IceNet 2 NetCDF file. 
@@ -58,10 +28,18 @@ class IceNetDataLoader(ScalarDataLoader):
         max_time = datetime.strptime(bounds.get_time_max(), '%Y-%m-%d')
         min_time = datetime.strptime(bounds.get_time_min(), '%Y-%m-%d')
         time_range = max_time - min_time
+        # Retrieve list of dates from filenames
+        # assumes file names are in the format 
+        # <hemisphere>_daily_forecast.<YYYY-MM-DD>.nc
+        file_dates = {datetime.strptime(file.split('.')[1], '%YYYY-%m-%d'): file 
+                      for file in self.files}
+
+        # Find closest date prior to min_time
+        closest_date = min(file_dates, 
+                           key=lambda x: (x>min_time, abs(x-min_time)))
         
-        logging.info(f"- Opening file {self.file}")
         # Open Dataset
-        ds = xr.open_dataset(self.file)
+        ds = xr.open_dataset(file_dates[closest_date])
         # Cast coordinates/variables to those understood by mesh
         ds = ds.rename({'lon':'long',
                         'sic_mean': 'SIC'})
@@ -72,6 +50,9 @@ class IceNetDataLoader(ScalarDataLoader):
         # Ensure that temporal boundary is possible before extracting
         assert time_range < timedelta(days=max_leadtime),\
             f'Time boundary too large! Forecast only runs for max of {max_leadtime} days'
+        
+        assert closest_date + timedelta(days=max_leadtime) < max_time,\
+            'Time boundary runs beyond max forecast date!'
         
         logging.info(f"- Searching for closest date prior to {bounds.get_time_min()}")
         # For the days in forecast range of IceNet dataset
@@ -108,15 +89,11 @@ class IceNetDataLoader(ScalarDataLoader):
         df.time = df.time + to_timedelta(df.leadtime, unit='d')
         # Remove unwanted columns
         df = df.drop(columns=['yc','xc','leadtime', 'Lambert_Azimuthal_Grid', 'sic_stddev', 'forecast_date'])
+        # Trim to initial datapoints
+        df = self.trim_datapoints(bounds, data=df)
         
-        logging.info('- Limiting to initial bounds')
-        # Remove rows outside of spatial boundary
-        mask = (df['lat']  >  bounds.get_lat_min())  & \
-               (df['lat']  <= bounds.get_lat_max())  & \
-               (df['long'] >  bounds.get_long_min()) & \
-               (df['long'] <= bounds.get_long_max())
         # Turn SIC into a percentage
         df.SIC = df.SIC.apply(lambda x: x*100)
         
         # Return extracted data
-        return df.loc[mask]
+        return df

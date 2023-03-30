@@ -5,52 +5,38 @@ import logging
 import glob
 import xarray as xr
 class AMSRDataLoader(ScalarDataLoader):
-    def __init__(self, bounds, params):
+    
+    def add_params(self, params):
         '''
-        Initialises AMSR dataset. Reprojects data.
+        Translates 'hemisphere' parameter into values of in_proj and out_proj 
+        that pyProj can understand. Also defines x_col and y_col for AMSR data
+        for reprojection to function
         
-       Args:
-            bounds (Boundary): 
-                Initial boundary to limit the dataset to
-            params (dict):
-                Dictionary of {key: value} pairs. Keys are attributes 
-                this dataloader requires to function
+        Args:
+            params (dict): 
+                Dictionary holding keys and values that will be turned into 
+                object attributes
+        
+        Returns:
+            dict:
+                Params dictionary with addition of translated key/value pairs
         '''
-        logging.info("Initalising AMSR Sea Ice dataloader")
-        
-        # Creates a class attribute for all keys in params
-        for key, val in params.items():
-            setattr(self, key, val)
-        
-        # Read in and manipulate data to standard form
-        self.data = self.import_data(bounds)
-        self.data = self.downsample()
-        
-        # Cast to df to reproject
-        self.data = self.data.to_dataframe().reset_index().dropna()
-        
-        # Set to lower case for case insensitivity
-        self.hemisphere = self.hemisphere.lower()
-        # Reproject to mercator
-        if self.hemisphere == 'north': 
-            self.data = self.reproject('EPSG:3411', 'EPSG:4326', x_col='x', y_col='y')
-        elif self.hemisphere == 'south':
-            self.data = self.reproject('EPSG:3412', 'EPSG:4326', x_col='x', y_col='y')
+        # Translate 'hemisphere' into initial projection
+        hemisphere = params['hemisphere'].lower()
+        if  hemisphere == 'north':
+            params['in_proj'] = 'EPSG:3411'
+        elif hemisphere == 'south':
+            params['in_proj'] = 'EPSG:3412'
         else:
-            raise ValueError('No hemisphere defined in params!')
+            raise ValueError(
+                "Hemisphere defined in config is not 'north' or 'south'"
+                )
+        # Set initial projection column names
+        params['x_col'] = 'x'
+        params['y_col'] = 'y'
         
-        # Limit dataset to just values within bounds
-        self.data = self.data.loc[self.get_datapoints(bounds).index]
-        
-        # Get data name from column name if not set in params
-        if self.data_name is None:
-            logging.debug('- Setting self.data_name from column name')
-            self.data_name = self.get_data_col_name()
-        # or if set in params, set col name to data name
-        else:
-            logging.debug(f'- Setting data column name to {self.data_name}')
-            self.data = self.set_data_col_name(self.data_name)
-        
+        return params
+            
     def import_data(self, bounds):
         '''
         Reads in data from a AMSR NetCDF file, or folder of files. 
@@ -83,37 +69,24 @@ class AMSRDataLoader(ScalarDataLoader):
             data = data.assign_coords(time=date)
             return data
 
-        # If single NetCDF File specified
-        if hasattr(self, 'file'):
-            # Ensure .nc file passed in params
-            assert(self.file[-3:] == '.nc')
-            logging.debug(f"- Opening file {self.file}")
-            # Extract data, append date to coords
-            date = retrieve_date(self.file)
-            data = retrieve_data(self.file, date)
-        # If folder specified
-        elif hasattr(self, 'folder'):
-            # Open folder and read in files
-            logging.debug(f"- Searching folder {self.folder}")
-            data_array = []
-            # For each .nc file in folder
-            for file in sorted(glob.glob(f'{self.folder}*.nc')):
-                logging.debug(f"- Opening file {file}")
-                # If date within boundary
-                date = retrieve_date(file)
-                # If file data from within time boundary, append to list
-                # Doing now to avoid ingesting too much data initially
-                if datetime.strptime(bounds.get_time_min(), '%Y-%m-%d') <= \
-                   datetime.strptime(date, '%Y-%m-%d') <= \
-                   datetime.strptime(bounds.get_time_max(), '%Y-%m-%d'):
-                    data_array.append(retrieve_data(file, date))
-            # Concat all valid files
-            data = xr.concat(data_array,'time')
-        # Otherwise need a file or folder to read from
-        else:
-            raise ValueError('File or folder not specified in params!')
+        data_array = []
+        # For each file found from config
+        for file in self.files:
+            # If date within boundary
+            date = retrieve_date(file)
+            # If file data from within time boundary, append to list
+            # Doing now to avoid ingesting too much data initially
+            if datetime.strptime(bounds.get_time_min(), '%Y-%m-%d') <= \
+                datetime.strptime(date, '%Y-%m-%d') <= \
+                datetime.strptime(bounds.get_time_max(), '%Y-%m-%d'):
+                data_array.append(retrieve_data(file, date))
+        # Concat all valid files
+        data = xr.concat(data_array,'time')
 
-        # Remove unnecessary column
+        # Remove unnecessary column, rename data column
         data = data.drop_vars('polar_stereographic')
         data = data.rename({'z': 'SIC'})
+        
+        # TODO Limit data range before reprojection
+        
         return data
