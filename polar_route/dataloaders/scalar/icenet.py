@@ -31,7 +31,7 @@ class IceNetDataLoader(ScalarDataLoader):
         # Retrieve list of dates from filenames
         # assumes file names are in the format 
         # <hemisphere>_daily_forecast.<YYYY-MM-DD>.nc
-        file_dates = {datetime.strptime(file.split('.')[1], '%YYYY-%m-%d'): file 
+        file_dates = {datetime.strptime(file.split('.')[1], '%Y-%m-%d'): file 
                       for file in self.files}
 
         # Find closest date prior to min_time
@@ -51,7 +51,7 @@ class IceNetDataLoader(ScalarDataLoader):
         assert time_range < timedelta(days=max_leadtime),\
             f'Time boundary too large! Forecast only runs for max of {max_leadtime} days'
         
-        assert closest_date + timedelta(days=max_leadtime) < max_time,\
+        assert closest_date + timedelta(days=max_leadtime) > max_time,\
             'Time boundary runs beyond max forecast date!'
         
         logging.info(f"- Searching for closest date prior to {bounds.get_time_min()}")
