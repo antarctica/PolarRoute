@@ -24,18 +24,18 @@ pip install polar-route
 ```
 
 ## Required Data sources
-Polar-route has been built to work with a variety of open-source climactic data sources. 
-A list of supported data sources and there associated data-loaders is given in the 
+Polar-route has been built to work with a variety of open-source atmospheric and oceanographic data sources. 
+A list of supported data sources and their associated data-loaders is given in the 
 'Data Loaders' section of the manual
 
 ## Documentation
-Sphinx is used to generate documentation for this project. The dependancies can be installed through pip:
+Sphinx is used to generate documentation for this project. The dependencies can be installed through pip:
 ```
 pip install sphinx sphinx_markdown_builder sphinx_rtd_theme rinohtype
 ```
 When updating the docs, run the following command within the PolarRoute directory to recompile.
 ```
-sphinx-build -b html ./docs/source ./docs/build
+sphinx-build -b html ./docs/source ./docs/html
 ```
 Sometimes the cache needs to be cleared for internal links to update. If facing this problem, run this from the PolarRoute directory.
 ```
