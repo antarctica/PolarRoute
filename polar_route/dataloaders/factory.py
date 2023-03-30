@@ -58,6 +58,7 @@ class DataLoaderFactory:
             # Scalar
             'scalarcsv':(ScalarCSVDataLoader, ['files']),
             'amsr':        (AMSRDataLoader, ['files', 'hemisphere']),
+            'amsr_folder': (AMSRDataLoader, ['folder', 'hemisphere']),
             'bsose_sic':   (BSOSESeaIceDataLoader, ['files']),
             'bsose_depth': (BSOSEDepthDataLoader, ['files']),
             'baltic_sic':  (BalticSeaIceDataLoader, ['files']),
@@ -118,6 +119,8 @@ class DataLoaderFactory:
                 Dictionary of attributes the dataloader will require, 
                 completed with default values if not provided in config.
         '''
+        # Save dataloader name in params
+        params['dataloader_name'] = name
         
         if 'downsample_factors' not in params:
             params['downsample_factors'] = (1,1)
@@ -131,10 +134,22 @@ class DataLoaderFactory:
         if 'min_dp' not in params:
             params['min_dp'] = min_dp
             
+        if 'in_proj' not in params:
+            params['in_proj'] = 'EPSG:4326'
+            
+        if 'out_proj' not in params:
+            params['out_proj'] = 'EPSG:4326'
+            
+        if 'x_col' not in params:
+            params['x_col'] = 'lat'
+
+        if 'y_col' not in params:
+            params['y_col'] = 'long'
+            
         if 'file' in params:
             params['files'] = [params['file']]
         elif 'folder' in params:
-            params['files'] = sorted(glob(params['folder']))
+            params['files'] = sorted(glob(params['folder']+'*'))
             
         # Set defaults for abstract data generators
         if name in ['circle', 'checkerboard', 'gradient']:
@@ -250,7 +265,29 @@ class DataLoaderFactory:
 if __name__ == '__main__':
     from polar_route.mesh_generation.boundary import Boundary
     
-    bounds = Boundary([-10,10],[-10,10],['2000-01-01', '2000-01-31'])
+    bounds = Boundary([-65,-60],[-70,-50],['2013-03-01', '2013-03-14'])
     
-    scalar = DataLoaderFactory().get_dataloader('scalar_grf', bounds, {})
+    if True:
+        params = {
+            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
+            'aggregate_type': 'MAX',
+            "downsample_factors": [
+                                        5,
+                                        5
+                                    ],
+        }
+        gebco = DataLoaderFactory().get_dataloader('gebco', bounds, params)
+    
+    if True:
+        params = {
+            'folder':'/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
+            'hemisphere': 'south'
+        }
+        amsr = DataLoaderFactory().get_dataloader('amsr', bounds, params)
+        
+    if True:
+        params = {}
+        splitting_conds = {'threshold': 1000, 'upper_bound':0.9, 'lower_bound':0.1}
+        density = DataLoaderFactory().get_dataloader('density', bounds, params)
+        # print(density.get_hom_condition(bounds, splitting_conds))
     print()
