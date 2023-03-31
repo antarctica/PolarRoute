@@ -2,11 +2,12 @@ import argparse
 import json
 import inspect
 import logging
-from multiprocessing.connection import wait
-from polar_route.mesh_generation.mesh_builder import MeshBuilder
 
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call
+from polar_route.mesh_generation.mesh_builder import MeshBuilder
+from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
+from polar_route.route_planner import RoutePlanner
 
 
 @setup_logging
@@ -19,6 +20,7 @@ def get_args(
     Adds required command line arguments to all CLI entry points.
 
     Args:
+        default_output (str): The default output file location.
         config_arg (bool): True if the CLI entry point requires a <config.json> file. Default is True.
         mesh_arg (bool): True if the CLI entry point requires a <mesh.json> file. Default is False.
         waypoints_arg (bool): True if the CLI entry point requires a <waypoints.csv> file. Default is False.
@@ -28,7 +30,10 @@ def get_args(
     """
     ap = argparse.ArgumentParser()
 
-    # Optinal arguments used in all CLI entry points
+    ap.add_argument('--version', action='version',
+                        version='%(prog)s {version}'.format(version=version))
+
+    # Optional arguments used in all CLI entry points
     ap.add_argument("-o", "--output",
                     default=default_output,
                     help="Output file")
@@ -43,7 +48,7 @@ def get_args(
 
     if mesh_arg:
         ap.add_argument("mesh", type=argparse.FileType("r"),
-                    help="File location of the enviromental mesh")
+                    help="File location of the environmental mesh")
 
     if waypoints_arg:
         ap.add_argument("waypoints", type=argparse.FileType("r"))
@@ -66,7 +71,7 @@ def get_args(
 @timed_call
 def create_mesh_cli():
     """
-
+        CLI entry point for the mesh construction
     """
     
     default_output = "create_mesh.output.json"
@@ -86,20 +91,19 @@ def create_mesh_cli():
 @timed_call
 def add_vehicle_cli():
     """
-
+        CLI entry point for the vessel performance modeller
     """
-    from polar_route.vessel_performance import VesselPerformance
 
     default_output = "add_vehicle.output.json"
     args = get_args(default_output, config_arg=True, mesh_arg=True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    mesh = json.load(args.mesh)
-    vessel = json.load(args.config)
+    mesh_json = json.load(args.mesh)
+    vessel_config = json.load(args.config)
 
-    
-
-    vp = VesselPerformance(mesh, vessel['Vessel'])
+    vp = VesselPerformanceModeller(mesh_json, vessel_config)
+    vp.model_accessibility()
+    vp.model_performance()
 
     logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
@@ -109,9 +113,8 @@ def add_vehicle_cli():
 @timed_call
 def optimise_routes_cli():
     """
-
+        CLI entry point for the route optimisation
     """
-    from polar_route.route_planner import RoutePlanner
 
     args = get_args("optimise_routes.output.json",
                     config_arg=True, mesh_arg=True ,waypoints_arg= True)

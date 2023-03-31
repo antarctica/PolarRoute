@@ -1,60 +1,100 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-
-<!doctype html>
-
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
-    <title>6. Outputs - Data Types &#8212; polar_route 0.0.12 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
-    
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/bizstyle.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6. Outputs - Data Types &mdash; polar_route 0.0.17 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="7. Examples" href="Examples.html" />
-    <link rel="prev" title="5. Input - Data Loaders" href="Multi_data_input.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <!--[if lt IE 9]>
-    <script src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="Examples.html" title="7. Examples"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><span class="section-number">6. </span>Outputs - Data Types</a></li> 
-      </ul>
-    </div>  
+    <link rel="next" title="7. Examples of running code" href="Examples.html" />
+    <link rel="prev" title="5.4.3.7. Vector GRF Dataloader" href="Dataloaders/vector/implemented/VectorGRF.html" /> 
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">3. Runnning Codebase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration.html">4. Input - Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">5. Dataloader Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Outputs - Data Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mesh-construction">6.1. Mesh construction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cellboxes">6.1.1. cellboxes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#neighbour-graph">6.1.2. neighbour_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vehicle-specifics">6.2. Vehicle specifics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#route-planning">6.3. Route planning</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#waypoints">6.3.1. waypoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#paths">6.3.2. paths</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">7. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">6. </span>Outputs - Data Types</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sections/Outputs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
   <section id="outputs-data-types">
-<h1><span class="section-number">6. </span>Outputs - Data Types<a class="headerlink" href="#outputs-data-types" title="Permalink to this heading">¶</a></h1>
+<span id="outputs"></span><h1><span class="section-number">6. </span>Outputs - Data Types<a class="headerlink" href="#outputs-data-types" title="Permalink to this heading"></a></h1>
 <section id="mesh-construction">
-<h2><span class="section-number">6.1. </span>Mesh construction<a class="headerlink" href="#mesh-construction" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">6.1. </span>Mesh construction<a class="headerlink" href="#mesh-construction" title="Permalink to this heading"></a></h2>
 <p>The first stage in the route planning pipeline is constructing a discrete
 mesh of the environment in which the route planner can operate. Once this
 mesh is constructed, it can then be exported as a json object and passed
@@ -72,7 +112,7 @@ of mesh construction and json object generation are as follows:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Examples and a description of the configuration files can be found in
-the <span class="xref std std-ref">Configuration</span> section of this document.</p>
+the <a class="reference internal" href="Configuration.html#configuration"><span class="std std-ref">Input - Configuration</span></a> section of this document.</p>
 </div>
 <p>The json object outputted by the Mesh consists of 3 sections: <strong>config</strong>,
 <strong>cellboxes</strong> and <strong>neighbour_graph</strong>.</p>
@@ -104,7 +144,7 @@ the <span class="xref std std-ref">Configuration</span> section of this document
 <li><p><strong>neighbour_graph</strong> : A graphical representation of the adjacency of CellBoxes within the Mesh.</p></li>
 </ul>
 <section id="cellboxes">
-<h3><span class="section-number">6.1.1. </span>cellboxes<a class="headerlink" href="#cellboxes" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.1.1. </span>cellboxes<a class="headerlink" href="#cellboxes" title="Permalink to this heading"></a></h3>
 <p>Each CellBox object within <em>cellboxes</em> in the outputted json object is of
 the following form:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -134,7 +174,7 @@ the following form:</p>
 </figure>
 </section>
 <section id="neighbour-graph">
-<h3><span class="section-number">6.1.2. </span>neighbour_graph<a class="headerlink" href="#neighbour-graph" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.1.2. </span>neighbour_graph<a class="headerlink" href="#neighbour-graph" title="Permalink to this heading"></a></h3>
 <p>For each CellBox in the <em>cellboxes</em> section of the outputted json object, there will be a
 corresponding entry in the <em>neighbour_graph</em>.</p>
 <div class="admonition note">
@@ -178,40 +218,57 @@ as inaccessible CellBoxes will be removed from <em>neighbour_graph</em> but will
 </section>
 </section>
 <section id="vehicle-specifics">
-<h2><span class="section-number">6.2. </span>Vehicle specifics<a class="headerlink" href="#vehicle-specifics" title="Permalink to this heading">¶</a></h2>
-<p>Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
+<h2><span class="section-number">6.2. </span>Vehicle specifics<a class="headerlink" href="#vehicle-specifics" title="Permalink to this heading"></a></h2>
+<p>Once a discrete mesh environment is contracted, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.mesh</span> <span class="kn">import</span> <span class="n">Mesh</span>
-<span class="kn">from</span> <span class="nn">polar_route.vessel_performance</span> <span class="kn">import</span> <span class="n">VesselPerformance</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">polar_route.vessel_performance.vessel_performance_modeller</span> <span class="kn">import</span> <span class="n">VesselPerformanceModeller</span>
 
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;config.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;vessel_config.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">vessel_config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-<span class="n">mesh_json</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="n">vpm</span> <span class="o">=</span> <span class="n">VesselPerformanceModeller</span><span class="p">(</span><span class="n">mesh_json</span><span class="p">,</span> <span class="n">vessel_config</span><span class="p">)</span>
 
-<span class="n">vp</span> <span class="o">=</span> <span class="n">VesselPerformance</span><span class="p">(</span><span class="n">mesh_json</span><span class="p">)</span>
-<span class="n">vessel_mesh_json</span> <span class="o">=</span> <span class="n">vp</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="n">vpm</span><span class="o">.</span><span class="n">model_accessibility</span><span class="p">()</span>
+<span class="n">vpm</span><span class="o">.</span><span class="n">model_performance</span><span class="p">()</span>
+
+<span class="n">vessel_mesh_json</span> <span class="o">=</span> <span class="n">vpm</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>To be compatible with vessel performance transformations, a Mesh must be constructed with
+<p>To make use of the full range of vessel performance transformations, a Mesh should be constructed with
 the following attributes:</p>
 <ul class="simple">
-<li><p>SIC (available via data_loaders: <em>loader_amsr</em>, <em>load_bsose</em>, <em>load_modis</em>)</p></li>
-<li><p>thickness (available via data_loaders: <em>load_thickness</em>)</p></li>
-<li><p>density (available via data_loaders: <em>load_density</em>)</p></li>
+<li><p>SIC (available via data_loaders: <em>amsr</em>, <em>bsose_sic</em>, <em>baltic_sic</em>, <em>icenet</em>, <em>modis</em>)</p></li>
+<li><p>thickness (available via data_loaders: <em>thickness</em>)</p></li>
+<li><p>density (available via data_loaders: <em>density</em>)</p></li>
+<li><p>u10, v10 (available via data_loaders: <em>era5_wind</em>)</p></li>
 </ul>
-<p>see section <strong>Multi Data Input</strong> for more information on data_loaders</p>
+<p>see section <strong>Dataloader Overview</strong> for more information on data_loaders</p>
+<p>The vessel performance modeller will still run without these attributes but will assign default values from the
+configuration file where any data is missing.</p>
 </div>
+<p>As an example, after running the vessel performance modeller with the SDA class and all relevant data each cellbox will
+have a set of new attributes as follows:</p>
+<ul class="simple">
+<li><p><strong>speed</strong> <em>(list)</em> : The speed of the vessel in that cell when travelling to each of its neighbours.</p></li>
+<li><p><strong>fuel</strong> <em>(list)</em> : The rate of fuel consumption in that cell when travelling to each of its neighbours.</p></li>
+<li><p><strong>inaccessible</strong> <em>(boolean)</em> : Whether the cell is considered inaccessible to the vessel for any reason.</p></li>
+<li><p><strong>land</strong> <em>(boolean)</em> : Whether the cell is shallow enough to be considered land by the vessel.</p></li>
+<li><p><strong>ext_ice</strong> <em>(boolean)</em> : Whether the cell has enough ice to be inaccessible to the vessel.</p></li>
+<li><p><strong>resistance</strong> <em>(list)</em> : The total resistance force the vessel will encounter in that cell when travelling to each of its neighbours.</p></li>
+<li><p><strong>ice resistance</strong> <em>(float)</em> : The resistance force due to ice.</p></li>
+<li><p><strong>wind resistance</strong> <em>(list)</em> : The resistance force due to wind.</p></li>
+<li><p><strong>relative wind speed</strong> <em>(list)</em> : The apparent wind speed acting on the vessel.</p></li>
+<li><p><strong>relative wind angle</strong> <em>(list)</em> : The angle of the apparent wind acting on the vessel.</p></li>
+</ul>
 </section>
-<hr class="docutils" />
 <section id="route-planning">
-<h2><span class="section-number">6.3. </span>Route planning<a class="headerlink" href="#route-planning" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">6.3. </span>Route planning<a class="headerlink" href="#route-planning" title="Permalink to this heading"></a></h2>
 <p>During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:</p>
 <section id="waypoints">
-<h3><span class="section-number">6.3.1. </span>waypoints<a class="headerlink" href="#waypoints" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.3.1. </span>waypoints<a class="headerlink" href="#waypoints" title="Permalink to this heading"></a></h3>
 <p>An entry in the json including all the information of the waypoints defined by the user from the <cite>waypoints_path</cite> file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints are returned to this entry. The structure of the entry follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>\<span class="n">n</span>
     <span class="s2">&quot;Name&quot;</span><span class="p">:{</span>\<span class="n">n</span>
@@ -269,13 +326,11 @@ the following attributes:</p>
 </li>
 <li><p><strong>&lt;…&gt;</strong> : Any additional column names defined in the original .csv that was loaded</p></li>
 </ul>
-<p>This output can be converted to a pandas dataframe by running</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">waypoints_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">waypoints</span><span class="p">)</span>
-</pre></div>
-</div>
+<p>This output can be converted to a pandas dataframe by running::
+waypoints_dataframe = pd.DataFrame(waypoints)</p>
 </section>
 <section id="paths">
-<h3><span class="section-number">6.3.2. </span>paths<a class="headerlink" href="#paths" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">6.3.2. </span>paths<a class="headerlink" href="#paths" title="Permalink to this heading"></a></h3>
 <p>An entry in the json, in a geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>\<span class="n">n</span>
     <span class="s1">&#39;types&#39;</span><span class="p">:</span><span class="s1">&#39;FeatureCollection&#39;</span><span class="p">,</span>\<span class="n">n</span>
@@ -341,85 +396,34 @@ the following attributes:</p>
 </section>
 
 
-            <div class="clearer"></div>
+           </div>
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <div>
-    <h3><a href="../index.html">Table of Contents</a></h3>
-    <ul>
-<li><a class="reference internal" href="#">6. Outputs - Data Types</a><ul>
-<li><a class="reference internal" href="#mesh-construction">6.1. Mesh construction</a><ul>
-<li><a class="reference internal" href="#cellboxes">6.1.1. cellboxes</a></li>
-<li><a class="reference internal" href="#neighbour-graph">6.1.2. neighbour_graph</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#vehicle-specifics">6.2. Vehicle specifics</a></li>
-<li><a class="reference internal" href="#route-planning">6.3. Route planning</a><ul>
-<li><a class="reference internal" href="#waypoints">6.3.1. waypoints</a></li>
-<li><a class="reference internal" href="#paths">6.3.2. paths</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Dataloaders/vector/implemented/VectorGRF.html" class="btn btn-neutral float-left" title="5.4.3.7. Vector GRF Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Examples.html" class="btn btn-neutral float-right" title="7. Examples of running code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, BAS AI Lab.</p>
   </div>
-  <div>
-    <h4>Previous topic</h4>
-    <p class="topless"><a href="Multi_data_input.html"
-                          title="previous chapter"><span class="section-number">5. </span>Input - Data Loaders</a></p>
-  </div>
-  <div>
-    <h4>Next topic</h4>
-    <p class="topless"><a href="Examples.html"
-                          title="next chapter"><span class="section-number">7. </span>Examples</a></p>
-  </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/sections/Outputs.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="Examples.html" title="7. Examples"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><span class="section-number">6. </span>Outputs - Data Types</a></li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, BAS AI Lab.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
-    </div>
-  </body>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

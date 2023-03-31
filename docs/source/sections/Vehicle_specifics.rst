@@ -1,3 +1,5 @@
+.. _vessel-performance:
+
 ****************************
 Methods - Vessel Performance
 ****************************
@@ -15,6 +17,12 @@ in a given mesh are inaccessible for that particular vessel and what its perform
 
     Maps of the sea ice concentration (a), speed (b) and fuel consumption (c) across the Weddell Sea.
     The latter two quantities are derived from the former.
+
+.. figure:: ./Figures/VesselUML.png
+   :align: center
+   :width: 700
+
+   *UML Diagram detailing the vessel performance subsystem*
 
 
 

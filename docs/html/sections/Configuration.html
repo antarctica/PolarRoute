@@ -1,171 +1,192 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-
-<!doctype html>
-
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
-    <title>4. Input - Configuration &#8212; polar_route 0.0.12 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
-    
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/bizstyle.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4. Input - Configuration &mdash; polar_route 0.0.17 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="5. Input - Data Loaders" href="Multi_data_input.html" />
-    <link rel="prev" title="3. Runnning Codebase" href="running.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <!--[if lt IE 9]>
-    <script src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="running.html" title="3. Runnning Codebase"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>Input - Configuration</a></li> 
-      </ul>
-    </div>  
+    <link rel="next" title="5. Dataloader Overview" href="Dataloaders/overview.html" />
+    <link rel="prev" title="3. Runnning Codebase" href="running.html" /> 
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">3. Runnning Codebase</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Input - Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mesh-construction-configuration-file-example">4.1. Mesh Construction configuration file example.</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#region">4.1.1. Region</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-sources">4.1.2. Data_sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#splitting">4.1.3. splitting</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vessel-performance-configuration-file-example">4.2. Vessel Performance configuration file example.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#route-planning-configuration-file-example">4.3. Route Planning configuration file example.</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">5. Dataloader Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">7. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">4. </span>Input - Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sections/Configuration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
   <section id="input-configuration">
-<h1><span class="section-number">4. </span>Input - Configuration<a class="headerlink" href="#input-configuration" title="Permalink to this heading">¶</a></h1>
+<span id="configuration"></span><h1><span class="section-number">4. </span>Input - Configuration<a class="headerlink" href="#input-configuration" title="Permalink to this heading"></a></h1>
 <p>In this section we will outline the standard structure for a configuration file used in all portions of the PolarRoute software package.</p>
 <p>Outlined below is an example configuration file for running PolarRoute. Using this as a template we will go through each of the definitions in turn, describing what each portion does with the subsections in the manual given by the main sections in the configuration file.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-   <span class="s2">&quot;Mesh_info&quot;</span><span class="p">:{</span>
-      <span class="s2">&quot;Region&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;latMin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">77.5</span><span class="p">,</span>
-         <span class="s2">&quot;latMax&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">55</span><span class="p">,</span>
-         <span class="s2">&quot;longMin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">120</span><span class="p">,</span>
-         <span class="s2">&quot;longMax&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span>
-         <span class="s2">&quot;startTime&quot;</span><span class="p">:</span> <span class="s2">&quot;2017-02-01&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;endTime&quot;</span><span class="p">:</span> <span class="s2">&quot;2017-02-14&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;cellWidth&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
-         <span class="s2">&quot;cellHeight&quot;</span><span class="p">:</span><span class="mf">2.5</span>
-      <span class="p">},</span>
-      <span class="s2">&quot;Data_sources&quot;</span><span class="p">:</span> <span class="p">[</span>
-         <span class="p">{</span>
-         <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_bsose_depth&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-            <span class="s2">&quot;file&quot;</span><span class="p">:</span><span class="s2">&quot;../../Data/BSOSE/bsose_i122_2013to2017_1day_SeaIceArea.nc&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;elevation&quot;</span>
-         <span class="p">}</span>
+<section id="mesh-construction-configuration-file-example">
+<h2><span class="section-number">4.1. </span>Mesh Construction configuration file example.<a class="headerlink" href="#mesh-construction-configuration-file-example" title="Permalink to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;config&quot;</span><span class="p">:</span> <span class="p">{</span>
+     <span class="s2">&quot;Mesh_info&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;Region&quot;</span><span class="p">:</span> <span class="p">{</span>
+             <span class="s2">&quot;latMin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">65</span><span class="p">,</span>
+             <span class="s2">&quot;latMax&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">60</span><span class="p">,</span>
+             <span class="s2">&quot;longMin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">70</span><span class="p">,</span>
+             <span class="s2">&quot;longMax&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span>
+             <span class="s2">&quot;startTime&quot;</span><span class="p">:</span> <span class="s2">&quot;2013-03-01&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;endTime&quot;</span><span class="p">:</span> <span class="s2">&quot;2013-03-14&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;cellWidth&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+             <span class="s2">&quot;cellHeight&quot;</span><span class="p">:</span> <span class="mf">2.5</span>
          <span class="p">},</span>
-         <span class="p">{</span>
-         <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_amsr&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-            <span class="s2">&quot;file&quot;</span><span class="p">:</span><span class="s2">&quot;../../Data/AMSR/asi-AMSR-2017.nc&quot;</span>
-         <span class="p">}</span>
-         <span class="p">},</span>
-         <span class="p">{</span>
-         <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_sose_currents&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-            <span class="s2">&quot;file&quot;</span><span class="p">:</span><span class="s2">&quot;../../Data/SOSE_surface_velocity_6yearMean_2005-2010.nc&quot;</span>
-         <span class="p">}</span>
-         <span class="p">},</span>
-         <span class="p">{</span>
-         <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_thickness&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-         <span class="p">}</span>
-         <span class="p">},</span>
-         <span class="p">{</span>
-         <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_density&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-         <span class="p">}</span>
-         <span class="p">}</span>
-      <span class="p">],</span>
-      <span class="s2">&quot;splitting&quot;</span><span class="p">:</span> <span class="p">{</span>
-         <span class="s2">&quot;split_depth&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
-         <span class="s2">&quot;minimum_datapoints&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
-         <span class="s2">&quot;splitting_conditions&quot;</span><span class="p">:[</span>
-            <span class="p">{</span><span class="s2">&quot;elevation&quot;</span><span class="p">:{</span>
-               <span class="s2">&quot;threshold&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span>
-               <span class="s2">&quot;upperBound&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-               <span class="s2">&quot;lowerBound&quot;</span><span class="p">:</span><span class="mi">0</span>
-            <span class="p">}},</span>
-            <span class="p">{</span><span class="s2">&quot;SIC&quot;</span><span class="p">:{</span>
-               <span class="s2">&quot;threshold&quot;</span><span class="p">:</span><span class="mi">35</span><span class="p">,</span>
-               <span class="s2">&quot;upperBound&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
-               <span class="s2">&quot;lowerBound&quot;</span><span class="p">:</span><span class="mf">0.1</span>
-            <span class="p">}}</span>
+         <span class="s2">&quot;Data_sources&quot;</span><span class="p">:</span> <span class="p">[</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;GEBCO&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;downsample_factors&quot;</span><span class="p">:</span> <span class="p">[</span>
+                         <span class="mi">5</span><span class="p">,</span>
+                         <span class="mi">5</span>
+                     <span class="p">],</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;aggregate_type&quot;</span><span class="p">:</span> <span class="s2">&quot;MAX&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;splitting_conditions&quot;</span><span class="p">:</span> <span class="p">[</span>
+                         <span class="p">{</span>
+                             <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                 <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span>
+                                 <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                                 <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mi">0</span>
+                             <span class="p">}</span>
+                         <span class="p">}</span>
+                     <span class="p">]</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;AMSR_folder&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;folder&quot;</span><span class="p">:</span> <span class="s2">&quot;../datastore/sic/amsr_south/&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;hemisphere&quot;</span><span class="p">:</span> <span class="s2">&quot;south&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;SIC&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;splitting_conditions&quot;</span><span class="p">:</span> <span class="p">[</span>
+                         <span class="p">{</span>
+                             <span class="s2">&quot;SIC&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                 <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+                                 <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+                                 <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">0.1</span>
+                             <span class="p">}</span>
+                         <span class="p">}</span>
+                     <span class="p">]</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;SOSE&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;uC,vC&quot;</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;thickness&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;thickness&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;density&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;density&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span>
+                 <span class="p">}</span>
+             <span class="p">}</span>
          <span class="p">],</span>
-         <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:{</span>
-            <span class="s2">&quot;SIC&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;uC&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;vC&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span>
+         <span class="s2">&quot;splitting&quot;</span><span class="p">:</span> <span class="p">{</span>
+             <span class="s2">&quot;split_depth&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+             <span class="s2">&quot;minimum_datapoints&quot;</span><span class="p">:</span> <span class="mi">5</span>
          <span class="p">}</span>
-      <span class="p">},</span>
-      <span class="s2">&quot;value_output_types&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;elevation&quot;</span><span class="p">:</span><span class="s2">&quot;MAX&quot;</span>
-      <span class="p">}</span>
-   <span class="p">},</span>
-   <span class="s2">&quot;Vessel&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;Speed&quot;</span><span class="p">:</span> <span class="mf">26.5</span><span class="p">,</span>
-      <span class="s2">&quot;Unit&quot;</span><span class="p">:</span> <span class="s2">&quot;km/hr&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;Beam&quot;</span><span class="p">:</span> <span class="mf">24.0</span><span class="p">,</span>
-      <span class="s2">&quot;HullType&quot;</span><span class="p">:</span> <span class="s2">&quot;slender&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;ForceLimit&quot;</span><span class="p">:</span> <span class="mf">96634.5</span><span class="p">,</span>
-      <span class="s2">&quot;MaxIceExtent&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
-      <span class="s2">&quot;MinDepth&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span>
-   <span class="p">},</span>
-   <span class="s2">&quot;Route_Info&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;Objective_Function&quot;</span><span class="p">:</span> <span class="s2">&quot;traveltime&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;Path_Variables&quot;</span><span class="p">:</span> <span class="p">[</span>
-         <span class="s2">&quot;fuel&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;traveltime&quot;</span>
-      <span class="p">],</span>
-      <span class="s2">&quot;WayPoints&quot;</span><span class="p">:</span> <span class="s2">&quot;./WayPoints_org.csv&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;Source_Waypoints&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;LongPathStart&quot;</span><span class="p">],</span>
-      <span class="s2">&quot;End_Waypoints&quot;</span><span class="p">:</span> <span class="p">[],</span>
-      <span class="s2">&quot;Vector Names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;uC&quot;</span><span class="p">,</span><span class="s2">&quot;vC&quot;</span><span class="p">],</span>
-      <span class="s2">&quot;Zero_Currents&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;Variable_Speed&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-      <span class="s2">&quot;Time_Unit&quot;</span><span class="p">:</span> <span class="s2">&quot;days&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;Early_Stopping_Criterion&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-      <span class="s2">&quot;Save_Dijkstra_Graphs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;Smooth Path&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;Max Iteration Number&quot;</span><span class="p">:</span><span class="mi">1000</span><span class="p">,</span>
-         <span class="s2">&quot;Minimum Difference&quot;</span><span class="p">:</span> <span class="mf">1e-3</span>
-      <span class="p">}</span>
-   <span class="p">}</span>
-<span class="p">}</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
 </pre></div>
 </div>
-<p>The Configuration file is composed of three distinct sections ‘Mesh_info’, ‘Vessel’, and ‘Route_Info’.
-Each of these contain configuration information for the various stages of the route planning pipeline.</p>
-<section id="mesh-info">
-<h2><span class="section-number">4.1. </span>Mesh_info<a class="headerlink" href="#mesh-info" title="Permalink to this heading">¶</a></h2>
-<p>Mesh_info contains information required to build the discretised environment in which the route planner
+<p>The configuration file used for mesh construction contains information required to build the discretised environment in which the route planner
 operates. Information here dictates the region in which the mesh is constructed, the data contained within
-the mesh and how the mesh is split to a non-uniform resolution.</p>
+the mesh and how the mesh is split to a non-uniform resolution. The configuration file used to generate a mesh is stored in a section titled ‘Mesh_info’</p>
 <p>The ‘Mesh_info’ section of the configuration file contains three primary sections:</p>
 <section id="region">
-<h3><span class="section-number">4.1.1. </span>Region<a class="headerlink" href="#region" title="Permalink to this heading">¶</a></h3>
-<p>The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (<cite>longMin</cite>, <cite>latMin</cite>, <cite>longMax</cite>, <cite>latMax</cite>, <cite>startTime</cite>, <cite>endTime</cite>), but also the starting shape of the spatial grid cell boxes (<cite>cellWidth</cite>, <cite>cellHeight</cite>) is defined before splitting is applied . Further detail on each parameter is given below:</p>
+<h3><span class="section-number">4.1.1. </span>Region<a class="headerlink" href="#region" title="Permalink to this heading"></a></h3>
+<p>The region section gives detailed information for the construction of the Discrete Mesh. The main definitions are the bounding region and temporal portion of interest (<cite>longMin</cite>, <cite>latMin</cite>, <cite>longMax</cite>, <cite>latMax</cite>, <cite>startTime</cite>, <cite>endTime</cite>), but also the starting shape of the spatial grid cell boxes (<cite>cellWidth</cite>, <cite>cellHeight</cite>) is defined before splitting is applied. Further detail on each parameter is given below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Region&quot;</span><span class="p">:</span> <span class="p">{</span>
    <span class="s2">&quot;latMin&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">77.5</span><span class="p">,</span>
    <span class="s2">&quot;latMax&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">55</span><span class="p">,</span>
@@ -189,123 +210,110 @@ the mesh and how the mesh is split to a non-uniform resolution.</p>
 <li><p><strong>cellWidth</strong>    <em>(float, degrees)</em>      : Initial Cell Box Width prior to splitting</p></li>
 <li><p><strong>cellHeight</strong>   <em>(float, degrees)</em>      : Initial Cell Box Height prior to splitting</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Variables <strong>startTime</strong> and <strong>endTime</strong> also support reference to system time using
+the keyword <strong>TODAY</strong> <em>e.g.</em></p>
+<p>“startTime”: “TODAY” ,  “endTime”: “TODAY + 5”</p>
+<p>“startTime”: “TODAY - 3”,  “endTime”: “TODAY”</p>
+</div>
 </section>
 <section id="data-sources">
-<h3><span class="section-number">4.1.2. </span>Data_sources<a class="headerlink" href="#data-sources" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">4.1.2. </span>Data_sources<a class="headerlink" href="#data-sources" title="Permalink to this heading"></a></h3>
 <p>The ‘Data_sources’ section of the configuration file dictates which information will be added to the
 mesh when constructed. Each item in the list of data sources represents a single data set to be added
 to the mesh.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Data_sources&quot;</span><span class="p">:</span> <span class="p">[</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_bsose_depth&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;file&quot;</span><span class="p">:</span><span class="s2">&quot;../../Data/BSOSE/bsose_i122_2013to2017_1day_SeaIceArea.nc&quot;</span><span class="p">,</span>
-         <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;elevation&quot;</span>
-      <span class="p">}</span>
-   <span class="p">},</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_amsr&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;file&quot;</span><span class="p">:</span><span class="s2">&quot;../../Data/AMSR/asi-AMSR-2017.nc&quot;</span>
-      <span class="p">}</span>
-   <span class="p">},</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_sose_currents&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;file&quot;</span><span class="p">:</span><span class="s2">&quot;../../Data/SOSE_surface_velocity_6yearMean_2005-2010.nc&quot;</span>
-      <span class="p">}</span>
-   <span class="p">},</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_thickness&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-      <span class="p">}</span>
-   <span class="p">},</span>
-   <span class="p">{</span>
-      <span class="s2">&quot;loader&quot;</span><span class="p">:</span><span class="s2">&quot;load_density&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;params&quot;</span><span class="p">:{</span>
-      <span class="p">}</span>
-   <span class="p">}</span>
-<span class="p">]</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;GEBCO&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;downsample_factors&quot;</span><span class="p">:</span> <span class="p">[</span>
+                         <span class="mi">5</span><span class="p">,</span>
+                         <span class="mi">5</span>
+                     <span class="p">],</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;aggregate_type&quot;</span><span class="p">:</span> <span class="s2">&quot;MAX&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;splitting_conditions&quot;</span><span class="p">:</span> <span class="p">[</span>
+                         <span class="p">{</span>
+                             <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                 <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span>
+                                 <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                                 <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mi">0</span>
+                             <span class="p">}</span>
+                         <span class="p">}</span>
+                     <span class="p">]</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;AMSR_folder&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;folder&quot;</span><span class="p">:</span> <span class="s2">&quot;../datastore/sic/amsr_south/&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;hemisphere&quot;</span><span class="p">:</span> <span class="s2">&quot;south&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;SIC&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;splitting_conditions&quot;</span><span class="p">:</span> <span class="p">[</span>
+                         <span class="p">{</span>
+                             <span class="s2">&quot;SIC&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                 <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+                                 <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+                                 <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">0.1</span>
+                             <span class="p">}</span>
+                         <span class="p">}</span>
+                     <span class="p">]</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;SOSE&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;uC,vC&quot;</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;thickness&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;thickness&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span>
+                 <span class="p">}</span>
+             <span class="p">},</span>
+             <span class="p">{</span>
+                 <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;density&quot;</span><span class="p">,</span>
+                 <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;density&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span>
+                 <span class="p">}</span>
+             <span class="p">}</span>
+         <span class="p">]</span>
 </pre></div>
 </div>
 <p>where the variables are as follows:</p>
-<ul class="simple">
+<ul>
 <li><dl class="simple">
-<dt><strong>loader</strong> <em>(string)</em><span class="classifier">The function name of the data loader to be used to add this data source to the mesh</span></dt><dd><p>see section ‘Multi Data Input’ for further information about data loader functions.</p>
+<dt><strong>loader</strong> <em>(string)</em><span class="classifier">The name of the data loader to be used to add this data source to the mesh</span></dt><dd><p>see the <a class="reference internal" href="Dataloaders/overview.html#dataloaders-overview"><span class="std std-ref">abstractScalarDataloader doc page</span></a> for further information about the available data loaders.</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>params</strong> <em>(dict)</em><span class="classifier">A dictionary containing optional parameters which may be required by data loader function</span></dt><dd><p>named in variable ‘loader’.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</section>
-<section id="splitting">
-<h3><span class="section-number">4.1.3. </span>splitting<a class="headerlink" href="#splitting" title="Permalink to this heading">¶</a></h3>
-<p>The splitting section of the Configuration file determines how the CellBoxes that form the
-Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
-of non-uniform spatial resolution.</p>
-<p>Non-uniform mesh refinement is done by selectively sub-dividing cells. Cell sub-division is performed
-whenever a cell (of any size) is determined to be inhomogeneous with respect to a specific characteristic
-of interest such as SIC or ocean depth. For example, considering SIC, we define a range, from a lower bound
-<em>lb</em> to an upper bound <em>ub</em>, and a threshold, <em>t</em>. Then, a cell is considered inhomogeneous if between <em>lb</em> and <em>ub</em>
-of the ice measurements in that cell are at <em>t%</em> or higher.  If the proportion of ice in the cell above the
-<em>t%</em> concentration is below <em>lb%</em>, we consider the cell to be homogeneous open water: such a cell can be navigated
-through so does not require splitting based on this homogeneity condition (though may still be split based on others).</p>
+<li><p><strong>params</strong> <em>(dict)</em> : A dictionary containing optional parameters which may be required by the specified data loader in ‘loader’. These parameters include the following:</p>
 <blockquote>
-<div><p>At the other end of the range, if the proportion is greater than <em>ub%</em>, then the cell is considered</p>
-</div></blockquote>
-<p>homogeneous ice: such a cell cannot be navigated through all will not be split on this or any subsequent splitting conditions.
-If the proportion is between these bounds, then the cell is inhomogeneous and must be split so that the homogeneous sub-cells</p>
-<blockquote>
-<div><p>can be found.</p>
-</div></blockquote>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;splitting&quot;</span><span class="p">:</span> <span class="p">{</span>
-   <span class="s2">&quot;split_depth&quot;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span>
-   <span class="s2">&quot;minimum_datapoints&quot;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span>
-   <span class="s2">&quot;splitting_conditions&quot;</span><span class="p">:[</span>
-     <span class="p">{</span><span class="s2">&quot;elevation&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;threshold&quot;</span><span class="p">:</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span>
-         <span class="s2">&quot;upperBound&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-         <span class="s2">&quot;lowerBound&quot;</span><span class="p">:</span><span class="mi">0</span>
-     <span class="p">}},</span>
-     <span class="p">{</span><span class="s2">&quot;SIC&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;threshold&quot;</span><span class="p">:</span><span class="mi">35</span><span class="p">,</span>
-         <span class="s2">&quot;upperBound&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
-         <span class="s2">&quot;lowerBound&quot;</span><span class="p">:</span><span class="mf">0.1</span>
-     <span class="p">}}</span>
-   <span class="p">],</span>
-   <span class="s2">&quot;value_fill_types&quot;</span><span class="p">:{</span>
-     <span class="s2">&quot;SIC&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
-     <span class="s2">&quot;uC&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span><span class="p">,</span>
-     <span class="s2">&quot;vC&quot;</span><span class="p">:</span> <span class="s2">&quot;parent&quot;</span>
-   <span class="p">}</span>
- <span class="p">}</span>
-</pre></div>
-</div>
-<p>where the variables are as follows:</p>
-<ul class="simple">
-<li><p><strong>split_depth</strong> <em>(float)</em> : The number of times the mesh will sub-divided each initial cellbox</p></li>
-<li><p><strong>minimum_datapoints</strong> <em>(float)</em> : The minimum number of datapoints a cellbox must contain for each value type to be able to split</p></li>
+<div><ul class="simple">
 <li><dl class="simple">
 <dt><strong>splitting_conditions</strong> <em>(list)</em><span class="classifier">The conditions which determine if a cellbox should be split.</span></dt><dd><ul>
-<li><p><strong>&lt;value_name&gt;</strong> <em>(string)</em> : The name of the value which the splitting condition will be applied to.</p></li>
 <li><p><strong>threshold</strong> <em>(float)</em> : The threshold above or below which CellBoxes will be sub-divided to separate the datapoints into homogeneous cells.</p></li>
-<li><p><strong>upperBound</strong> <em>(float)</em> : A percentage normalised between 0 and 1. A CellBox is deemed homogeneous in a given data type if greater than this percentage of data points are above the given threshold.</p></li>
-<li><p><strong>lowerBound</strong> <em>(float)</em> : A percentage normalised between 0 and 1. A Cellbox is deemed homogeneous in a given data type if less than this percentage of data points are below the given threshold.</p></li>
+<li><p><strong>upperBound</strong> <em>(float)</em> : A percentage normalised between 0 and 1. A CellBox is deemed homogeneous if greater than this percentage of data points are above the given threshold.</p></li>
+<li><p><strong>lowerBound</strong> <em>(float)</em> : A percentage normalised between 0 and 1. A Cellbox is deemed homogeneous if less than this percentage of data points are below the given threshold.</p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt><strong>value_fill_types</strong> <em>(dict)</em><span class="classifier">Determines the actions taken if a cellbox is generated with no data for a given value type</span></dt><dd><ul>
-<li><p><strong>&lt;value_name&gt;</strong> <em>(string)</em> : The name of the value which the fill type will be applied to.</p></li>
-<li><p><strong>&lt;fill_type&gt;</strong> <em>(string)</em> : &lt;parent | zero | nan&gt;</p></li>
+<li><p><strong>value_fill_types</strong> <em>(string)</em> : Determines the actions taken if a cellbox is generated with no data. The possible values are either parent (which implies assigning the value of the parent cellbox), zero or nan.</p></li>
+<li><p><strong>aggregate_type</strong> <em>(string)</em> : Specifies how the data within a cellbox will be aggregated. By default aggregation takes place by calculating the mean of all data points within the CellBoxes bounds. <em>aggregate_type</em> allows this default to be changed to other aggregate function (e.g. MIN, MAX, COUNT).</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 </li>
 </ul>
 <div class="admonition note">
@@ -313,75 +321,94 @@ If the proportion is between these bounds, then the cell is inhomogeneous and mu
 <p>splitting conditions are applied in the order they are specified in the configuration file.</p>
 </div>
 </section>
-<section id="value-output-types-optional">
-<h3><span class="section-number">4.1.4. </span>value_output_types (optional)<a class="headerlink" href="#value-output-types-optional" title="Permalink to this heading">¶</a></h3>
-<p>The value_output_types section is an optional section which may be added to Mesh_info. This dictates how data
-of each value of a cellbox is returned when outputting the (CellBox) or (Mesh). By default values associated
-with a (CellBox) are calculated by taking the mean of all data points of a given value within the CellBoxes bounds.
-<em>value_output_type</em> allows this default to be changed to either the minimum or maximum of data-points.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;value_output_types&quot;</span><span class="p">:{</span>
-   <span class="s2">&quot;&lt;value_name&gt;&quot;</span><span class="p">:</span><span class="o">&lt;</span> <span class="s2">&quot;MIN&quot;</span> <span class="o">|</span> <span class="s2">&quot;MAX&quot;</span> <span class="o">|</span> <span class="s2">&quot;MEAN&quot;</span> <span class="o">&gt;</span>
+<section id="splitting">
+<h3><span class="section-number">4.1.3. </span>splitting<a class="headerlink" href="#splitting" title="Permalink to this heading"></a></h3>
+<p>Non-uniform mesh refinement is done by selectively sub-dividing cells. Cell sub-division is performed
+whenever a cell (of any size) is determined to be inhomogeneous with respect to a specific characteristic
+of interest such as SIC or ocean depth (this characteristic is defined as a splitting condition inside the data source’s params as illustrated above). For example, considering SIC, we define a range, from a lower bound
+<em>lb</em> to an upper bound <em>ub</em>, and a threshold, <em>t</em>. Then, a cell is considered inhomogeneous if between <em>lb</em> and <em>ub</em>
+of the ice measurements in that cell are at <em>t%</em> or higher.  If the proportion of ice in the cell above the
+<em>t%</em> concentration is below <em>lb%</em>, we consider the cell to be homogeneous open water: such a cell can be navigated
+through so does not require splitting based on this homogeneity condition (though may still be split based on others).
+At the other end of the range, if the proportion is greater than <em>ub%</em>, then the cell is considered
+homogeneous ice: such a cell cannot be navigated through and will not be split on this or any subsequent splitting conditions.
+If the proportion is between these bounds, then the cell is inhomogeneous and must be split so that the homogeneous sub-cells can be found.</p>
+<p>The splitting section of the Configuration file defines the splitting parameters that are <em>common</em> across all the data sources and determines how the CellBoxes that form the
+Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
+of non-uniform spatial resolution.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;splitting&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="s2">&quot;split_depth&quot;</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span>
+   <span class="s2">&quot;minimum_datapoints&quot;</span><span class="p">:</span><span class="mi">5</span>
  <span class="p">}</span>
 </pre></div>
 </div>
+<p>where the variables are as follows:</p>
 <ul class="simple">
-<li><p><strong>&lt;value_name&gt;</strong> <em>(string)</em> : The name of the value which the output type change will be applied to</p></li>
+<li><p><strong>split_depth</strong> <em>(float)</em> : The number of times the MeshBuilder will sub-divide each initial cellbox (subject to satisfying the splitting conditions of each data source)</p></li>
+<li><p><strong>minimum_datapoints</strong> <em>(float)</em> : The minimum number of datapoints a cellbox must contain for each value type to be able to split</p></li>
 </ul>
 </section>
 </section>
-<section id="vessel">
-<h2><span class="section-number">4.2. </span>Vessel<a class="headerlink" href="#vessel" title="Permalink to this heading">¶</a></h2>
-<p>The Vessel section of the configuration file provides all the necessary information about the vessel that will execute
-the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the <cite>VesselPerformance</cite>
-class for this vessel.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Vessel&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;Speed&quot;</span><span class="p">:</span> <span class="mf">26.5</span><span class="p">,</span>
+<section id="vessel-performance-configuration-file-example">
+<h2><span class="section-number">4.2. </span>Vessel Performance configuration file example.<a class="headerlink" href="#vessel-performance-configuration-file-example" title="Permalink to this heading"></a></h2>
+<p>The Vessel configuration file provides all the necessary information about the vessel that will execute
+the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the
+<cite>VesselPerformanceModeller</cite> class. A file of this structure is also used as a command line argument for
+the ‘add_vehicle’ entry point.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;Vessel&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;VesselType&quot;</span><span class="p">:</span> <span class="s2">&quot;SDA&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;MaxSpeed&quot;</span><span class="p">:</span> <span class="mf">26.5</span><span class="p">,</span>
       <span class="s2">&quot;Unit&quot;</span><span class="p">:</span> <span class="s2">&quot;km/hr&quot;</span><span class="p">,</span>
       <span class="s2">&quot;Beam&quot;</span><span class="p">:</span> <span class="mf">24.0</span><span class="p">,</span>
       <span class="s2">&quot;HullType&quot;</span><span class="p">:</span> <span class="s2">&quot;slender&quot;</span><span class="p">,</span>
       <span class="s2">&quot;ForceLimit&quot;</span><span class="p">:</span> <span class="mf">96634.5</span><span class="p">,</span>
-      <span class="s2">&quot;MaxIceExtent&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+      <span class="s2">&quot;MaxIceConc&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
       <span class="s2">&quot;MinDepth&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span>
-   <span class="p">},</span>
+   <span class="p">}</span>
+
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>where the variables are as follows:</p>
+<p>Above are a typical set of configuration parameters used for a vessel where the variables are as follows:</p>
 <ul class="simple">
-<li><p><strong>Speed</strong> <em>(float)</em> : The maximum speed of the vessel in open water.</p></li>
+<li><p><strong>VesselType</strong> <em>(string)</em> : The specific vessel class to use for performance modelling.</p></li>
+<li><p><strong>MaxSpeed</strong> <em>(float)</em> : The maximum speed of the vessel in open water.</p></li>
 <li><p><strong>Unit</strong> <em>(string)</em> : The units of measurement for the speed of the vessel (currently only “km/hr” is supported).</p></li>
 <li><p><strong>Beam</strong> <em>(float)</em> : The beam (width) of the ship in metres.</p></li>
 <li><p><strong>HullType</strong> <em>(string)</em> : The hull profile of the ship (should be one of either “slender” or “blunt”).</p></li>
 <li><p><strong>ForceLimit</strong> <em>(float)</em> : The maximum allowed resistance force, specified in Newtons.</p></li>
-<li><p><strong>MaxIceExtent</strong> <em>(float)</em> : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.</p></li>
+<li><p><strong>MaxIceConc</strong> <em>(float)</em> : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.</p></li>
 <li><p><strong>MinDepth</strong> <em>(float)</em> : The minimum depth of water the vessel is able to travel through in metres. Negative values correspond to a depth below sea level.</p></li>
 </ul>
 </section>
-<section id="route-info">
-<h2><span class="section-number">4.3. </span>Route_Info<a class="headerlink" href="#route-info" title="Permalink to this heading">¶</a></h2>
-<p>TODO intro to route info</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;Route_Info&quot;</span><span class="p">:</span> <span class="p">{</span>
-      <span class="s2">&quot;objective_function&quot;</span><span class="p">:</span> <span class="s2">&quot;traveltime&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;path_variables&quot;</span><span class="p">:</span> <span class="p">[</span>
+<section id="route-planning-configuration-file-example">
+<h2><span class="section-number">4.3. </span>Route Planning configuration file example.<a class="headerlink" href="#route-planning-configuration-file-example" title="Permalink to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;Route_Info&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;Objective_Function&quot;</span><span class="p">:</span> <span class="s2">&quot;traveltime&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Path_Variables&quot;</span><span class="p">:</span> <span class="p">[</span>
          <span class="s2">&quot;fuel&quot;</span><span class="p">,</span>
          <span class="s2">&quot;traveltime&quot;</span>
       <span class="p">],</span>
-      <span class="s2">&quot;waypoints_path&quot;</span><span class="p">:</span> <span class="s2">&quot;./WayPoints_org.csv&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;source_waypoints&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;LongPathStart&quot;</span><span class="p">],</span>
-      <span class="s2">&quot;end_waypoints&quot;</span><span class="p">:</span> <span class="p">[],</span>
-      <span class="s2">&quot;vector_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;uC&quot;</span><span class="p">,</span><span class="s2">&quot;vC&quot;</span><span class="p">],</span>
-      <span class="s2">&quot;zero_currents&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;variable_speed&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-      <span class="s2">&quot;time_unit&quot;</span><span class="p">:</span> <span class="s2">&quot;days&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;early_stopping_criterion&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-      <span class="s2">&quot;save_dijkstra_graphs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
-      <span class="s2">&quot;smooth_path&quot;</span><span class="p">:{</span>
-         <span class="s2">&quot;max_iteration_number&quot;</span><span class="p">:</span><span class="mi">1000</span><span class="p">,</span>
-         <span class="s2">&quot;minimum_difference&quot;</span><span class="p">:</span> <span class="mf">1e-3</span>
+      <span class="s2">&quot;WayPoints&quot;</span><span class="p">:</span> <span class="s2">&quot;./WayPoints_org.csv&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Source_Waypoints&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;LongPathStart&quot;</span><span class="p">],</span>
+      <span class="s2">&quot;End_Waypoints&quot;</span><span class="p">:</span> <span class="p">[],</span>
+      <span class="s2">&quot;Vector Names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;uC&quot;</span><span class="p">,</span><span class="s2">&quot;vC&quot;</span><span class="p">],</span>
+      <span class="s2">&quot;Zero_Currents&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;Variable_Speed&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">&quot;Time_Unit&quot;</span><span class="p">:</span> <span class="s2">&quot;days&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;Early_Stopping_Criterion&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+      <span class="s2">&quot;Save_Dijkstra_Graphs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+      <span class="s2">&quot;Smooth Path&quot;</span><span class="p">:{</span>
+         <span class="s2">&quot;Max Iteration Number&quot;</span><span class="p">:</span><span class="mi">1000</span><span class="p">,</span>
+         <span class="s2">&quot;Minimum Difference&quot;</span><span class="p">:</span> <span class="mf">1e-3</span>
       <span class="p">}</span>
    <span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-<p>where the variables are as follows:</p>
+<p>above is a typical set of configuration parameters used for route planning where the variables are as follows:</p>
 <ul class="simple">
 <li><p><strong>objective_function</strong> <em>(string)</em> : Defining the objective function to minimise for the construction of the mesh based Dijkstra routes. This variable can either be defined as ‘traveltime’ or ‘fuel’ .</p></li>
 <li><p><strong>path_variables</strong> <em>(list&lt;(string)&gt;)</em> : A list of strings of the route variables to return in the output geojson.</p></li>
@@ -407,83 +434,34 @@ class for this vessel.</p>
 </section>
 
 
-            <div class="clearer"></div>
+           </div>
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <div>
-    <h3><a href="../index.html">Table of Contents</a></h3>
-    <ul>
-<li><a class="reference internal" href="#">4. Input - Configuration</a><ul>
-<li><a class="reference internal" href="#mesh-info">4.1. Mesh_info</a><ul>
-<li><a class="reference internal" href="#region">4.1.1. Region</a></li>
-<li><a class="reference internal" href="#data-sources">4.1.2. Data_sources</a></li>
-<li><a class="reference internal" href="#splitting">4.1.3. splitting</a></li>
-<li><a class="reference internal" href="#value-output-types-optional">4.1.4. value_output_types (optional)</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#vessel">4.2. Vessel</a></li>
-<li><a class="reference internal" href="#route-info">4.3. Route_Info</a></li>
-</ul>
-</li>
-</ul>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="running.html" class="btn btn-neutral float-left" title="3. Runnning Codebase" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Dataloaders/overview.html" class="btn btn-neutral float-right" title="5. Dataloader Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, BAS AI Lab.</p>
   </div>
-  <div>
-    <h4>Previous topic</h4>
-    <p class="topless"><a href="running.html"
-                          title="previous chapter"><span class="section-number">3. </span>Runnning Codebase</a></p>
-  </div>
-  <div>
-    <h4>Next topic</h4>
-    <p class="topless"><a href="Multi_data_input.html"
-                          title="next chapter"><span class="section-number">5. </span>Input - Data Loaders</a></p>
-  </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/sections/Configuration.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="Multi_data_input.html" title="5. Input - Data Loaders"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="running.html" title="3. Runnning Codebase"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>Input - Configuration</a></li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, BAS AI Lab.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
-    </div>
-  </body>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>
