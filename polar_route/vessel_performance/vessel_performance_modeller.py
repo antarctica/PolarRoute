@@ -36,6 +36,7 @@ class VesselPerformanceModeller:
             access_values = self.vessel.model_accessibility(cellbox)
             self.env_mesh.update_cellbox(i, access_values)
         inaccessible_nodes = [c.id for c in self.env_mesh.agg_cellboxes if c.agg_data['inaccessible']]
+        logging.info(f"Found {len(inaccessible_nodes)} inaccessible cells in the mesh")
         for in_node in inaccessible_nodes:
             self.env_mesh.neighbour_graph.remove_node_and_update_neighbours(in_node)
 

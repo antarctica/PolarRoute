@@ -69,9 +69,9 @@ class NeighbourGraph:
         ''' 
             method that removes a node in the neighbour_graph at a given index. remove_node_from_neighbours should be called first.
             Args: 
-            cellbox_index (int): the index of the cellbox that will get removed from the neoghbpur_graph
+            cellbox_index (int): the index of the cellbox that will get removed from the neighbour_graph
         '''
-        # go through all thee neighbours in all the directions to remove the give cellbox_index from their neighbour_map
+        # go through all the neighbours in all the directions to remove the give cellbox_index from their neighbour_map
         direction_obj = Direction()
         for direction in direction_obj.__dict__.values():
             self.remove_node_from_neighbours(cellbox_index, direction)
@@ -134,11 +134,20 @@ class NeighbourGraph:
             method that goes through neighbours in a given direction and remove cellbox_index from their neighbour_maps
             Args:
             cellbox_indx (int): the index of the cellbox that we will go through its neighbours and remove this index from their neighbour_map
-            directio (int): an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)
+            direction (int): an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)
         '''
-        neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
+
+        # Try with int keys first as in mesh construction then try with str keys for json mesh
+        try:
+            neighbour_indx_list = self.neighbour_graph[cellbox_indx][direction]
+        except KeyError:
+            neighbour_indx_list = self.neighbour_graph[cellbox_indx][str(direction)]
+
         for indx in neighbour_indx_list:
-            self.neighbour_graph[indx][-1*direction].remove(cellbox_indx)
+            try:
+                self.neighbour_graph[indx][-1*direction].remove(cellbox_indx)
+            except KeyError:
+                self.neighbour_graph[str(indx)][str(-1*direction)].remove(int(cellbox_indx))
 
     def update_corner_neighbours(self, cellbox_indx, north_west_indx, north_east_indx, south_west_indx, south_east_indx):
         '''
