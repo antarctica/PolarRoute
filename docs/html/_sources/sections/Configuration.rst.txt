@@ -282,17 +282,14 @@ the 'add_vehicle' entry point.
 ::
 
    {
-      "Vessel": {
-         "VesselType": "SDA",
-         "MaxSpeed": 26.5,
-         "Unit": "km/hr",
-         "Beam": 24.0,
-         "HullType": "slender",
-         "ForceLimit": 96634.5,
-         "MaxIceConc": 80,
-         "MinDepth": -10
-      }
-
+     "VesselType": "SDA",
+     "MaxSpeed": 26.5,
+     "Unit": "km/hr",
+     "Beam": 24.0,
+     "HullType": "slender",
+     "ForceLimit": 96634.5,
+     "MaxIceConc": 80,
+     "MinDepth": -10
    }
 
 Above are a typical set of configuration parameters used for a vessel where the variables are as follows:
