@@ -15,7 +15,7 @@ class VectorDataLoader(DataLoaderInterface):
     @abstractmethod
     def __init__(self, bounds, params, min_dp):
         '''
-        User defined. This is where large-scale operations are performed, 
+        This is where large-scale operations are performed, 
         such as importing data, downsampling, reprojecting, and renaming 
         variables
         
@@ -25,9 +25,7 @@ class VectorDataLoader(DataLoaderInterface):
             params (dict): 
                 Values needed by dataloader to initialise. Unique to each
                 dataloader
-            min_dp (int): 
-                Minimum datapoints required to get homogeneity condition
-                
+
         Attributes:
             self.data (pd.DataFrame or xr.Dataset): 
                 Data stored by dataloader to use when called upon by the mesh.
@@ -37,7 +35,46 @@ class VectorDataLoader(DataLoaderInterface):
                 Name of scalar variable. Must be the column name if self.data
                 is pd.DataFrame. Must be variable if self.data is xr.Dataset
         '''
-        pass
+        print(f"Initialising {params['dataloader_name']} dataloader")
+        
+        # Translates parameters from config input to desired inputs
+        params = self.add_params(params)
+        # Creates a class attribute for all keys in params
+        for key, val in params.items():
+            setattr(self, key, val)
+            
+        # Read in and manipulate data to standard form
+        if 'files' in params:
+            logging.info('\tReading in files:')
+            for file in self.files:
+                logging.info(f'\t\t{file}')
+        self.data = self.import_data(bounds)
+        # If need to downsample data
+        self.data = self.downsample()
+        # If need to reproject data
+        if self.in_proj != self.out_proj:
+            self.data = self.reproject(
+                                in_proj  = self.in_proj,
+                                out_proj = self.out_proj,
+                                x_col    = self.x_col,
+                                y_col    = self.y_col
+                                )
+        # Cut dataset down to initial boundary
+        logging.info(
+            "\tTrimming data to initial boundary: {min} to {max}".format(
+                min=(bounds.get_lat_min(), bounds.get_long_min()),
+                max=(bounds.get_lat_max(), bounds.get_long_max())
+            ))
+        self.data = self.trim_datapoints(bounds)
+
+        # Get data name from column name if not set in params
+        if self.data_name is None:
+            logging.debug('- Setting self.data_name from column name')
+            self.data_name = self.get_data_col_name()
+        # or if set in params, set col name to data name
+        else:
+            logging.debug(f'- Setting data column name to {self.data_name}')
+            self.data = self.set_data_col_name(self.data_name)
 
     @abstractmethod
     def import_data(self, bounds):
@@ -59,6 +96,85 @@ class VectorDataLoader(DataLoaderInterface):
                 Downsampling and reprojecting happen in __init__() method
         '''
         pass
+    
+    def add_params(self, params):
+        '''
+        Provides option to add parameters before dataloader initialised,
+        useful for translating params from config to specific default 
+        parameters for dataloader. Does nothing by default, but user can
+        overload to add to specific dataloader
+        
+        Args:
+            params (dict): 
+                Dictionary holding keys and values that will be turned into 
+                object attributes
+        
+        Returns:
+            dict:
+                Params dictionary with addition of translated key/value pairs
+        '''
+        return params
+
+    def trim_datapoints(self, bounds, data=None):
+        '''
+        Trims datapoints from self.data within boundary defined by 'bounds'.
+        self.data can be pd.DataFrame or xr.Dataset
+        
+        Args:
+            bounds (Boundary): Limits of lat/long/time to select data from
+
+        Returns:
+            pd.DataFrame or xr.Dataset: 
+                Trimmed dataset in same format as self.data
+        '''
+        def trim_datapoints_from_df(data, bounds):
+            '''
+            Extracts data from a pd.DataFrame
+            '''
+            # Mask off any positions not within spatial bounds
+            mask = (data['lat']  > bounds.get_lat_min())  & \
+                   (data['lat']  <= bounds.get_lat_max())  & \
+                   (data['long'] > bounds.get_long_min()) & \
+                   (data['long'] <= bounds.get_long_max())
+            # Mask with time if time column exists
+            if 'time' in data.columns:
+                mask &= (data['time'] >= bounds.get_time_min()) & \
+                        (data['time'] <= bounds.get_time_max())
+                        
+            # Return column of data from within bounds
+            return data.loc[mask]
+        
+        def trim_datapoints_from_xr(data, bounds):
+            '''
+            Extracts data from a xr.Dataset
+            '''
+            # Select data region within spatial bounds
+            # TODO make sure boundaries act same as df
+            data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
+            data = data.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
+            # Select data region within temporal bounds if time exists as a coordinate
+            if 'time' in data.coords.keys():
+                data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
+
+            # Return column of data from within bounds
+            return data
+        
+        # If no specific data passed in, default to entire dataset
+        if data is None:
+            data = self.data
+        
+        # Skip trimming if data already completely within bounds
+        if data.lat.min() >  bounds.get_lat_min() and \
+           data.lat.max() <= bounds.get_lat_max() and \
+           data.long.min() >  bounds.get_long_min() and \
+           data.long.max() <= bounds.get_long_max():
+            logging.debug('Data is already trimmed to bounds!')
+            return data
+        
+        if type(data) == type(pd.DataFrame()):
+            return trim_datapoints_from_df(data, bounds)
+        elif type(data) == type(xr.Dataset()):
+            return trim_datapoints_from_xr(data, bounds)
     
     def get_dp_from_coord(self, long=None, lat=None, return_coords=False):
         '''
@@ -117,7 +233,7 @@ class VectorDataLoader(DataLoaderInterface):
             return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
         
 
-    def get_datapoints(self, bounds, return_coords=False):
+    def get_datapoints(self, bounds, return_coords=False, data=None):
         '''
         Extracts datapoints from self.data within boundary defined by 'bounds'.
         self.data can be pd.DataFrame or xr.Dataset
@@ -127,65 +243,34 @@ class VectorDataLoader(DataLoaderInterface):
             return_coords (boolean): 
                 Flag to determine if coordinates are provided for each 
                 datapoint found. Default is False.
-                            
             
         Returns:
             pd.DataFrame: 
                 Column of data values within selected region. If return_coords
                 is true, also returns with coordinate columns 
         '''
-        def get_datapoints_from_df(data, names, bounds, return_coords):
-            '''
-            Extracts data from a pd.DataFrame
-            '''
-            # Mask off any positions not within spatial bounds
-            mask = (data['lat']  >= bounds.get_lat_min())  & \
-                   (data['lat']  <= bounds.get_lat_max())  & \
-                   (data['long'] > bounds.get_long_min()) & \
-                   (data['long'] <= bounds.get_long_max())
-            # Mask with time if time column exists
-            if 'time' in data.columns:
-                mask &= (data['time'] >= bounds.get_time_min()) & \
-                        (data['time'] <= bounds.get_time_max())
-            # Return column of data from within bounds
-            # TODO add dropna() when merged, standard didn't have it 
-            # Include lat/long/time if requested
-            if return_coords: columns = list(data.columns)
-            else:             columns = names.split(',')
-            # Return column of data from within bounds
-            return data.loc[mask][columns]
-        
-        def get_datapoints_from_xr(data, names, bounds, return_coords):
-            '''
-            Extracts data from a xr.Dataset
-            '''
-            # Select data region within spatial bounds
-            # TODO make sure boundaries act same as df
-            data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
-            data = data.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
-            # Select data region within temporal bounds if time exists as a coordinate
-            if 'time' in data.coords.keys():
-                data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
-            # Cast as a pd.DataFrame
-            # TODO add dropna() when merged, standard didn't have it
-            data = data.to_dataframe().reset_index()#.dropna()
-            # Include lat/long/time if requested
-            if return_coords: columns = list(data.columns)
-            else:             columns = names.split(',')
+        if data is None:
+            data = self.data
+        # Cast to dataframe for output
+        if type(data) == type(xr.Dataset()):
+            data = self.trim_datapoints(bounds, data=data)
+            # Cast to dataframe
+            data = data.to_dataframe().reset_index().dropna()
             
-            # Return column of data from within bounds
-            return data[columns]
+        # Trim to boundary specified
+        data = self.trim_datapoints(bounds, data=data)
 
-            
-        # Choose which method to retrieve data based on input type
+        # Retrieve data column name
         if hasattr(self, 'data_name'): data_name = self.data_name
         else:                          data_name = self.get_data_col_name()
         
-        # Choose which method to retrieve data based on input type
-        if type(self.data) == type(pd.DataFrame()):
-            return get_datapoints_from_df(self.data, data_name, bounds, return_coords)
-        elif type(self.data) == type(xr.Dataset()):
-            return get_datapoints_from_xr(self.data, data_name, bounds, return_coords)
+        # Include lat/long/time if requested
+        if return_coords: columns = list(data.columns)
+        else:             columns = data_name.split(',')
+        
+        
+        # Return column of data from within bounds
+        return data[columns]
 
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
