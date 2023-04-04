@@ -34,7 +34,7 @@
                     }
                 },
                 {
-                    "loader": "AMSR_folder",
+                    "loader": "AMSR",
                     "params": {
                         "folder": "../../datastore/sic/amsr_south/",
                         "hemisphere": "south",

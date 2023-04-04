@@ -22,6 +22,7 @@ from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
 
 from glob import glob
+import os
 
 
 class DataLoaderFactory:
@@ -56,33 +57,33 @@ class DataLoaderFactory:
         
         dataloader_requirements = {
             # Scalar
-            'scalarcsv':(ScalarCSVDataLoader, ['files']),
-            'amsr':        (AMSRDataLoader, ['files', 'hemisphere']),
-            'amsr_folder': (AMSRDataLoader, ['folder', 'hemisphere']),
-            'bsose_sic':   (BSOSESeaIceDataLoader, ['files']),
-            'bsose_depth': (BSOSEDepthDataLoader, ['files']),
-            'baltic_sic':  (BalticSeaIceDataLoader, ['files']),
-            'gebco':       (GEBCODataLoader, ['files']),
-            'icenet':      (IceNetDataLoader, ['files']),
-            'modis':       (MODISDataLoader, ['files']),
-            # TODO Make these LUT dataloaders
-            'thickness': (ThicknessDataLoader, []),
-            'density':   (DensityDataLoader, []),
+            'scalar_csv':   (ScalarCSVDataLoader, ['files']),
+            'scalar_grf':   (ScalarGRFDataLoader, []),
+            'binary_grf':   (ScalarGRFDataLoader,[]),
+            'amsr':         (AMSRDataLoader, ['files', 'hemisphere']),
+            'bsose_sic':    (BSOSESeaIceDataLoader, ['files']),
+            'bsose_depth':  (BSOSEDepthDataLoader, ['files']),
+            'baltic_sic':   (BalticSeaIceDataLoader, ['files']),
+            'gebco':        (GEBCODataLoader, ['files']),
+            'icenet':       (IceNetDataLoader, ['files']),
+            'modis':        (MODISDataLoader, ['files']),
+            'thickness':    (ThicknessDataLoader, []),
+            'density':      (DensityDataLoader, []),
             # Scalar - Abstract shapes
             'circle':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'radius', 'centre']),
             'square':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'side_length', 'centre']),
             'gradient':     (ShapeDataLoader, ['shape', 'nx', 'ny', 'vertical']),
             'checkerboard': (ShapeDataLoader, ['shape', 'nx', 'ny', 'gridsize']),
             # Vector
-            'vectorcsv':        (VectorCSVDataLoader, ['files']),
+            'vector_csv':       (VectorCSVDataLoader, ['files']),
+            'vector_grf':       (VectorGRFDataLoader, []),
             'baltic_currents':  (BalticCurrentDataLoader, ['files']),
             'era5_wind':        (ERA5WindDataLoader, ['files']),
             'northsea_currents':(NorthSeaCurrentDataLoader, ['files']),
             # TODO make it run from 'files'
             'oras5_currents':   (ORAS5CurrentDataLoader, ['files']),
             'sose':             (SOSEDataLoader, ['files'])
-            # Lookup Table
-            # TODO
+
         }
         # If name is recognised as a dataloader
         if name in dataloader_requirements:
@@ -149,7 +150,8 @@ class DataLoaderFactory:
         if 'file' in params:
             params['files'] = [params['file']]
         elif 'folder' in params:
-            params['files'] = sorted(glob(params['folder']+'*'))
+            folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existant
+            params['files'] = sorted(glob(folder+'*'))
             
         # Set defaults for abstract data generators
         if name in ['circle', 'checkerboard', 'gradient']:
@@ -261,33 +263,3 @@ class DataLoaderFactory:
                 params['vec_y'] = 'vC'
                 
         return params
-
-if __name__ == '__main__':
-    from polar_route.mesh_generation.boundary import Boundary
-    
-    bounds = Boundary([-65,-60],[-70,-50],['2013-03-01', '2013-03-14'])
-    
-    if True:
-        params = {
-            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc',
-            'aggregate_type': 'MAX',
-            "downsample_factors": [
-                                        5,
-                                        5
-                                    ],
-        }
-        gebco = DataLoaderFactory().get_dataloader('gebco', bounds, params)
-    
-    if True:
-        params = {
-            'folder':'/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_south/',
-            'hemisphere': 'south'
-        }
-        amsr = DataLoaderFactory().get_dataloader('amsr', bounds, params)
-        
-    if True:
-        params = {}
-        splitting_conds = {'threshold': 1000, 'upper_bound':0.9, 'lower_bound':0.1}
-        density = DataLoaderFactory().get_dataloader('density', bounds, params)
-        # print(density.get_hom_condition(bounds, splitting_conds))
-    print()
