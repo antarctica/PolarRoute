@@ -1442,19 +1442,38 @@ class NewtonianCurve:
         # --- Additional Cells & Reverse Edges
         self._horseshoe()
 
+
+        # -- Include horeshoe and smooth and check for inmprovement --
         if (self._horseshoe_created == True) or (self._corner_created==True):
             org_variables = self.objective_function(self.org_points)
             new_variables = self.objective_function(self.horshoe_points)
 
             self._horshoe_percentage_improvement = ((new_variables[self.objective_func]['path_values'][-1] - org_variables[self.objective_func]['path_values'][-1])/org_variables[self.objective_func]['path_values'][-1])*100
 
-            if  self._horshoe_percentage_improvement > -10:
+            if self._horshoe_percentage_improvement > 0:
                 horeshoe_points     = self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy()
                 same_horseshoes_num = count_similarities(horeshoe_points.tolist(),self.previous_horeshoes)
                 if same_horseshoes_num <=3:
                     self.CrossingDF = self.CrossingDF.drop(self.triplet.index)
                     self.CrossingDF = pd.concat([self.CrossingDF, self.horshoe_points]).sort_index().reset_index(drop=True)
                     self.previous_horeshoes += [[iter,self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy().tolist(),self._horshoe_percentage_improvement]]
+
+
+
+        # # -- Include horeshoe and smooth and check for inmprovement --
+        # if (self._horseshoe_created == True) or (self._corner_created==True):
+        #     org_variables = self.objective_function(self.org_points)
+        #     new_variables = self.objective_function(self.horshoe_points)
+
+        #     self._horshoe_percentage_improvement = ((new_variables[self.objective_func]['path_values'][-1] - org_variables[self.objective_func]['path_values'][-1])/org_variables[self.objective_func]['path_values'][-1])*100
+
+        #     if  self._horshoe_percentage_improvement > -10:
+        #         horeshoe_points     = self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy()
+        #         same_horseshoes_num = count_similarities(horeshoe_points.tolist(),self.previous_horeshoes)
+        #         if same_horseshoes_num <=3:
+        #             self.CrossingDF = self.CrossingDF.drop(self.triplet.index)
+        #             self.CrossingDF = pd.concat([self.CrossingDF, self.horshoe_points]).sort_index().reset_index(drop=True)
+        #             self.previous_horeshoes += [[iter,self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy().tolist(),self._horshoe_percentage_improvement]]
 
         self._reverseCase()
         self.CrossingDF = self.CrossingDF.reset_index(drop=True)
