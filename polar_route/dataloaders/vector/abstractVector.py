@@ -12,8 +12,7 @@ class VectorDataLoader(DataLoaderInterface):
     '''
     Abstract class for all vector Datasets.
     '''
-    @abstractmethod
-    def __init__(self, bounds, params, min_dp):
+    def __init__(self, bounds, params):
         '''
         This is where large-scale operations are performed, 
         such as importing data, downsampling, reprojecting, and renaming 

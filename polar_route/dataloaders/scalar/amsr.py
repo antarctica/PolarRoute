@@ -1,8 +1,6 @@
 from polar_route.dataloaders.scalar.abstractScalar import ScalarDataLoader
 from datetime import datetime
 
-import logging
-import glob
 import xarray as xr
 class AMSRDataLoader(ScalarDataLoader):
     

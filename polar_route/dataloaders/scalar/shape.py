@@ -45,7 +45,7 @@ class ShapeDataLoader(ScalarDataLoader):
             Args:
                 bounds (Boundary): Limits of lat/long to generate within
         """
-        logging.info(f"- Setting up boundary of dataset")
+        logging.info("\tSetting up boundary of dataset")
         # Generate rows
         self.lat  = np.linspace(bounds.get_lat_min(), bounds.get_lat_max(), self.ny)    
         # Generate cols
@@ -61,14 +61,14 @@ class ShapeDataLoader(ScalarDataLoader):
                                   self.ny))
         x = np.linspace(bounds.get_long_min(), bounds.get_long_max(), self.nx)
 
-        logging.info(f"- Creating mask of circle")
+        logging.info("\tCreating mask of circle")
         # Create a 2D-array with distance from defined centre
         dist_from_centre = np.sqrt((x-c_x)**2 + (y-c_y)**2)
         # Turn this into a mask of values within radius
         mask = dist_from_centre <= self.radius
         # Set up empty dataframe to populate with dummy data
         dummy_df = pd.DataFrame(columns = ['lat', 'long', 'dummy_data'])
-        logging.info("- Generating dataset")
+        logging.info("\tGenerating dataset")
         # For each combination of lat/long
         for i in range(self.ny):
             for j in range(self.nx):
@@ -92,7 +92,7 @@ class ShapeDataLoader(ScalarDataLoader):
             Args:
                 bounds (Boundary): Limits of lat/long to generate within
         """
-        logging.info(f"- Setting up boundary of dataset")
+        logging.info("\tSetting up boundary of dataset")
         # Generate rows
         self.lat  = np.linspace(bounds.get_lat_min(), 
                                 bounds.get_lat_max(), 
@@ -102,7 +102,7 @@ class ShapeDataLoader(ScalarDataLoader):
                                 bounds.get_long_max(),
                                 self.nx)
         
-        logging.info(f"- Creating gradient of values")
+        logging.info("\tCreating gradient of values")
         #Create 1D gradient
         if self.vertical:   gradient = np.linspace(0,1,self.ny)
         else:               gradient = np.linspace(0,1,self.nx)
@@ -130,7 +130,7 @@ class ShapeDataLoader(ScalarDataLoader):
             Args:
                 bounds (Boundary): Limits of lat/long to generate within
         """
-        logging.info(f"- Setting up boundary of dataset")
+        logging.info("\tSetting up boundary of dataset")
         # Generate rows
         self.lat  = np.linspace(bounds.get_lat_min(), 
                                 bounds.get_lat_max(), 

@@ -1,7 +1,5 @@
 from polar_route.dataloaders.scalar.abstractScalar import ScalarDataLoader
 
-import logging
-
 import xarray as xr
 
 class BSOSEDepthDataLoader(ScalarDataLoader):

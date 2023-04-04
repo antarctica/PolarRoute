@@ -20,7 +20,7 @@ class MODISDataLoader(ScalarDataLoader):
         '''
         logging.info(f"- Opening file {self.file}")
         # Open Dataset
-        data = xr.open_dataset(self.file)
+        data = xr.open_mfdataset(self.file)
         # Change column name
         data = data.rename({'iceArea': 'SIC'})
 

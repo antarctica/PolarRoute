@@ -424,10 +424,10 @@ class ScalarDataLoader(DataLoaderInterface):
         
         # If no reprojection to do
         if in_proj == out_proj:
-            logging.debug("- self.reproject() called but don't need to")
+            logging.debug("\tself.reproject() called but don't need to")
             return self.data
         else:
-            logging.info(f"- Reprojecting data from {in_proj} to {out_proj}")
+            logging.info(f"\tReprojecting data from {in_proj} to {out_proj}")
         
         # Choose appropriate method of reprojection based on data type
         if type(self.data) == type(pd.DataFrame()):

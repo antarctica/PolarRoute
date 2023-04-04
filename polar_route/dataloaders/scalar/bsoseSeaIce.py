@@ -26,7 +26,7 @@ class BSOSESeaIceDataLoader(ScalarDataLoader):
         '''
         logging.info(f"- Opening file {self.file}")
         # Open Dataset
-        data = xr.open_dataset(self.file)
+        data = xr.open_mfdataset(self.file)
         # Change column names
         data = data.rename({'SIarea': 'SIC',
                             'YC': 'lat',
