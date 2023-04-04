@@ -34,7 +34,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 Name of scalar variable. Must be the column name if self.data
                 is pd.DataFrame. Must be variable if self.data is xr.Dataset
         '''
-        print(f"Initialising {params['dataloader_name']} dataloader")
+        logging.info(f"Initialising {params['dataloader_name']} dataloader")
         
         # Translates parameters from config input to desired inputs
         params = self.add_params(params)
