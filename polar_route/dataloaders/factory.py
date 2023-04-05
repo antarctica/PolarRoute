@@ -21,7 +21,8 @@ from polar_route.dataloaders.vector.vectorGRF import VectorGRFDataLoader
 from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
 
-
+from glob import glob
+import os
 
 
 class DataLoaderFactory:
@@ -56,35 +57,33 @@ class DataLoaderFactory:
         
         dataloader_requirements = {
             # Scalar
-            'scalar_csv':  (ScalarCSVDataLoader, ['file']),
-            'binary_grf':  (ScalarGRFDataLoader, []),
-            'scalar_grf':  (ScalarGRFDataLoader, []),
-            'amsr':        (AMSRDataLoader, ['file', 'hemisphere']),
-            'amsr_folder': (AMSRDataLoader, ['folder', 'hemisphere']),
-            'bsose_sic':   (BSOSESeaIceDataLoader, ['file']),
-            'bsose_depth': (BSOSEDepthDataLoader, ['file']),
-            'baltic_sic':  (BalticSeaIceDataLoader, ['file']),
-            'gebco':       (GEBCODataLoader, ['file']),
-            'icenet':      (IceNetDataLoader, ['file']),
-            'modis':       (MODISDataLoader, ['file']),
-            # TODO Make these LUT dataloaders
-            'thickness': (ThicknessDataLoader, []),
-            'density':   (DensityDataLoader, []),
+            'scalar_csv':   (ScalarCSVDataLoader, ['files']),
+            'scalar_grf':   (ScalarGRFDataLoader, []),
+            'binary_grf':   (ScalarGRFDataLoader,[]),
+            'amsr':         (AMSRDataLoader, ['files', 'hemisphere']),
+            'bsose_sic':    (BSOSESeaIceDataLoader, ['files']),
+            'bsose_depth':  (BSOSEDepthDataLoader, ['files']),
+            'baltic_sic':   (BalticSeaIceDataLoader, ['files']),
+            'gebco':        (GEBCODataLoader, ['files']),
+            'icenet':       (IceNetDataLoader, ['files']),
+            'modis':        (MODISDataLoader, ['files']),
+            'thickness':    (ThicknessDataLoader, []),
+            'density':      (DensityDataLoader, []),
             # Scalar - Abstract shapes
             'circle':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'radius', 'centre']),
             'square':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'side_length', 'centre']),
             'gradient':     (ShapeDataLoader, ['shape', 'nx', 'ny', 'vertical']),
             'checkerboard': (ShapeDataLoader, ['shape', 'nx', 'ny', 'gridsize']),
             # Vector
-            'vectorcsv':        (VectorCSVDataLoader, ['file']),
+            'vector_csv':       (VectorCSVDataLoader, ['files']),
             'vector_grf':       (VectorGRFDataLoader, []),
-            'baltic_currents':  (BalticCurrentDataLoader, ['file']),
-            'era5_wind':        (ERA5WindDataLoader, ['file']),
-            'northsea_currents':(NorthSeaCurrentDataLoader, ['file']),
-            'oras5_currents':   (ORAS5CurrentDataLoader, ['file_u', 'file_v']),
-            'sose':             (SOSEDataLoader, ['file'])
-            # Lookup Table
-            # TODO
+            'baltic_currents':  (BalticCurrentDataLoader, ['files']),
+            'era5_wind':        (ERA5WindDataLoader, ['files']),
+            'northsea_currents':(NorthSeaCurrentDataLoader, ['files']),
+            # TODO make it run from 'files'
+            'oras5_currents':   (ORAS5CurrentDataLoader, ['files']),
+            'sose':             (SOSEDataLoader, ['files'])
+
         }
         # If name is recognised as a dataloader
         if name in dataloader_requirements:
@@ -121,6 +120,8 @@ class DataLoaderFactory:
                 Dictionary of attributes the dataloader will require, 
                 completed with default values if not provided in config.
         '''
+        # Save dataloader name in params
+        params['dataloader_name'] = name
         
         if 'downsample_factors' not in params:
             params['downsample_factors'] = (1,1)
@@ -134,7 +135,25 @@ class DataLoaderFactory:
         if 'min_dp' not in params:
             params['min_dp'] = min_dp
             
-        # Set defaults for abstract shape generators
+        if 'in_proj' not in params:
+            params['in_proj'] = 'EPSG:4326'
+            
+        if 'out_proj' not in params:
+            params['out_proj'] = 'EPSG:4326'
+            
+        if 'x_col' not in params:
+            params['x_col'] = 'lat'
+
+        if 'y_col' not in params:
+            params['y_col'] = 'long'
+            
+        if 'file' in params:
+            params['files'] = [params['file']]
+        elif 'folder' in params:
+            folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existant
+            params['files'] = sorted(glob(folder+'*'))
+            
+        # Set defaults for abstract data generators
         if name in ['circle', 'checkerboard', 'gradient']:
             params = self.set_default_shape_params(name, params)
         
@@ -244,11 +263,3 @@ class DataLoaderFactory:
                 params['vec_y'] = 'vC'
                 
         return params
-
-if __name__ == '__main__':
-    from polar_route.mesh_generation.boundary import Boundary
-    
-    bounds = Boundary([-10,10],[-10,10],['2000-01-01', '2000-01-31'])
-    
-    scalar = DataLoaderFactory().get_dataloader('scalar_grf', bounds, {})
-    print()
