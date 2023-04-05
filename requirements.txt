@@ -1,3 +1,4 @@
+dask
 folium
 geopandas
 matplotlib
