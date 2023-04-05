@@ -1032,7 +1032,7 @@ class NewtonianCurve:
 
 
 
-    def _mergePoint(self,merge_distance = 1e-4):
+    def _mergePoint(self,merge_distance = 1e-12):
         '''
             Merging two points into a corner case if their distance is small enough.
         '''
@@ -1448,9 +1448,9 @@ class NewtonianCurve:
             org_variables = self.objective_function(self.org_points)
             new_variables = self.objective_function(self.horshoe_points)
 
-            self._horshoe_percentage_improvement = ((new_variables[self.objective_func]['path_values'][-1] - org_variables[self.objective_func]['path_values'][-1])/org_variables[self.objective_func]['path_values'][-1])*100
+            self._horshoe_percentage_improvement = np.max([row['cellStart']['SIC'] for idx,row in self.horshoe_points.iterrows()]) < (np.max([row['cellStart']['SIC'] for idx,row in self.org_points.iterrows()])+10)
 
-            if self._horshoe_percentage_improvement > 0:
+            if self._horshoe_percentage_improvement:
                 horeshoe_points     = self.horshoe_points[['cx','cy']].iloc[1:-1].to_numpy()
                 same_horseshoes_num = count_similarities(horeshoe_points.tolist(),self.previous_horeshoes)
                 if same_horseshoes_num <=3:
