@@ -1,11 +1,11 @@
-from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
+from polar_route.dataloaders.scalar.abstract_scalar import ScalarDataLoader
 from polar_route.utils import gaussian_random_field
 
 import logging
 import pandas as pd
 import numpy as np
 
-class VectorGRFDataLoader(VectorDataLoader):
+class ScalarGRFDataLoader(ScalarDataLoader):
     def import_data(self, bounds):
         '''
         Creates data in the form of a Gaussian Random Field
@@ -21,26 +21,44 @@ class VectorGRFDataLoader(VectorDataLoader):
                 defined in config
                 
         '''
-
-        def grf_to_vector(magnitudes, directions, min_val, max_val):
+    
+        def grf_to_binary(grf, threshold):
+            '''
+            Creates a mask out of a GRF if params specify a binary output
+            '''
+            # Cast all above threshold to 1, below to 0
+            grf[grf >= threshold] = 1.0
+            grf[grf <  threshold] = 0.0
+            # Cast 0/1 to False/True
+            grf = (grf == True)
+            return grf
+        
+        def grf_to_scalar(grf, threshold, min_val, max_val):
+            # Bound GRF to threshold limits
+            grf[grf <  threshold[0]] = threshold[0]
+            grf[grf >= threshold[1]] = threshold[1]
+            # Renormalise the GRF
+            grf = grf - np.min(grf)
+            grf = grf/(np.max(grf)-np.min(grf))
             # Scale to max/min
-            magnitudes = magnitudes * (max_val - min_val) + min_val
+            grf = grf * (max_val - min_val) + min_val
             
-            dy = np.cos(directions) * magnitudes
-            dx = np.sin(directions) * magnitudes
-            
-            return dx, dy
+            return grf
         
         # Set seed for generation. If not specified, will be 'random'
         np.random.seed(self.seed)
         
-        # Create a GRF of magnitudes and angles
-        magnitudes = gaussian_random_field(self.size, self.alpha)
-        directions = gaussian_random_field(self.size, self.alpha)
-        directions = np.radians(360*directions)
+        # Create a GRF
+        grf = gaussian_random_field(self.size, self.alpha)
         
-        vec_x, vec_y = grf_to_vector(magnitudes, directions, self.min, self.max)
-        
+        # Set it to a binary mask if chosen in config
+        if self.binary == True:
+            grf = grf_to_binary(grf, self.threshold)
+        # Set it to scalar GRF field if chosen in config
+        else:
+            grf = grf_to_scalar(grf, self.threshold, self.min, self.max)
+            # Scale with multiplier and offset
+            grf = self.multiplier * grf + self.offset
     
         # Set up domain of field
         lat_array = np.linspace(bounds.get_lat_min(), 
@@ -53,8 +71,7 @@ class VectorGRFDataLoader(VectorDataLoader):
 
         # Create an entry for each row in final dataframe
         rows = [
-            {'lat': latv[i,j], 'long': longv[i,j], 
-             self.vec_x: vec_x[i,j], self.vec_y: vec_y[i,j]}
+            {'lat': latv[i,j], 'long': longv[i,j], 'data': grf[i,j]}
             for i in range(self.size) 
             for j in range(self.size)
             ]

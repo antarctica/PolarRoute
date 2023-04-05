@@ -1,22 +1,22 @@
 from polar_route.dataloaders.scalar.amsr import AMSRDataLoader
-from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
-from polar_route.dataloaders.scalar.bsoseDepth import BSOSEDepthDataLoader
-from polar_route.dataloaders.scalar.bsoseSeaIce import BSOSESeaIceDataLoader
-from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.bsose_depth import BSOSEDepthDataLoader
+from polar_route.dataloaders.scalar.bsose_sea_ice import BSOSESeaIceDataLoader
+from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
 from polar_route.dataloaders.scalar.gebco import GEBCODataLoader
 from polar_route.dataloaders.scalar.icenet import IceNetDataLoader
 from polar_route.dataloaders.scalar.modis import MODISDataLoader
-from polar_route.dataloaders.scalar.scalarCSV import ScalarCSVDataLoader
-from polar_route.dataloaders.scalar.scalarGRF import ScalarGRFDataLoader
+from polar_route.dataloaders.scalar.scalar_csv import ScalarCSVDataLoader
+from polar_route.dataloaders.scalar.scalar_grf import ScalarGRFDataLoader
 from polar_route.dataloaders.scalar.shape import ShapeDataLoader
 
-from polar_route.dataloaders.vector.balticCurrent import BalticCurrentDataLoader
-from polar_route.dataloaders.vector.era5Wind import ERA5WindDataLoader
-from polar_route.dataloaders.vector.northSeaCurrent import NorthSeaCurrentDataLoader
-from polar_route.dataloaders.vector.oras5Current import ORAS5CurrentDataLoader
+from polar_route.dataloaders.vector.baltic_current import BalticCurrentDataLoader
+from polar_route.dataloaders.vector.era5_wind import ERA5WindDataLoader
+from polar_route.dataloaders.vector.north_sea_current import NorthSeaCurrentDataLoader
+from polar_route.dataloaders.vector.oras5_current import ORAS5CurrentDataLoader
 from polar_route.dataloaders.vector.sose import SOSEDataLoader
-from polar_route.dataloaders.vector.vectorCSV import VectorCSVDataLoader
-from polar_route.dataloaders.vector.vectorGRF import VectorGRFDataLoader
+from polar_route.dataloaders.vector.vector_csv import VectorCSVDataLoader
+from polar_route.dataloaders.vector.vector_grf import VectorGRFDataLoader
 
 from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
@@ -37,8 +37,11 @@ class DataLoaderFactory:
         Args:
             name (str): 
                 Name of data source/type. Must be one of following - 
-                'GEBCO','AMSR','SOSE','thickness','density',
-                'GRFScalar','GRFVector','GRFMask'
+                'scalar_csv', 'scalar_grf', 'binary_grf', 'amsr', 'bsose_sic',
+                'bsose_depth', 'baltic_sic', 'gebco', 'icenet', 'modis', 
+                'thickness', 'density', 'circle', 'square', 'gradient',
+                'checkerboard', 'vector_csv', 'vector_grf', 'baltic_currents',
+                'era5_wind', 'northsea_currents', 'oras5_currents', 'sose'
             bounds (Boundary): 
                 Boundary object with initial mesh space&time limits
             params (dict): 

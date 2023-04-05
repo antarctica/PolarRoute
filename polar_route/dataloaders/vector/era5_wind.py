@@ -1,4 +1,4 @@
-from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
+from polar_route.dataloaders.vector.abstract_vector import VectorDataLoader
 
 import logging
 
@@ -25,9 +25,6 @@ class ERA5WindDataLoader(VectorDataLoader):
         # Change column names
         data = data.rename({'latitude': 'lat',
                             'longitude': 'long'})
-
-        # TODO Remove this temp fix
-        data = data.assign(time= data['time'] + pd.Timedelta(days=365*2))
 
         # Set min time to start of month to ensure we include data as only have
         # monthly cadence. Assuming time is in str format
