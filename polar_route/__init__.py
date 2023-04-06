@@ -8,5 +8,4 @@ __copyright__ = "2022, BAS AI Lab"
 from polar_route.mesh_generation.mesh_builder import MeshBuilder as MeshBuilder
 from polar_route.dataloaders.factory import DataLoaderFactory as DataLoaderFactory
 
-from polar_route.vessel_performance.vessel_factory import VesselFactory as VesselFactory
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller as VesselPerformanceModeller
