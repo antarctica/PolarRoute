@@ -91,7 +91,6 @@ class EnvironmentMesh:
         bounds = Boundary.from_json(config)
         # load the agg_cellboxes
         for cellbox_json in cellboxes_json:
-            print(cellbox_json)
             agg_cellbox = AggregatedCellBox.from_json(cellbox_json)
             agg_cellboxes.append(agg_cellbox)
         neighbour_graph = NeighbourGraph.from_json(

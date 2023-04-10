@@ -38,7 +38,7 @@ class TestBoundary (unittest.TestCase):
 
    def test_load_from_json (self):
       
-      json_file = "../regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json"
+      json_file = "../regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json"
       with open (json_file , "r") as config_file:
           config = json.load(config_file) ['config']
           boundary = Boundary.from_json (config)

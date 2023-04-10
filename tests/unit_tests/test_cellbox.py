@@ -1,7 +1,7 @@
 
 import unittest
 from polar_route.mesh_generation.metadata import Metadata
-from polar_route.Dataloaders.Factory import DataLoaderFactory
+from polar_route.dataloaders.factory import DataLoaderFactory
 from polar_route.mesh_generation.cellbox import CellBox
 
 from polar_route.mesh_generation.boundary import Boundary

@@ -463,17 +463,4 @@ class MeshBuilder:
         return self.config
 
 
-if __name__ == '__main__':
-    import time
-    start = time.time()
-    conf = None
-    with open("feb_2013_Jgrid_config.json", "r") as config_file:
-        conf = json.load(config_file)['config']
 
-    mesh_builder = MeshBuilder(conf)
-    env_mesh = mesh_builder.build_environmental_mesh()
-    print(conf)
-    env_mesh.save ("feb_2013_Jgrid_output.json")
-    end = time.time()
-    elapsed_seconds = float("%.2f" % (end - start))
-    print(elapsed_seconds)

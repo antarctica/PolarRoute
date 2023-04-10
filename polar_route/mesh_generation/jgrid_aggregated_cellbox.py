@@ -86,10 +86,10 @@ class JGridAggregatedCellBox (AggregatedCellBox):
         value = self.agg_data ['SIC']      
         number_of_points = self.agg_data["SIC_COUNT"]
         if value != None:
-            ice_area = value
+            ice_area = value 
       
-        uc = self.agg_data['uC']
-        vc = self.agg_data['vC']
+        uc = self.agg_data['uC']*3.6  #unit conversion to match the Java code
+        vc = self.agg_data['vC']*3.6 #unit conversion to match the Java code 
 
         mesh_dump += str(ice_area) + "; "  # add ice area
         # add uc, uv

@@ -2,7 +2,7 @@
 import unittest
 import json
 from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
-from PolarRoute.polar_route.mesh_builder import MeshBuilder
+from polar_route.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
 from polar_route.mesh_generation.boundary import Boundary
@@ -10,7 +10,7 @@ class TestEnvMesh(unittest.TestCase):
    def setUp(self):
       self.config = None
       self.env_mesh = None
-      self.json_file = "../regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80_new_format.json"
+      self.json_file = "../regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json"
       with open (self.json_file , "r") as config_file:
           self.config = json.load(config_file) ['config']
           self.env_mesh = MeshBuilder(self.config).build_environmental_mesh()
