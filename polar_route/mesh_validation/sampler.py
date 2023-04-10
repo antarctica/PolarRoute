@@ -1,5 +1,6 @@
-import sobol
-import numpy
+import math
+from scipy.stats import qmc
+import numpy as np
 
 class Sampler:
 
@@ -10,19 +11,15 @@ class Sampler:
 
 
     def generate_samples ( self, ranges):
-        samples = sobol.sample(dimension=self.dimensions, n_points=self.number_of_samples)
+        sampler =  qmc.Sobol(d=self.dimensions)
+        n_points_log_2= int (math.log2(self.number_of_samples))
+        samples = sampler.random_base2(m=n_points_log_2)
         mapped_samples = []
         # map samples to ranges
         for sample in samples:
             for i in range (len(ranges)):
                 mapped_samples. append (ranges [i] [0] + sample[i]* (ranges[i] [1] - ranges [i][0]))
-        return numpy.array(mapped_samples).reshape ( len (samples), len(ranges))
+        return np.array(mapped_samples).reshape ( len (samples), len(ranges))
+        
         
        
-
-if __name__=='__main__':
-    sampler = Sampler()
-    sampler.generate_samples(2,3)
-    ranges = [[10,20] , [100,200]]
-    sampler.map_samples_to_range(ranges)
-    print (sampler.mapped_samples)

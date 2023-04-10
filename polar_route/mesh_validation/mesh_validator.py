@@ -1,13 +1,15 @@
 
 
-from polar_route.mesh_validation.Sampler import Sampler
+from polar_route.mesh_validation.sampler import Sampler
 
-import xarray as xr
-from polar_route.MeshBuilder import MeshBuilder
-from polar_route.mesh import Mesh
+
+from polar_route.mesh_generation.mesh_builder import MeshBuilder
+from polar_route.mesh_generation.mesh import Mesh
 import numpy as np
 import json
-from polar_route.Boundary import Boundary
+import math
+import logging
+from polar_route.mesh_generation.boundary import Boundary
 from sklearn.metrics import mean_squared_error
 class MeshValidator:
 
@@ -22,7 +24,7 @@ class MeshValidator:
         mesh_builder = MeshBuilder (self.conf)
         self.env_mesh =  mesh_builder.build_environmental_mesh()
         self.mesh = mesh_builder.mesh
-        # self.mesh = mesh_builder.mesh
+
     
        
 
@@ -37,13 +39,10 @@ class MeshValidator:
         mesh_value = np.array([])
         for sample in samples:
            actual_value =  np.append (actual_value ,self.get_value_from_data (sample))
-           mesh_value =  np.append ( mesh_value ,self.get_values_from_mesh(sample))
-        # print (actual_value)
-        # print (mesh_value)
-            
+           mesh_value =  np.append ( mesh_value ,self.get_values_from_mesh(sample))  
         # calculate the RMSE over the samples.
-        MSE = mean_squared_error(actual_value,mesh_value)
-        return MSE
+        distance = math.sqrt (mean_squared_error(actual_value,mesh_value))
+        return distance
     
 
     def get_value_from_data (self , sample):
@@ -55,9 +54,8 @@ class MeshValidator:
         for source in self.mesh.cellboxes[0].get_data_source():
             data_loader = source.get_data_loader() 
             dp = data_loader.get_datapoints( Boundary (lat_range , long_range , time_range))
-            # print (">>> data values >>> " , dp)
             values = np.append (values , dp)
-        print ("values >>> " , values)
+        logging.info("values from data are: {}".format(' '.join(map(str, values))))
         return values
 
     def get_range_end(self, sample):
@@ -90,8 +88,8 @@ class MeshValidator:
                         if agg_cellbox.contains_point(lat , long):
                              values = np.append ( values , agg_cellbox.agg_data [data_loader.data_name] )#get the agg_value 
                              break  # break to make sure we avoid getting multiple values (for lat and long on bounds of multiple cellboxes)
-
-            print ("values from mesh  >>> " , values)
+            logging.info("values from mesh are: {}".format(' '.join(map(str, values))))
+         
             return values
     
 
