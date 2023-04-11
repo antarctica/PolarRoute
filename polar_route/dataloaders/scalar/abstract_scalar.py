@@ -514,7 +514,7 @@ class ScalarDataLoader(DataLoaderInterface):
             agg_type = self.aggregate_type
         
         # If no downsampling
-        if self.downsample_factors == (1,1):
+        if self.downsample_factors == (1,1) :
             logging.debug("- self.downsample() called but don't have to")
             return self.data
         else:

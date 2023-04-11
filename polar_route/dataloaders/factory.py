@@ -127,7 +127,7 @@ class DataLoaderFactory:
         params['dataloader_name'] = name
         
         if 'downsample_factors' not in params:
-            params['downsample_factors'] = (1,1)
+            params['downsample_factors'] = [1,1]
 
         if 'data_name' not in params:
             params['data_name'] = None
