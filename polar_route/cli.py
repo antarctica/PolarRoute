@@ -8,6 +8,7 @@ from polar_route.utils import setup_logging, timed_call
 from polar_route.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 from polar_route.route_planner import RoutePlanner
+from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
 
 
 @setup_logging
@@ -15,7 +16,8 @@ def get_args(
         default_output: str,
         config_arg: bool = True,
         mesh_arg: bool = False,
-        waypoints_arg: bool = False):
+        waypoints_arg: bool = False,
+        format_arg: bool = False):
     """
     Adds required command line arguments to all CLI entry points.
 
@@ -63,6 +65,11 @@ def get_args(
                         default=False,
                         action = "store_true",
                         help="output only the calculated paths")
+        
+    if format_arg:
+        ap.add_argument("format",
+                        help = "Export format to transform a mesh into. Supported \
+                        formats are JSON, GEOJSON")
 
 
     return ap.parse_args()
@@ -139,3 +146,27 @@ def optimise_routes_cli():
         if args.dijkstra:
              json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
         json.dump(info, open(args.output, "w"))
+
+@timed_call
+def export_mesh_cli():
+    """
+        CLI entry point for exporting a mesh to standard formats.
+    """
+    print("test tit")
+    args = get_args("export_mesh.output.json", 
+                    config_arg = False, mesh_arg = True, format_arg = True)
+    
+    print(f" Mesh arg = {args.mesh}, format arg = {args.format}")
+    
+    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
+
+    
+
+    mesh = json.load(args.mesh)
+
+    env_mesh = EnvironmentMesh.load_from_json(mesh)
+
+    logging.info(f"exporting mesh to {args.output} in format {args.format}")
+    env_mesh.save(args.output, args.format)
+
+
