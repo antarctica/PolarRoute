@@ -206,11 +206,19 @@ class EnvironmentMesh:
         else:
             raise ValueError(f'Invalid cellbox index')
 
-    def save(self, path):
+    def save(self, path, format="JSON"):
 
         logging.info(f"- saving the environment mesh to {path}")
         with open(path, 'w') as f:
-            json.dump(self.to_json(), f)
+            if format.upper() == "JSON":
+                logging.info(f"Saving mesh in {format} format")
+                json.dump(self.to_json(), f)
+            elif format.upper() == "GEOJSON":
+                logging.info(f"Saving mesh in {format} format")
+                json.dump(self.to_geojson(), f)
+            else:
+                logging.warning(f"Cannot save mesh in a {format} format")
+
             if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
                dump_path = path.replace (".json" , ".dump")
                with open(dump_path, 'w') as dump_f:
