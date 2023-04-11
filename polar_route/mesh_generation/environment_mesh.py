@@ -207,6 +207,18 @@ class EnvironmentMesh:
             raise ValueError(f'Invalid cellbox index')
 
     def save(self, path, format="JSON"):
+        """
+            Saves this object to a location in local storage. 
+
+            Args:
+                path (String): The file location the mesh will be saved to.
+                format (String) (optional): The format the mesh will be saved in.
+                    If not format is given, default is JSON.
+                    Supported formats are:
+                        JSON
+                        GEOJSON
+        """
+        
 
         logging.info(f"- saving the environment mesh to {path}")
         with open(path, 'w') as f:
