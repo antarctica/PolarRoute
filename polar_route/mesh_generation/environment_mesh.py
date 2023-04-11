@@ -1,5 +1,10 @@
 import json
 import logging
+import geopandas as gpd
+import pandas as pd
+from shapely import wkt
+
+
 from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
 from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
@@ -128,6 +133,31 @@ class EnvironmentMesh:
         output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
         return json.loads(json.dumps(output))
+    
+    def to_geojson(self):
+        """
+            Returns the cellboxes of this mesh converted to a geoJSON format.
+
+            Returns:
+                geojson: The cellboxes of this mesh in a geoJSON format
+
+            NOTE:
+                geoJSON format does not contain all the data included in the standard 
+                .to_json() format. geoJSON meshes do not contain the configs used to 
+                build them, or the neighbour-graph which details how each of the 
+                cellboxes are connected together.
+        """
+        geojson = ""
+        mesh_json = self.to_json()
+
+        # Formatting mesh to geoJSON
+        mesh_df = pd.DataFrame(mesh_json['cellboxes'])
+        mesh_df['geometry'] = mesh_df['geometry'].apply(wkt.loads)
+        mesh_gdf = gpd.GeoDataFrame(mesh_df, crs = "EPSG:4326", geometry="geometry")
+        geojson = json.loads(mesh_gdf.to_json())
+
+        return geojson
+        
 
     def cellboxes_to_json(self):
         """
