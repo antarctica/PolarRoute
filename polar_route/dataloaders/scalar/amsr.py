@@ -1,4 +1,4 @@
-from polar_route.dataloaders.scalar.abstractScalar import ScalarDataLoader
+from polar_route.dataloaders.scalar.abstract_scalar import ScalarDataLoader
 from datetime import datetime
 
 import xarray as xr

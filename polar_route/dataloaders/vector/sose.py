@@ -1,4 +1,4 @@
-from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
+from polar_route.dataloaders.vector.abstract_vector import VectorDataLoader
 
 import xarray as xr
 

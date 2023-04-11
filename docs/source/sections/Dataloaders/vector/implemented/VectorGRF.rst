@@ -33,6 +33,6 @@ For scalar fields, see  the :ref:`Vector GRF page<scalar-grf>`.
 
 The dataloader is implemented as follows:
 
-.. automodule:: polar_route.dataloaders.vector.vectorGRF
+.. automodule:: polar_route.dataloaders.vector.vector_grf
    :special-members: __init__
    :members:

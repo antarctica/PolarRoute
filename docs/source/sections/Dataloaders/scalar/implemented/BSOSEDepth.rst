@@ -17,6 +17,6 @@ Data can be downloaded from `here <http://sose.ucsd.edu/BSOSE_iter105_solution.h
 Note: This dataloader may not work as is for new data downloaded, it has been internally collated into 
 a more easily ingestable format.
 
-.. automodule:: polar_route.dataloaders.scalar.bsoseDepth
+.. automodule:: polar_route.dataloaders.scalar.bsose_depth
    :special-members: __init__
    :members:

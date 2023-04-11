@@ -1,13 +1,15 @@
-from polar_route.dataloaders.vector.abstractVector import VectorDataLoader
+from polar_route.dataloaders.vector.abstract_vector import VectorDataLoader
 
 import logging
- 
-import xarray as xr
 
-class BalticCurrentDataLoader(VectorDataLoader):
+import xarray as xr
+import numpy as np
+
+#TODO Read in 2 files, combine to one object
+class ORAS5CurrentDataLoader(VectorDataLoader):
     def import_data(self, bounds):
         '''
-        Reads in data from a BSOSE Depth NetCDF file. 
+        Reads in data from a ORAS5 Depth NetCDF files. 
         Renames coordinates to 'lat' and 'long', and renames variable to 
         'uC, vC'
         
@@ -16,18 +18,21 @@ class BalticCurrentDataLoader(VectorDataLoader):
             
         Returns:
             xr.Dataset: 
-                Baltic currents dataset within limits of bounds. 
+                ORAS5 currents dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', and variable 'uC', 'vC'
         '''
         # Open Dataset
         data = xr.open_mfdataset(self.files)
+        
         # Change column names
-        data = data.rename({'latitude': 'lat',
-                            'longitude': 'long',
+        data = data.rename({'nav_lon': 'long',
+                            'nav_lat': 'lat',
                             'uo': 'uC',
                             'vo': 'vC'})
+        # Limit to just these coords and variables
+        data = data[['lat','long','uC','vC']]
         
-        # Trim to initial datapoints
+        # Limit to initial boundary
         data = self.trim_datapoints(bounds, data=data)
         
         return data

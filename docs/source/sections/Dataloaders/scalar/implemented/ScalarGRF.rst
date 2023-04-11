@@ -41,6 +41,6 @@ the min and max are
 
 The dataloader is implemented as follows:
 
-.. automodule:: polar_route.dataloaders.scalar.scalarGRF
+.. automodule:: polar_route.dataloaders.scalar.scalar_grf
    :special-members: __init__
    :members:

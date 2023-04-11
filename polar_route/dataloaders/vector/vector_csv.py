@@ -1,8 +1,10 @@
-from polar_route.dataloaders.scalar.abstractScalar import ScalarDataLoader
+from polar_route.dataloaders.vector.abstract_vector import VectorDataLoader
+
+import logging
 
 import dask as dd
 
-class ScalarCSVDataLoader(ScalarDataLoader):
+class VectorCSVDataLoader(VectorDataLoader):
     def import_data(self, bounds):
         '''
         Reads in data from a CSV file. 
@@ -12,7 +14,7 @@ class ScalarCSVDataLoader(ScalarDataLoader):
             
         Returns:
             pd.DataFrame: 
-                Scalar dataset within limits of bounds. 
+                Vector dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', potentially 'time',
                 and variable defined by column heading in csv file
         '''
