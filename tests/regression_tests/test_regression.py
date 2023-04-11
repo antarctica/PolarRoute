@@ -79,7 +79,7 @@ def test_env_mesh_neighbour_graph_ids(env_mesh_pair):
     compare_neighbour_graph_ids(env_mesh_pair[0], env_mesh_pair[1])
 
 def test_env_mesh_neighbour_graph_values(env_mesh_pair):
-    compare_neighbour_graph_count(env_mesh_pair[0], env_mesh_pair[1])
+    compare_neighbour_graph_values(env_mesh_pair[0], env_mesh_pair[1])
 
 # Testing Vessel Performances Meshes
 def test_vp_mesh_cellbox_count(vessel_mesh_pair):
@@ -101,7 +101,7 @@ def test_vp_mesh_neighbour_graph_ids(vessel_mesh_pair):
     compare_neighbour_graph_ids(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
 def test_vp_mesh_neighbour_graph_values(vessel_mesh_pair):
-    compare_neighbour_graph_count(vessel_mesh_pair[0], vessel_mesh_pair[1])
+    compare_neighbour_graph_values(vessel_mesh_pair[0], vessel_mesh_pair[1])
 
 # Testing Abstract Meshes
 def test_abstract_mesh_cellbox_count(abstract_mesh_pair):
@@ -123,7 +123,7 @@ def test_abstract_mesh_neighbour_graph_ids(abstract_mesh_pair):
     compare_neighbour_graph_ids(abstract_mesh_pair[0], abstract_mesh_pair[1])
 
 def test_abstract_mesh_neighbour_graph_values(abstract_mesh_pair):
-    compare_neighbour_graph_count(abstract_mesh_pair[0], abstract_mesh_pair[1])
+    compare_neighbour_graph_values(abstract_mesh_pair[0], abstract_mesh_pair[1])
 
 
 # Utility functions
@@ -373,7 +373,7 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
     regression_graph = mesh_a['neighbour_graph']
     new_graph = mesh_b['neighbour_graph']
 
-    mismatch_neighbors = dict()
+    mismatch_neighbours = dict()
 
     for node in regression_graph.keys():
         # Prevent crashing if node not found. 
@@ -382,8 +382,12 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
             neighbours_a = regression_graph[node]
             neighbours_b = new_graph[node]
 
-            if not neighbours_b == neighbours_a:
-                mismatch_neighbors[node] = neighbours_b
+            # Sort the lists of neighbours as ordering is not important
+            sorted_neighbours_a = {k:sorted(neighbours_a[k]) for k in neighbours_a.keys()}
+            sorted_neighbours_b = {k: sorted(neighbours_b[k]) for k in neighbours_b.keys()}
 
-    assert(len(mismatch_neighbors) == 0), \
-        f"Mismatch in neighbour graph neighbours. <{len(mismatch_neighbors.keys())}> nodes have changed in new mesh."
+            if not sorted_neighbours_b == sorted_neighbours_a:
+                mismatch_neighbours[node] = sorted_neighbours_b
+
+    assert(len(mismatch_neighbours) == 0), \
+        f"Mismatch in neighbour graph neighbours. <{len(mismatch_neighbours.keys())}> nodes have changed in the new mesh."
