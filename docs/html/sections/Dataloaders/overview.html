@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5. Dataloader Overview &mdash; polar_route 0.0.17 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="5.1. Dataloader Interface" href="DataLoaderInterface.html" />
+    <link rel="prev" title="4. Input - Configuration" href="../Configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running.html">3. Runnning Codebase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration.html">4. Input - Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">5. Dataloader Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="DataLoaderInterface.html">5.1. Dataloader Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Factory.html">5.2. Dataloader Factory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scalar/index.html">5.3. Scalar Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vector/index.html">5.4. Vector Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#section-overview">5.5. Section Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#implementing-new-dataloaders">5.5.1. Implementing New Dataloaders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dataloader-types">5.5.2. Dataloader Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#abstract-dataloaders">5.5.3. Abstract Dataloaders</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../Outputs.html">6. Outputs - Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Examples.html">7. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Route_optimisation.html">10. Methods - Route Planner</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">5. </span>Dataloader Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/sections/Dataloaders/overview.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dataloader-overview">
+<span id="dataloaders-overview"></span><h1><span class="section-number">5. </span>Dataloader Overview<a class="headerlink" href="#dataloader-overview" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="DataLoaderInterface.html">5.1. Dataloader Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Factory.html">5.2. Dataloader Factory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scalar/index.html">5.3. Scalar Dataloaders</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vector/index.html">5.4. Vector Dataloaders</a></li>
+</ul>
+</div>
+<section id="section-overview">
+<h2><span class="section-number">5.5. </span>Section Overview<a class="headerlink" href="#section-overview" title="Permalink to this heading"></a></h2>
+<p>In this section, we discuss the dataloader objects which retrieve data
+within a spatial (and optionally temporal) boundary for the Environmental Mesh.
+The dataloaders are responsible for transforming the raw data into a format
+that is interpretable by the mesh construction code. This may include reprojecting
+to mercator (EPSG:4326) projection, or downsampling to reduce the computing resources
+needed to process large datasets. Typically, raw data is stored as a NetCDF or CSV file,
+however this can be whatever the user needs, so long as they are cast into either
+<code class="code docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>’s or <code class="code docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>’s for the
+<a class="reference internal" href="#abstract-dataloaders">Abstract Dataloaders</a> to work with.</p>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="../../_images/DataloaderUML.png"><img alt="../../_images/DataloaderUML.png" src="../../_images/DataloaderUML.png" style="width: 700px;" /></a>
+<figcaption>
+<p><span class="caption-text"><em>UML Diagram detailing the dataloader subsystem</em></span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<section id="implementing-new-dataloaders">
+<h3><span class="section-number">5.5.1. </span>Implementing New Dataloaders<a class="headerlink" href="#implementing-new-dataloaders" title="Permalink to this heading"></a></h3>
+<p>Each dataloader is to be implemented as a separate object for the Environmental mesh to interface with.
+The general workflow for creating a new dataloader is as follows:</p>
+<ol class="arabic simple">
+<li><p>Choose an approriate dataloader type (see <a class="reference internal" href="#dataloader-types">Dataloader Types</a>).</p></li>
+<li><p>Create a new file under <code class="code docutils literal notranslate"><span class="pre">polar_route/DataLoaders/{dataloader-type}</span></code> with an appropriate name.</p></li>
+<li><p>Create <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code> and <code class="code docutils literal notranslate"><span class="pre">import_data()</span></code> methods. Examples of how to do this are shown on the <a class="reference internal" href="scalar/index.html#abstract-scalar-dataloader-index"><span class="std std-ref">abstractScalar</span></a> and <a class="reference internal" href="vector/index.html#abstract-vector-dataloader-index"><span class="std std-ref">abstractVector</span></a> pages.</p></li>
+<li><p>Add a new entry to the dataloader factory object, within <code class="code docutils literal notranslate"><span class="pre">polar_route/Dataloaders/Factory.py</span></code>. Instructions on how to do so are shown in <a class="reference internal" href="Factory.html#dataloader-factory"><span class="std std-ref">Dataloader Factory</span></a></p></li>
+</ol>
+<p>After performing these actions, the dataloader should be ready to go. It is useful for debugging purposes
+to create the dataloader object from within <code class="code docutils literal notranslate"><span class="pre">polar_route/Dataloaders/Factory.py</span></code> (e.g. within
+<code class="code docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__=='__main__':</span></code> ) and test its functionality before deploying it.</p>
+</section>
+<section id="dataloader-types">
+<h3><span class="section-number">5.5.2. </span>Dataloader Types<a class="headerlink" href="#dataloader-types" title="Permalink to this heading"></a></h3>
+<p>There are two main types of dataloaders that are implemented as abstract classes: Scalar and Vector.</p>
+<p><strong>Scalar dataloaders</strong> are to be used on scalar datasets; i.e. variables with a single value
+per latitude/longitude(/time) coordinate. Examples of this are bathymetry, sea ice concentration, etc…
+While the raw datasets may contain more than one variable (a common example being the existance of values and errors in the same file),
+these <em>MUST</em> be cut down to just coordinates, and a single variable, in order to work correctly with the <a class="reference internal" href="scalar/abstractScalar.html#abstract-scalar-dataloader"><span class="std std-ref">abstractScalar</span></a> dataloader.
+To read more on how to implement these, follow instructions in <a class="reference internal" href="#implementing-new-dataloaders">Implementing New Dataloaders</a> and the <a class="reference internal" href="scalar/index.html#abstract-scalar-dataloader-index"><span class="std std-ref">abstract scalar dataloader page</span></a>.</p>
+<p><strong>Vector dataloaders</strong> are to be used on vector datasets; i.e. variables with multi-dimensional values
+per latitude/longitude(/time) coordinate. Examples of this are ocean currents,
+wind, etc… The datasets will have multiple data variables, and should be cut down to include only coordinates (‘lat’, ‘long’,
+and optionally ‘time’), and the values for each dimensional component of the variable. This will generally be two dimensions,
+however the <a class="reference internal" href="vector/abstractVector.html#abstract-vector-dataloader"><span class="std std-ref">abstractVector</span></a> dataloader should be flexible to n-dimensional data.
+Rigor should be taken when testing these dataloaders to ensure that the outputs of <code class="code docutils literal notranslate"><span class="pre">get_value()</span></code> method of these dataloaders produces outputs that make sense.
+To read more on how to implement these, follow instructions in <a class="reference internal" href="#implementing-new-dataloaders">Implementing New Dataloaders</a> and <a class="reference internal" href="vector/index.html#abstract-vector-dataloader-index"><span class="std std-ref">abstract vector dataloader page</span></a>.</p>
+</section>
+<section id="abstract-dataloaders">
+<h3><span class="section-number">5.5.3. </span>Abstract Dataloaders<a class="headerlink" href="#abstract-dataloaders" title="Permalink to this heading"></a></h3>
+<p>To look at specific abstract dataloaders, use the following links:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="scalar/abstractScalar.html#abstract-scalar-dataloader"><span class="std std-ref">Abstract Scalar Dataloader</span></a></p></li>
+<li><p><a class="reference internal" href="vector/abstractVector.html#abstract-vector-dataloader"><span class="std std-ref">Abstract Vector Dataloader</span></a></p></li>
+</ul>
+<p>These are the templates to be used when implementing new dataloaders into PolarRoute.
+They have been split into two seperate categories: Scalar and Vector, detailed in <a class="reference internal" href="#dataloader-types">Dataloader Types</a>.
+The abstract classes generalise the methods used by each dataloader type to produce outputs
+that the Environmental Mesh can retrieve via the  <a class="reference internal" href="DataLoaderInterface.html#dataloader-interface"><span class="std std-ref">dataloader interface</span></a>.
+They are flexible in that they can store and process data as both <code class="code docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code>’s or
+<code class="code docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>’s.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Configuration.html" class="btn btn-neutral float-left" title="4. Input - Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="DataLoaderInterface.html" class="btn btn-neutral float-right" title="5.1. Dataloader Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

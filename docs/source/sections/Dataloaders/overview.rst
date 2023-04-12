@@ -93,5 +93,16 @@ These are the templates to be used when implementing new dataloaders into PolarR
 They have been split into two seperate categories: Scalar and Vector, detailed in `Dataloader Types`_.
 The abstract classes generalise the methods used by each dataloader type to produce outputs
 that the Environmental Mesh can retrieve via the  :ref:`dataloader interface<dataloader-interface>`. 
-They are flexible in that they can store and process data as both :code:`pandas.DataFrame`'s or 
-:code:`xarray.Dataset`'s.
+They are flexible in that they can store and process data as both :code:`xarray.Dataset`'s or 
+:code:`pandas.DataFrame`'s (and by extension, :code:`dask.DataFrames`'s). 
+When creating your own, :code:`dask` and :code:`xarray` should be utilised as much as possible to 
+reduce memory consumption.
+
+Both abstract base classes define the :code:`__init__()` function to have the following process:
+
+#. Read in params from config
+#. Add params from :code:`self.add_params()`, defined by user when creating a dataloader
+#. Downsample data if required and if loaded as :code:`xarray.Dataset`
+#. Reproject data if required
+#. Trim datapoints to initial boundary
+#. Rename data column name if defined in params

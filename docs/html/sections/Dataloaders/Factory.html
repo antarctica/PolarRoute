@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5.2. Dataloader Factory &mdash; polar_route 0.0.17 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="5.3. Scalar Dataloaders" href="scalar/index.html" />
+    <link rel="prev" title="5.1. Dataloader Interface" href="DataLoaderInterface.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running.html">3. Runnning Codebase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Configuration.html">4. Input - Configuration</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="overview.html">5. Dataloader Overview</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="DataLoaderInterface.html">5.1. Dataloader Interface</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">5.2. Dataloader Factory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#adding-new-dataloader-to-factory">5.2.1. Adding New Dataloader to Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">5.2.2. Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.dataloaders.factory">5.2.3. Dataloader Factory Object</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.dataloaders.factory.DataLoaderFactory"><code class="docutils literal notranslate"><span class="pre">DataLoaderFactory</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scalar/index.html">5.3. Scalar Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vector/index.html">5.4. Vector Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#section-overview">5.5. Section Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../Outputs.html">6. Outputs - Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Examples.html">7. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Route_optimisation.html">10. Methods - Route Planner</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="overview.html"><span class="section-number">5. </span>Dataloader Overview</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">5.2. </span>Dataloader Factory</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/sections/Dataloaders/Factory.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="dataloader-factory">
+<span id="id1"></span><h1><span class="section-number">5.2. </span>Dataloader Factory<a class="headerlink" href="#dataloader-factory" title="Permalink to this heading"></a></h1>
+<p>The dataloader factory produces dataloader objects based off of parameter
+inputs provided in the config file. The parameters needed in the config are
+defined in the <code class="code docutils literal notranslate"><span class="pre">get_dataloader()</span></code> method of the factory. At the very
+least, a name must be provided to select the dataloader from all those that
+are available.</p>
+<section id="adding-new-dataloader-to-factory">
+<h2><span class="section-number">5.2.1. </span>Adding New Dataloader to Factory<a class="headerlink" href="#adding-new-dataloader-to-factory" title="Permalink to this heading"></a></h2>
+<p>Two actions must be performed to add a new dataloader to the Factory object.
+Optionally, a third may be added if you want to add a new default value for
+a parameter the dataloader requires. The actions are:</p>
+<ol class="arabic simple">
+<li><p>Import the dataloader</p></li>
+<li><p>Add an entry to the <code class="code docutils literal notranslate"><span class="pre">dataloader_requirements</span></code> dictionary</p></li>
+<li><p>(OPTIONAL) Add a default value to <code class="code docutils literal notranslate"><span class="pre">set_default_params()</span></code></p></li>
+</ol>
+</section>
+<section id="example">
+<h2><span class="section-number">5.2.2. </span>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h2>
+<p>In this example, a new scalar dataloader <cite>myScalarDataloader</cite> has been created, and
+is located at <code class="code docutils literal notranslate"><span class="pre">polar_route/Dataloaders/Scalar/myScalarDataloader.py</span></code>.
+The only parameter required by this dataloader is a file to read data from:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add new import statement for Factory to read</span>
+<span class="kn">from</span> <span class="nn">polar_route.Dataloaders.Scalar.myScalarDataloader</span> <span class="kn">import</span> <span class="n">myScalarDataloader</span>
+
+<span class="o">...</span>
+
+<span class="k">class</span> <span class="nc">DataLoaderFactory</span><span class="p">:</span>
+   <span class="o">...</span>
+   <span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">min_dp</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+      <span class="o">...</span>
+      <span class="n">dataloader_requirements</span> <span class="o">=</span> <span class="p">{</span>
+         <span class="o">...</span>
+         <span class="c1"># Add new dataloader</span>
+         <span class="s1">&#39;myscalar&#39;</span><span class="p">:</span>    <span class="p">(</span><span class="n">myScalarDataloader</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">])</span>
+         <span class="o">...</span>
+      <span class="o">...</span>
+   <span class="o">...</span>
+</pre></div>
+</div>
+<p>To call this dataloader, add an entry in the <code class="code docutils literal notranslate"><span class="pre">config.json</span></code>
+file used to generate the mesh:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+      <span class="s2">&quot;loader&quot;</span><span class="p">:</span> <span class="s2">&quot;myscalar&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="s2">&quot;PATH_TO_DATA_FILE&quot;</span><span class="p">,</span>
+      <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="module-polar_route.dataloaders.factory">
+<span id="dataloader-factory-object"></span><h2><span class="section-number">5.2.3. </span>Dataloader Factory Object<a class="headerlink" href="#module-polar_route.dataloaders.factory" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="polar_route.dataloaders.factory.DataLoaderFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.dataloaders.factory.</span></span><span class="sig-name descname"><span class="pre">DataLoaderFactory</span></span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory" title="Permalink to this definition"></a></dt>
+<dd><p>Produces initialised DataLoader objects that can be used by the mesh to
+quickly retrieve values within a boundary.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.dataloaders.factory.DataLoaderFactory.get_dataloader">
+<span class="sig-name descname"><span class="pre">get_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory.get_dataloader" title="Permalink to this definition"></a></dt>
+<dd><p>Creates appropriate dataloader object based on name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of data source/type. Must be one of following -
+‘GEBCO’,’AMSR’,’SOSE’,’thickness’,’density’,
+‘GRFScalar’,’GRFVector’,’GRFMask’</p></li>
+<li><p><strong>bounds</strong> (<em>Boundary</em>) – Boundary object with initial mesh space&amp;time limits</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of parameters required by each dataloader</p></li>
+<li><p><strong>min_dp</strong> (<em>int</em>) – Minimum datapoints required to get homogeneity condition</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataLoader object of correct type, with required params set</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(Scalar/Vector/LUT DataLoader)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.dataloaders.factory.DataLoaderFactory.set_default_params">
+<span class="sig-name descname"><span class="pre">set_default_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory.set_default_params" title="Permalink to this definition"></a></dt>
+<dd><p>Set default values for all dataloaders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of dataloader entry in dataloader_requirements. Used to
+specify default parameters for a specific dataloader.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary containing attributes that are required for each
+dataloader.</p></li>
+<li><p><strong>min_dp</strong> (<em>int</em>) – Minimum number of datapoints required to return a homogeneity
+condition. Passed in here so it can be added to params</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of attributes the dataloader will require,
+completed with default values if not provided in config.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.dataloaders.factory.DataLoaderFactory.set_default_shape_params">
+<span class="sig-name descname"><span class="pre">set_default_shape_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory.set_default_shape_params" title="Permalink to this definition"></a></dt>
+<dd><p>Set default values for abstract shape dataloaders. This function is
+seperated out from set_default_params() simply to reduce cognitive
+complexity, but is otherwise in the same format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of shape entry in dataloader_requirements. Used to
+specify default parameters for the shape dataloader.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionary containing attributes that are required for the
+shape being loaded.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary of attributes the dataloader will require,
+completed with default values if not provided in config.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="DataLoaderInterface.html" class="btn btn-neutral float-left" title="5.1. Dataloader Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="scalar/index.html" class="btn btn-neutral float-right" title="5.3. Scalar Dataloaders" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

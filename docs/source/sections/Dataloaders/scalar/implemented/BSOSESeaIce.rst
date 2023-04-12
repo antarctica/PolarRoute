@@ -17,6 +17,6 @@ Note: This dataloader may not work as is for new data downloaded, it has been in
 a more easily ingestable format.
 
 
-.. automodule:: polar_route.dataloaders.scalar.bsoseSeaIce
+.. automodule:: polar_route.dataloaders.scalar.bsose_sea_ice
    :special-members: __init__
    :members:

@@ -1,5 +1,5 @@
-
 import json
+import logging
 from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
 from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
@@ -21,12 +21,12 @@ class EnvironmentMesh:
 
     """
     @classmethod
-    def load_from_json(cls, file_path):
+    def load_from_json(cls, mesh_json):
         """
             Constructs an Env.Mesh from a given env-mesh json file to be used by other modules (ex.Vessel Performance Modeller).
 
             Args:
-                file_path (string): a string that contains a path to Env-mesh json file of the following format - \n
+                mesh_json (dict): a dictionary loaded from an Env-mesh json file of the following format - \n
                     \n
                     {\n
                         "config": {\n
@@ -80,17 +80,12 @@ class EnvironmentMesh:
 
 
         """
-
-        mesh_json = None
-        with open(file_path, "r") as config_file:
-            mesh_json = json.load(config_file)
         config = mesh_json['config']
         cellboxes_json = mesh_json['cellboxes']
         agg_cellboxes = []
         bounds = Boundary.from_json(config)
         # load the agg_cellboxes
         for cellbox_json in cellboxes_json:
-            print(cellbox_json)
             agg_cellbox = AggregatedCellBox.from_json(cellbox_json)
             agg_cellboxes.append(agg_cellbox)
         neighbour_graph = NeighbourGraph.from_json(
@@ -187,7 +182,9 @@ class EnvironmentMesh:
         with open(path, 'w') as f:
             json.dump(self.to_json(), f)
             if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
-                self.dump_mesh(f)
+               dump_path = path.replace (".json" , ".dump")
+               with open(dump_path, 'w') as dump_f:
+                self.dump_mesh(dump_f)
 
     def dump_mesh(self, file):
         """

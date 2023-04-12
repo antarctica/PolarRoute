@@ -1,220 +1,502 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-
-<!doctype html>
-
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
-    <title>8. Methods - Mesh Construction &#8212; polar_route 0.0.12 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/bizstyle.css" />
-    
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/bizstyle.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>8. Methods - Mesh Construction &mdash; polar_route 0.0.17 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="9. Methods - Vessel Specifics" href="Vehicle_specifics.html" />
-    <link rel="prev" title="7. Examples" href="Examples.html" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <!--[if lt IE 9]>
-    <script src="_static/css3-mediaqueries.js"></script>
-    <![endif]-->
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="Vehicle_specifics.html" title="9. Methods - Vessel Specifics"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="Examples.html" title="7. Examples"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><span class="section-number">8. </span>Methods - Mesh Construction</a></li> 
-      </ul>
-    </div>  
+    <link rel="next" title="9. Methods - Vessel Performance" href="Vehicle_specifics.html" />
+    <link rel="prev" title="7. Examples of running code" href="Examples.html" /> 
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">3. Runnning Codebase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration.html">4. Input - Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">5. Dataloader Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">7. Examples of running code</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">8. Methods - Mesh Construction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mesh-construction-overview">8.1. Mesh Construction Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mesh-construction-design">8.2. Mesh Construction Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mesh-construction-use-case">8.3. Mesh Construction Use case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#classes">8.4. Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.mesh_generation.cellbox">8.4.1. CellBox</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.mesh_generation.cellbox.CellBox"><code class="docutils literal notranslate"><span class="pre">CellBox</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.mesh_generation.metadata">8.4.2. MetaData</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.mesh_generation.metadata.Metadata"><code class="docutils literal notranslate"><span class="pre">Metadata</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.mesh_generation.mesh_builder">8.4.3. MeshBuilder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.mesh_generation.mesh_builder.MeshBuilder"><code class="docutils literal notranslate"><span class="pre">MeshBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.mesh_generation.aggregated_cellBox">8.4.4. AggregatedCellBox</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox"><code class="docutils literal notranslate"><span class="pre">AggregatedCellBox</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.mesh_generation.environment_mesh">8.4.5. EnvironmentMesh</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh"><code class="docutils literal notranslate"><span class="pre">EnvironmentMesh</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.mesh_generation.neighbour_graph">8.4.6. NeighbourGraph</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph"><code class="docutils literal notranslate"><span class="pre">NeighbourGraph</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">8. </span>Methods - Mesh Construction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sections/Discrete_meshing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
   <section id="methods-mesh-construction">
-<h1><span class="section-number">8. </span>Methods - Mesh Construction<a class="headerlink" href="#methods-mesh-construction" title="Permalink to this heading">¶</a></h1>
-<section id="overview">
-<h2><span class="section-number">8.1. </span>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
-<p>Throughout this section we will outline the use case for the Discrete Meshing of the environment. The two main classes used are <cite>Mesh</cite> and <cite>CellBox</cite>, with a Mesh being composed of a series of CellBox objects.</p>
+<h1><span class="section-number">8. </span>Methods - Mesh Construction<a class="headerlink" href="#methods-mesh-construction" title="Permalink to this heading"></a></h1>
+<p>Throughout this section we will outline an overview of the Environment Mesh Construction module, describe the main classes that composes the module and illustrate a use case for the Discrete Meshing of the environment.</p>
+<section id="mesh-construction-overview">
+<h2><span class="section-number">8.1. </span>Mesh Construction Overview<a class="headerlink" href="#mesh-construction-overview" title="Permalink to this heading"></a></h2>
 <p>A general overview of the method can be seen below:</p>
 <figure class="align-center" id="id1">
 <a class="reference internal image-reference" href="../_images/FlowDiagram_MeshGraph.png"><img alt="../_images/FlowDiagram_MeshGraph.png" src="../_images/FlowDiagram_MeshGraph.png" style="width: 700px;" /></a>
 <figcaption>
-<p><span class="caption-text">Overview figure of the Discrete Meshing from the multi-data input.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Overview figure of the Discrete Meshing from the multi-data input.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </section>
-<section id="module-polar_route.cellbox">
-<span id="cellbox"></span><h2><span class="section-number">8.2. </span>CellBox<a class="headerlink" href="#module-polar_route.cellbox" title="Permalink to this heading">¶</a></h2>
-<p>Outlined in this section we will discuss the usage of the CellBox functionality
-of the PolarRoute package. In this series of class distributions we house our discrete
-representation of input data. In each CellBox we determine the mean and variance of
-the information governing our numerical world, this includes and is not limited to:
-Ocean Currents, Sea Ice Concentration and Bathymetric depth.</p>
-<p class="rubric">Example</p>
-<p>An example of running this code can be executed by running the following
-in a ipython/Jupyter Notebook:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route</span> <span class="kn">import</span> <span class="n">cellbox</span>
+<section id="mesh-construction-design">
+<h2><span class="section-number">8.2. </span>Mesh Construction Design<a class="headerlink" href="#mesh-construction-design" title="Permalink to this heading"></a></h2>
+<p>The below UML diagram describes how the Environment Mesh Construction module is designed. It depicts the classes of the module and how they interact with each other.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/mesh-construct-UML.drawio.png"><img alt="../_images/mesh-construct-UML.drawio.png" src="../_images/mesh-construct-UML.drawio.png" style="width: 1000px;" /></a>
+</figure>
+</section>
+<section id="mesh-construction-use-case">
+<h2><span class="section-number">8.3. </span>Mesh Construction Use case<a class="headerlink" href="#mesh-construction-use-case" title="Permalink to this heading"></a></h2>
+<p>This sequence diagram illustrates a use case for the Discrete Meshing of the environment, where the module’s client starts by initializing the MeshBuilder with a certain mesh configuration (see Input-Configuration section for more details about the configuration format) then calls build_environment_mesh method.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/mesh-build-sequence-diagram.drawio.png"><img alt="../_images/mesh-build-sequence-diagram.drawio.png" src="../_images/mesh-build-sequence-diagram.drawio.png" style="width: 1000px;" /></a>
+</figure>
+<p>The following diagram depicts the sequence of events that take place inside build_environment_mesh method into details</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/build-env-mesh.drawio.png"><img alt="../_images/build-env-mesh.drawio.png" src="../_images/build-env-mesh.drawio.png" style="width: 1000px;" /></a>
+</figure>
+</section>
+<section id="classes">
+<h2><span class="section-number">8.4. </span>Classes<a class="headerlink" href="#classes" title="Permalink to this heading"></a></h2>
+<p>This section describes the main classes of the Mesh Construction module in details</p>
+<section id="module-polar_route.mesh_generation.cellbox">
+<span id="cellbox"></span><h3><span class="section-number">8.4.1. </span>CellBox<a class="headerlink" href="#module-polar_route.mesh_generation.cellbox" title="Permalink to this heading"></a></h3>
+<p>Outlined in this section we will discuss the usage of the CellBox functionality of the PolarRoute package.
+In this series of class distributions we house our discrete representation of input data. In each CellBox,
+we represent a way of accessing the information governing our numerical world,
+this includes and is not limited to: Ocean Currents, Sea Ice Concentration and Bathymetric depth.</p>
+<blockquote>
+<div><p>Example:</p>
+<p>An example of running this code can be executed by running the following in a ipython/Jupyter Notebook:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.mesh_generation.cellbox</span> <span class="kn">import</span> <span class="n">cellbox</span>
+
 <span class="o">....</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>CellBoxes are intended to be constructed by and used within a Mesh
-object. The methods provided are to extract information for CellBoxes
-contained within a Mesh.</p>
+<p>Note:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>CellBoxes are intended to be constructed by and used within a Mesh object.</dt><dd><p>The methods provided are to extract information for CellBoxes contained within a Mesh.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div></blockquote>
+<dl class="py class">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh_generation.cellbox.</span></span><span class="sig-name descname"><span class="pre">CellBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox" title="Permalink to this definition"></a></dt>
+<dd><p>A CellBox represnts a geo-spatial/temporal boundary that enables projecting to information within.
+Information about any given value of a CellBox is calculated from aggregating all data points of within those bounds.
+CellBoxes may  be split into smaller CellBoxes and the data points within distributed  between the newly created
+CellBoxes so as to construct a non-uniform mesh of CellBoxes, such as within a Mesh.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.Bounds">
+<span class="sig-name descname"><span class="pre">Bounds</span></span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.Bounds" title="Permalink to this definition"></a></dt>
+<dd><p>object that contains the latitude and logtitute range and the time range</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boundary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.id" title="Permalink to this definition"></a></dt>
+<dd><p>the id of the cellbox</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bounds</strong> (<em>Boundary</em>) – encapsulates latitude, longtitude and time range of the CellBox</p></li>
+<li><p><strong>id</strong> (<em>int</em>) – the id of the cellbox</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.aggregate">
+<span class="sig-name descname"><span class="pre">aggregate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.aggregate" title="Permalink to this definition"></a></dt>
+<dd><p>aggregates CellBox data using the associated data_sources’ aggregate type (ex. MEAN, MAX)
+and returns AggregatedCellBox object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object contains the aggregated data within cellbox bounds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>AggregatedCellbox</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.set_data_source">
+<span class="sig-name descname"><span class="pre">set_data_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.set_data_source" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>a method that sets the data source of the cellbox ( which includes the data loaders,</dt><dd><p>splitting conditions and aggregation type)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_source</strong> (<em>List &lt;MetaData&gt;</em>) – a list of MetaData objects, each object represents a source of this CellBox data
+(where the data comes from, how it is spitted and aggregated)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.set_parent">
+<span class="sig-name descname"><span class="pre">set_parent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.set_parent" title="Permalink to this definition"></a></dt>
+<dd><p>set the parent CellBox, which is the bigger CellBox that conains this CellBox
+:param CellBox: the bigger Cellbox object that got splitted to produce this cellbox</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.should_split">
+<span class="sig-name descname"><span class="pre">should_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stop_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.should_split" title="Permalink to this definition"></a></dt>
+<dd><p>determines if a cellbox should be split based on the homogeneity
+condition of each data type contained within. The homogeneity condition
+of values within this cellbox is calculated using the method
+‘get_hom_cond’ in each DataLoader object inside CellBox’s metadata</p>
+<dl class="simple">
+<dt>if ANY data returns ‘HOM’:</dt><dd><p>do not split</p>
+</dd>
+<dt>if ANY data returns ‘MIN’:</dt><dd><p>do not split</p>
+</dd>
+<dt>if ALL data returns ‘CLR’:</dt><dd><p>do not split</p>
+</dd>
+<dt>else (mixture of CLR &amp; HET):</dt><dd><p>split</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stop_index</strong> – the index of the data source at which checking the splitting conditions stops.</p></li>
+<li><p><strong>splitting.</strong> (<em>Implemented like this to perform depth-first</em>) – </p></li>
+<li><p><strong>splitting</strong> (<em>Should be deprecated once we switch to breadth-first</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>True if the splitting_conditions of this CellBox</dt><dd><p>will result in the CellBox being split.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.cellbox.CellBox.split">
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.cellbox.CellBox.split" title="Permalink to this definition"></a></dt>
+<dd><p>splits the current cellbox into 4 corners, returns as a list of cellbox objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>start_id</strong> – represenst the start of the splitted cellboxes ids,
+usuallly it is the number of the existing cellboxes</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The 4 corner cellboxes generated by splitting
+the cellbox uniformly.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list&lt;CellBox&gt;</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-polar_route.mesh_generation.metadata">
+<span id="metadata"></span><h3><span class="section-number">8.4.2. </span>MetaData<a class="headerlink" href="#module-polar_route.mesh_generation.metadata" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.metadata.Metadata">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh_generation.metadata.</span></span><span class="sig-name descname"><span class="pre">Metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spliiting_conditions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_fill_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.metadata.Metadata" title="Permalink to this definition"></a></dt>
+<dd><p>A Metadata is a class that defines the datasource for a certain Cellbox and the assocated splitting conditions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.metadata.Metadata.data_loader">
+<span class="sig-name descname"><span class="pre">data_loader</span></span><a class="headerlink" href="#polar_route.mesh_generation.metadata.Metadata.data_loader" title="Permalink to this definition"></a></dt>
+<dd><p>object of the DataLoader class that enable projecting to the cellBox data</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.metadata.Metadata.splitting_conditions">
+<span class="sig-name descname"><span class="pre">splitting_conditions</span></span><a class="headerlink" href="#polar_route.mesh_generation.metadata.Metadata.splitting_conditions" title="Permalink to this definition"></a></dt>
+<dd><p>list of conditions that determine how to split the data accessed by data_loader</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.metadata.Metadata.value_fill_type">
+<span class="sig-name descname"><span class="pre">value_fill_type</span></span><a class="headerlink" href="#polar_route.mesh_generation.metadata.Metadata.value_fill_type" title="Permalink to this definition"></a></dt>
+<dd><p>indicates how to fill a CellBox if it has void data
+(ex. use the data in the parent cellbox or assign 0 to the data)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.metadata.Metadata.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spliiting_conditions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_fill_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.metadata.Metadata.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_loader</strong> (<em>DataLoader</em>) – object of the DataLoader class that enables projecting to the cellBox data</p></li>
+<li><p><strong>splitting_conditions</strong> (<em>List&lt;dict&gt;</em>) – list of conditions that determine how to split CellBox</p></li>
+<li><p><strong>value_fill_tyep</strong> (<em>string</em>) – represents the way the data of a cellBox will be filled
+in case it has void data (ex. parent , 0 )</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-polar_route.mesh_generation.mesh_builder">
+<span id="meshbuilder"></span><h3><span class="section-number">8.4.3. </span>MeshBuilder<a class="headerlink" href="#module-polar_route.mesh_generation.mesh_builder" title="Permalink to this heading"></a></h3>
+<p>In this section we will discuss the usage of the MeshBuilder functionality of PolarRoute.</p>
+<p class="rubric">Example</p>
+<p>An example of how to run this code can be executed by running the following in an ipython/Jupyter Notebook:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.mesh_generation.mesh_builder</span> <span class="kn">import</span> <span class="n">MeshBuilder</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./config.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
+
+<span class="n">mesh_builder</span> <span class="o">=</span> <span class="n">MeshBuilder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="n">mesh_builder</span><span class="o">.</span><span class="n">build_environmental_mesh</span><span class="p">()</span>
+</pre></div>
 </div>
 <dl class="py class">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.cellbox.</span></span><span class="sig-name descname"><span class="pre">CellBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splitting_conditions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox" title="Permalink to this definition">¶</a></dt>
-<dd><p>A CellBox is a collection of data-points contained within a given geo-spatial/temporal
-boundary. Information about any given value of a CellBox is calculated from
-the mean of all data points of that type within those bounds. CellBoxes may
-be split into smaller CellBoxes and the data points within distributed
-between the newly created CellBoxes so as to construct a non-uniform mesh
-of CellBoxes, such as within a Mesh.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.lat">
-<span class="sig-name descname"><span class="pre">lat</span></span><a class="headerlink" href="#polar_route.cellbox.CellBox.lat" title="Permalink to this definition">¶</a></dt>
-<dd><p>The latitude of the top-left corner of the CellBox</p>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.mesh_builder.MeshBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh_generation.mesh_builder.</span></span><span class="sig-name descname"><span class="pre">MeshBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.mesh_builder.MeshBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>A class resposible for building an environment mesh based on a provided config file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.mesh_builder.MeshBuilder.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.mesh_builder.MeshBuilder.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Constructs a Mesh from a given config file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – <p>config file which defines the attributes of the Mesh to be constructed. config is of the form:</p>
+<blockquote>
+<div><p>”config”: {</p>
+<blockquote>
+<div><p>“Mesh_info”:{</p>
+<blockquote>
+<div><p>“Region”: {</p>
+<blockquote>
+<div><p>“latMin”: (real),</p>
+<p>”latMax”: (real),</p>
+<p>”longMin”: (real),</p>
+<p>”longMax”: (real),</p>
+<p>”startTime”: (string) ‘YYYY-MM-DD’,</p>
+<p>”endTime”: (string) ‘YYYY-MM-DD’,</p>
+<p>”cellWidth”: (real),</p>
+<p>”cellHeight” (real),</p>
+<p>”splitDepth” (int)</p>
+</div></blockquote>
+<p>},</p>
+<p>”Data_sources”: [</p>
+<blockquote>
+<div><p>{</p>
+<blockquote>
+<div><p>“loader”: (string)</p>
+<p>”params” (dict)</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>],</p>
+<p>”splitting”: {</p>
+<blockquote>
+<div><p>“split_depth”: (int),</p>
+<p>”minimum_datapoints”: (int)</p>
+<p>}</p>
+</div></blockquote>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>”j_grid” (bool): True if the Mesh to be constructed should be of the same format as the original Java CellGrid, to be used for regression testing.</p>
+</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.long">
-<span class="sig-name descname"><span class="pre">long</span></span><a class="headerlink" href="#polar_route.cellbox.CellBox.long" title="Permalink to this definition">¶</a></dt>
-<dd><p>The longitude of the top-left corner of the CellBox</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.mesh_builder.MeshBuilder.build_environmental_mesh">
+<span class="sig-name descname"><span class="pre">build_environmental_mesh</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.mesh_builder.MeshBuilder.build_environmental_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>splits the mesh then goes through the mesh cellboxes and builds an evironmental mesh that contains the cellboxes aggregated data</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>an object that represents the constructed nonunifrom mesh and contains the aggregated cellboxs and neighbour graph</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh" title="polar_route.mesh_generation.environment_mesh.EnvironmentMesh">EnvironmentMesh</a></p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.width">
-<span class="sig-name descname"><span class="pre">width</span></span><a class="headerlink" href="#polar_route.cellbox.CellBox.width" title="Permalink to this definition">¶</a></dt>
-<dd><p>The width of the CellBox, given in degrees longitude</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.mesh_builder.MeshBuilder.split_and_replace">
+<span class="sig-name descname"><span class="pre">split_and_replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.mesh_builder.MeshBuilder.split_and_replace" title="Permalink to this definition"></a></dt>
+<dd><p>Replaces a cellBox given by parameter ‘cellBox’ in this grid with
+4 smaller cellBoxes representing the four corners of the given cellBox.
+A neighbours map is then created for each of the 4 new cellBoxes
+and the neighbours map for all surrounding cell boxes is updated.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cellbox</strong> (<a class="reference internal" href="#polar_route.mesh_generation.cellbox.CellBox" title="polar_route.mesh_generation.cellbox.CellBox"><em>CellBox</em></a>) – the CellBox within this Mesh to be split into
+4 smaller CellBox objects.</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.height">
-<span class="sig-name descname"><span class="pre">height</span></span><a class="headerlink" href="#polar_route.cellbox.CellBox.height" title="Permalink to this definition">¶</a></dt>
-<dd><p>The height of the CellBox, given in degrees latitude</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.mesh_builder.MeshBuilder.split_to_depth">
+<span class="sig-name descname"><span class="pre">split_to_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">split_depth</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.mesh_builder.MeshBuilder.split_to_depth" title="Permalink to this definition"></a></dt>
+<dd><p>splits all cellboxes in this grid until a maximum split depth
+is reached, or all cellboxes are homogeneous.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>split_depth</strong> (<em>int</em>) – The maximum split depth reached by any CellBox
+within this Mesh after splitting.</p>
 </dd>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+</section>
+<section id="module-polar_route.mesh_generation.aggregated_cellBox">
+<span id="aggregatedcellbox"></span><h3><span class="section-number">8.4.4. </span>AggregatedCellBox<a class="headerlink" href="#module-polar_route.mesh_generation.aggregated_cellBox" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh_generation.aggregated_cellBox.</span></span><span class="sig-name descname"><span class="pre">AggregatedCellBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boundary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="Permalink to this definition"></a></dt>
+<dd><p>a class represnts an aggrgated information within a geo-spatial/temporal boundary.</p>
+<p>Attributes:</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>All geospatial boundaries of a CellBox are given in a ‘EPSG:4326’ projection</p>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splitting_conditions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boundary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox.__init__" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>lat</strong> (<em>float</em>) – The latitude of the top-left corner of the CellBox</p></li>
-<li><p><strong>long</strong> (<em>float</em>) – The longitude of the top-left corner of the CellBox</p></li>
-<li><p><strong>width</strong> (<em>float</em>) – The width of the CellBox, given in degrees longitude</p></li>
-<li><p><strong>height</strong> (<em>float</em>) – The height of the CellBox, given in degrees latitude</p></li>
-<li><p><strong>splitting_conditions</strong> (<em>list&lt;</em><em>(</em><em>dict</em><em>)</em><em>&gt;</em>) – <p>conditions in which the CellBox
-will be split into 4 smaller CellBoxes.</p>
-<dl>
-<dt>splitting_conditions are of the form -</dt><dd><dl>
-<dt>{</dt><dd><dl>
-<dt>&lt;value&gt;:{</dt><dd><p>“threshold” (float):,</p>
-<p>”upperBound” (float):,</p>
-<p>”lowerBound” (float)</p>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-</p></li>
-<li><p><strong>j_grid</strong> (<em>bool</em>) – True if the CellBox should be constructed using the
-format of the original Java codebase</p></li>
+<li><p><strong>boundary</strong> (<em>Boundary</em>) – encapsulates latitude, longtitude and time range of the CellBox</p></li>
+<li><p><strong>agg_data</strong> (<em>dict</em>) – a dictionary that contains data_names and agg values</p></li>
+<li><p><strong>id</strong> (<em>string</em>) – a string represents cellbox id</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.add_data_points">
-<span class="sig-name descname"><span class="pre">add_data_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_data_points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.add_data_points" title="Permalink to this definition">¶</a></dt>
-<dd><p>adds a dataframe containing datapoints to the dataframe
-of datapoints within this CellBox</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>new_data_points</strong> (<em>Dataframe</em>) – A dataframe of data_points to be added</p></li>
-<li><p><strong>-</strong> (<em>to this CellBox. new_data_points must be of the format</em>) – lat | long | (time)* | value_1 | … | value_n</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.add_splitting_condition">
-<span class="sig-name descname"><span class="pre">add_splitting_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">splitting_condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.add_splitting_condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>adds a dictionary containing a splitting condition to the
-list of splitting conditions contained within this CellBox</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>splitting_condition</strong> (<em>dict</em>) – a splitting condition to be added to</p></li>
-<li><p><strong>-</strong> (<em>this CellBox. splitting_condition must be of the form</em>) – </p></li>
-<li><p><strong>form</strong> (<em>splitting condition is of</em>) – </p></li>
-<li><p><strong>{&lt;value&gt;</strong> – <p>{
-‘threshold’: (float) …,
-‘upperbound’: (float) …,
-‘lowerbound’ (float) …:</p>
-</p></li>
-<li><p><strong>}}</strong> – </p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.contains_point">
-<span class="sig-name descname"><span class="pre">contains_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.contains_point" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox.contains_point">
+<span class="sig-name descname"><span class="pre">contains_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox.contains_point" title="Permalink to this definition"></a></dt>
 <dd><p>Returns true if a given lat/long coordinate is contained within this cellBox.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -237,244 +519,27 @@ list of splitting conditions contained within this CellBox</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.get_bounds">
-<span class="sig-name descname"><span class="pre">get_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.get_bounds" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns the bounds of this cellbox</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The geo-spatial boundaries of this CellBox.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bounds (list&lt;tuples&gt;)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.get_data_points">
-<span class="sig-name descname"><span class="pre">get_data_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.get_data_points" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dataframe of containing values specified in parameter ‘values’.
-If values is empty, return a dataframe containing all datapoints within
-the CellBox.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>values</strong> (<em>list&lt;string&gt;</em>) – datapoints within the CellBox to be included
-in the returned dataframe</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>a dataframe of datapoints within the CellBox.
-The dataframe is of the form -</p>
-<blockquote>
-<div><p>long | lat | time | value_1 | … | value_n</p>
-</div></blockquote>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>data_points (Dataframe)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.get_value">
-<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MEAN'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.get_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns the mean value of the datapoints within this cellbox
-specified by the parameter ‘value’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>value_name</strong> (<em>string</em>) – The value type requested</p></li>
-<li><p><strong>value_type</strong> (<em>string</em>) – The output type of a value requested.
-value_type may be &lt; MEAN | MIN | MAX &gt;. If none is given
-a default of MIN is used.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>The mean of all data_points of type ‘value’</dt><dd><p>within this CellBox</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>value (float)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.getcx">
-<span class="sig-name descname"><span class="pre">getcx</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.getcx" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns x-position of the centroid of the cellbox</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>the x-position of the top-left corner of the CellBox</dt><dd><p>given in degrees longitude.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cx (float)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.getcy">
-<span class="sig-name descname"><span class="pre">getcy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.getcy" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns y-position of the centroid of the cellbox</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>the y-position of the top-left corner of the CellBox</dt><dd><p>given in degrees latitude.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cy (float)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.getdcx">
-<span class="sig-name descname"><span class="pre">getdcx</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.getdcx" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns x-distance from the edge to the centroid of the cellbox</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>the x-distance from the edge of the CellBox to the</dt><dd><p>centroid of the CellBox. Given in degrees longitude</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dcx (float)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.getdcy">
-<span class="sig-name descname"><span class="pre">getdcy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.getdcy" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns y-distance from the edge to the centroid of the cellbox</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>the y-distance from the edge of the CellBox to the</dt><dd><p>centroid of the CellBox. Given in degrees latitude</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dxy (float)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.hom_condition">
-<span class="sig-name descname"><span class="pre">hom_condition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.hom_condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>The total homogeneity condition of this CellBox, determined by
-all splitting_conditions within this CellBox.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl>
-<dt>The homogeneity condition of this CellBox.</dt><dd><p>hom_condition is of the form -</p>
-<dl class="simple">
-<dt>CLR = the proportion of datapoints within this CellBox over a given</dt><dd><p>threshold is lower than the lowerbound</p>
-</dd>
-<dt>HOM = the proportion of datapoints within this cellbox over a given</dt><dd><p>threshold is higher than the upperbound</p>
-</dd>
-</dl>
-<p>MIN = the cellbox contains less than a minimum number of datapoints</p>
-<dl class="simple">
-<dt>HET = the proportion of datapoints within this cellbox over a given</dt><dd><p>threshold if between the upper and lower bound</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>hom_condition (string)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.should_split">
-<span class="sig-name descname"><span class="pre">should_split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.should_split" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines if a cellbox should be split based on the homogeneity
-condition of each data type contained within. The homogeneity condition
-of values within this cellbox is calculated using the function
-‘value_hom_condition()’</p>
-<dl class="simple">
-<dt>if ANY data returns ‘HOM’:</dt><dd><p>do not split</p>
-</dd>
-<dt>if ANY data returns ‘MIN’:</dt><dd><p>do not split</p>
-</dd>
-<dt>if ALL data returns ‘CLR’:</dt><dd><p>do not split</p>
-</dd>
-<dt>else (mixture of CLR &amp; HET):</dt><dd><p>split</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>True if the splitting_conditions of this CellBox</dt><dd><p>will result in the CellBox being split.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>should_split (bool)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.split">
-<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.split" title="Permalink to this definition">¶</a></dt>
-<dd><p>splits the current cellbox into 4 corners, returns as a list of cellbox objects.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl class="simple">
-<dt>The 4 corner cellboxes generates by splitting</dt><dd><p>this current cellboxes and dividing the data_points contained between.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>split_boxes (list&lt;CellBox&gt;)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.to_json" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox.to_json" title="Permalink to this definition"></a></dt>
 <dd><p>convert cellBox to JSON</p>
 <p>The returned object is of the form -</p>
 <blockquote>
-<div><dl>
-<dt>{</dt><dd><p>“geometry” (String): POLYGON(…),</p>
+<div><p>{</p>
+<blockquote>
+<div><p>“geometry” (String): POLYGON(…),</p>
 <p>“cx” (float): …,</p>
 <p>“cy” (float): …,</p>
 <p>“dcx” (float): …,</p>
 <p>“dcy” (float): …,</p>
-<p>“value_1” (float): …,</p>
+<p>“agg_value_1” (float): …,</p>
 <p>…,</p>
-<p>“value_n” (float): …</p>
-</dd>
-</dl>
+<p>“agg_value_n” (float): …</p>
+</div></blockquote>
 <p>}</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A JSON parsable dictionary representation of this CellBox</p>
+<dd class="field-odd"><p>A JSON parsable dictionary representation of this AggregatedCellBox</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>cell_json (dict)</p>
@@ -482,72 +547,186 @@ of values within this cellbox is calculated using the function
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.value_hom_condition">
-<span class="sig-name descname"><span class="pre">value_hom_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowerbound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upperbound</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.value_hom_condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns ‘CLR’, ‘HET’ or ‘HOM’ dependant on the distribution of
-datapoints contained within.</p>
+</dd></dl>
+
+</section>
+<section id="module-polar_route.mesh_generation.environment_mesh">
+<span id="environmentmesh"></span><h3><span class="section-number">8.4.5. </span>EnvironmentMesh<a class="headerlink" href="#module-polar_route.mesh_generation.environment_mesh" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh_generation.environment_mesh.</span></span><span class="sig-name descname"><span class="pre">EnvironmentMesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_cellboxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh" title="Permalink to this definition"></a></dt>
+<dd><p>a class that defines the environmental mesh structure and contains each cellbox aggregate information</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.bounds">
+<span class="sig-name descname"><span class="pre">bounds</span></span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.bounds" title="Permalink to this definition"></a></dt>
+<dd><p>the boundaries of this mesh</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>string</em>) – the name of a value a splitting condition is checked against.</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – The threshold at which data points of type ‘value’ within
-this CellBox are checked to be either above or below</p></li>
-<li><p><strong>lowerbound</strong> (<em>float</em>) – The lowerbound of acceptable percentage of data_points of
-type value within this CellBox that are above ‘threshold’</p></li>
-<li><p><strong>upperbound</strong> (<em>float</em>) – the upperbound of acceptable percentage of data_points of
-type value within this CellBox that are above ‘threshold’</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>The homogeniety condtion of this CellBox by given parameters</dt><dd><p>hom_condition is of the form -</p>
-</dd>
-<dt>CLR = the proportion of data points within this cellbox over a given</dt><dd><p>threshold is lower than the lowerbound</p>
-</dd>
-<dt>HOM = the proportion of data points within this cellbox over a given</dt><dd><p>threshold is higher than the upperbound</p>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boundary</p>
 </dd>
 </dl>
-<p>MIN = the cellbox contains less than a minimum number of data points</p>
-<dl class="simple">
-<dt>HET = the proportion of data points within this cellbox over a given</dt><dd><p>threshold if between the upper and lower bound</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.agg_cellboxes">
+<span class="sig-name descname"><span class="pre">agg_cellboxes</span></span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.agg_cellboxes" title="Permalink to this definition"></a></dt>
+<dd><p>a list of aggregated cellboxes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox">AggregatedCellBox</a>[]</p>
 </dd>
 </dl>
-</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.neighbour_graph">
+<span class="sig-name descname"><span class="pre">neighbour_graph</span></span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.neighbour_graph" title="Permalink to this definition"></a></dt>
+<dd><p>an object contains each cellbox neighbours information</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph" title="polar_route.mesh_generation.neighbour_graph.NeighbourGraph">NeighbourGraph</a></p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>hom_condition (string)</p>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.config" title="Permalink to this definition"></a></dt>
+<dd><p>conatins the initial config used to build this mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="polar_route.cellbox.CellBox.value_should_be_split">
-<span class="sig-name descname"><span class="pre">value_should_be_split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lowerbound</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upperbound</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.cellbox.CellBox.value_should_be_split" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns true or false depending on whether a splitting condition associated
-with parameter ‘value’ should cause the cellbox to be split according to the
-parameters ‘threshold’, ‘upperbound’ and ‘lowerbound’.</p>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agg_cellboxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.__init__" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bounds</strong> (<em>Boundary</em>) – the boundaries of this mesh</p></li>
+<li><p><strong>agg_cellboxes</strong> (<a class="reference internal" href="#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox"><em>AggregatedCellBox</em></a><em>[</em><em>]</em>) – a list of aggregated cellboxes</p></li>
+<li><p><strong>neighbour_graph</strong> (<a class="reference internal" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph" title="polar_route.mesh_generation.neighbour_graph.NeighbourGraph"><em>NeighbourGraph</em></a>) – an object contains each cellbox neighbours information</p></li>
+<li><p><strong>config</strong> (<em>dict</em>) – conatins the initial config used to build this mesh</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.load_from_json">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_json</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.load_from_json" title="Permalink to this definition"></a></dt>
+<dd><p>Constructs an Env.Mesh from a given env-mesh json file to be used by other modules (ex.Vessel Performance Modeller).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mesh_json</strong> (<em>dict</em>) – <p>a dictionary loaded from an Env-mesh json file of the following format -</p>
+<p>{</p>
+<blockquote>
+<div><p>“config”: {</p>
+<blockquote>
+<div><p>“Mesh_info”:{</p>
+<blockquote>
+<div><p>“Region”: {</p>
+<blockquote>
+<div><p>“latMin”: (real),</p>
+<p>”latMax”: (real),</p>
+<p>”longMin”: (real),</p>
+<p>”longMax”: (real),</p>
+<p>”startTime”: (string) ‘YYYY-MM-DD’,</p>
+<p>”endTime”: (string) ‘YYYY-MM-DD’,</p>
+<p>”cellWidth”: (real),</p>
+<p>”cellHeight” (real),</p>
+<p>”splitDepth” (int)</p>
+</div></blockquote>
+<p>},</p>
+<p>”Data_sources”: [</p>
+<blockquote>
+<div><p>{</p>
+<blockquote>
+<div><p>“loader”: (string)</p>
+<p>”params” (dict)</p>
+</div></blockquote>
+<p>},</p>
+<p>…,</p>
+<p>{…}
+],</p>
+</div></blockquote>
+<p>”splitting”:</p>
+<p>{</p>
+<blockquote>
+<div><p>“split_depth”: (int),</p>
+<p>”minimum_datapoints”: (int)</p>
+</div></blockquote>
+<p>}</p>
+<p>”cellboxes”: [</p>
+<blockquote>
+<div><p>{</p>
+<p>},</p>
+<p>…,</p>
+<p>{…}</p>
+</div></blockquote>
+<p>],</p>
+<p>”neighbour_graph”: [</p>
+<blockquote>
+<div><p>{</p>
+<p>},</p>
+<p>…,</p>
+<p>{…}</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>object that contains all the json file mesh information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh" title="polar_route.mesh_generation.environment_mesh.EnvironmentMesh">EnvironmentMesh</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.to_json">
+<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.to_json" title="Permalink to this definition"></a></dt>
+<dd><p>Returns this Mesh converted to a JSON object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p>a string representation of the CellGird parseable as a JSON object. The JSON object is of the form -</p>
+<blockquote>
+<div><p>{</p>
+<blockquote>
+<div><p>“config”: the config used to initialize the Mesh,</p>
+<p>”cellboxes”: a list of CellBoxes contained within the Mesh,</p>
+<p>”neighbour_graph”: a graph representing the adjacency of CellBoxes within the Mesh</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>json</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.environment_mesh.EnvironmentMesh.update_cellbox">
+<span class="sig-name descname"><span class="pre">update_cellbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.update_cellbox" title="Permalink to this definition"></a></dt>
+<dd><p>method that adds values to the dict of a cellbox at certain index (to be used by the vessel perf. module to add the perf. metrics to the cellbox)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>string</em>) – the name of a value a splitting condition is checked against.</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – The threshold at which data_points of type ‘value’ within
-this CellBox are checked to be either above or below.</p></li>
-<li><p><strong>lowerbound</strong> (<em>float</em>) – The lowerbound of acceptable percentage of data_points of
-type value within this CellBox that are above ‘threshold’.</p></li>
-<li><p><strong>upperbound</strong> (<em>float</em>) – the upperbound of acceptable percentage of data_points of
-type value within this CellBox that are above ‘threshold’.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – the index of the cellbox to be updated</p></li>
+<li><p><strong>values</strong> (<em>dict</em>) – a dict contains perf. metrics names and values</p></li>
 </ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>True if the splitting_condition given would result in</dt><dd><p>this CellBox being split.</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>should_be_split (bool)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -555,30 +734,16 @@ type value within this CellBox that are above ‘threshold’.</p></li>
 </dd></dl>
 
 </section>
-<section id="mesh">
-<h2><span class="section-number">8.3. </span>Mesh<a class="headerlink" href="#mesh" title="Permalink to this heading">¶</a></h2>
+<section id="module-polar_route.mesh_generation.neighbour_graph">
+<span id="neighbourgraph"></span><h3><span class="section-number">8.4.6. </span>NeighbourGraph<a class="headerlink" href="#module-polar_route.mesh_generation.neighbour_graph" title="Permalink to this heading"></a></h3>
 <dl class="py class">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh.</span></span><span class="sig-name descname"><span class="pre">Mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.cellboxes">
-<span class="sig-name descname"><span class="pre">cellboxes</span></span><a class="headerlink" href="#polar_route.mesh.Mesh.cellboxes" title="Permalink to this definition">¶</a></dt>
-<dd><p>A list of CellBox objects forming the Mesh</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list&lt;(<a class="reference internal" href="#polar_route.cellbox.CellBox" title="polar_route.cellbox.CellBox">CellBox</a>)&gt;</p>
-</dd>
-</dl>
-</dd></dl>
-
+<dt class="sig sig-object py" id="polar_route.mesh_generation.neighbour_graph.NeighbourGraph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.mesh_generation.neighbour_graph.</span></span><span class="sig-name descname"><span class="pre">NeighbourGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellboxes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph" title="Permalink to this definition"></a></dt>
+<dd><p>A NeighbourGraph is a class that defines the  graphical representation of the adjacency relationship between CellBoxes in the Mesh.</p>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.neighbour_graph">
-<span class="sig-name descname"><span class="pre">neighbour_graph</span></span><a class="headerlink" href="#polar_route.mesh.Mesh.neighbour_graph" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>A graphical representation of the adjacency</dt><dd><p>relationship between CellBoxes in the Mesh. The neighbour_graph is
-of the form</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.neighbour_graph.NeighbourGraph.neighbour_graph">
+<span class="sig-name descname"><span class="pre">neighbour_graph</span></span><a class="headerlink" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph.neighbour_graph" title="Permalink to this definition"></a></dt>
+<dd><p>a dictionary that contains cellboxes ids along with their adjacent neighbours in the following form</p>
 <p>{</p>
 <blockquote>
 <div><p>&lt;CellBox id_1&gt;: {</p>
@@ -613,178 +778,23 @@ of the form</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j_grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Constructs a Mesh from a given config file.</p>
-<dl>
-<dt>Args:</dt><dd><dl>
-<dt>config (dict): config file which defines the attributes of the Mesh</dt><dd><p>to be constructed. config is of the form -</p>
-<p>{</p>
-<blockquote>
-<div><p>“config”: {</p>
-<blockquote>
-<div><p>“Mesh_info”:{</p>
-<blockquote>
-<div><p>“Region”: {</p>
-<blockquote>
-<div><p>“latMin”: (real),</p>
-<p>“latMax”: (real),</p>
-<p>“longMin”: (real),</p>
-<p>“longMax”: (real),</p>
-<p>“startTime”: (string) ‘YYYY-MM-DD’,</p>
-<p>“endTime”: (string) ‘YYYY-MM-DD’,</p>
-<p>“cellWidth”: (real),</p>
-<p>“cellHeight” (real),</p>
-<p>“splitDepth” (int)</p>
-</div></blockquote>
-<p>},</p>
-<dl>
-<dt>“Data_sources”: [</dt><dd><dl>
-<dt>{</dt><dd><p>“loader”: (string)</p>
-<p>“params” (dict)</p>
-</dd>
-</dl>
-<p>},</p>
-<p>…,</p>
-<p>{…}</p>
-</dd>
-</dl>
-<p>]</p>
-</div></blockquote>
-</div></blockquote>
-</div></blockquote>
-</dd>
-</dl>
-</dd>
-</dl>
-</div></blockquote>
-<dl>
-<dt>,</dt><dd><blockquote>
-<div><blockquote>
-<div><blockquote>
-<div><blockquote>
-<div><dl>
-<dt>“splitting_conditions”: [</dt><dd><dl>
-<dt>{</dt><dd><dl>
-<dt>&lt;value&gt;: {</dt><dd><p>“threshold”: (float),</p>
-<p>“upperBound”: (float),</p>
-<p>“lowerBound”: (float)</p>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-<p>},</p>
-<p>…,</p>
-<p>{…}</p>
-</dd>
-</dl>
-<p>]</p>
-</div></blockquote>
-<p>}</p>
-</div></blockquote>
-<p>}</p>
-</div></blockquote>
-<p>}</p>
-</div></blockquote>
-<dl class="simple">
-<dt>j_grid (bool): True if the Mesh to be constructed should be of the same</dt><dd><p>format as the original Java CellGrid, to be used for regression testing.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.add_data_points">
-<span class="sig-name descname"><span class="pre">add_data_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.add_data_points" title="Permalink to this definition">¶</a></dt>
-<dd><p>takes a dataframe containing geospatial-temporal located values and assigns them to
-cellboxes within this Mesh.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>data_points</strong> (<em>DataFrame</em>) – <p>a dataframe of datapoints to be added to the Mesh.
-data_points is of the form</p>
-<p>lat | long | (time)* | value_1 | … | value_n</p>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.get_cellbox">
-<span class="sig-name descname"><span class="pre">get_cellbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.get_cellbox" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the CellBox which contains a point, given by parameters lat, long</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>long</strong> (<em>long</em>) – longitude of a given point</p></li>
-<li><p><strong>lat</strong> (<em>float</em>) – latitude of given point</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>the cellbox which contains the point given my parameters
-(long, lat)</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>cellbox (<a class="reference internal" href="#polar_route.cellbox.CellBox" title="polar_route.cellbox.CellBox">CellBox</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.get_cellboxes">
-<span class="sig-name descname"><span class="pre">get_cellboxes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.get_cellboxes" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns a list of dictionaries containing information about each cellbox
-in this Mesh.
-all cellboxes will include id, geometry, cx, cy, dcx, dcy</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl>
-<dt>a list of CellBoxes which form the Mesh.</dt><dd><p>CellBoxes are of the form -</p>
-<dl>
-<dt>{</dt><dd><p>“id”: (string) …</p>
-<p>”geometry”: (string) POLYGON(…),</p>
-<p>”cx”: (float) …,</p>
-<p>”cy”: (float) …,</p>
-<p>”dcx”: (float) …,</p>
-<p>”dcy”: (float) …,</p>
-<p>”value_1”: (float) …,</p>
-<p>…,</p>
-<p>”value_n”: (float) …</p>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cellboxes (list&lt;dict&gt;)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.get_neighbour_case">
-<span class="sig-name descname"><span class="pre">get_neighbour_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cellbox_b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.get_neighbour_case" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.neighbour_graph.NeighbourGraph.get_neighbour_case">
+<span class="sig-name descname"><span class="pre">get_neighbour_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cellbox_b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph.get_neighbour_case" title="Permalink to this definition"></a></dt>
 <dd><p>Given two cellBoxes (cellbox_a, cellbox_b) returns a case number
 representing where the two cellBoxes are touching.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>cellbox_a</strong> (<a class="reference internal" href="#polar_route.cellbox.CellBox" title="polar_route.cellbox.CellBox"><em>CellBox</em></a>) – starting CellBox</p></li>
-<li><p><strong>cellbox_b</strong> (<a class="reference internal" href="#polar_route.cellbox.CellBox" title="polar_route.cellbox.CellBox"><em>CellBox</em></a>) – destination CellBox</p></li>
+<li><p><strong>cellbox_a</strong> (<a class="reference internal" href="#polar_route.mesh_generation.cellbox.CellBox" title="polar_route.mesh_generation.cellbox.CellBox"><em>CellBox</em></a>) – starting CellBox</p></li>
+<li><p><strong>cellbox_b</strong> (<a class="reference internal" href="#polar_route.mesh_generation.cellbox.CellBox" title="polar_route.mesh_generation.cellbox.CellBox"><em>CellBox</em></a>) – destination CellBox</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl>
-<dt>an int representing the direction of the adjacency</dt><dd><p>between input cellbox_a and cellbox_b. The meaning of each case
-is as follows -</p>
+<dd class="field-even"><p><p>an int representing the direction of the adjacency between input cellbox_a and cellbox_b. The meaning of each case is as follows -</p>
 <blockquote>
 <div><p>case 0 -&gt; CellBoxes are not neighbours</p>
 <p>case 1 -&gt; cellbox_b is the North-East corner of cellbox_a</p>
-<p>case 2 -&gt; cellbox_b is East of cellbox_a</p>
+<p>case 2 -&gt; cellbox_b is East of cellbadd_nodeox_a</p>
 <p>case 3 -&gt; cellbox_b is the South-East corner of cellbox_a</p>
 <p>case 4 -&gt; cellbox_b is South of cellbox_a</p>
 <p>case -1 -&gt; cellbox_b is the South-West corner of cellbox_a</p>
@@ -792,68 +802,32 @@ is as follows -</p>
 <p>case -3 -&gt; cellbox_b is the North-West corner of cellbox_a</p>
 <p>case -4 -&gt; cellbox_b is North of cellbox_a</p>
 </div></blockquote>
-</dd>
-</dl>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>case (int)</p>
+<dd class="field-odd"><p>int</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.split_and_replace">
-<span class="sig-name descname"><span class="pre">split_and_replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.split_and_replace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replaces a cellBox given by parameter ‘cellBox’ in this grid with
-4 smaller cellBoxes representing the four corners of the given cellBox.
-A neighbours map is then created for each of the 4 new cellBoxes
-and the neighbours map for all surrounding cell boxes is updated.</p>
+<dt class="sig sig-object py" id="polar_route.mesh_generation.neighbour_graph.NeighbourGraph.initialise_neighbour_graph">
+<span class="sig-name descname"><span class="pre">initialise_neighbour_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellboxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid_width</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph.initialise_neighbour_graph" title="Permalink to this definition"></a></dt>
+<dd><p>initialize the neighbour graph</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.mesh_generation.neighbour_graph.NeighbourGraph.update_neighbours">
+<span class="sig-name descname"><span class="pre">update_neighbours</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox_indx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_neighbours_indx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cellboxes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh_generation.neighbour_graph.NeighbourGraph.update_neighbours" title="Permalink to this definition"></a></dt>
+<dd><p>method that updates the neighbour of a certain cellbox in a specific direction. It removes cellbox_indx from the neighbour_map of its neighbours in a specific direction and add new_neighbour_indx</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cellbox</strong> (<a class="reference internal" href="#polar_route.cellbox.CellBox" title="polar_route.cellbox.CellBox"><em>CellBox</em></a>) – the CellBox within this Mesh to be split into
-4 smaller CellBox objects.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.split_to_depth">
-<span class="sig-name descname"><span class="pre">split_to_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">split_depth</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.split_to_depth" title="Permalink to this definition">¶</a></dt>
-<dd><p>splits all cellboxes in this grid until a maximum split depth
-is reached, or all cellboxes are homogeneous.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>split_depth</strong> (<em>int</em>) – The maximum split depth reached by any CellBox
-within this Mesh after splitting.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="polar_route.mesh.Mesh.to_json">
-<span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.mesh.Mesh.to_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns this Mesh converted to string parsable as a JSON object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p><dl>
-<dt>a string representation of the CellGird parseable as a</dt><dd><p>JSON object. The JSON object is of the form -</p>
-<dl>
-<dt>{</dt><dd><p>“config”: the config used to initialize the Mesh,
-“cellboxes”: a list of CellBoxes contained within the Mesh,
-“neighbour_graph”: a graph representing the adjacency of CellBoxes</p>
-<blockquote>
-<div><p>within the Mesh</p>
-</div></blockquote>
-</dd>
-</dl>
-<p>}</p>
-</dd>
-</dl>
-</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>json (string)</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cellbox_index</strong> (<em>int</em>) – index of the cellbox that its neighbour will be updated</p></li>
+<li><p><strong>new_neighbour_indx</strong> (<em>int</em>) – the index of the new neighbour that will replace cellbox_index</p></li>
+<li><p><strong>direction</strong> (<em>int</em>) – an int that represents the direction of the neighbours that will get updated (e.g. north, south ,..)</p></li>
+<li><p><strong>cellboxes</strong> (<em>list&lt;CellBox&gt;</em>) – the list that contains all the cellboxes of the mesh</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -862,79 +836,37 @@ within this Mesh after splitting.</p>
 
 </section>
 </section>
+</section>
 
 
-            <div class="clearer"></div>
+           </div>
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <div>
-    <h3><a href="../index.html">Table of Contents</a></h3>
-    <ul>
-<li><a class="reference internal" href="#">8. Methods - Mesh Construction</a><ul>
-<li><a class="reference internal" href="#overview">8.1. Overview</a></li>
-<li><a class="reference internal" href="#module-polar_route.cellbox">8.2. CellBox</a></li>
-<li><a class="reference internal" href="#mesh">8.3. Mesh</a></li>
-</ul>
-</li>
-</ul>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Examples.html" class="btn btn-neutral float-left" title="7. Examples of running code" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Vehicle_specifics.html" class="btn btn-neutral float-right" title="9. Methods - Vessel Performance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, BAS AI Lab.</p>
   </div>
-  <div>
-    <h4>Previous topic</h4>
-    <p class="topless"><a href="Examples.html"
-                          title="previous chapter"><span class="section-number">7. </span>Examples</a></p>
-  </div>
-  <div>
-    <h4>Next topic</h4>
-    <p class="topless"><a href="Vehicle_specifics.html"
-                          title="next chapter"><span class="section-number">9. </span>Methods - Vessel Specifics</a></p>
-  </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="../_sources/sections/Discrete_meshing.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="../genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="../py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="Vehicle_specifics.html" title="9. Methods - Vessel Specifics"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="Examples.html" title="7. Examples"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">polar_route 0.0.12 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><span class="section-number">8. </span>Methods - Mesh Construction</a></li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2022, BAS AI Lab.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.1.1.
-    </div>
-  </body>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>

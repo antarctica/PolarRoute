@@ -23,3 +23,6 @@ configs/*
 waypoints/*
 outputs/*
 docs_builder/*
+testing.ipynb
+docs/*
+dev_venv/*

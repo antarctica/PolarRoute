@@ -1,5 +1,5 @@
 """
-    Regression testing package to ensure consistance functionality in development
+    Regression testing package to ensure consistent functionality in development
     of the PolarRoute python package.
 """
 import numpy as np
@@ -9,16 +9,16 @@ import pytest
 
 # from polar_route.mesh import Mesh
 from polar_route.mesh_generation.mesh_builder import MeshBuilder
-from polar_route.vessel_performance import VesselPerformance
+from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 
-#File locations of all vessel performance meshes to be recaculated for regression testing.
+#File locations of all vessel performance meshes to be recalculated for regression testing.
 TEST_VESSEL_MESHES = [
     './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80.json',
     './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80.json',
     './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80.json'
 ]
 
-#File locations of all enviromental meshes to be recaculated for regression testing.
+#File locations of all environmental meshes to be recalculated for regression testing.
 TEST_ENV_MESHES = [
     './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json',
     './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80.json',
@@ -54,11 +54,12 @@ def vessel_mesh_pair(request):
 @pytest.fixture(scope='session', autouse=False, params=TEST_ABSTRACT_MESHES)
 def abstract_mesh_pair(request):
     """
-        creates a mesh pair for circle meshes listed in TEST_ABSTRACT_MESHES
+        creates a mesh pair for absract shape meshes listed in 
+        array TEST_ABSTRACT_MESHES
     """
     return calculate_env_mesh(request.param)
 
-# Testing Enviromental Meshes
+# Testing Environmental Meshes
 def test_env_mesh_cellbox_count(env_mesh_pair):
     compare_cellbox_count(env_mesh_pair[0], env_mesh_pair[1])
 
@@ -128,7 +129,7 @@ def test_abstract_mesh_neighbour_graph_values(abstract_mesh_pair):
 # Utility functions
 def calculate_env_mesh(mesh_location):
     """
-        recreates an enviromental mesh from the config of a pre-computed mesh.
+        recreates an environmental mesh from the config of a pre-computed mesh.
 
         params:
             mesh_location (string): File location of the mesh to be recomputed
@@ -165,7 +166,9 @@ def calculate_vessel_mesh(mesh_location):
 
     regression_mesh = env_meshes[0]
 
-    new_mesh = VesselPerformance(env_meshes[1], env_meshes[1]['config']['Vessel'])
+    new_mesh = VesselPerformanceModeller(env_meshes[1], env_meshes[1]['config']['Vessel'])
+    new_mesh.model_accessibility()
+    new_mesh.model_performance()
     new_mesh = new_mesh.to_json()
 
     return [regression_mesh, new_mesh]
@@ -201,7 +204,7 @@ def compare_cellbox_ids(mesh_a, mesh_b):
 
         Throws:
             Fails if any cellbox exists in regression_mesh that or not in new_mesh,
-            or any cellbox exsits in new_mesh that is not in regression_mesh
+            or any cellbox exists in new_mesh that is not in regression_mesh
     """
     regression_mesh = mesh_a['cellboxes']
     new_mesh = mesh_b['cellboxes']
@@ -255,15 +258,23 @@ def compare_cellbox_values(mesh_a, mesh_b):
             cellbox_b = indxed_b[cellbox_a['id']]
 
             mismatch_values = []
+            mismatch_keys = []
             for key in cellbox_a.keys():
                 # To prevent crashing if cellboxes have different attributes
                 # This error will be detected by the 'test_cellbox_attributes' test
                 if key in cellbox_b.keys():
-
                     # Round to 5 dec. pl if value is a float, high precision can be issue between OS's
                     if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):
                         value_b = np.round(float(cellbox_b[key]), decimals=5)
                         value_a = np.round(float(cellbox_a[key]), decimals=5)
+                    # We also want to round float values for comparison when contained inside a list
+                    elif (type(cellbox_a[key]) is list) and (type(cellbox_b[key]) is list):
+                        if any(isinstance(val, float) for val in cellbox_a[key]) and any(isinstance(val, float) for val in cellbox_b[key]):
+                            value_b = [np.round(float(v), decimals=5) for v in cellbox_b[key]]
+                            value_a = [np.round(float(v), decimals=5) for v in cellbox_a[key]]
+                        else:
+                            value_b = cellbox_b[key]
+                            value_a = cellbox_a[key]
                     # Otherwise just extract values
                     else:
                         value_b = cellbox_b[key]  
@@ -272,11 +283,12 @@ def compare_cellbox_values(mesh_a, mesh_b):
                     # Compare values
                     
                     if str(value_a) != str(value_b):
-                        mismatch_values.append(key)
-                        mismatch_cellboxes[cellbox_a['id']] = mismatch_values
+                        mismatch_keys.append(key)
+                        mismatch_values.append([value_a,value_b])
+                        mismatch_cellboxes[cellbox_a['id']] = [mismatch_keys, mismatch_values]
 
     assert(len(mismatch_cellboxes) == 0) , \
-        f"Values in <{len(mismatch_cellboxes.keys())}> cellboxes in the new mesh have changed. The changes cellboxes are: {mismatch_cellboxes}"
+        f"Values in <{len(mismatch_cellboxes.keys())}> cellboxes in the new mesh have changed. The changed cellboxes are: {mismatch_cellboxes}"
 
 def compare_cellbox_attributes(mesh_a, mesh_b):
     """
@@ -346,7 +358,7 @@ def compare_neighbour_graph_ids(mesh_a, mesh_b):
     missing_b_keys = list(regression_graph_ids - new_graph_ids)
 
     assert(regression_graph_ids == new_graph_ids) , \
-        f"Mismatch in neighbour graph nodes. <{len(missing_a_keys)}> nodes  have appeared in the new neighbour graph. <{len(missing_b_keys)}> nodes  are missing from the new neighbour graph."
+        f"Mismatch in neighbour graph nodes. <{len(missing_a_keys)}> nodes have appeared in the new neighbour graph. <{len(missing_b_keys)}> nodes are missing from the new neighbour graph."
 
 def compare_neighbour_graph_values(mesh_a, mesh_b):
     """

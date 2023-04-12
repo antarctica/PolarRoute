@@ -2,6 +2,7 @@
 
 
 from datetime import datetime
+from datetime import timedelta
 
 class Boundary:
     """
@@ -51,12 +52,71 @@ class Boundary:
         """
         if time_range is None:
             time_range=[]
+        else: 
+             time_range[0] = self.parse_datetime(time_range[0])
+             time_range[1] = self.parse_datetime(time_range[1])
+
         self.validate_bounds(lat_range , long_range , time_range)
         # Boundary information 
         self.lat_range = lat_range
         self.long_range = long_range
         self.time_range = time_range
 
+    def parse_datetime(self, datetime_str: str):
+        """
+            Attempts to parse a string containing reference to system time into datetime format.
+            If given the string 'TODAY', will return system time.
+            special characters '+' and '-' can be used to adjust system time. e.g 'TODAY + 3' 
+            will return system time + 3 days, 'TODAY - 16' will return system time - 16 days
+            
+            Args:
+                datetime_str (String): String attempted to be parsed to datetime format. 
+                    Expected input format is '%d%m%Y'
+            Returns:
+                date (String): date in a String format, '%Y-%m-%d'.
+            Raises:
+                ValueError : If given 'datetime_str' cannot be parsed, raises ValueError.
+        """
+        DATE_FORMAT = "%Y-%m-%d"
+        
+        datetime_str = datetime_str.upper()
+
+        # check if datetime_str is valid datetime format.
+        try:
+            datetime_object = datetime.strptime(datetime_str, DATE_FORMAT).date()
+            return datetime_object.strftime(DATE_FORMAT)
+        except ValueError:
+            # check if datetime_str contains reference to system-time.
+            if datetime_str.strip() == "TODAY":
+                today = datetime.today()
+                return today.strftime(DATE_FORMAT)
+            elif "TODAY" not in datetime_str:
+                raise ValueError(f'Incorrect date format given. Cannot convert "{datetime_str}" to date.')
+            
+                # check for increment to system time.
+            if "+" in datetime_str:
+                increment = datetime_str.split("+")[1].strip()
+                try:
+                    increment = float(increment)
+                    datetime_object = datetime.today() + timedelta(days = increment)
+                    return datetime_object.strftime(DATE_FORMAT)
+                except ValueError:
+                    raise ValueError(f'Incorrect date format given. Cannot convert "{datetime_str}" to date. ' + \
+                        f'Time increment "{increment}" cannot be cast to float')
+                
+                # check for decrement to system time.
+            elif "-" in datetime_str:
+                decrement = datetime_str.split("-")[1].strip()
+                try:
+                    decrement = float(decrement)
+                    datetime_object = datetime.today() - timedelta(days = decrement)
+                    return datetime_object.strftime(DATE_FORMAT)
+                except ValueError:
+                    raise ValueError(f'Incorrect date format given. Cannot convert "{datetime_str}" to date. ' + \
+                            f'Time decrement "{decrement}" cannot be cast to float')
+            else:
+                raise ValueError(f'Incorrect date format given. Cannot convert "{datetime_str}" to date')
+        
 
     def validate_bounds (self, lat_range , long_range , time_range):
         """
@@ -184,5 +244,16 @@ class Boundary:
                     [ self.long_range[1], self.lat_range[0]],
                     [self.long_range[0], self.lat_range[0], ]]
         return bounds
+
+    def __str__(self):
+
+
+        lat_range = "lat range :[" + str(self.get_lat_min()) + \
+              "," + str(self.get_lat_max()) + "]"
+        long_range = "long range :[" + str(self.get_long_min()) + \
+              "," + str(self.get_long_max()) + "]"
+        time_range = "time range :" + str(self.get_time_range())
+
+        return "{"+ lat_range + ", " + long_range + ", " + time_range + "}"
 
 

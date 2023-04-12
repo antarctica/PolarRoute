@@ -1,46 +1,13 @@
-from polar_route.dataloaders.scalar.abstractScalar import ScalarDataLoader
+from polar_route.dataloaders.scalar.abstract_scalar import ScalarDataLoader
 from polar_route.utils import date_range
-
 
 from datetime import datetime
 import logging
-
 
 import numpy as np
 import xarray as xr
 
 class DensityDataLoader(ScalarDataLoader):
-    def __init__(self, bounds, params):
-        '''
-        Initialises density dataset. Initialises from values in a lookup table
-        This will eventually be deprecated and replaced with a 
-        'Lookup Table Dataloader'
-        
-       Args:
-            bounds (Boundary): 
-                Initial boundary to limit the dataset to
-            params (dict):
-                Dictionary of {key: value} pairs. Keys are attributes 
-                this dataloader requires to function
-        '''
-        logging.info("Initalising BSOSE Depth dataloader")
-        # Creates a class attribute for all keys in params
-        for key, val in params.items():
-            logging.debug(f"self.{key}={val} (dtype={type(val)}) from params")
-            setattr(self, key, val)
-        
-        # Import data
-        self.data = self.import_data(bounds)
-        
-        # Get data name from column name if not set in params
-        if self.data_name is None:
-            logging.debug('- Setting self.data_name from column name')
-            self.data_name = self.get_data_col_name()
-        # or if set in params, set col name to data name
-        else:
-            logging.debug(f'- Setting data column name to {self.data_name}')
-            self.data = self.set_data_col_name(self.data_name)
-        
     def import_data(self, bounds):
         '''
         Creates a simulated dataset of sea ice density based on 
@@ -50,7 +17,7 @@ class DensityDataLoader(ScalarDataLoader):
             bounds (Boundary): Initial boundary to limit the dataset to
             
         Returns:
-            pd.DataFrame: 
+            density_xr (xarray): 
                 Sea Ice Density dataset within limits of bounds. 
                 Dataset has coordinates 'lat', 'long', and variable 'density'
         '''
@@ -105,6 +72,11 @@ class DensityDataLoader(ScalarDataLoader):
         density_df = density_data.\
             to_dataframe().\
             reset_index().\
-            set_index(['lat', 'long', 'time']).reset_index()
+            set_index(['lat', 'long', 'time'])
+        # Cast to xr.Dataset for faster processing
+        density_xr = density_df.to_xarray()
+        # Clear memory of now unused dataframe
+        del density_df
+        # No need to trim data, as was defined by bounds
 
-        return density_df
+        return density_xr

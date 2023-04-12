@@ -11,6 +11,6 @@ From their webpage:
 
 Data can be downloaded from `here <https://data.marine.copernicus.eu/product/SEAICE_BAL_PHY_L4_MY_011_019/description>`_
 
-.. automodule:: polar_route.dataloaders.scalar.balticSeaIce
+.. automodule:: polar_route.dataloaders.scalar.baltic_sea_ice
    :special-members: __init__
    :members:

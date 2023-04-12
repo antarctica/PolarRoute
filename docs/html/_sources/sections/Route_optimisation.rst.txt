@@ -1,15 +1,15 @@
-********
+***********************
 Methods - Route Planner
-********
+***********************
 
-Overview
-##############
+Route Optimisation Overview
+###########################
 
 In this section we will outline the construction of the route paths using the Mesh construction corrected to include the objective functions define and generated in the earlier section.
 
 
-RoutePlanner
-##############
+Route Planner
+#############
 
 .. automodule:: polar_route.route_planner
    :members: 

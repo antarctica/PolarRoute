@@ -141,35 +141,53 @@ where each of the values represent the following:
 Vehicle specifics
 #################
 
-Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
+Once a discrete mesh environment is contracted, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle.
 
-:: 
+::
 
-    from polar_route.mesh import Mesh
-    from polar_route.vessel_performance import VesselPerformance
+    import json
+    from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 
-    with open('config.json', 'r') as f:
-        config = json.load(f)
+    with open('vessel_config.json', 'r') as f:
+        vessel_config = json.load(f)
 
-    mesh = Mesh(config)
-    mesh_json = mesh.to_json()
+    vpm = VesselPerformanceModeller(mesh_json, vessel_config)
 
-    vp = VesselPerformance(mesh_json)
-    vessel_mesh_json = vp.to_json()
+    vpm.model_accessibility()
+    vpm.model_performance()
+
+    vessel_mesh_json = vpm.to_json()
 
 .. note::
-    To be compatible with vessel performance transformations, a Mesh must be constructed with
+    To make use of the full range of vessel performance transformations, a Mesh should be constructed with
     the following attributes:
     
-    * SIC (available via data_loaders: *loader_amsr*, *load_bsose*, *load_modis*)
-    * thickness (available via data_loaders: *load_thickness*)
-    * density (available via data_loaders: *load_density*)
+    * SIC (available via data_loaders: *amsr*, *bsose_sic*, *baltic_sic*, *icenet*, *modis*)
+    * thickness (available via data_loaders: *thickness*)
+    * density (available via data_loaders: *density*)
+    * u10, v10 (available via data_loaders: *era5_wind*)
 
-    see section **Multi Data Input** for more information on data_loaders
+    see section **Dataloader Overview** for more information on data_loaders
+
+    The vessel performance modeller will still run without these attributes but will assign default values from the
+    configuration file where any data is missing.
 
 
-TODO - Description of transformation applied to the mesh json object by Vessel Performance.
+As an example, after running the vessel performance modeller with the SDA class and all relevant data each cellbox will
+have a set of new attributes as follows:
+
+* **speed** *(list)* : The speed of the vessel in that cell when travelling to each of its neighbours.
+* **fuel** *(list)* : The rate of fuel consumption in that cell when travelling to each of its neighbours.
+* **inaccessible** *(boolean)* : Whether the cell is considered inaccessible to the vessel for any reason.
+* **land** *(boolean)* : Whether the cell is shallow enough to be considered land by the vessel.
+* **ext_ice** *(boolean)* : Whether the cell has enough ice to be inaccessible to the vessel.
+* **resistance** *(list)* : The total resistance force the vessel will encounter in that cell when travelling to each of its neighbours.
+* **ice resistance** *(float)* : The resistance force due to ice.
+* **wind resistance** *(list)* : The resistance force due to wind.
+* **relative wind speed** *(list)* : The apparent wind speed acting on the vessel.
+* **relative wind angle** *(list)* : The angle of the apparent wind acting on the vessel.
+
 
 ##############
 Route planning

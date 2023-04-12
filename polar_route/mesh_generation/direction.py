@@ -9,4 +9,11 @@ class Direction:
     north= -4
 
     def __init__(self):
-        pass
+        self.north_east = 1
+        self.east = 2
+        self.south_east = 3
+        self.south = 4
+        self.south_west = -1
+        self.west = -2
+        self.north_west = -3
+        self.north = -4

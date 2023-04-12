@@ -15,6 +15,6 @@ From their webpage:
 Data can be downloaded from `here <https://data.marine.copernicus.eu/product/BALTICSEA_REANALYSIS_PHY_003_011/description>`_
 
 
-.. automodule:: polar_route.dataloaders.vector.balticCurrent
+.. automodule:: polar_route.dataloaders.vector.baltic_current
    :special-members: __init__
    :members:
