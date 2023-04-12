@@ -8,6 +8,7 @@ from calendar import monthrange
 
 import numpy as np
 from scipy.fftpack import fftshift
+from math import log10, floor
 
 """
 Utilities that might be of use
@@ -62,6 +63,16 @@ def date_range(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
+
+def round_to_sigfig(x, sigfig=5):
+    if type(x) == int:
+        x = [x]
+    x = np.array(x)
+    dec_pl = sigfig - np.floor(np.log10(np.abs(x))).astype(int)-1
+    # Change 0's to 0 sig fig (overflow error produces this number)
+    dec_pl[dec_pl == -9223372036854775807] = 0
+    rounded = [np.around(x[i], decimals=dec_pl[i]) for i in range(len(x))]
+    return np.array(rounded)
 
 
 # GRF functions
