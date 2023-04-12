@@ -5,6 +5,7 @@ from polar_route.dataloaders.scalar.bsoseSeaIce import BSOSESeaIceDataLoader
 from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
 from polar_route.dataloaders.scalar.gebco import GEBCODataLoader
 from polar_route.dataloaders.scalar.icenet import IceNetDataLoader
+from polar_route.dataloaders.scalar.misr import MISRDataLoader
 from polar_route.dataloaders.scalar.modis import MODISDataLoader
 from polar_route.dataloaders.scalar.scalarCSV import ScalarCSVDataLoader
 from polar_route.dataloaders.scalar.shape import ShapeDataLoader
@@ -63,6 +64,7 @@ class DataLoaderFactory:
             'gebco':       (GEBCODataLoader, ['file']),
             'icenet':      (IceNetDataLoader, ['file']),
             'modis':       (MODISDataLoader, ['file']),
+            'misr':        (MISRDataLoader, ['file']),
             # TODO Make these LUT dataloaders
             'thickness': (ThicknessDataLoader, []),
             'density':   (DensityDataLoader, []),
@@ -188,3 +190,41 @@ class DataLoaderFactory:
         
         return params
     
+if __name__=='__main__':
+    from polar_route.mesh_generation.boundary import Boundary
+    # bounds=Boundary([-80, -40], [-129.9999, -30.0001], ['2013-01-31', '2013-03-01'])
+    bounds=Boundary([-80, -40], [-129.9999, 30.0001], ['2013-01-31', '2013-03-01'])
+    cell_bounds=Boundary([-42.5 , -40], [-19.99, -14.99], ['2013-01-31', '2013-03-01'])
+    if True:
+        params = {
+            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/sic/bsose/bsose_i122_2013to2017_1day_SeaIceArea.nc'
+        }
+        bsose = DataLoaderFactory().get_dataloader('bsose_sic',bounds, params)
+        print(bsose.get_value(cell_bounds))
+    
+    if False:
+        params = {
+            'file': '/home/habbot/Documents/Work/PolarRoute/datastore/sir/MISR/April 2019 Roughness.h5',
+            'data_name': 'SIR'
+        }
+        misr = DataLoaderFactory().get_dataloader('misr', bounds, params)
+        
+    if False:
+        params = {
+            "folder": "/home/habbot/Documents/Work/PolarRoute/datastore/sic/amsr_north/",
+            "data_name": "SIC",
+            "hemisphere": "north",
+            "value_fill_types": "parent",
+            "aggregate_type": "MEAN",
+            "splitting_conditions": [
+                {
+                    "SIC": {
+                        "threshold": 35,
+                        "upper_bound": 0.9,
+                        "lower_bound": 0.1
+                    }
+                }
+            ]
+        }
+        amsr = DataLoaderFactory().get_dataloader('AMSR_folder', bounds, params)
+    print('hi')
