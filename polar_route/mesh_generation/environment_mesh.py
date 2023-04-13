@@ -1,5 +1,10 @@
 import json
 import logging
+import geopandas as gpd
+import pandas as pd
+from shapely import wkt
+
+
 from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
 from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
@@ -128,6 +133,31 @@ class EnvironmentMesh:
         output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
         return json.loads(json.dumps(output))
+    
+    def to_geojson(self):
+        """
+            Returns the cellboxes of this mesh converted to a geoJSON format.
+
+            Returns:
+                geojson: The cellboxes of this mesh in a geoJSON format
+
+            NOTE:
+                geoJSON format does not contain all the data included in the standard 
+                .to_json() format. geoJSON meshes do not contain the configs used to 
+                build them, or the neighbour-graph which details how each of the 
+                cellboxes are connected together.
+        """
+        geojson = ""
+        mesh_json = self.to_json()
+
+        # Formatting mesh to geoJSON
+        mesh_df = pd.DataFrame(mesh_json['cellboxes'])
+        mesh_df['geometry'] = mesh_df['geometry'].apply(wkt.loads)
+        mesh_gdf = gpd.GeoDataFrame(mesh_df, crs = "EPSG:4326", geometry="geometry")
+        geojson = json.loads(mesh_gdf.to_json())
+
+        return geojson
+        
 
     def cellboxes_to_json(self):
         """
@@ -176,11 +206,31 @@ class EnvironmentMesh:
         else:
             raise ValueError(f'Invalid cellbox index')
 
-    def save(self, path):
+    def save(self, path, format="JSON"):
+        """
+            Saves this object to a location in local storage. 
+
+            Args:
+                path (String): The file location the mesh will be saved to.
+                format (String) (optional): The format the mesh will be saved in.
+                    If not format is given, default is JSON.
+                    Supported formats are:
+                        JSON
+                        GEOJSON
+        """
+        
 
         logging.info(f"- saving the environment mesh to {path}")
         with open(path, 'w') as f:
-            json.dump(self.to_json(), f)
+            if format.upper() == "JSON":
+                logging.info(f"Saving mesh in {format} format")
+                json.dump(self.to_json(), f)
+            elif format.upper() == "GEOJSON":
+                logging.info(f"Saving mesh in {format} format")
+                json.dump(self.to_geojson(), f)
+            else:
+                logging.warning(f"Cannot save mesh in a {format} format")
+
             if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
                dump_path = path.replace (".json" , ".dump")
                with open(dump_path, 'w') as dump_f:

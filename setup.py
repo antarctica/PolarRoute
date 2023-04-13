@@ -42,7 +42,8 @@ setup(
         'console_scripts': [
             "create_mesh=polar_route.cli:create_mesh_cli",
             "add_vehicle=polar_route.cli:add_vehicle_cli",
-            "optimise_routes=polar_route.cli:optimise_routes_cli"],
+            "optimise_routes=polar_route.cli:optimise_routes_cli",
+            "export_mesh=polar_route.cli:export_mesh_cli"],
     },
     keywords=[],
     packages=find_packages(),
