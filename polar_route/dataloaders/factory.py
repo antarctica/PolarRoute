@@ -1,25 +1,28 @@
 from polar_route.dataloaders.scalar.amsr import AMSRDataLoader
-from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
-from polar_route.dataloaders.scalar.bsoseDepth import BSOSEDepthDataLoader
-from polar_route.dataloaders.scalar.bsoseSeaIce import BSOSESeaIceDataLoader
-from polar_route.dataloaders.scalar.balticSeaIce import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
+from polar_route.dataloaders.scalar.bsose_depth import BSOSEDepthDataLoader
+from polar_route.dataloaders.scalar.bsose_sea_ice import BSOSESeaIceDataLoader
+from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
 from polar_route.dataloaders.scalar.gebco import GEBCODataLoader
 from polar_route.dataloaders.scalar.icenet import IceNetDataLoader
 from polar_route.dataloaders.scalar.modis import MODISDataLoader
-from polar_route.dataloaders.scalar.scalarCSV import ScalarCSVDataLoader
+from polar_route.dataloaders.scalar.scalar_csv import ScalarCSVDataLoader
+from polar_route.dataloaders.scalar.scalar_grf import ScalarGRFDataLoader
 from polar_route.dataloaders.scalar.shape import ShapeDataLoader
 
-from polar_route.dataloaders.vector.balticCurrent import BalticCurrentDataLoader
-from polar_route.dataloaders.vector.era5Wind import ERA5WindDataLoader
-from polar_route.dataloaders.vector.northSeaCurrent import NorthSeaCurrentDataLoader
-from polar_route.dataloaders.vector.oras5Current import ORAS5CurrentDataLoader
+from polar_route.dataloaders.vector.baltic_current import BalticCurrentDataLoader
+from polar_route.dataloaders.vector.era5_wind import ERA5WindDataLoader
+from polar_route.dataloaders.vector.north_sea_current import NorthSeaCurrentDataLoader
+from polar_route.dataloaders.vector.oras5_current import ORAS5CurrentDataLoader
 from polar_route.dataloaders.vector.sose import SOSEDataLoader
-from polar_route.dataloaders.vector.vectorCSV import VectorCSVDataLoader
+from polar_route.dataloaders.vector.vector_csv import VectorCSVDataLoader
+from polar_route.dataloaders.vector.vector_grf import VectorGRFDataLoader
 
 from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
 
-
+from glob import glob
+import os
 
 
 class DataLoaderFactory:
@@ -34,8 +37,11 @@ class DataLoaderFactory:
         Args:
             name (str): 
                 Name of data source/type. Must be one of following - 
-                'GEBCO','AMSR','SOSE','thickness','density',
-                'GRFScalar','GRFVector','GRFMask'
+                'scalar_csv', 'scalar_grf', 'binary_grf', 'amsr', 'bsose_sic',
+                'bsose_depth', 'baltic_sic', 'gebco', 'icenet', 'modis', 
+                'thickness', 'density', 'circle', 'square', 'gradient',
+                'checkerboard', 'vector_csv', 'vector_grf', 'baltic_currents',
+                'era5_wind', 'northsea_currents', 'oras5_currents', 'sose'
             bounds (Boundary): 
                 Boundary object with initial mesh space&time limits
             params (dict): 
@@ -54,32 +60,33 @@ class DataLoaderFactory:
         
         dataloader_requirements = {
             # Scalar
-            'scalarcsv':(ScalarCSVDataLoader, ['file']),
-            'amsr':        (AMSRDataLoader, ['file', 'hemisphere']),
-            'amsr_folder': (AMSRDataLoader, ['folder', 'hemisphere']),
-            'bsose_sic':   (BSOSESeaIceDataLoader, ['file']),
-            'bsose_depth': (BSOSEDepthDataLoader, ['file']),
-            'baltic_sic':  (BalticSeaIceDataLoader, ['file']),
-            'gebco':       (GEBCODataLoader, ['file']),
-            'icenet':      (IceNetDataLoader, ['file']),
-            'modis':       (MODISDataLoader, ['file']),
-            # TODO Make these LUT dataloaders
-            'thickness': (ThicknessDataLoader, []),
-            'density':   (DensityDataLoader, []),
+            'scalar_csv':   (ScalarCSVDataLoader, ['files']),
+            'scalar_grf':   (ScalarGRFDataLoader, []),
+            'binary_grf':   (ScalarGRFDataLoader,[]),
+            'amsr':         (AMSRDataLoader, ['files', 'hemisphere']),
+            'bsose_sic':    (BSOSESeaIceDataLoader, ['files']),
+            'bsose_depth':  (BSOSEDepthDataLoader, ['files']),
+            'baltic_sic':   (BalticSeaIceDataLoader, ['files']),
+            'gebco':        (GEBCODataLoader, ['files']),
+            'icenet':       (IceNetDataLoader, ['files']),
+            'modis':        (MODISDataLoader, ['files']),
+            'thickness':    (ThicknessDataLoader, []),
+            'density':      (DensityDataLoader, []),
             # Scalar - Abstract shapes
             'circle':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'radius', 'centre']),
             'square':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'side_length', 'centre']),
             'gradient':     (ShapeDataLoader, ['shape', 'nx', 'ny', 'vertical']),
             'checkerboard': (ShapeDataLoader, ['shape', 'nx', 'ny', 'gridsize']),
             # Vector
-            'vectorcsv':        (VectorCSVDataLoader, ['file']),
-            'baltic_currents':  (BalticCurrentDataLoader, ['file']),
-            'era5_wind':        (ERA5WindDataLoader, ['file']),
-            'northsea_currents':(NorthSeaCurrentDataLoader, ['file']),
-            'oras5_currents':   (ORAS5CurrentDataLoader, ['file_u', 'file_v']),
-            'sose':             (SOSEDataLoader, ['file'])
-            # Lookup Table
-            # TODO
+            'vector_csv':       (VectorCSVDataLoader, ['files']),
+            'vector_grf':       (VectorGRFDataLoader, []),
+            'baltic_currents':  (BalticCurrentDataLoader, ['files']),
+            'era5_wind':        (ERA5WindDataLoader, ['files']),
+            'northsea_currents':(NorthSeaCurrentDataLoader, ['files']),
+            # TODO make it run from 'files'
+            'oras5_currents':   (ORAS5CurrentDataLoader, ['files']),
+            'sose':             (SOSEDataLoader, ['files'])
+
         }
         # If name is recognised as a dataloader
         if name in dataloader_requirements:
@@ -116,9 +123,11 @@ class DataLoaderFactory:
                 Dictionary of attributes the dataloader will require, 
                 completed with default values if not provided in config.
         '''
+        # Save dataloader name in params
+        params['dataloader_name'] = name
         
         if 'downsample_factors' not in params:
-            params['downsample_factors'] = (1,1)
+            params['downsample_factors'] = [1,1]
 
         if 'data_name' not in params:
             params['data_name'] = None
@@ -129,10 +138,32 @@ class DataLoaderFactory:
         if 'min_dp' not in params:
             params['min_dp'] = min_dp
             
+        if 'in_proj' not in params:
+            params['in_proj'] = 'EPSG:4326'
+            
+        if 'out_proj' not in params:
+            params['out_proj'] = 'EPSG:4326'
+            
+        if 'x_col' not in params:
+            params['x_col'] = 'lat'
+
+        if 'y_col' not in params:
+            params['y_col'] = 'long'
+            
+        if 'file' in params:
+            params['files'] = [params['file']]
+        elif 'folder' in params:
+            folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existant
+            params['files'] = sorted(glob(folder+'*'))
+            
         # Set defaults for abstract data generators
         if name in ['circle', 'checkerboard', 'gradient']:
             params = self.set_default_shape_params(name, params)
-                
+        
+        # Set defaults for GRF generators
+        if name in ['binary_grf', 'scalar_grf', 'vector_grf']:
+            params = self.set_default_grf_params(name, params)
+        
         return params
     
     def set_default_shape_params(self, name, params):
@@ -187,4 +218,51 @@ class DataLoaderFactory:
         
         
         return params
-    
+
+    def set_default_grf_params(self, name, params):
+        # Params that all GRF dataloaders need
+        if 'data_name' not in params:
+            params['data_name'] = 'data'
+        if 'seed' not in params:
+            params['seed'] = None
+        if 'size' not in params:
+            params['size'] = 512
+        if 'alpha' not in params:
+            params['alpha'] = 3
+        # Specific GRF loaders
+        # If making a mask (e.g. land)
+        if name == 'binary_grf':
+            params['binary'] = True
+            if 'min' not in params:
+                params['min'] = 0
+            if 'max' not in params:
+                params['max'] = 1
+            # If threshold not set, make it average of min/max val
+            if 'threshold' not in params:
+                params['threshold'] = 0.5
+        # If making a scalar field
+        elif name == 'scalar_grf':
+            params['binary'] = False
+            if 'min' not in params:
+                params['min'] = -10
+            if 'max' not in params:
+                params['max'] = 10
+            # If threshold not set, make it min/max vals
+            if 'threshold' not in params:
+                params['threshold'] = [0,1]
+            if 'multiplier' not in params:
+                params['multiplier'] = 1
+            if 'offset' not in params:
+                params['offset'] = 0
+        # If making a vector field
+        elif name == 'vector_grf':
+            if 'min' not in params:
+                params['min'] = 0
+            if 'max' not in params:
+                params['max'] = 10
+            if 'vec_x' not in params:
+                params['vec_x'] = 'uC'
+            if 'vec_y' not in params:
+                params['vec_y'] = 'vC'
+                
+        return params

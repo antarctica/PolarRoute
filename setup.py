@@ -1,7 +1,9 @@
 from setuptools import setup, find_packages
 
 import polar_route
-
+import polar_route.dataloaders
+import polar_route.mesh_generation
+import polar_route.vessel_performance
 
 def get_content(filename):
     with open(filename, "r") as fh:

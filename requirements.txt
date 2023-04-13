@@ -1,3 +1,4 @@
+dask
 folium
 geopandas
 matplotlib
@@ -6,3 +7,4 @@ numpy>=1.21.6
 pandas>=1.3.5,<1.5
 tqdm
 xarray
+scipy

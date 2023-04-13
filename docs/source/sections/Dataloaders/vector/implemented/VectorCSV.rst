@@ -7,6 +7,6 @@ it into a data source for mesh construction. It was primarily used in testing
 for loading dummy data to test performance. As such, there is no data source 
 for this dataloader.
 
-.. automodule:: polar_route.dataloaders.vector.vectorCSV
+.. automodule:: polar_route.dataloaders.vector.vector_csv
    :special-members: __init__
    :members:
