@@ -70,7 +70,7 @@ def round_to_sigfig(x, sigfig=5):
     x = np.array(x)
     dec_pl = sigfig - np.floor(np.log10(np.abs(x))).astype(int)-1
     # Change 0's to 0 sig fig (overflow error produces this number)
-    dec_pl[dec_pl < -9223372036854775800] = 0
+    dec_pl[dec_pl == np.log10(0).astype(int)] = 0
     rounded = [np.around(x[i], decimals=dec_pl[i]) for i in range(len(x))]
     return np.array(rounded)
 
