@@ -45,6 +45,8 @@ def _json_str(input):
 def _pandas_dataframe_str(input):
     if type(input) is dict:
         output = input
+    elif type(input) == type(pd.DataFrame()):
+        output = input
     elif type(input) is str:
         try:
             output = pd.read_csv(input)
