@@ -55,7 +55,7 @@ def route_pair(request):
     return [old_route, new_route]
 
 # Generating new outputs
-def calculate_smoothed_route(route_info, route_json):
+def calculate_smoothed_route(config, mesh):
     """
     Calculates the fuel-optimised route, with dijkstra but no smoothing
 
@@ -67,9 +67,7 @@ def calculate_smoothed_route(route_info, route_json):
     """
 
     # Initial set up
-    config      = route_info
-    mesh        = route_json
-    waypoints   = extract_waypoints(route_json)
+    waypoints   = extract_waypoints(mesh)
     
     # Calculate dijskstra route
     rp = RoutePlanner(mesh, config, waypoints)
