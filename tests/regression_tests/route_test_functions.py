@@ -6,54 +6,29 @@ from polar_route.utils import round_to_sigfig
 SIG_FIG_TOLERANCE = 5
 
 # Testing fuel optimised routes
-def test_fuel_route_coordinates(fuel_route_pair):
-    compare_route_coordinates(fuel_route_pair[0], fuel_route_pair[1])
+def test_route_coordinates(route_pair):
+    compare_route_coordinates(route_pair[0], route_pair[1])
 
-def test_fuel_waypoint_names(fuel_route_pair):
-    compare_waypoint_names(fuel_route_pair[0], fuel_route_pair[1])
+def test_waypoint_names(route_pair):
+    compare_waypoint_names(route_pair[0], route_pair[1])
     
-def test_fuel_time(fuel_route_pair):
-    compare_time(fuel_route_pair[0], fuel_route_pair[1])
+def test_time(route_pair):
+    compare_time(route_pair[0], route_pair[1])
 
-def test_fuel_fuel(fuel_route_pair):
-    compare_fuel(fuel_route_pair[0], fuel_route_pair[1])
+def test_fuel(route_pair):
+    compare_fuel(route_pair[0], route_pair[1])
 
-def test_fuel_cell_indices(fuel_route_pair):
-    compare_cell_indices(fuel_route_pair[0], fuel_route_pair[1])
+def test_cell_indices(route_pair):
+    compare_cell_indices(route_pair[0], route_pair[1])
 
-def test_fuel_cases(fuel_route_pair):
-    compare_cases(fuel_route_pair[0], fuel_route_pair[1])
+def test_cases(route_pair):
+    compare_cases(route_pair[0], route_pair[1])
     
-def test_fuel_distance(fuel_route_pair):
-    compare_distance(fuel_route_pair[0], fuel_route_pair[1])
+def test_distance(route_pair):
+    compare_distance(route_pair[0], route_pair[1])
     
-def test_fuel_speed(fuel_route_pair):
-    compare_speed(fuel_route_pair[0], fuel_route_pair[1])
-    
-# Testing time optimised routes
-def test_time_route_coordinates(time_route_pair):
-    compare_route_coordinates(time_route_pair[0], time_route_pair[1])
-
-def test_time_waypoint_names(time_route_pair):
-    compare_waypoint_names(time_route_pair[0], time_route_pair[1])
-    
-def test_time_time(time_route_pair):
-    compare_time(time_route_pair[0], time_route_pair[1])
-
-def test_time_fuel(time_route_pair):
-    compare_fuel(time_route_pair[0], time_route_pair[1])
-    
-def test_time_cell_indices(time_route_pair):
-    compare_cell_indices(time_route_pair[0], time_route_pair[1])
-
-def test_time_cases(time_route_pair):
-    compare_cases(time_route_pair[0], time_route_pair[1])
-    
-def test_time_distance(time_route_pair):
-    compare_distance(time_route_pair[0], time_route_pair[1])
-    
-def test_time_speed(time_route_pair):
-    compare_speed(time_route_pair[0], time_route_pair[1])
+def test_speed(route_pair):
+    compare_speed(route_pair[0], route_pair[1])
     
 
 # Comparison between old and new
@@ -255,3 +230,14 @@ def extract_path(mesh):
         json: Dictionary with path information
     """
     return mesh['paths']['features'][0]
+
+def zip_info_route(info, routes):
+    """
+    Zips together route info with each route in list of routes
+    Args:
+        info (str): File name for route info json
+        routes (list): List of filenames for routes pertinent to route info
+    Returns:
+        list: Zipped pair of route info and output route
+    """
+    return [(info, route) for route in routes]

@@ -3,20 +3,15 @@ import pytest
 
 from polar_route.route_planner import RoutePlanner
 from .route_test_functions import extract_waypoints
+from .route_test_functions import zip_info_route
 
 # Import tests, which are automatically run
-from .route_test_functions import test_fuel_route_coordinates
-from .route_test_functions import test_fuel_waypoint_names
-from .route_test_functions import test_fuel_time
-from .route_test_functions import test_fuel_fuel
-from .route_test_functions import test_fuel_cell_indices
-from .route_test_functions import test_fuel_cases
-from .route_test_functions import test_time_route_coordinates
-from .route_test_functions import test_time_waypoint_names
-from .route_test_functions import test_time_time
-from .route_test_functions import test_time_fuel
-from .route_test_functions import test_time_cell_indices
-from .route_test_functions import test_time_cases
+from .route_test_functions import test_route_coordinates
+from .route_test_functions import test_waypoint_names
+from .route_test_functions import test_time
+from .route_test_functions import test_fuel
+from .route_test_functions import test_cell_indices
+from .route_test_functions import test_cases
 
 FUEL_ROUTE_INFO = './example_routes/route_info_fuel.json'
 TIME_ROUTE_INFO = './example_routes/route_info_time.json'
@@ -38,8 +33,9 @@ TEST_TIME_ROUTES = [
 ]
 
 # Pairing old and new outputs
-@pytest.fixture(scope='session', autouse=False, params=TEST_FUEL_ROUTES)
-def fuel_route_pair(request):
+@pytest.fixture(scope='session', autouse=False, params=zip_info_route(FUEL_ROUTE_INFO, TEST_FUEL_ROUTES) + 
+                                                       zip_info_route(TIME_ROUTE_INFO, TEST_TIME_ROUTES))
+def route_pair(request):
     """
     Creates a pair of JSON objects, one newly generated, one as old reference
     Args:
@@ -49,29 +45,13 @@ def fuel_route_pair(request):
     Returns:
         list: [reference json, new json]
     """
+    route_info = request.param[0]
+    route_file = request.param[1]
     # Load reference JSON
-    with open(request.param, 'r') as fp:
+    with open(route_file, 'r') as fp:
         old_route = json.load(fp)
     # Create new json (cast old to dict to create copy to avoid modifying)
-    new_route = calculate_dijkstra_route(FUEL_ROUTE_INFO, dict(old_route))
-    return [old_route, new_route]
-
-@pytest.fixture(scope='session', autouse=False, params=TEST_TIME_ROUTES)
-def time_route_pair(request):
-    """
-    Creates a pair of JSON objects, one newly generated, one as old reference
-    Args:
-        request (fixture): 
-            fixture object including list of jsons of time optimised routes
-
-    Returns:
-        list: [reference json, new json]
-    """
-    # Load reference JSON
-    with open(request.param, 'r') as fp:
-        old_route = json.load(fp)
-    # Create new json (cast old to dict to create copy to avoid modifying)
-    new_route = calculate_dijkstra_route(TIME_ROUTE_INFO, dict(old_route))
+    new_route = calculate_dijkstra_route(route_info, dict(old_route))
     return [old_route, new_route]
 
 # Generating new outputs
