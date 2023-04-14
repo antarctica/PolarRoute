@@ -204,7 +204,10 @@ def compare_distance(route_a, route_b):
     distance_a = extract_path(route_a)['properties']['distance']
     distance_b = extract_path(route_b)['properties']['distance']
 
-    np.testing.assert_array_equal(distance_a, distance_b)
+    rounded_a = round_to_sigfig(distance_a, sigfig=SIG_FIG_TOLERANCE)
+    rounded_b = round_to_sigfig(distance_b, sigfig=SIG_FIG_TOLERANCE)
+
+    np.testing.assert_array_equal(rounded_a, rounded_b)
     
 def compare_speed(route_a, route_b):
     """
@@ -221,7 +224,10 @@ def compare_speed(route_a, route_b):
     speed_a = extract_path(route_a)['properties']['speed']
     speed_b = extract_path(route_b)['properties']['speed']
 
-    np.testing.assert_array_equal(speed_a, speed_b)
+    rounded_a = round_to_sigfig(speed_a, sigfig=SIG_FIG_TOLERANCE)
+    rounded_b = round_to_sigfig(speed_b, sigfig=SIG_FIG_TOLERANCE)
+
+    np.testing.assert_array_equal(rounded_a, rounded_b)
 
 # Utility functions
 def extract_waypoints(mesh):

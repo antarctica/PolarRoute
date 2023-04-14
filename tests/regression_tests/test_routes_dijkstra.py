@@ -2,21 +2,21 @@ import json
 import pytest
 
 from polar_route.route_planner import RoutePlanner
-from .route_methods import extract_waypoints
+from .route_test_functions import extract_waypoints
 
 # Import tests, which are automatically run
-from .route_methods import test_fuel_route_coordinates
-from .route_methods import test_fuel_waypoint_names
-from .route_methods import test_fuel_time
-from .route_methods import test_fuel_fuel
-from .route_methods import test_fuel_cell_indices
-from .route_methods import test_fuel_cases
-from .route_methods import test_time_route_coordinates
-from .route_methods import test_time_waypoint_names
-from .route_methods import test_time_time
-from .route_methods import test_time_fuel
-from .route_methods import test_time_cell_indices
-from .route_methods import test_time_cases
+from .route_test_functions import test_fuel_route_coordinates
+from .route_test_functions import test_fuel_waypoint_names
+from .route_test_functions import test_fuel_time
+from .route_test_functions import test_fuel_fuel
+from .route_test_functions import test_fuel_cell_indices
+from .route_test_functions import test_fuel_cases
+from .route_test_functions import test_time_route_coordinates
+from .route_test_functions import test_time_waypoint_names
+from .route_test_functions import test_time_time
+from .route_test_functions import test_time_fuel
+from .route_test_functions import test_time_cell_indices
+from .route_test_functions import test_time_cases
 
 FUEL_ROUTE_INFO = './example_routes/route_info_fuel.json'
 TIME_ROUTE_INFO = './example_routes/route_info_time.json'
