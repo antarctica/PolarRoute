@@ -20,20 +20,20 @@ from .mesh_test_functions import test_mesh_neighbour_graph_values
 
 #File locations of all environmental meshes to be recalculated for regression testing.
 TEST_ENV_MESHES = [
-    './example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json',
-    './example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80.json',
-    './example_meshes/Enviromental_Meshes/create_mesh.output2019_6_80.json'
+    './example_meshes/env_meshes/mesh_2013.json',
+    './example_meshes/env_meshes/mesh_2016.json',
+    './example_meshes/env_meshes/mesh_2019.json'
 ]
 
 TEST_ABSTRACT_MESHES = [
-    './example_meshes/Abstract_Environmental_Meshes/vgrad_n201_vT_mesh.json',
-    './example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json',
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw2.5_gh2.5_mesh.json',
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw5_gh2.5_mesh.json',
-    './example_meshes/Abstract_Environmental_Meshes/checkerboard_n201_gw6_gh3_mesh.json',
-    './example_meshes/Abstract_Environmental_Meshes/circle_n201_r2_cy-62.5_cx-60.0_mesh.json',
-    './example_meshes/Abstract_Environmental_Meshes/cornercirclesplit_n201_r3_cy-65_cx-70_mesh.json',
-    './example_meshes/Abstract_Environmental_Meshes/cornercirclenosplit_n201_r3_cy-65_cx-70_mesh.json'
+    './example_meshes/abstract_env_meshes/vgrad.json',
+    './example_meshes/abstract_env_meshes/hgrad.json',
+    './example_meshes/abstract_env_meshes/checkerboard_1.json',
+    './example_meshes/abstract_env_meshes/checkerboard_2.json',
+    './example_meshes/abstract_env_meshes/checkerboard_3.json',
+    './example_meshes/abstract_env_meshes/circle.json',
+    './example_meshes/abstract_env_meshes/circle_quadrant_split.json',
+    './example_meshes/abstract_env_meshes/circle_quadrant_nosplit.json'
 ]
 
 @pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES)

@@ -22,9 +22,9 @@ from .mesh_test_functions import test_mesh_neighbour_graph_values
 
 #File locations of all vessel performance meshes to be recalculated for regression testing.
 TEST_VESSEL_MESHES = [
-    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2013_4_80.json',
-    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2017_6_80.json',
-    './example_meshes/Vessel_Performance_Meshes/add_vehicle.output2019_6_80.json'
+    './example_meshes/vessel_meshes/vessel_2013.json',
+    './example_meshes/vessel_meshes/vessel_2017.json',
+    './example_meshes/vessel_meshes/vessel_2019.json'
 ]
 
 @pytest.fixture(scope='session', autouse=False, params=TEST_VESSEL_MESHES)
