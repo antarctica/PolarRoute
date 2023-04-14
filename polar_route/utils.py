@@ -65,12 +65,30 @@ def date_range(start_date, end_date):
 
 
 def round_to_sigfig(x, sigfig=5):
-    if type(x) == int:
+    """
+    Rounds numbers to some number of significant figures
+
+    Args:
+        x (float or np.array): Value(s) to round to sig figs
+        sigfig (int): Number of significant figures desired
+
+    Returns:
+        np.array:
+            Values rounded to the desired number of significant figures
+    """
+    # Cast as array if not initially, so that later processes all act as expected
+    if type(x) == int or type(x) == float:
         x = [x]
     x = np.array(x)
-    dec_pl = sigfig - np.floor(np.log10(np.abs(x))).astype(int)-1
+    # Determine number of decimal places to round each number to
+    # np.abs because can't find log of negative number
+    # np.log10 to get position of most significant digit
+    # np.floor to round to most significant digit
+    # np.array.astype(int) to enable np.around to work later
+    dec_pl = sigfig - np.floor(np.log10(np.abs(x))).astype(int) - 1
     # Change 0's to 0 sig fig (overflow error produces this number)
-    dec_pl[dec_pl == sigfig - np.floor(np.log10(0)).astype(int)-1] = 0
+    dec_pl[dec_pl == sigfig - np.floor(np.log10(0)).astype(int) - 1] = 0
+    # Round to sig figs
     rounded = [np.around(x[i], decimals=dec_pl[i]) for i in range(len(x))]
     return np.array(rounded)
 
