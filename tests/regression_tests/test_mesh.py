@@ -38,16 +38,34 @@ TEST_ABSTRACT_MESHES = [
 
 @pytest.fixture(scope='session', autouse=False, params=TEST_ENV_MESHES + TEST_ABSTRACT_MESHES)
 def mesh_pair(request):
+    """
+    Creates a pair of JSON objects, one newly generated, one as old reference
+    Args:
+        request (fixture):
+            fixture object including list of meshes to regenerate
+
+    Returns:
+        list: old and new mesh jsons for comparison
+    """
     with open(request.param, 'r') as fp:
         old_mesh = json.load(fp)
     
-    new_mesh = calculate_mesh(old_mesh)
+    mesh_config = old_mesh['config']
+    new_mesh = calculate_env_mesh(mesh_config)
 
     return [old_mesh, new_mesh]
 
-def calculate_mesh(mesh_json):
-    config = mesh_json['config']
-    mesh_builder = MeshBuilder(config)
+def calculate_env_mesh(mesh_config):
+    """
+    Creates a new environmental mesh from the old mesh's config
+
+    Args:
+        mesh_config (json): Config to generate new mesh from
+
+    Returns:
+        json: Newly regenerated mesh
+    """
+    mesh_builder = MeshBuilder(mesh_config)
     new_mesh = mesh_builder.build_environmental_mesh()
 
     return new_mesh.to_json()

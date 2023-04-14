@@ -33,25 +33,40 @@ OUTPUT_MESHES = [
 
 @pytest.fixture(scope='session', autouse=False, params=zip(INPUT_MESHES, OUTPUT_MESHES))
 def mesh_pair(request):
+    """
+    Creates a pair of JSON objects, one newly generated, one as old reference
+    Args:
+        request (fixture):
+            fixture object including list of meshes to regenerate
 
+    Returns:
+        list: old and new mesh jsons for comparison
+    """
     input_mesh_file = request.param[0]
     output_mesh_file = request.param[1]
-
+    # Open vessel mesh for reference
     with open(output_mesh_file, 'r') as fp:
         old_mesh = json.load(fp)
-
+    # Open env mesh to generate new vessel mesh
     with open(input_mesh_file, 'r') as fp:
         input_mesh = json.load(fp)
-    
+    # Extract out vessel config from reference mesh
     vessel_config = old_mesh['config']['Vessel']
-    new_mesh = calculate_mesh(input_mesh, vessel_config)
-
-
+    new_mesh = calculate_vessel_mesh(input_mesh, vessel_config)
     
     return [old_mesh, new_mesh]
 
-def calculate_mesh(mesh_json, vessel_config):
+def calculate_vessel_mesh(mesh_json, vessel_config):
+    """
+    Creates a new, pruned and updated mesh from the environmental mesh
 
+    Args:
+        mesh_json (json): Environmental mesh to modify with vessel parameters
+        vessel_config (json): Vessel information to prune the env mesh with
+
+    Returns:
+        json: Newly regenerated mesh
+    """
     new_mesh = VesselPerformanceModeller(mesh_json, vessel_config)
     new_mesh.model_accessibility()
     new_mesh.model_performance()
