@@ -1,4 +1,9 @@
 import numpy as np
+import pandas as pd
+
+from polar_route.utils import round_to_sigfig
+
+SIG_FIG_TOLERANCE = 5
 
 
 def test_mesh_cellbox_count(mesh_pair):
@@ -36,8 +41,8 @@ def compare_cellbox_count(mesh_a, mesh_b):
             Fails if the number of cellboxes in regression_mesh and new_mesh are
             not equal
     """
-    regression_mesh = mesh_a['cellboxes']
-    new_mesh = mesh_b['cellboxes']
+    regression_mesh = extract_cellboxes(mesh_a)
+    new_mesh = extract_cellboxes(mesh_b)
 
     cellbox_count_a = len(regression_mesh)
     cellbox_count_b = len(new_mesh)
@@ -57,8 +62,8 @@ def compare_cellbox_ids(mesh_a, mesh_b):
             Fails if any cellbox exists in regression_mesh that or not in new_mesh,
             or any cellbox exists in new_mesh that is not in regression_mesh
     """
-    regression_mesh = mesh_a['cellboxes']
-    new_mesh = mesh_b['cellboxes']
+    regression_mesh = extract_cellboxes(mesh_a)
+    new_mesh = extract_cellboxes(mesh_b)
 
     indxed_a = dict()
     for cellbox in regression_mesh:
@@ -90,56 +95,32 @@ def compare_cellbox_values(mesh_a, mesh_b):
             Fails if any values of any attributes differ between regression_mesh
             and new_mesh
     """
-    regression_mesh = mesh_a['cellboxes']
-    new_mesh = mesh_b['cellboxes']
+    # Retrieve cellboxes from meshes
+    df_a = pd.DataFrame(extract_cellboxes(mesh_a)).set_index('geometry')
+    df_b = pd.DataFrame(extract_cellboxes(mesh_b)).set_index('geometry')
+    # Extract only cellboxes with same boundaries
+    # Drop ID as that may be different despite same boundary
+    df_a = df_a.loc[extract_common_boundaries(mesh_a, mesh_b)].drop(columns=['id'])
+    df_b = df_b.loc[extract_common_boundaries(mesh_a, mesh_b)].drop(columns=['id'])
+    # Ignore cellboxes with different boundaries, that will be picked up in other tests
 
-    indxed_a = dict()
-    for cellbox in regression_mesh:
-        indxed_a[cellbox['id']] = cellbox
+    # For each mesh
+    for df in [df_a, df_b]:
+        # Round to sig figs if column contains floats
+        float_cols = df.select_dtypes(include=float).columns
+        for col in float_cols:
+            df[col] = round_to_sigfig(df[col], sigfig=SIG_FIG_TOLERANCE)
+        # Round to sig figs if column contains list, which may contain floats
+        list_cols = df.select_dtypes(include=list).columns
+        for col in list_cols:
+            df[col] = [round_to_sigfig(x, sigfig=SIG_FIG_TOLERANCE).item() 
+                       if type(x) == float else x for x in df[col]]
 
-    indxed_b = dict()
-    for cellbox in new_mesh:
-        indxed_b[cellbox['id']] = cellbox
+    # Find difference between the two
+    diff = df_a.compare(df_b).rename({'self': 'old', 'other':'new'})
 
-    mismatch_cellboxes = dict()
-    for cellbox_a in indxed_a.values():
-        # Prevent crashing if cellbox not in new mesh
-        # This error will be detected by 'test_cellbox_ids'
-        if cellbox_a['id'] in indxed_b.keys():
-            cellbox_b = indxed_b[cellbox_a['id']]
-
-            mismatch_values = []
-            mismatch_keys = []
-            for key in cellbox_a.keys():
-                # To prevent crashing if cellboxes have different attributes
-                # This error will be detected by the 'test_cellbox_attributes' test
-                if key in cellbox_b.keys():
-                    # Round to 5 dec. pl if value is a float, high precision can be issue between OS's
-                    if (type(cellbox_a[key]) is float) and (type(cellbox_b[key]) is float):
-                        value_b = np.round(float(cellbox_b[key]), decimals=5)
-                        value_a = np.round(float(cellbox_a[key]), decimals=5)
-                    # We also want to round float values for comparison when contained inside a list
-                    elif (type(cellbox_a[key]) is list) and (type(cellbox_b[key]) is list):
-                        if any(isinstance(val, float) for val in cellbox_a[key]) and any(isinstance(val, float) for val in cellbox_b[key]):
-                            value_b = [np.round(float(v), decimals=5) for v in cellbox_b[key]]
-                            value_a = [np.round(float(v), decimals=5) for v in cellbox_a[key]]
-                        else:
-                            value_b = cellbox_b[key]
-                            value_a = cellbox_a[key]
-                    # Otherwise just extract values
-                    else:
-                        value_b = cellbox_b[key]  
-                        value_a = cellbox_a[key]
-
-                    # Compare values
-                    
-                    if str(value_a) != str(value_b):
-                        mismatch_keys.append(key)
-                        mismatch_values.append([value_a,value_b])
-                        mismatch_cellboxes[cellbox_a['id']] = [mismatch_keys, mismatch_values]
-
-    assert(len(mismatch_cellboxes) == 0) , \
-        f"Values in <{len(mismatch_cellboxes.keys())}> cellboxes in the new mesh have changed. The changed cellboxes are: {mismatch_cellboxes}"
+    assert(len(diff) == 0), \
+        f'Mismatch between values in common cellboxes:\n{diff.to_string(max_colwidth=10)}'
 
 def compare_cellbox_attributes(mesh_a, mesh_b):
     """
@@ -159,8 +140,8 @@ def compare_cellbox_attributes(mesh_a, mesh_b):
             Fails if the cellboxes in the provided meshes contain different
             attributes
     """
-    regression_mesh = mesh_a['cellboxes']
-    new_mesh = mesh_b['cellboxes']
+    regression_mesh = extract_cellboxes(mesh_a)
+    new_mesh = extract_cellboxes(mesh_b)
 
     regression_regression_meshttributes = set(regression_mesh[0].keys())
     new_mesh_attributes = set(new_mesh[0].keys())
@@ -181,8 +162,8 @@ def compare_neighbour_graph_count(mesh_a, mesh_b):
             mesh_b (json)
 
     """
-    regression_graph = mesh_a['neighbour_graph']
-    new_graph = mesh_b['neighbour_graph']
+    regression_graph = extract_neighbour_graph(mesh_a)
+    new_graph = extract_neighbour_graph(mesh_b)
 
     regression_graph_count = len(regression_graph.keys())
     new_graph_count = len(new_graph.keys())
@@ -199,8 +180,8 @@ def compare_neighbour_graph_ids(mesh_a, mesh_b):
             mesh_a (json)
             mesh_b (json)
     """
-    regression_graph = mesh_a['neighbour_graph']
-    new_graph = mesh_b['neighbour_graph']
+    regression_graph = extract_neighbour_graph(mesh_a)
+    new_graph = extract_neighbour_graph(mesh_b)
 
     regression_graph_ids = set(regression_graph.keys())
     new_graph_ids = set(new_graph.keys())
@@ -221,8 +202,8 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
             mesh_b (json)
 
     """
-    regression_graph = mesh_a['neighbour_graph']
-    new_graph = mesh_b['neighbour_graph']
+    regression_graph = extract_neighbour_graph(mesh_a)
+    new_graph = extract_neighbour_graph(mesh_b)
 
     mismatch_neighbours = dict()
 
@@ -242,3 +223,20 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
 
     assert(len(mismatch_neighbours) == 0), \
         f"Mismatch in neighbour graph neighbours. <{len(mismatch_neighbours.keys())}> nodes have changed in the new mesh."
+
+
+
+# Utility functions
+def extract_neighbour_graph(mesh):
+    return mesh['neighbour_graph']
+
+def extract_cellboxes(mesh):
+    return mesh['cellboxes']
+
+def extract_common_boundaries(mesh_a, mesh_b):
+    bounds_a = [cb['geometry'] for cb in extract_cellboxes(mesh_a)]
+    bounds_b = [cb['geometry'] for cb in extract_cellboxes(mesh_b)]
+
+    common_bounds = [geom for geom in bounds_a if geom in bounds_b]
+
+    return common_bounds
