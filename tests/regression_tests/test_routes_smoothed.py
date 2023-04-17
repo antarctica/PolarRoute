@@ -3,7 +3,7 @@ import pytest
 
 from polar_route.route_planner import RoutePlanner
 from .route_test_functions import extract_waypoints
-from .route_test_functions import zip_info_route
+from .route_test_functions import extract_route_info
 
 # Import tests, which are automatically run
 from .route_test_functions import test_route_coordinates
@@ -13,18 +13,11 @@ from .route_test_functions import test_fuel
 from .route_test_functions import test_distance
 from .route_test_functions import test_speed
 
-FUEL_ROUTE_INFO = './example_routes/route_info_fuel.json'
-TIME_ROUTE_INFO = './example_routes/route_info_time.json'
-
-TEST_FUEL_ROUTES = [
+TEST_ROUTES = [
     './example_routes/smoothed/fuel/gaussian_random_field.json',
     './example_routes/smoothed/fuel/checkerboard.json',
     './example_routes/smoothed/fuel/great_circle_forward.json',
     './example_routes/smoothed/fuel/great_circle_reverse.json',
-    # './example_routes/smoothed/fuel/real.json'
-]
-
-TEST_TIME_ROUTES = [
     './example_routes/smoothed/time/gaussian_random_field.json',
     './example_routes/smoothed/time/checkerboard.json',
     './example_routes/smoothed/time/great_circle_forward.json',
@@ -33,8 +26,7 @@ TEST_TIME_ROUTES = [
 ]
 
 # Pairing old and new outputs
-@pytest.fixture(scope='session', autouse=False, params=zip_info_route(FUEL_ROUTE_INFO, TEST_FUEL_ROUTES) + 
-                                                       zip_info_route(TIME_ROUTE_INFO, TEST_TIME_ROUTES))
+@pytest.fixture(scope='session', autouse=False, params=TEST_ROUTES)
 def route_pair(request):
     """
     Creates a pair of JSON objects, one newly generated, one as old reference
@@ -45,13 +37,13 @@ def route_pair(request):
     Returns:
         list: [reference json, new json]
     """
-    route_info = request.param[0]
-    route_file = request.param[1]
     # Load reference JSON
-    with open(route_file, 'r') as fp:
+    with open(request.param, 'r') as fp:
         old_route = json.load(fp)
+    route_info = extract_route_info(old_route)
     # Create new json (cast old to dict to create copy to avoid modifying)
     new_route = calculate_smoothed_route(route_info, dict(old_route))
+
     return [old_route, new_route]
 
 # Generating new outputs

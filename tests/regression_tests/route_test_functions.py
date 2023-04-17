@@ -224,20 +224,21 @@ def extract_path(mesh):
     tests to work with
     
     Args:
-        mesh (json): JSON object with waypoints key
+        mesh (json): JSON object with paths key
 
     Returns:
         json: Dictionary with path information
     """
     return mesh['paths']['features'][0]
 
-def zip_info_route(info, routes):
+def extract_route_info(mesh):
     """
-    Zips together route info with each route in list of routes
+    Extracts route info from mesh and returns as JSON to read
+    
     Args:
-        info (str): File name for route info json
-        routes (list): List of filenames for routes pertinent to route info
+        mesh (json): JSON object with route_info key
+
     Returns:
-        list: Zipped pair of route info and output route
+        json: Dictionary with route information
     """
-    return [(info, route) for route in routes]
+    return mesh['route_info']
