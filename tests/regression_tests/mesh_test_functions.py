@@ -219,7 +219,7 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
             sorted_neighbours_a = {k:sorted(neighbours_a[k]) for k in neighbours_a.keys()}
             sorted_neighbours_b = {k: sorted(neighbours_b[k]) for k in neighbours_b.keys()}
 
-            if not sorted_neighbours_b == sorted_neighbours_a:
+            if sorted_neighbours_b != sorted_neighbours_a:
                 mismatch_neighbours[node] = sorted_neighbours_b
 
     assert(len(mismatch_neighbours) == 0), \

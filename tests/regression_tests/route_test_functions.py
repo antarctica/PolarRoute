@@ -241,4 +241,4 @@ def extract_route_info(mesh):
     Returns:
         json: Dictionary with route information
     """
-    return mesh['route_info']
+    return mesh['config']['route_info']
