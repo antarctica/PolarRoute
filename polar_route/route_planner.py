@@ -45,6 +45,8 @@ def _json_str(input):
 def _pandas_dataframe_str(input):
     if type(input) is dict:
         output = input
+    elif type(input) == type(pd.DataFrame()):
+        output = input
     elif type(input) is str:
         try:
             output = pd.read_csv(input)
@@ -293,6 +295,7 @@ class RoutePlanner:
         '''
         mesh = copy.copy(self.mesh)
         mesh['waypoints'] = mesh['waypoints'].to_dict()
+        mesh['route_info'] = self.config
         output_json = json.loads(json.dumps(mesh))
         del mesh
         return output_json
