@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 
 from polar_route.utils import round_to_sigfig
