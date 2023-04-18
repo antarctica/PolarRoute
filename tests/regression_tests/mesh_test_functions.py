@@ -145,13 +145,13 @@ def compare_cellbox_attributes(mesh_a, mesh_b):
     regression_mesh = extract_cellboxes(mesh_a)
     new_mesh = extract_cellboxes(mesh_b)
 
-    regression_regression_meshttributes = set(regression_mesh[0].keys())
-    new_mesh_attributes = set(new_mesh[0].keys())
+    regression_mesh_attributes = set(regression_mesh[0].keys())
+    new_mesh_attributes        = set(new_mesh[0].keys())
 
-    missing_a_attributes = list(new_mesh_attributes - regression_regression_meshttributes)
-    missing_b_attributes = list(regression_regression_meshttributes - new_mesh_attributes)
+    missing_a_attributes = list(new_mesh_attributes - regression_mesh_attributes)
+    missing_b_attributes = list(regression_mesh_attributes - new_mesh_attributes)
 
-    assert(regression_regression_meshttributes == new_mesh_attributes), \
+    assert(regression_mesh_attributes == new_mesh_attributes), \
         f"Mismatch in cellbox attributes. Attributes {missing_a_attributes} have appeared in the new mesh. Attributes {missing_b_attributes} are missing in the new mesh"
 
 def compare_neighbour_graph_count(mesh_a, mesh_b):
