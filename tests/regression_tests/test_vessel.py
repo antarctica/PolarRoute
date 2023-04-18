@@ -6,7 +6,6 @@
 import json
 import pytest
 
-# from polar_route.mesh import Mesh
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 
 # Import tests, which are automatically run
@@ -20,15 +19,23 @@ from .mesh_test_functions import test_mesh_neighbour_graph_values
 
 #File locations of all vessel performance meshes to be recalculated for regression testing.
 INPUT_MESHES = [
-    './example_meshes/env_meshes/mesh_2013.json',
-    './example_meshes/env_meshes/mesh_2017.json',
-    './example_meshes/env_meshes/mesh_2019.json'
+    # './example_meshes/env_meshes/mesh_2013.json',
+    # './example_meshes/env_meshes/mesh_2017.json',
+    # './example_meshes/env_meshes/mesh_2019.json',
+    './example_meshes/env_meshes/grf_normal.json',
+    './example_meshes/env_meshes/grf_downsample.json',
+    './example_meshes/env_meshes/grf_reprojection.json',
+    './example_meshes/env_meshes/grf_sparse.json'
 ]
 
 OUTPUT_MESHES = [
-    './example_meshes/vessel_meshes/vessel_2013.json',
-    './example_meshes/vessel_meshes/vessel_2017.json',
-    './example_meshes/vessel_meshes/vessel_2019.json'
+    # './example_meshes/vessel_meshes/vessel_2013.json',
+    # './example_meshes/vessel_meshes/vessel_2017.json',
+    # './example_meshes/vessel_meshes/vessel_2019.json'
+    './example_meshes/vessel_meshes/grf_normal.json',
+    './example_meshes/vessel_meshes/grf_downsample.json',
+    './example_meshes/vessel_meshes/grf_reprojection.json',
+    './example_meshes/vessel_meshes/grf_sparse.json'
 ]
 
 @pytest.fixture(scope='session', autouse=False, params=zip(INPUT_MESHES, OUTPUT_MESHES))
@@ -51,7 +58,7 @@ def mesh_pair(request):
     with open(input_mesh_file, 'r') as fp:
         input_mesh = json.load(fp)
     # Extract out vessel config from reference mesh
-    vessel_config = old_mesh['config']['Vessel']
+    vessel_config = old_mesh['config']['vessel_info']
     new_mesh = calculate_vessel_mesh(input_mesh, vessel_config)
     
     return [old_mesh, new_mesh]
