@@ -109,13 +109,15 @@ def compare_cellbox_values(mesh_a, mesh_b):
         # Round to sig figs if column contains floats
         float_cols = df.select_dtypes(include=float).columns
         for col in float_cols:
-            df[col] = round_to_sigfig(df[col], sigfig=SIG_FIG_TOLERANCE)
+            df[col] = round_to_sigfig(df[col].to_numpy(), 
+                                      sigfig=SIG_FIG_TOLERANCE)
         # Round to sig figs if column contains list, which may contain floats
         list_cols = df.select_dtypes(include=list).columns
         for col in list_cols:
             df[col] = [round_to_sigfig(x, sigfig=SIG_FIG_TOLERANCE).item() 
                        if type(x) == float else x for x in df[col]]
 
+        
     # Find difference between the two
     diff = df_a.compare(df_b).rename({'self': 'old', 'other':'new'})
 
