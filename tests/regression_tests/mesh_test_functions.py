@@ -47,7 +47,8 @@ def compare_cellbox_count(mesh_a, mesh_b):
     cellbox_count_b = len(new_mesh)
 
     assert(cellbox_count_a == cellbox_count_b), \
-        f"Incorrect number of cellboxes in new mesh. Expected :{cellbox_count_a}, got: {cellbox_count_b}"
+        f"Incorrect number of cellboxes in new mesh. "\
+        f"Expected :{cellbox_count_a}, got: {cellbox_count_b}"
 
 def compare_cellbox_ids(mesh_a, mesh_b):
     """
@@ -79,7 +80,8 @@ def compare_cellbox_ids(mesh_a, mesh_b):
     missing_b_ids = list(regression_mesh_ids - new_mesh_ids)
 
     assert(indxed_a.keys()  == indxed_b.keys()), \
-        f"Mismatch in cellbox IDs. ID's {missing_a_ids} have appeared in the new mesh. ID's {missing_b_ids} are missing from the new mesh"
+        f"Mismatch in cellbox IDs. ID's {missing_a_ids} have appeared in the "\
+        f"new mesh. ID's {missing_b_ids} are missing from the new mesh"
 
 def compare_cellbox_values(mesh_a, mesh_b):
     """
@@ -121,7 +123,8 @@ def compare_cellbox_values(mesh_a, mesh_b):
     diff = df_a.compare(df_b).rename({'self': 'old', 'other':'new'})
 
     assert(len(diff) == 0), \
-        f'Mismatch between values in common cellboxes:\n{diff.to_string(max_colwidth=10)}'
+        f'Mismatch between values in common cellboxes:\n'\
+        f'{diff.to_string(max_colwidth=10)}'
 
 def compare_cellbox_attributes(mesh_a, mesh_b):
     """
@@ -151,7 +154,9 @@ def compare_cellbox_attributes(mesh_a, mesh_b):
     missing_b_attributes = list(regression_mesh_attributes - new_mesh_attributes)
 
     assert(regression_mesh_attributes == new_mesh_attributes), \
-        f"Mismatch in cellbox attributes. Attributes {missing_a_attributes} have appeared in the new mesh. Attributes {missing_b_attributes} are missing in the new mesh"
+        f"Mismatch in cellbox attributes. Attributes {missing_a_attributes} "\
+        f"have appeared in the new mesh. Attributes {missing_b_attributes} "\
+        f"are missing in the new mesh"
 
 def compare_neighbour_graph_count(mesh_a, mesh_b):
     """
@@ -170,7 +175,9 @@ def compare_neighbour_graph_count(mesh_a, mesh_b):
     new_graph_count = len(new_graph.keys())
 
     assert(regression_graph_count == new_graph_count), \
-        f"Incorrect number of nodes in neighbour graph. Expected: <{regression_graph_count}> nodes, got: <{new_graph_count}> nodes."
+        f"Incorrect number of nodes in neighbour graph. "\
+        f"Expected: <{regression_graph_count}> nodes, "\
+        f"got: <{new_graph_count}> nodes."
 
 def compare_neighbour_graph_ids(mesh_a, mesh_b):
     """
@@ -191,7 +198,9 @@ def compare_neighbour_graph_ids(mesh_a, mesh_b):
     missing_b_keys = list(regression_graph_ids - new_graph_ids)
 
     assert(regression_graph_ids == new_graph_ids) , \
-        f"Mismatch in neighbour graph nodes. <{len(missing_a_keys)}> nodes have appeared in the new neighbour graph. <{len(missing_b_keys)}> nodes are missing from the new neighbour graph."
+        f"Mismatch in neighbour graph nodes. <{len(missing_a_keys)}> nodes "\
+        f"have appeared in the new neighbour graph. <{len(missing_b_keys)}> "\
+        f"nodes are missing from the new neighbour graph."
 
 def compare_neighbour_graph_values(mesh_a, mesh_b):
     """
@@ -216,14 +225,17 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
             neighbours_b = new_graph[node]
 
             # Sort the lists of neighbours as ordering is not important
-            sorted_neighbours_a = {k:sorted(neighbours_a[k]) for k in neighbours_a.keys()}
-            sorted_neighbours_b = {k: sorted(neighbours_b[k]) for k in neighbours_b.keys()}
+            sorted_neighbours_a = {k:sorted(neighbours_a[k]) 
+                                   for k in neighbours_a.keys()}
+            sorted_neighbours_b = {k: sorted(neighbours_b[k]) 
+                                   for k in neighbours_b.keys()}
 
             if sorted_neighbours_b != sorted_neighbours_a:
                 mismatch_neighbours[node] = sorted_neighbours_b
 
     assert(len(mismatch_neighbours) == 0), \
-        f"Mismatch in neighbour graph neighbours. <{len(mismatch_neighbours.keys())}> nodes have changed in the new mesh."
+        f"Mismatch in neighbour graph neighbours. "\
+        f"<{len(mismatch_neighbours.keys())}> nodes have changed in the new mesh."
 
 
 

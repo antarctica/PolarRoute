@@ -63,8 +63,10 @@ def compare_route_coordinates(route_a, route_b):
     rounded_y_a = round_to_sigfig(coords_a[:][1], sigfig=SIG_FIG_TOLERANCE)
     rounded_y_b = round_to_sigfig(coords_b[:][1], sigfig=SIG_FIG_TOLERANCE)
     
-    np.testing.assert_array_equal(rounded_x_a, rounded_x_b)
-    np.testing.assert_array_equal(rounded_y_a, rounded_y_b)
+    np.testing.assert_array_equal(rounded_x_a, rounded_x_b, 
+                                  err_msg='Difference in "route_coordinates"')
+    np.testing.assert_array_equal(rounded_y_a, rounded_y_b, 
+                                  err_msg='Difference in "route_coordinates"')
 
 def compare_waypoint_names(route_a, route_b):
     """
@@ -107,7 +109,8 @@ def compare_time(route_a, route_b):
     rounded_a = round_to_sigfig(times_a, sigfig=SIG_FIG_TOLERANCE)
     rounded_b = round_to_sigfig(times_b, sigfig=SIG_FIG_TOLERANCE)
 
-    np.testing.assert_array_equal(rounded_a, rounded_b)
+    np.testing.assert_array_equal(rounded_a, rounded_b, 
+                                  err_msg='Difference in "traveltime"')
 
 def compare_fuel(route_a, route_b):
     """
@@ -128,7 +131,8 @@ def compare_fuel(route_a, route_b):
     rounded_a = round_to_sigfig(fuel_a, sigfig=SIG_FIG_TOLERANCE)
     rounded_b = round_to_sigfig(fuel_b, sigfig=SIG_FIG_TOLERANCE)
 
-    np.testing.assert_array_equal(rounded_a, rounded_b)
+    np.testing.assert_array_equal(rounded_a, rounded_b, 
+                                  err_msg='Difference in "fuel"')
 
 def compare_cell_indices(route_a, route_b):
     """
@@ -145,7 +149,8 @@ def compare_cell_indices(route_a, route_b):
     cid_a = extract_path(route_a)['properties']['CellIndices']
     cid_b = extract_path(route_b)['properties']['CellIndices']
 
-    np.testing.assert_array_equal(cid_a, cid_b)
+    np.testing.assert_array_equal(cid_a, cid_b, 
+                                  err_msg='Difference in "cell_indices"')
 
 def compare_cases(route_a, route_b):
     """
@@ -162,7 +167,8 @@ def compare_cases(route_a, route_b):
     cases_a = extract_path(route_a)['properties']['cases']
     cases_b = extract_path(route_b)['properties']['cases']
     
-    np.testing.assert_array_equal(cases_a, cases_b)
+    np.testing.assert_array_equal(cases_a, cases_b, 
+                                  err_msg='Difference in "cases"')
 
 def compare_distance(route_a, route_b):
     """
@@ -182,7 +188,8 @@ def compare_distance(route_a, route_b):
     rounded_a = round_to_sigfig(distance_a, sigfig=SIG_FIG_TOLERANCE)
     rounded_b = round_to_sigfig(distance_b, sigfig=SIG_FIG_TOLERANCE)
 
-    np.testing.assert_array_equal(rounded_a, rounded_b)
+    np.testing.assert_array_equal(rounded_a, rounded_b, 
+                                  err_msg='Difference in "distance"')
     
 def compare_speed(route_a, route_b):
     """
@@ -202,7 +209,8 @@ def compare_speed(route_a, route_b):
     rounded_a = round_to_sigfig(speed_a, sigfig=SIG_FIG_TOLERANCE)
     rounded_b = round_to_sigfig(speed_b, sigfig=SIG_FIG_TOLERANCE)
 
-    np.testing.assert_array_equal(rounded_a, rounded_b)
+    np.testing.assert_array_equal(rounded_a, rounded_b, 
+                                  err_msg='Difference in "speed"')
 
 # Utility functions
 def extract_waypoints(mesh):
