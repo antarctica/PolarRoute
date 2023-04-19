@@ -10,7 +10,7 @@ class TestMeshValidator(unittest.TestCase):
    
 
    def setUp(self):
-     self.mesh_validator = MeshValidator("../regression_tests/example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json")
+     self.mesh_validator = MeshValidator("../regression_tests/example_meshes/abstract_env_meshes/hgrad.json")
       
 
 
