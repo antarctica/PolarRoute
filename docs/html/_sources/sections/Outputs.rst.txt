@@ -1,10 +1,12 @@
-********
-Outputs - Data Types
-********
+.. _outputs:
 
-#####
+********************
+Outputs - Data Types
+********************
+
+#################
 Mesh construction
-#####
+#################
 
 The first stage in the route planning pipeline is constructing a discrete 
 mesh of the environment in which the route planner can operate. Once this
@@ -58,9 +60,9 @@ where the parts of the json object can be understood as follows:
 * **cellboxes** : A list of json representations of CellBox objects that form the Mesh.
 * **neighbour_graph** : A graphical representation of the adjacency of CellBoxes within the Mesh.
 
-=============
+=========
 cellboxes
-=============
+=========
 
 Each CellBox object within *cellboxes* in the outputted json object is of
 the following form:
@@ -93,9 +95,9 @@ Where the values within the CellBox represent the following:
    :width: 700
 
 
-==================
+===============
 neighbour_graph
-==================
+===============
 
 For each CellBox in the *cellboxes* section of the outputted json object, there will be a
 corresponding entry in the *neighbour_graph*.
@@ -135,55 +137,67 @@ where each of the values represent the following:
    :align: center
    :width: 700
 
-#####
+#################
 Vehicle specifics
-#####
+#################
 
-Once a discrete mesh environment is contracted, it is then passed to the vessel performance object
+Once a discrete mesh environment is contracted, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle.
 
-:: 
+::
 
-    from polar_route.mesh import Mesh
-    from polar_route.vessel_performance import VesselPerformance
+    import json
+    from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 
-    with open('config.json', 'r') as f:
-        config = json.load(f)
+    with open('vessel_config.json', 'r') as f:
+        vessel_config = json.load(f)
 
-    mesh = Mesh(config)
-    mesh_json = mesh.to_json()
+    vpm = VesselPerformanceModeller(mesh_json, vessel_config)
 
-    vp = VesselPerformance(mesh_json)
-    vessel_mesh_json = vp.to_json()
+    vpm.model_accessibility()
+    vpm.model_performance()
+
+    vessel_mesh_json = vpm.to_json()
 
 .. note::
-    To be compatible with vessel performance transformations, a Mesh must be constructed with
+    To make use of the full range of vessel performance transformations, a Mesh should be constructed with
     the following attributes:
     
-    * SIC (available via data_loaders: *loader_amsr*, *load_bsose*, *load_modis*)
-    * thickness (available via data_loaders: *load_thickness*)
-    * density (available via data_loaders: *load_density*)
+    * SIC (available via data_loaders: *amsr*, *bsose_sic*, *baltic_sic*, *icenet*, *modis*)
+    * thickness (available via data_loaders: *thickness*)
+    * density (available via data_loaders: *density*)
+    * u10, v10 (available via data_loaders: *era5_wind*)
 
-    see section **Multi Data Input** for more information on data_loaders
+    see section **Dataloader Overview** for more information on data_loaders
+
+    The vessel performance modeller will still run without these attributes but will assign default values from the
+    configuration file where any data is missing.
 
 
-TODO - Description of transformation applied to the mesh json object by Vessel Performance.
-................................................................................................................
-................................................................................................................
-................................................................................................................
-................................................................................................................
-................................................................................................................
-................................................................................................................
+As an example, after running the vessel performance modeller with the SDA class and all relevant data each cellbox will
+have a set of new attributes as follows:
 
-#####
+* **speed** *(list)* : The speed of the vessel in that cell when travelling to each of its neighbours.
+* **fuel** *(list)* : The rate of fuel consumption in that cell when travelling to each of its neighbours.
+* **inaccessible** *(boolean)* : Whether the cell is considered inaccessible to the vessel for any reason.
+* **land** *(boolean)* : Whether the cell is shallow enough to be considered land by the vessel.
+* **ext_ice** *(boolean)* : Whether the cell has enough ice to be inaccessible to the vessel.
+* **resistance** *(list)* : The total resistance force the vessel will encounter in that cell when travelling to each of its neighbours.
+* **ice resistance** *(float)* : The resistance force due to ice.
+* **wind resistance** *(list)* : The resistance force due to wind.
+* **relative wind speed** *(list)* : The apparent wind speed acting on the vessel.
+* **relative wind angle** *(list)* : The angle of the apparent wind acting on the vessel.
+
+
+##############
 Route planning
-#####
+##############
 
 During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:
 
-==================
+=========
 waypoints
-==================
+=========
 
 An entry in the json including all the information of the waypoints defined by the user from the `waypoints_path` file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints are returned to this entry. The structure of the entry follows:
 
@@ -224,14 +238,13 @@ where each of the values represent the following:
     * **1**  : The cellbox index of waypoint for index row '1' etc
 * **<...>** : Any additional column names defined in the original .csv that was loaded
 
-This output can be converted to a pandas dataframe by running
-::
-    waypoints_dataframe = pd.DataFrame(waypoints) 
+This output can be converted to a pandas dataframe by running::
+waypoints_dataframe = pd.DataFrame(waypoints) 
 
 
-==================
+=====
 paths
-==================
+=====
 An entry in the json, in a geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:
 
 :: 

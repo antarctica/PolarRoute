@@ -2,31 +2,40 @@ import argparse
 import json
 import inspect
 import logging
-from multiprocessing.connection import wait
 
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call
+from polar_route.mesh_generation.mesh_builder import MeshBuilder
+from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
+from polar_route.route_planner import RoutePlanner
+from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
 
 
 @setup_logging
 def get_args(
         default_output: str,
         config_arg: bool = True,
-        info_arg: bool = False,
-        waypoints_arg: bool = False):
+        mesh_arg: bool = False,
+        waypoints_arg: bool = False,
+        format_arg: bool = False):
     """
+    Adds required command line arguments to all CLI entry points.
 
-    Parameters
-    ----------
-    config_arg
-    info_arg
+    Args:
+        default_output (str): The default output file location.
+        config_arg (bool): True if the CLI entry point requires a <config.json> file. Default is True.
+        mesh_arg (bool): True if the CLI entry point requires a <mesh.json> file. Default is False.
+        waypoints_arg (bool): True if the CLI entry point requires a <waypoints.csv> file. Default is False.
 
-    Returns
-    -------
+    Returns:
 
     """
     ap = argparse.ArgumentParser()
 
+    ap.add_argument('--version', action='version',
+                        version='%(prog)s {version}'.format(version=version))
+
+    # Optional arguments used in all CLI entry points
     ap.add_argument("-o", "--output",
                     default=default_output,
                     help="Output file")
@@ -37,14 +46,16 @@ def get_args(
 
     if config_arg:
         ap.add_argument("config", type=argparse.FileType("r"), 
-                    help="File location of configuration file used to build the mesh")
+                    help="File location of a <config.json> file")
 
-    if info_arg:
-        ap.add_argument("info", type=argparse.FileType("r"),
-                    help="File location of the enviromental mesh")
+    if mesh_arg:
+        ap.add_argument("mesh", type=argparse.FileType("r"),
+                    help="File location of the environmental mesh")
 
     if waypoints_arg:
         ap.add_argument("waypoints", type=argparse.FileType("r"))
+
+        # Optional arguments used when route planning.
         ap.add_argument("-p", "--path_only",
                         default=False,
                         action = "store_true",
@@ -54,6 +65,11 @@ def get_args(
                         default=False,
                         action = "store_true",
                         help="output only the calculated paths")
+        
+    if format_arg:
+        ap.add_argument("format",
+                        help = "Export format to transform a mesh into. Supported \
+                        formats are JSON, GEOJSON")
 
 
     return ap.parse_args()
@@ -62,17 +78,17 @@ def get_args(
 @timed_call
 def create_mesh_cli():
     """
-
+        CLI entry point for the mesh construction
     """
-    from polar_route.mesh import Mesh
-
-    args = get_args("create_mesh.output.json")
+    
+    default_output = "create_mesh.output.json"
+    args = get_args(default_output)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    config = json.load(args.config)
+    config = json.load(args.config)['config']
 
     # Discrete Meshing
-    cg = Mesh(config)
+    cg = MeshBuilder(config).build_environmental_mesh()
 
     logging.info("Saving mesh to {}".format(args.output))
     info = cg.to_json()
@@ -82,16 +98,19 @@ def create_mesh_cli():
 @timed_call
 def add_vehicle_cli():
     """
-
+        CLI entry point for the vessel performance modeller
     """
-    from polar_route.vessel_performance import VesselPerformance
 
-    args = get_args("add_vehicle.output.json", config_arg=False, info_arg=True)
+    default_output = "add_vehicle.output.json"
+    args = get_args(default_output, config_arg=True, mesh_arg=True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    mesh = json.load(args.info)
+    mesh_json = json.load(args.mesh)
+    vessel_config = json.load(args.config)
 
-    vp = VesselPerformance(mesh)
+    vp = VesselPerformanceModeller(mesh_json, vessel_config)
+    vp.model_accessibility()
+    vp.model_performance()
 
     logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
@@ -101,12 +120,11 @@ def add_vehicle_cli():
 @timed_call
 def optimise_routes_cli():
     """
-
+        CLI entry point for the route optimisation
     """
-    from polar_route.route_planner import RoutePlanner
 
     args = get_args("optimise_routes.output.json",
-                    config_arg=False, info_arg=True, waypoints_arg= True)
+                    config_arg=True, mesh_arg=True ,waypoints_arg= True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
     if args.path_only:
@@ -114,8 +132,7 @@ def optimise_routes_cli():
     else: 
         logging.info("outputting full mesh to {}".format(args.output))
 
-    vehicle_mesh = json.load(args.info)
-    rp = RoutePlanner(vehicle_mesh, args.waypoints)
+    rp = RoutePlanner(args.mesh.name, args.config.name, args.waypoints.name)
     rp.compute_routes()
     info_dijkstra = rp.to_json()
     rp.compute_smoothed_routes()
@@ -129,3 +146,27 @@ def optimise_routes_cli():
         if args.dijkstra:
              json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
         json.dump(info, open(args.output, "w"))
+
+@timed_call
+def export_mesh_cli():
+    """
+        CLI entry point for exporting a mesh to standard formats.
+    """
+    print("test tit")
+    args = get_args("export_mesh.output.json", 
+                    config_arg = False, mesh_arg = True, format_arg = True)
+    
+    print(f" Mesh arg = {args.mesh}, format arg = {args.format}")
+    
+    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
+
+    
+
+    mesh = json.load(args.mesh)
+
+    env_mesh = EnvironmentMesh.load_from_json(mesh)
+
+    logging.info(f"exporting mesh to {args.output} in format {args.format}")
+    env_mesh.save(args.output, args.format)
+
+
