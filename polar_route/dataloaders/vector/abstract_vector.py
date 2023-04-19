@@ -507,8 +507,8 @@ class VectorDataLoader(DataLoaderInterface):
                 data = data.coarsen(long=ds[0],boundary='pad').std()
             elif agg_type =='COUNT': 
                 # Returns every first element in bin
-                data = data.thin(lat=ds[1],boundary='pad')
-                data = data.thin(long=ds[0],boundary='pad')
+                data = data.thin(lat=ds[1])
+                data = data.thin(long=ds[0])
             return data
     
         def downsample_df(data, ds, agg_type):
