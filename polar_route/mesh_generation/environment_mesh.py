@@ -234,7 +234,7 @@ class EnvironmentMesh:
             if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
                dump_path = path.replace (".json" , ".dump")
                with open(dump_path, 'w') as dump_f:
-                self.dump_mesh(dump_f)
+                    self.dump_mesh(dump_f)
 
     def dump_mesh(self, file):
         """

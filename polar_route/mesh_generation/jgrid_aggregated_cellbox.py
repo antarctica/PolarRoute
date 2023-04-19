@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
-
+import logging
 class JGridAggregatedCellBox (AggregatedCellBox):
     """
     a class represnts an aggrgated information within a geo-spatial/temporal boundary. 
@@ -67,6 +67,7 @@ class JGridAggregatedCellBox (AggregatedCellBox):
         return self.id
 
     def mesh_dump(self):
+        logging.info ("dumping the mesh ...")
         """
             returns a string representing all the information stored in the mesh
             of this cellbox
@@ -81,26 +82,23 @@ class JGridAggregatedCellBox (AggregatedCellBox):
         uc = None
         vc = None
         mesh_dump += str(self.boundary.getcy()) + ", " + str(self.boundary.getcx()) + "; "  # add lat,long
-
      
-        value = self.agg_data ['SIC']
-               
+        value = self.agg_data ['SIC']      
         number_of_points = self.agg_data["SIC_COUNT"]
         if value != None:
-            ice_area = value
+            ice_area = value 
       
-        uc = self.agg_data['uC']
-        vc = self.agg_data['vC']
+        uc = self.agg_data['uC']*3.6  #unit conversion to match the Java code
+        vc = self.agg_data['vC']*3.6 #unit conversion to match the Java code 
 
         mesh_dump += str(ice_area) + "; "  # add ice area
         # add uc, uv
-        if (uc == None): 
-            uc = 0
-        if (vc == None):
-             vc = 0
+        if np.isnan(uc) or np.isnan(vc): 
+            uc = 0.0
+            vc = 0.0 
         
         mesh_dump += str(uc) + ", " + str(vc) + ", "
-        mesh_dump += str(number_of_points) #TODO: double check 
+        mesh_dump += str(number_of_points) 
         mesh_dump += "\n"
 
         return mesh_dump

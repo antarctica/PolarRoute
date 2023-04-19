@@ -125,6 +125,8 @@ class MeshBuilder:
         self.mesh = Mesh(bounds, cellboxes,
                          self.neighbour_graph, max_split_depth)
         self.mesh.set_config(config)
+        if self.is_jgrid_mesh():
+            logging.warning("We're using the legacy Java style cell grid")
 
     def initialize_meta_data(self, bounds, min_datapoints):
         meta_data_list = []
@@ -172,8 +174,8 @@ class MeshBuilder:
 
     def is_jgrid_mesh(self):
         if 'j_grid' in self.config['Mesh_info'].keys():
-            logging.warning("We're using the legacy Java style cell grid")
-            return True
+            if  self.config['Mesh_info']['j_grid'] == "True":
+                return True
         return False
 
     def initialize_cellboxes(self, bounds, cell_width, cell_height):
@@ -196,7 +198,7 @@ class MeshBuilder:
                     y_coord = abs(math.floor(
                         cellbox_indx / grid_width) - (grid_height - 1))
                     cellbox.set_grid_coord(x_coord, y_coord)
-                    cellbox.set_initial_bounds(bounds)
+                    cellbox.set_initial_bounds(cell_bounds)
 
                 else:
                     cellbox = CellBox(cell_bounds, cell_id)
@@ -461,19 +463,4 @@ class MeshBuilder:
         return self.config
 
 
-if __name__ == '__main__':
-    import time
-    start = time.time()
-    conf = None
-    with open("../../tests/regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2016_6_80.json", "r") as config_file:
-        conf = json.load(config_file)['config']
 
-    mesh_builder = MeshBuilder(conf)
-    env_mesh = mesh_builder.build_environmental_mesh()
-    print(conf)
-    # with open("feb_2013_Jgrid_.json", 'w') as file:
-    #     json.dump(env_mesh.to_json(), file)
-    env_mesh.save ("create_mesh.output2016_6_80.json")
-    end = time.time()
-    elapsed_seconds = float("%.2f" % (end - start))
-    print(elapsed_seconds)

@@ -26,15 +26,24 @@ class JGridCellBox (CellBox):
         # Box information relative to bottom left
         self.bounds = bounds
         self.parent = None
-        self.minimum_datapoints = 10
+        self.minimum_datapoints = 3000
         self.split_depth = 0
         self.data_source = None
         self.id = id
         self.x_coord = 0
         self.y_coord = 0
-        self.focus = ""
+        self.focus = []
         self.land_locked = False
         self.initial_bounds = None
+
+    @classmethod
+    def init_from_cellbox(cls , cellbox):
+        obj = JGridCellBox (cellbox.bounds , cellbox.id)
+        obj.parent = cellbox.parent
+        obj.split_depth = cellbox.split_depth
+        obj.data_source = cellbox.data_source
+        obj.id = cellbox.id
+        return obj
 
     def split(self, start_id):
         """
@@ -47,21 +56,19 @@ class JGridCellBox (CellBox):
         """
         # split using the CellBox method then perform the extra JGridCellBox logic
         split_boxes = CellBox.split(self, start_id)
-
+        jgrid_split_boxes = []
         # set CellBox split_depth, data_source and parent
         for split_box in split_boxes:
-        # if parent box is land, all child boxes are considered land
-            if self.is_land():
-                split_box.land_locked = True
-
-          # set gridCoord of split boxes equal to parent.
-            split_box.set_grid_coord(self.x_coord, self.y_coord)
-
-        # create focus for split boxes.
-            split_box.set_focus(self.get_focus().copy())
-            split_box.add_to_focus(split_boxes.index(split_box))
-
-        return split_boxes
+            index = split_boxes.index(split_box)
+            jgrid_split_box = JGridCellBox.init_from_cellbox(split_box)
+            # set gridCoord of split boxes equal to parent.
+            jgrid_split_box.set_grid_coord(self.x_coord, self.y_coord)
+            # create focus for split boxes.
+            jgrid_split_box.set_focus(self.get_focus().copy())
+            jgrid_split_box.add_to_focus(index)
+            jgrid_split_box.set_initial_bounds (self.initial_bounds)
+            jgrid_split_boxes.append(jgrid_split_box)
+        return jgrid_split_boxes
 
     def aggregate(self):
         '''
@@ -76,9 +83,8 @@ class JGridCellBox (CellBox):
             parent = self.get_parent()
             # check if the data name has many entries (ex. uC,vC)
             if ',' in data_name:
-                # get uC, vC using the initial bounds
+               
                 agg_value = loader.get_value(self.initial_bounds)
-
             else:
                 # get the aggregated value from the associated DataLoader
                 agg_value = loader.get_value(self.bounds)
@@ -97,7 +103,9 @@ class JGridCellBox (CellBox):
             agg_dict.update (agg_value) # combine the aggregated values in one dict 
 
         agg_cellbox = JGridAggregatedCellBox (self.bounds , agg_dict , self.get_id())
-        agg_cellbox.set_node_string(self.node_string())
+   
+        agg_cellbox.set_node_string(self.get_node_string())
+        # print (self.get_node_string())
 
         return agg_cellbox 
  
@@ -136,7 +144,7 @@ class JGridCellBox (CellBox):
         """
         return "(" + str(int(self.x_coord)) + "," + str(int(self.y_coord)) + ")"
 
-    def node_string(self):
+    def get_node_string(self):
         """
             returns a string representing the node of this cellbox
 
@@ -170,5 +178,28 @@ class JGridCellBox (CellBox):
             if loader.data_name == data_name:
                 is_land = loader.get_value (self.bounnds)[data_name]  
         return is_land
+    
+    def set_focus(self, focus):
+        """
+            initialize the focus of this cellbox
+            for use in j_grid regression testing
+        """
+        self.focus = focus
 
+        
+    def contains_point(self, lat, long):
+        """
+            Returns true if a given lat/long coordinate is contained within this cellBox.
 
+            Args:
+                lat (float): latitude of a given point
+                long (float): longitude of a given point
+
+            Returns:
+                contains_points (bool): True if this CellBox contains a point given by
+                    parameters (lat, long)
+        """
+        if (lat >= self.bounds.get_lat_min()) & (lat <= self.bounds.get_lat_max()):
+            if (long >= self.bounds.get_long_min()) & (long <= self.bounds.get_long_max()):
+                return True
+        return False
