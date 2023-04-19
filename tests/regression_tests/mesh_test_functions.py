@@ -4,7 +4,7 @@ from polar_route.utils import round_to_sigfig
 
 SIG_FIG_TOLERANCE = 5
 
-
+# Testing mesh outputs
 def test_mesh_cellbox_count(mesh_pair):
     compare_cellbox_count(mesh_pair[0], mesh_pair[1])
 
@@ -27,7 +27,7 @@ def test_mesh_neighbour_graph_values(mesh_pair):
     compare_neighbour_graph_values(mesh_pair[0], mesh_pair[1])
 
 
-
+# Comparison between old and new
 def compare_cellbox_count(mesh_a, mesh_b):
     """
         Test if two provided meshes contain the same number of cellboxes
@@ -229,12 +229,40 @@ def compare_neighbour_graph_values(mesh_a, mesh_b):
 
 # Utility functions
 def extract_neighbour_graph(mesh):
+    """
+    Extracts out the neighbour graph from a mesh
+    
+    Args:
+        mesh (json): Complete mesh output
+        
+    Returns:
+        dict: Neighbour graph for each cellbox
+    """
     return mesh['neighbour_graph']
 
 def extract_cellboxes(mesh):
+    """
+    Extracts out the cellboxes and aggregated info from a mesh
+    
+    Args:
+        mesh (json): Complete mesh output
+        
+    Returns:
+        list: Each cellbox as a dict/json object, in a list 
+    """
     return mesh['cellboxes']
 
 def extract_common_boundaries(mesh_a, mesh_b):
+    """
+    Creates a list of common boundaries between two mesh jsons
+
+    Args:
+        mesh_a (json): First mesh json to extract boundaries from
+        mesh_b (json): Second mesh json to extract boundaries from
+
+    Returns:
+        list: List of common cellbox boundaries (as strings) 
+    """
     bounds_a = [cb['geometry'] for cb in extract_cellboxes(mesh_a)]
     bounds_b = [cb['geometry'] for cb in extract_cellboxes(mesh_b)]
 

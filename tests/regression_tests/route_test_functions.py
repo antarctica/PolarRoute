@@ -5,7 +5,7 @@ from polar_route.utils import round_to_sigfig
 
 SIG_FIG_TOLERANCE = 5
 
-# Testing fuel optimised routes
+# Testing route outputs
 def test_route_coordinates(route_pair):
     compare_route_coordinates(route_pair[0], route_pair[1])
 

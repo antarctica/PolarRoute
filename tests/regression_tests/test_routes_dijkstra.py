@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from polar_route.route_planner import RoutePlanner
+from polar_route import RoutePlanner
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
 

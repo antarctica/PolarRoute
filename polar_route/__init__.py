@@ -9,3 +9,5 @@ from polar_route.mesh_generation.mesh_builder import MeshBuilder as MeshBuilder
 from polar_route.dataloaders.factory import DataLoaderFactory as DataLoaderFactory
 
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller as VesselPerformanceModeller
+
+from polar_route.route_planner import RoutePlanner as RoutePlanner

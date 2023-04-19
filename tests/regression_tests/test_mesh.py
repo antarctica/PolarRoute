@@ -6,7 +6,7 @@
 import json
 import pytest
 
-from polar_route.mesh_generation.mesh_builder import MeshBuilder
+from polar_route import MeshBuilder
 
 # Import tests, which are automatically run
 from .mesh_test_functions import test_mesh_cellbox_attributes
@@ -19,9 +19,6 @@ from .mesh_test_functions import test_mesh_neighbour_graph_values
 
 #File locations of all environmental meshes to be recalculated for regression testing.
 TEST_ENV_MESHES = [
-    # './example_meshes/env_meshes/mesh_2013.json',
-    # './example_meshes/env_meshes/mesh_2017.json',
-    # './example_meshes/env_meshes/mesh_2019.json',
     './example_meshes/env_meshes/grf_normal.json',
     './example_meshes/env_meshes/grf_downsample.json',
     './example_meshes/env_meshes/grf_reprojection.json',
