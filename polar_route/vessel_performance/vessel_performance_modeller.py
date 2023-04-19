@@ -20,6 +20,7 @@ class VesselPerformanceModeller:
         logging.info("Initialising Vessel Performance Modeller")
 
         self.env_mesh = EnvironmentMesh.load_from_json(env_mesh_json)
+        self.config = vessel_config
         self.vessel = VesselFactory.get_vessel(vessel_config)
 
         self.filter_nans()
@@ -59,6 +60,7 @@ class VesselPerformanceModeller:
             Returns:
                 j_mesh (dict): a dictionary representation of the modified mesh.
         """
+        self.env_mesh.config['vessel_info'] = self.config
         j_mesh = self.env_mesh.to_json()
         return j_mesh
 

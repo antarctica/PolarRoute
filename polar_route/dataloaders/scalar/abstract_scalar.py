@@ -405,8 +405,8 @@ class ScalarDataLoader(DataLoaderInterface):
                     .from_crs(CRS(in_proj), CRS(out_proj), always_xy=True)\
                     .transform(data[x_col].to_numpy(), data[y_col].to_numpy())
             # Replace columns with reprojected columns called 'lat'/'long'
-            data = data.drop(x_col, axis=1)
-            data = data.drop(y_col, axis=1)
+            if x_col != 'lat':  data = data.drop(x_col, axis=1)
+            if y_col != 'long': data = data.drop(y_col, axis=1)
             data['lat']  = y
             data['long'] = x
             

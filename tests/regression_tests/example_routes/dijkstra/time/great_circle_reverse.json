@@ -6,8 +6,8 @@
                 "latMax": 80.0,
                 "longMin": -80.0,
                 "longMax": 80,
-                "startTime": "2023-04-13",
-                "endTime": "2023-04-14",
+                "startTime": "2023-04-18",
+                "endTime": "2023-04-19",
                 "cellWidth": 4.0,
                 "cellHeight": 4.0
             },
@@ -116,6 +116,36 @@
             "splitting": {
                 "split_depth": 0,
                 "minimum_datapoints": 5
+            }
+        },
+        "vessel_info": {
+            "VesselType": "SDA",
+            "MaxSpeed": 26.5,
+            "Unit": "km/hr",
+            "Beam": 24.0,
+            "HullType": "slender",
+            "ForceLimit": 96634.5,
+            "MaxIceConc": 80,
+            "MinDepth": -10
+        },
+        "route_info": {
+            "objective_function": "traveltime",
+            "path_variables": [
+                "fuel",
+                "traveltime"
+            ],
+            "vector_names": [
+                "uC",
+                "vC"
+            ],
+            "zero_currents": true,
+            "variable_speed": false,
+            "time_unit": "days",
+            "early_stopping_criterion": true,
+            "save_dijkstra_graphs": true,
+            "smooth_path": {
+                "max_iteration_number": 1000,
+                "minimum_difference": 0.0005
             }
         }
     },
@@ -113818,25 +113848,5 @@
                 }
             }
         ]
-    },
-    "route_info": {
-        "objective_function": "traveltime",
-        "path_variables": [
-            "fuel",
-            "traveltime"
-        ],
-        "vector_names": [
-            "uC",
-            "vC"
-        ],
-        "zero_currents": false,
-        "variable_speed": true,
-        "time_unit": "days",
-        "early_stopping_criterion": true,
-        "save_dijkstra_graphs": true,
-        "smooth_path": {
-            "max_iteration_number": 1000,
-            "minimum_difference": 0.0005
-        }
     }
 }

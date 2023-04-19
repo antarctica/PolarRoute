@@ -76,21 +76,42 @@ def round_to_sigfig(x, sigfig=5):
         np.array:
             Values rounded to the desired number of significant figures
     """
+    # Save original type of data so can be returned as input
+    orig_type = type(x)
+    if orig_type not in [list, float, int, np.ndarray]:
+        raise ValueError(f'Cannot round {type(x)} to sig figs!')
+    
     # Cast as array if not initially, so that later processes all act as expected
-    if type(x) == int or type(x) == float:
+    if orig_type in [int, float]:
         x = [x]
     x = np.array(x)
+    # Create a mask disabling any values of inf or zero being passed to log10
+    loggable_idxs  = ([x!=0] & np.isfinite(x))[0]
     # Determine number of decimal places to round each number to
     # np.abs because can't find log of negative number
     # np.log10 to get position of most significant digit
-    # np.floor to round to most significant digit
+    #   where x is finite and non-zero, avoiding overflow from log10
+    #   out = 0, setting default value where x=0 or inf
+    # np.floor to round to position of most significant digit
     # np.array.astype(int) to enable np.around to work later
-    dec_pl = sigfig - np.floor(np.log10(np.abs(x))).astype(int) - 1
-    # Change 0's to 0 sig fig (overflow error produces this number)
-    dec_pl[dec_pl == sigfig - np.floor(np.log10(0)).astype(int) - 1] = 0
+    dec_pl = sigfig - np.floor(np.log10(np.abs(x), 
+                                        where = loggable_idxs,
+                                        out   = np.zeros_like(x))
+                               ).astype(int) - 1
     # Round to sig figs
-    rounded = [np.around(x[i], decimals=dec_pl[i]) for i in range(len(x))]
-    return np.array(rounded)
+    rounded = np.array(
+                    [np.around(x[i], decimals=dec_pl[i]) 
+                    for i in range(len(x))]
+                )
+    # Return as single value if input that way
+    if orig_type in [int, float]:
+        return rounded.item()
+    # Return as python list
+    elif orig_type == list:
+        return rounded.tolist()
+    # Otherwise, return np.array
+    else:
+        return rounded
 
 
 # GRF functions
