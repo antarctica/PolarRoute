@@ -22,7 +22,48 @@ class TestSDA(unittest.TestCase):
 
         self.cellbox = AggregatedCellBox(boundary, {}, '0')
         self.SDA = SDA(config)
+        
+    def assert_equal_flexible_type(self, actual, expected, places=5):
+        """
+        Flexibly compares if actual and expected are equal. Method depends on type
 
+        Args:
+            actual (many): Actual value(s) output by codebase
+            expected (many): Expected value(s) 
+
+        Raises:
+            AssertionError: When values are not equal
+        """
+        
+        # Cast np float to regular python float for comparison
+        if type(actual) == np.float64:
+            actual = actual.item()
+        # First test that they are the same type of data
+        actual_type = type(actual)
+        expected_type = type(expected)
+
+        assert(actual_type == expected_type)
+        
+        # If it's a float, check that they're equal to some dec places
+        if expected_type in [float]:
+            self.assertAlmostEqual(actual, expected, places=places)
+        # If str, int or bool, check that they're exactly equal
+        elif expected_type in [str, int, bool]:
+            self.assertEqual(actual, expected)
+        # If it's a tuple or list, recursively check values as per above tests
+        elif expected_type in [tuple, list]:
+            assert (len(expected) == len(actual))
+            for i in range(len(expected)):
+                self.assert_equal_flexible_type(actual[i], expected[i])
+        # If it's a dict, recursively check values per key as per above tests
+        elif expected_type == dict:
+            assert (expected.keys() == actual.keys())
+            for key in expected:
+                self.assert_equal_flexible_type(actual[key], expected[key])
+        # Otherwise I forgot to include check for that datatype
+        else:
+            raise ValueError(f'Unexpected value type {expected_type}')
+            
     def test_land(self):
         cellbox = copy(self.cellbox)
         cellbox.agg_data = {
@@ -31,7 +72,7 @@ class TestSDA(unittest.TestCase):
 
         actual = self.SDA.land(cellbox)
         expected = False
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_extreme_ice(self):
         cellbox = copy(self.cellbox)
@@ -41,7 +82,7 @@ class TestSDA(unittest.TestCase):
 
         actual = self.SDA.extreme_ice(cellbox)
         expected = True
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_model_speed_open_water(self):
         cellbox = copy(self.cellbox)
@@ -62,7 +103,7 @@ class TestSDA(unittest.TestCase):
             'ice resistance': 0.
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_model_speed_ice(self):
         cellbox = copy(self.cellbox)
@@ -84,7 +125,7 @@ class TestSDA(unittest.TestCase):
             'ice resistance': 96634.5,
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_model_resistance_open_water(self):
         cellbox = copy(self.cellbox)
@@ -107,7 +148,7 @@ class TestSDA(unittest.TestCase):
             'resistance': [0., 0., 0., 0., 0., 0., 0., 0.]
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_model_resistance_ice(self):
         cellbox = copy(self.cellbox)
@@ -132,7 +173,7 @@ class TestSDA(unittest.TestCase):
             'resistance': [96634.5, 96634.5, 96634.5, 96634.5, 96634.5, 96634.5, 96634.5, 96634.5]
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_model_fuel_open_water(self):
         cellbox = copy(self.cellbox)
@@ -157,7 +198,7 @@ class TestSDA(unittest.TestCase):
             'fuel': [27.3186897, 27.3186897, 27.3186897, 27.3186897, 27.3186897, 27.3186897, 27.3186897, 27.3186897]
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_model_fuel_ice(self):
         cellbox = copy(self.cellbox)
@@ -186,7 +227,7 @@ class TestSDA(unittest.TestCase):
         }
 
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_ice_resistance_zero(self):
         cellbox = copy(self.cellbox)
@@ -199,7 +240,7 @@ class TestSDA(unittest.TestCase):
 
         actual = self.SDA.ice_resistance(cellbox)
         expected = 0.
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_ice_resistance_pos(self):
         cellbox = copy(self.cellbox)
@@ -212,7 +253,7 @@ class TestSDA(unittest.TestCase):
 
         actual = self.SDA.ice_resistance(cellbox)
         expected = 64543.75549708632
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_invert_resistance_zero(self):
         cellbox = copy(self.cellbox)
@@ -225,7 +266,7 @@ class TestSDA(unittest.TestCase):
 
         actual = self.SDA.invert_resistance(cellbox)
         expected = 26.5
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_invert_resistance_pos(self):
         cellbox = copy(self.cellbox)
@@ -238,52 +279,52 @@ class TestSDA(unittest.TestCase):
 
         actual = self.SDA.invert_resistance(cellbox)
         expected = 7.842665122593933
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_fuel_eq_hotel(self):
         actual = fuel_eq(0., 0.)
         expected = 6.06970392
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_fuel_eq_open_water(self):
         actual = fuel_eq(26.5, 0)
         expected = 27.3186897
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_fuel_eq_ice_breaking(self):
         actual = fuel_eq(5.56, 64543.76)
         expected = 24.48333122037351
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_wind_coeff_zero(self):
         actual = c_wind(0.)
         expected = 0.94
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_wind_coeff_interp(self):
         actual = c_wind(np.pi/4.)
         expected = 0.595
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_wind_resistance_zero(self):
         actual = wind_resistance(0.,0.,0.)
         expected = 0.
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_wind_resistance_equal_opposite(self):
         actual = wind_resistance(10., 10., 0.)
         expected = 0.
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_wind_resistance_pos(self):
         actual = wind_resistance(10., 20., 0.)
         expected = 129543.75
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_wind_resistance_neg(self):
         actual = wind_resistance(10., 20., np.pi)
         expected = -105656.25
-        self.assertAlmostEqual(actual, expected, places=5)
+        self.assert_equal_flexible_type(actual, expected, places=5)
 
     def test_wind_mag_dir_zero(self):
         cellbox = copy(self.cellbox)
@@ -294,7 +335,7 @@ class TestSDA(unittest.TestCase):
         }
         actual = wind_mag_dir(cellbox, 0.)
         expected = (0., 0.)
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_wind_mag_dir_north(self):
         cellbox = copy(self.cellbox)
@@ -305,8 +346,8 @@ class TestSDA(unittest.TestCase):
         }
         actual = wind_mag_dir(cellbox, 0.)
         expected = (7.22222, np.pi)
-        self.assertAlmostEqual(actual[0], expected[0], places=5)
-        self.assertAlmostEqual(actual[1], expected[1], places=5)
+        self.assert_equal_flexible_type(actual[0], expected[0], places=5)
+        self.assert_equal_flexible_type(actual[1], expected[1], places=5)
 
     def test_wind_mag_dir_east(self):
         cellbox = copy(self.cellbox)
@@ -317,8 +358,8 @@ class TestSDA(unittest.TestCase):
         }
         actual = wind_mag_dir(cellbox, 0.)
         expected = (10.378634, 1.299849)
-        self.assertAlmostEqual(actual[0], expected[0], places=5)
-        self.assertAlmostEqual(actual[1], expected[1], places=5)
+        self.assert_equal_flexible_type(actual[0], expected[0], places=5)
+        self.assert_equal_flexible_type(actual[1], expected[1], places=5)
 
     def test_calc_wind_zero(self):
         cellbox = copy(self.cellbox)
@@ -333,11 +374,11 @@ class TestSDA(unittest.TestCase):
             'speed': [0., 0., 0., 0., 0., 0., 0., 0.],
             'u10': 0.,
             'v10': 0.,
-            'wind resistance': [0, 0, 0, 0, 0, 0, 0, 0],
-            'relative wind speed': [0, 0, 0, 0, 0, 0, 0, 0],
-            'relative wind angle': [0, 0, 0, 0, 0, 0, 0, 0]
+            'wind resistance': [0., 0., 0., 0., 0., 0., 0., 0.],
+            'relative wind speed': [0., 0., 0., 0., 0., 0., 0., 0.],
+            'relative wind angle': [0., 0., 0., 0., 0., 0., 0., 0.]
         }
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_calc_wind_north(self):
         cellbox = copy(self.cellbox)
@@ -357,7 +398,7 @@ class TestSDA(unittest.TestCase):
             'relative wind angle': [2.11646579563727, 1.299849270152763, 0.6226774988830187, 0.0, 0.6226774988830185, 1.2998492701527629, 2.1164657956372697, 3.141592653589793]
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_calc_wind_east(self):
         cellbox = copy(self.cellbox)
@@ -377,7 +418,7 @@ class TestSDA(unittest.TestCase):
             'relative wind angle': [2.1164657956372697, 3.141592653589793, 2.11646579563727, 1.299849270152763, 0.6226774988830187, 0.0, 0.6226774988830187, 1.2998492701527629]
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
 
     def test_model_resistance_ice_wind_north(self):
         cellbox = copy(self.cellbox)
@@ -409,4 +450,4 @@ class TestSDA(unittest.TestCase):
             'resistance': [97868.9775504276, 116498.89178110257, 137159.62205230855, 158629.99190277088, 137159.6220523086, 116498.89178110257, 97868.97755042762, 85030.28351429878]
         }
 
-        self.assertEqual(actual, expected)
+        self.assert_equal_flexible_type(actual, expected)
