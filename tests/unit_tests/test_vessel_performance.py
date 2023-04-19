@@ -29,7 +29,7 @@ class TestSDA(unittest.TestCase):
 
         Args:
             actual (many): Actual value(s) output by codebase
-            expected (many): Expected value(s) 
+            expected (many): Expected value(s) to compare against
 
         Raises:
             AssertionError: When values are not equal
