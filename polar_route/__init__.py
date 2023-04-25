@@ -11,3 +11,4 @@ from polar_route.dataloaders.factory import DataLoaderFactory as DataLoaderFacto
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller as VesselPerformanceModeller
 
 from polar_route.route_planner import RoutePlanner as RoutePlanner
+from polar_route.mesh_generation.boundary import Boundary as Boundary
