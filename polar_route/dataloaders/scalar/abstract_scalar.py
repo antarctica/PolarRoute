@@ -142,19 +142,26 @@ class ScalarDataLoader(DataLoaderInterface):
                         
             # Return column of data from within bounds
             return data.loc[mask]
-        
+
         def trim_datapoints_from_xr(data, bounds):
             '''
             Extracts data from a xr.Dataset
             '''
             # Select data region within spatial bounds
-            # TODO make sure boundaries act same as df
+            # NOTE slice in xarray is inclusive of bounds
             data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
             data = data.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
             # Select data region within temporal bounds if time exists as a coordinate
             if 'time' in data.coords.keys():
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
 
+
+            # Trim off any data on the min boundary to be consistent with df
+            if bounds.get_lat_min() in data.lat:
+                data = data.where(data.lat  != bounds.get_lat_min(), drop=True)
+            if bounds.get_long_min() in data.long:
+                data = data.where(data.long != bounds.get_long_min(), drop=True)
+            
             # Return column of data from within bounds
             return data
         
@@ -170,9 +177,9 @@ class ScalarDataLoader(DataLoaderInterface):
             logging.debug('Data is already trimmed to bounds!')
             return data
         
-        if type(data) == type(pd.DataFrame()):
+        if type(data) == pd.core.frame.DataFrame:
             return trim_datapoints_from_df(data, bounds)
-        elif type(data) == type(xr.Dataset()):
+        elif type(data) == xr.core.dataset.Dataset:
             return trim_datapoints_from_xr(data, bounds)
 
 
@@ -226,49 +233,10 @@ class ScalarDataLoader(DataLoaderInterface):
         if hasattr(self, 'data_name'): data_name = self.data_name
         else:                          data_name = self.get_data_col_name()
         
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
-
-    def get_datapoints(self, bounds, return_coords=False, data=None):
-        '''
-        Extracts datapoints from self.data within boundary defined by 'bounds'.
-        self.data can be pd.DataFrame or xr.Dataset
-        
-        Args:
-            bounds (Boundary): Limits of lat/long/time to select data from
-            return_coords (boolean): 
-                Flag to determine if coordinates are provided for each 
-                datapoint found. Default is False.
-            
-        Returns:
-            pd.DataFrame: 
-                Column of data values within selected region. If return_coords
-                is true, also returns with coordinate columns 
-        '''
-        if data is None:
-            data = self.data
-        # Cast to dataframe for output
-        if type(data) == type(xr.Dataset()):
-            data = self.trim_datapoints(bounds, data=data)
-            # Cast to dataframe
-            data = data.to_dataframe().reset_index().dropna()
-            
-        # Trim to boundary specified
-        data = self.trim_datapoints(bounds, data=data)
-
-        # Retrieve data column name
-        if hasattr(self, 'data_name'): data_name = self.data_name
-        else:                          data_name = self.get_data_col_name()
-        
-        # Include lat/long/time if requested
-        if return_coords: columns = list(data.columns)
-        else:             columns = [data_name]
-        
-        
-        # Return column of data from within bounds
-        return data[columns]
         
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
@@ -277,7 +245,7 @@ class ScalarDataLoader(DataLoaderInterface):
         Args:
             aggregation_type (str): Method of aggregation of datapoints within
                 bounds. Can be upper or lower case. 
-                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD', 'CLEAR'
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD', 'COUNT'
             bounds (Boundary): Boundary object with limits of lat/long
             skipna (bool): Defines whether to propogate NaN's or not
                 Default = True (ignore's NaN's)
@@ -289,34 +257,78 @@ class ScalarDataLoader(DataLoaderInterface):
         Raises:
             ValueError: aggregation type not in list of available methods
         '''
+        def get_value_from_df(dps, bounds, agg_type, skipna):
+            # Skip NaN's if desired
+            if skipna:  dps = dps.dropna()
+            # Sort values for faster indexing
+            dps = dps.sort_values()
+
+            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            # If want the number of datapoints
+            if agg_type =='COUNT':
+                return len(dps)
+            # If no data
+            elif len(dps) == 0:
+                return np.nan
+            # Return float of aggregated value
+            elif agg_type == 'MIN':
+                return float(dps.min(skipna=skipna))
+            elif agg_type == 'MAX':
+                return float(dps.max(skipna=skipna))
+            elif agg_type == 'MEAN':
+                return float(dps.mean(skipna=skipna))
+            elif agg_type == 'MEDIAN':
+                return float(dps.median(skipna=skipna))
+            elif agg_type == 'STD':
+                return float(dps.std(skipna=skipna))
+            # If aggregation_type not available
+            else:
+                raise ValueError(f'Unknown aggregation type {agg_type}')
+
+        
+        def get_value_from_xr(dps, bounds, agg_type, skipna):
+            dps = dps.values
+            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            # If want the number of datapoints
+            if agg_type =='COUNT':
+                return dps.size
+            # If no data
+            elif dps.size == 0:
+                return np.nan
+            # Return float of aggregated value
+            elif agg_type == 'MIN':
+                if skipna:  return np.nanmin(dps)
+                else:       return np.min(dps)
+            elif agg_type == 'MAX':
+                if skipna:  return np.nanmax(dps)
+                else:       return np.max(dps)
+            elif agg_type == 'MEAN':
+                if skipna:  return np.nanmean(dps)
+                else:       return np.mean(dps)
+            elif agg_type == 'MEDIAN':
+                if skipna:  return np.nanmedian(dps)
+                else:       return np.median(dps)
+            elif agg_type == 'STD':
+                if skipna:  return np.nanstd(dps)
+                else:       return np.std(dps)
+            # If aggregation_type not available
+            else:
+                raise ValueError(f'Unknown aggregation type {agg_type}')
+
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
+            
         # Limit data series to just the data, excluding coords/index
-        dps = self.get_datapoints(bounds)[self.data_name]
-        dps = dps.dropna().sort_values()
+        dps = self.trim_datapoints(bounds)[self.data_name]
 
-        # TODO update log to include boundary and data_name
-        logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
-        # If no data
-        if agg_type =='COUNT':
-            return {self.data_name: len(dps)}
-        elif len(dps) == 0:
-            return {self.data_name: np.nan}
-        # Return float of aggregated value
-        elif agg_type == 'MIN':
-            return {self.data_name :float(dps.min(skipna=skipna))}
-        elif agg_type == 'MAX':
-            return {self.data_name :float(dps.max(skipna=skipna))}
-        elif agg_type == 'MEAN':
-            return {self.data_name :float(dps.mean(skipna=skipna))}
-        elif agg_type == 'MEDIAN':
-            return {self.data_name :float(dps.median(skipna=skipna))}
-        elif agg_type == 'STD':
-            return {self.data_name :float(dps.std(skipna=skipna))}
-        # If aggregation_type not available
-        else:
-            raise ValueError(f'Unknown aggregation type {agg_type}')
+        if type(self.data) == pd.core.frame.DataFrame:
+            value = get_value_from_df(dps, bounds, agg_type, skipna)
+        elif type(self.data) == xr.core.dataset.Dataset:
+            value = get_value_from_xr(dps, bounds, agg_type, skipna)
+            
+        return {self.data_name: value}
+            
 
     def get_hom_condition(self, bounds, splitting_conds):
         '''
@@ -352,25 +364,49 @@ class ScalarDataLoader(DataLoaderInterface):
                 given threshold if between the upper and lower bound
                 
         '''
-        hom_type = "ERR"
+        def get_hom_condition_from_df(dps, splitting_conds):
+            # If not enough datapoints
+            if len(dps) < self.min_dp: hom_type = "MIN"
+            # Otherwise, extract the homogeneity condition
+            else:
+                # Calculate fraction over threshold
+                num_over_threshold = dps[dps > splitting_conds['threshold']]
+                frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
+                
+                # Return homogeneity condition
+                if   frac_over_threshold <= splitting_conds['lower_bound']: hom_type = "CLR"
+                elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
+                else: hom_type = "HET"
+
+            logging.debug(f"hom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+            return hom_type
+        
+        def get_hom_condition_from_xr(dps, splitting_conds):
+            
+            
+            if dps.size < self.min_dp: hom_type = "MIN"
+            else:
+                num_over_threshold = np.count_nonzero(dps > splitting_conds['threshold'])
+                
+                frac_over_threshold = num_over_threshold/dps.size
+                                    
+                # Return homogeneity condition
+                if   frac_over_threshold <= splitting_conds['lower_bound']: hom_type = "CLR"
+                elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
+                else: hom_type = "HET"
+                
+            logging.debug(f"hom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+            
+            return hom_type
         
         # Retrieve datapoints to analyse
-        dps = self.get_datapoints(bounds)[self.data_name]
-        # If not enough datapoints
-        if len(dps) < self.min_dp: hom_type = "MIN"
-        # Otherwise, extract the homogeneity condition
-        else:
-            # Calculate fraction over threshold
-            num_over_threshold = dps[dps > splitting_conds['threshold']]
-            frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
-            
-            # Return homogeneity condition
-            if   frac_over_threshold <= splitting_conds['lower_bound']: hom_type = "CLR"
-            elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
-            else: hom_type = "HET"
+        dps = self.trim_datapoints(bounds)[self.data_name]
 
-        logging.debug(f"hom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
-        return hom_type
+        if type(dps) == pd.core.series.Series:
+            return get_hom_condition_from_df(dps, splitting_conds)
+        elif type(dps) == xr.core.dataarray.DataArray:
+            return get_hom_condition_from_xr(dps, splitting_conds)
+
         
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
@@ -429,9 +465,9 @@ class ScalarDataLoader(DataLoaderInterface):
             logging.info(f"\tReprojecting data from {in_proj} to {out_proj}")
         
         # Choose appropriate method of reprojection based on data type
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return reproject_df(self.data, in_proj, out_proj, x_col, y_col)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return reproject_xr(self.data, in_proj, out_proj, x_col, y_col)
     
     def downsample(self, agg_type=None):
@@ -520,9 +556,9 @@ class ScalarDataLoader(DataLoaderInterface):
         else:
             logging.info(f"- Downsampling data by {self.downsample_factors}")
         # Otherwise, downsample appropriately
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return downsample_df(self.data, self.downsample_factors, agg_type)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return downsample_xr(self.data, self.downsample_factors, agg_type)
         
     def get_data_col_name(self):
@@ -572,9 +608,9 @@ class ScalarDataLoader(DataLoaderInterface):
         
         logging.info(f"- Retrieving data name from {type(self.data)}")
         # Choose method of extraction based on data type
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return get_data_name_from_df(self.data)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return get_data_name_from_xr(self.data)
 
     def set_data_col_name(self, new_name):
@@ -604,7 +640,7 @@ class ScalarDataLoader(DataLoaderInterface):
         old_name = self.get_data_col_name()
         logging.info(f"- Changing data name from {old_name} to {new_name}")
         # Change data name depending on data type
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return set_name_df(self.data, old_name, new_name)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return set_name_xr(self.data, old_name, new_name)
