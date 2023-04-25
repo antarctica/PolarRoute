@@ -1,7 +1,7 @@
 # Testing Strategy
 When updating any files within the PolarRoute repository, tests must be run to ensure that the core functionality of the software remains unchanged. To allow for validation of changes, a suite of regression tests have been provided in the folder `tests/regression_tests/...`. These tests attempt to rebuild existing test cases using the changed code and compares these rebuilt outputs to the reference test files. If any differences are found, the tests will fail. 
 
-Evidence that all the required regression tests have passed needs to be submitted as part of a pull request. This should be in the form of a `pytest_output.txt` attached the pull request. 
+Evidence that all the required regression tests have passed needs to be submitted as part of a pull request. This should be in the form of a `pytest_output.txt` attached to the pull request. 
 
 Pull requests will not be accepted unless all required regression tests pass. 
 
