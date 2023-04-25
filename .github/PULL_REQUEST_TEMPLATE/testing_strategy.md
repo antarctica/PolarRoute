@@ -7,38 +7,35 @@ Pull requests will not be accepted unless all required regression tests pass.
 
 ## Mesh Construction
 
-### Files
-`aggregated_cellBox.py`  
-`boundary.py`  
-`cellbox.py`  
-`direction.py`  
-`environment_mesh.py`  
-`mesh_builder.py`  
-`mesh.py`  
-`metadata.py`  
-`neighbour_graph.py`  
+| **Files altered**          | **Tests**                             |
+|----------------------------|---------------------------------------|
+| `aggregated_cellBox.py`    | `tests/regression_tests/test_mesh.py` |
+| `boundary.py`              |                                       |
+| `cellbox.py`               |                                       |
+| `direction.py`             |                                       |
+| `environment_mesh.py`      |                                       |
+|                            |                                       |
 
-### Tests
-`tests/regression_tests/test_mesh_construcion.py`
+
 
 ## Vessel Performance Modelling
+| **Files altered**                   | **Tests**                               |
+|-------------------------------------|-----------------------------------------|
+| `abstract_vessel.py`                | `tests/regression_tests/test_vessel.py` |
+| `vessel_factory.py`                 |                                         |
+| `vessel_performance_modeller.py`    |                                         |
+|                                     |                                         |
 
-### Files
-`abstract_vessel.py`  
-`vessel_factory.py`  
-`vessel_performance_modeller.py`  
-
-### Tests
-`tests/regression_tests/test_vessel_performance.py`  
 
 ## Route Planning
 
-### Files
-`crossing.py`  
-`route_planner.py`  
+| **Files altered**    | **Tests**                                           |
+|----------------------|-----------------------------------------------------|
+| `crossing.py`        | `tests/regression_tests/test_routes_dijkstra.py`    |
+| `route_planner.py`   | `tests/regression_tests/test_routes_smoothed.py`    |
+|                      |                                                     |
 
-### Tests
-`tests/regression_tests/test_route_planner.py`  
+
 
 ## Testing files
 Some updates to PolarRoute may result in changes to meshes calculated in our tests suite (*such as adding additional attributes to the cellbox object*). These changes will cause the test suite to fail, though the mode of failure should be predictable. 
@@ -48,17 +45,5 @@ Details of these failed tests should be submitted as part of the pull request in
 If the changes made are valid, the test files should be updated so-as the tests pass again, and evidence of the updated tests passing also submitted with the pull request. 
 
 ### Files
-`test_regression.py`  
-`test_boundary.py`  
-`test_cellbox.py`  
-`test_env_mesh.py`  
-`test_neighbour_graph.py`  
-`test_vessel_performance.py`  
-
-`create_mesh.output2013_4_80.py`  
-`create_mesh.output2016_6_80.py`  
-`create_mesh.output2019_6_80.py`  
-
-`add_vehicle.output2013_4_80.py`  
-`add_vehicle.output2016_6_80.py`  
-`add_vehicle.output2019_6_80.py`  
+`tests/regression_tests/exmaple_meshes/*` 
+`tests/regression_tests/exmaple_routes/*` 
