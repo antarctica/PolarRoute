@@ -1,12 +1,12 @@
 from polar_route.dataloaders.dataloader_interface import DataLoaderInterface
-from pyproj import Transformer, CRS
-
 from abc import abstractmethod
 
+from pyproj import Transformer, CRS
+
+import logging
+import numpy as np
 import xarray as xr
 import pandas as pd
-import numpy as np
-import logging
 
 class ScalarDataLoader(DataLoaderInterface):
     '''
@@ -35,7 +35,6 @@ class ScalarDataLoader(DataLoaderInterface):
                 is pd.DataFrame. Must be variable if self.data is xr.Dataset
         '''
         logging.info(f"Initialising {params['dataloader_name']} dataloader")
-        
         # Translates parameters from config input to desired inputs
         params = self.add_params(params)
         # Creates a class attribute for all keys in params
@@ -155,7 +154,6 @@ class ScalarDataLoader(DataLoaderInterface):
             if 'time' in data.coords.keys():
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
 
-
             # Trim off any data on the min boundary to be consistent with df
             if bounds.get_lat_min() in data.lat:
                 data = data.where(data.lat  != bounds.get_lat_min(), drop=True)
@@ -182,7 +180,6 @@ class ScalarDataLoader(DataLoaderInterface):
         elif type(data) == xr.core.dataset.Dataset:
             return trim_datapoints_from_xr(data, bounds)
 
-
     def get_dp_from_coord(self, long=None, lat=None, return_coords=False):
         '''
         Extracts datapoint from self.data with lat and long specified in kwargs.
@@ -204,7 +201,7 @@ class ScalarDataLoader(DataLoaderInterface):
             # Mask off any positions not within spatial bounds
             mask = (data['lat']  == lat)  & \
                    (data['long'] == long) 
-                   
+
             # Include lat/long/time if requested
             if return_coords: columns = list(data.columns)
             else:             columns = [name]
@@ -406,6 +403,8 @@ class ScalarDataLoader(DataLoaderInterface):
             return get_hom_condition_from_df(dps, splitting_conds)
         elif type(dps) == xr.core.dataarray.DataArray:
             return get_hom_condition_from_xr(dps, splitting_conds)
+        else:
+            raise TypeError(f'Unknown type {type(dps)}')
 
         
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
@@ -508,11 +507,11 @@ class ScalarDataLoader(DataLoaderInterface):
             '''
             if agg_type == 'MIN':
                 # Returns min of bin
-                data = data.coarsen(lat=ds[1], boundary='pad').min()
+                data = data.coarsen(lat=ds[1],boundary='pad').min()
                 data = data.coarsen(long=ds[0],boundary='pad').min()
             elif agg_type == 'MAX':
                 # Returns max of bin
-                data = data.coarsen(lat=ds[1], boundary='pad').max()
+                data = data.coarsen(lat=ds[1],boundary='pad').max()
                 data = data.coarsen(long=ds[0],boundary='pad').max()
             elif agg_type == 'MEAN':
                 # Returns mean of bin
@@ -543,7 +542,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 'too computationally expensive, returning original df'
                 )
             return data
-        
+
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
