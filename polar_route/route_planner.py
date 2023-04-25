@@ -295,7 +295,7 @@ class RoutePlanner:
         '''
         mesh = copy.copy(self.mesh)
         mesh['waypoints'] = mesh['waypoints'].to_dict()
-        mesh['route_info'] = self.config
+        mesh['config']['route_info'] = self.config
         output_json = json.loads(json.dumps(mesh))
         del mesh
         return output_json

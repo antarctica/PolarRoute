@@ -299,8 +299,9 @@ class ScalarDataLoader(DataLoaderInterface):
         # TODO update log to include boundary and data_name
         logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
         # If no data
-
-        if len(dps) == 0:
+        if agg_type =='COUNT':
+            return {self.data_name: len(dps)}
+        elif len(dps) == 0:
             return {self.data_name: np.nan}
         # Return float of aggregated value
         elif agg_type == 'MIN':
@@ -313,8 +314,6 @@ class ScalarDataLoader(DataLoaderInterface):
             return {self.data_name :float(dps.median(skipna=skipna))}
         elif agg_type == 'STD':
             return {self.data_name :float(dps.std(skipna=skipna))}
-        elif agg_type =='COUNT':
-            return {self.data_name: len(dps)}
         # If aggregation_type not available
         else:
             raise ValueError(f'Unknown aggregation type {agg_type}')
@@ -406,8 +405,8 @@ class ScalarDataLoader(DataLoaderInterface):
                     .from_crs(CRS(in_proj), CRS(out_proj), always_xy=True)\
                     .transform(data[x_col].to_numpy(), data[y_col].to_numpy())
             # Replace columns with reprojected columns called 'lat'/'long'
-            data = data.drop(x_col, axis=1)
-            data = data.drop(y_col, axis=1)
+            if x_col != 'lat':  data = data.drop(x_col, axis=1)
+            if y_col != 'long': data = data.drop(y_col, axis=1)
             data['lat']  = y
             data['long'] = x
             
@@ -473,24 +472,24 @@ class ScalarDataLoader(DataLoaderInterface):
             '''
             if agg_type == 'MIN':
                 # Returns min of bin
-                data = data.coarsen(lat=ds[1]).min()
-                data = data.coarsen(long=ds[0]).min()
+                data = data.coarsen(lat=ds[1], boundary='pad').min()
+                data = data.coarsen(long=ds[0],boundary='pad').min()
             elif agg_type == 'MAX':
                 # Returns max of bin
-                data = data.coarsen(lat=ds[1]).max()
-                data = data.coarsen(long=ds[0]).max()
+                data = data.coarsen(lat=ds[1], boundary='pad').max()
+                data = data.coarsen(long=ds[0],boundary='pad').max()
             elif agg_type == 'MEAN':
                 # Returns mean of bin
-                data = data.coarsen(lat=ds[1]).mean()
-                data = data.coarsen(long=ds[0]).mean()
+                data = data.coarsen(lat=ds[1],boundary='pad').mean()
+                data = data.coarsen(long=ds[0],boundary='pad').mean()
             elif agg_type == 'MEDIAN':
                 # Returns median of bin
-                data = data.coarsen(lat=ds[1]).median()
-                data = data.coarsen(long=ds[0]).median()
+                data = data.coarsen(lat=ds[1],boundary='pad').median()
+                data = data.coarsen(long=ds[0],boundary='pad').median()
             elif agg_type == 'STD':
                 # Returns std_dev of range
-                data = data.coarsen(lat=ds[1]).std()
-                data = data.coarsen(long=ds[0]).std()
+                data = data.coarsen(lat=ds[1],boundary='pad').std()
+                data = data.coarsen(long=ds[0],boundary='pad').std()
             elif agg_type =='COUNT': 
                 # Returns every first element in bin
                 data = data.thin(lat=ds[1])

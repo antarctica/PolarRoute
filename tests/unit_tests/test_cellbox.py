@@ -1,7 +1,7 @@
 
 import unittest
 from polar_route.mesh_generation.metadata import Metadata
-from polar_route.Dataloaders.Factory import DataLoaderFactory
+from polar_route.dataloaders.factory import DataLoaderFactory
 from polar_route.mesh_generation.cellbox import CellBox
 
 from polar_route.mesh_generation.boundary import Boundary
@@ -65,7 +65,7 @@ class TestCellBox (unittest.TestCase):
 
        
    def test_aggregate (self):
-      self.assertEqual ({'elevation': 624.0}, self.cellbox.aggregate().get_agg_data())
+      self.assertEqual ({'elevation': 627.0}, self.cellbox.aggregate().get_agg_data())
 
 
 

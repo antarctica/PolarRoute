@@ -3,7 +3,7 @@ import unittest
 from polar_route.mesh_generation.direction import Direction
 from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 from polar_route.mesh_generation.metadata import Metadata
-from polar_route.Dataloaders.Factory import DataLoaderFactory
+from polar_route.dataloaders.factory import DataLoaderFactory
 from polar_route.mesh_generation.cellbox import CellBox
 
 from polar_route.mesh_generation.boundary import Boundary
@@ -76,8 +76,8 @@ class TestNeighbourGraph (unittest.TestCase):
       self.neighbour_graph.update_neighbours(0, [2,1], Direction.north_east, self.cellboxes)
       self.assertEqual (  {1: [], 2: [], 3: [], 4: [1], -1: [], -2: [2,2], -3: [], -4: [1]} , self.neighbour_graph.get_graph()[3]) # SE cellbox
       self.neighbour_graph.update_neighbour(3, Direction.south, [1]) # undo the first update 
-      self.neighbour_graph.update_neighbour(3, Direction.west, [2]) # undo the firdt update 
-      self.neighbour_graph.update_neighbour(3, Direction.north, []) # undo the firdt update 
+      self.neighbour_graph.update_neighbour(3, Direction.west, [2]) # undo the first update 
+      self.neighbour_graph.update_neighbour(3, Direction.north, []) # undo the first update 
   
    def test_update_corner_neighbours(self):
       self.neighbour_graph.update_corner_neighbours (3 , -1, -1, -1, -1 )

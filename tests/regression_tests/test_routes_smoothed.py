@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from polar_route.route_planner import RoutePlanner
+from polar_route import RoutePlanner
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
 
@@ -21,8 +21,7 @@ TEST_ROUTES = [
     './example_routes/smoothed/time/gaussian_random_field.json',
     './example_routes/smoothed/time/checkerboard.json',
     './example_routes/smoothed/time/great_circle_forward.json',
-    './example_routes/smoothed/time/great_circle_reverse.json',
-    # './example_routes/smoothed/time/real.json'
+    './example_routes/smoothed/time/great_circle_reverse.json'
 ]
 
 # Pairing old and new outputs
