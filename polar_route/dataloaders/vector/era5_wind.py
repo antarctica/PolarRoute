@@ -21,7 +21,8 @@ class ERA5WindDataLoader(VectorDataLoader):
                 Dataset has coordinates 'lat', 'long', and variable 'elevation'
         '''
         # Open Dataset
-        data = xr.open_mfdataset(self.files)
+        if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
+        else:                       data = xr.open_mfdataset(self.files)
         # Change column names
         data = data.rename({'latitude': 'lat',
                             'longitude': 'long'})
