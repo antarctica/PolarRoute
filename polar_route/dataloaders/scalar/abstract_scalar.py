@@ -257,6 +257,11 @@ class ScalarDataLoader(DataLoaderInterface):
             ValueError: aggregation type not in list of available methods
         '''
         def get_value_from_df(dps, bounds, agg_type, skipna):
+            '''
+            Aggregates a value from a pd.Series. \n
+            dps (pd.Series): Datapoints within bounds. \n
+            skipna (bool): Flag for whether NaN's should be included in aggregation
+            '''
             # Skip NaN's if desired
             if skipna:  dps = dps.dropna()
 
@@ -284,6 +289,12 @@ class ScalarDataLoader(DataLoaderInterface):
 
         
         def get_value_from_xr(dps, bounds, agg_type, skipna):
+            '''
+            Aggregates a value from a xr.DataArray. \n
+            dps (xr.DataArray): Datapoints within bounds. \n
+            skipna (bool): Flag for whether NaN's should be included in aggregation
+            '''
+            # Extract values to be worked on by numpy functions
             dps = dps.values
             logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If want the number of datapoints
@@ -361,11 +372,15 @@ class ScalarDataLoader(DataLoaderInterface):
                 
         '''
         def get_hom_condition_from_df(dps, splitting_conds):
+            '''
+            Determined homogeneity condition from pd.Series. \n
+            dps (pd.Series): Datapoints within bounds. 
+            '''
             # If not enough datapoints
             if len(dps) < self.min_dp: hom_type = "MIN"
             # Otherwise, extract the homogeneity condition
             else:
-                # Calculate fraction over threshold
+                # Determine fraction of datapoints over threshold value
                 num_over_threshold = dps[dps > splitting_conds['threshold']]
                 frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
 
@@ -378,12 +393,16 @@ class ScalarDataLoader(DataLoaderInterface):
             return hom_type
         
         def get_hom_condition_from_xr(dps, splitting_conds):
-                        
+            '''
+            Determined homogeneity condition from xr.DataArray. \n
+            dps (pd.Series): Datapoints within bounds. 
+            '''  
             if dps.size < self.min_dp: hom_type = "MIN"
             else:
+                # Determine fraction of datapoints over threshold value
                 num_over_threshold = np.count_nonzero(dps > splitting_conds['threshold'])
                 frac_over_threshold = num_over_threshold/dps.size
-                                    
+                       
                 # Return homogeneity condition
                 if   frac_over_threshold <= splitting_conds['lower_bound']: hom_type = "CLR"
                 elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
