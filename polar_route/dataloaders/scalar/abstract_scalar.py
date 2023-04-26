@@ -8,6 +8,7 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 
+
 class ScalarDataLoader(DataLoaderInterface):
     '''
     Abstract class for all scalar Datasets.
@@ -234,7 +235,7 @@ class ScalarDataLoader(DataLoaderInterface):
             return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
         elif type(self.data) == xr.core.dataset.Dataset:
             return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
-        
+    
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
         Retrieve aggregated value from within bounds
@@ -269,15 +270,15 @@ class ScalarDataLoader(DataLoaderInterface):
                 return np.nan
             # Return float of aggregated value
             elif agg_type == 'MIN':
-                return float(dps.min(skipna=skipna))
+                return dps.min(skipna=skipna)
             elif agg_type == 'MAX':
-                return float(dps.max(skipna=skipna))
+                return dps.max(skipna=skipna)
             elif agg_type == 'MEAN':
-                return float(dps.mean(skipna=skipna))
+                return dps.mean(skipna=skipna)
             elif agg_type == 'MEDIAN':
-                return float(dps.median(skipna=skipna))
+                return dps.median(skipna=skipna)
             elif agg_type == 'STD':
-                return float(dps.std(skipna=skipna))
+                return dps.std(skipna=skipna)
             # If aggregation_type not available
             else:
                 raise ValueError(f'Unknown aggregation type {agg_type}')
@@ -324,8 +325,7 @@ class ScalarDataLoader(DataLoaderInterface):
         elif type(self.data) == xr.core.dataset.Dataset:
             value = get_value_from_xr(dps, bounds, agg_type, skipna)
             
-        return {self.data_name: value}
-            
+        return {self.data_name: float(value)}
 
     def get_hom_condition(self, bounds, splitting_conds):
         '''
@@ -369,7 +369,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 # Calculate fraction over threshold
                 num_over_threshold = dps[dps > splitting_conds['threshold']]
                 frac_over_threshold = num_over_threshold.shape[0]/dps.shape[0]
-                
+
                 # Return homogeneity condition
                 if   frac_over_threshold <= splitting_conds['lower_bound']: hom_type = "CLR"
                 elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
@@ -379,12 +379,10 @@ class ScalarDataLoader(DataLoaderInterface):
             return hom_type
         
         def get_hom_condition_from_xr(dps, splitting_conds):
-            
-            
+                        
             if dps.size < self.min_dp: hom_type = "MIN"
             else:
                 num_over_threshold = np.count_nonzero(dps > splitting_conds['threshold'])
-                
                 frac_over_threshold = num_over_threshold/dps.size
                                     
                 # Return homogeneity condition
