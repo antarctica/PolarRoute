@@ -8,6 +8,7 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 
+from polar_route.utils import timed_call
 
 class ScalarDataLoader(DataLoaderInterface):
     '''
@@ -113,7 +114,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 Params dictionary with addition of translated key/value pairs
         '''
         return params
-    
+
     def trim_datapoints(self, bounds, data=None):
         '''
         Trims datapoints from self.data within boundary defined by 'bounds'.
@@ -258,8 +259,6 @@ class ScalarDataLoader(DataLoaderInterface):
         def get_value_from_df(dps, bounds, agg_type, skipna):
             # Skip NaN's if desired
             if skipna:  dps = dps.dropna()
-            # Sort values for faster indexing
-            dps = dps.sort_values()
 
             logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If want the number of datapoints
@@ -432,7 +431,7 @@ class ScalarDataLoader(DataLoaderInterface):
         def reproject_df(data, in_proj, out_proj, x_col, y_col):
             '''
             Reprojects a pandas dataframe
-            '''            
+            '''
             # Do the reprojection
             x, y = Transformer\
                     .from_crs(CRS(in_proj), CRS(out_proj), always_xy=True)\
@@ -453,14 +452,13 @@ class ScalarDataLoader(DataLoaderInterface):
             # Cannot reproject directly as memory usage skyrockets
             df = data.to_dataframe().reset_index().dropna()
             return reproject_df(df, in_proj, out_proj, x_col, y_col)
-        
+
         # If no reprojection to do
         if in_proj == out_proj:
             logging.debug("\tself.reproject() called but don't need to")
             return self.data
         else:
             logging.info(f"\tReprojecting data from {in_proj} to {out_proj}")
-        
         # Choose appropriate method of reprojection based on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return reproject_df(self.data, in_proj, out_proj, x_col, y_col)
