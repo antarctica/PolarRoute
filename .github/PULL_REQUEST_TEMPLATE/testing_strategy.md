@@ -9,7 +9,11 @@ Pull requests will not be accepted unless all required regression tests pass.
 
 | **Files altered**          | **Tests**                             |
 |----------------------------|---------------------------------------|
-| `aggregated_cellBox.py`    | `tests/regression_tests/test_mesh.py` |
+| `mesh_builder.py`          | `tests/regression_tests/test_mesh.py` |
+| `mesh.py`                  |                                       |
+| `neighbour_graph.py`       |                                       |
+| `metadata.py`              |                                       |
+| `aggregated_cellBox.py`    |                                       |
 | `boundary.py`              |                                       |
 | `cellbox.py`               |                                       |
 | `direction.py`             |                                       |
