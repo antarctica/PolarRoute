@@ -235,7 +235,7 @@ class VectorDataLoader(DataLoaderInterface):
             return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
         elif type(self.data) == xr.core.dataset.Dataset:
             return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
-        
+    
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
         Retrieve aggregated value from within bounds
@@ -257,63 +257,7 @@ class VectorDataLoader(DataLoaderInterface):
             ValueError: aggregation type 'MEDIAN' not valid for vectors
             ValueError: aggregation type not in list of available methods
         '''
-        def get_value_from_df(dps, bounds, agg_type, skipna):
-            # Skip NaN's if desired
-            if skipna:  dps = dps.dropna()
-            # Sort values for faster indexing
-            dps = dps.sort_values()
 
-            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
-            # If want the number of datapoints
-            if agg_type =='COUNT':
-                return len(dps)
-            # If no data
-            elif len(dps) == 0:
-                return np.nan
-            # Return float of aggregated value
-            elif agg_type == 'MIN':
-                return float(dps.min(skipna=skipna))
-            elif agg_type == 'MAX':
-                return float(dps.max(skipna=skipna))
-            elif agg_type == 'MEAN':
-                return float(dps.mean(skipna=skipna))
-            elif agg_type == 'MEDIAN':
-                return float(dps.median(skipna=skipna))
-            elif agg_type == 'STD':
-                return float(dps.std(skipna=skipna))
-            # If aggregation_type not available
-            else:
-                raise ValueError(f'Unknown aggregation type {agg_type}')
-
-        
-        def get_value_from_xr(dps, bounds, agg_type, skipna):
-            dps = dps.values
-            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
-            # If want the number of datapoints
-            if agg_type =='COUNT':
-                return dps.size
-            # If no data
-            elif dps.size == 0:
-                return np.nan
-            # Return float of aggregated value
-            elif agg_type == 'MIN':
-                if skipna:  return np.nanmin(dps)
-                else:       return np.min(dps)
-            elif agg_type == 'MAX':
-                if skipna:  return np.nanmax(dps)
-                else:       return np.max(dps)
-            elif agg_type == 'MEAN':
-                if skipna:  return np.nanmean(dps)
-                else:       return np.mean(dps)
-            elif agg_type == 'MEDIAN':
-                if skipna:  return np.nanmedian(dps)
-                else:       return np.median(dps)
-            elif agg_type == 'STD':
-                if skipna:  return np.nanstd(dps)
-                else:       return np.std(dps)
-            # If aggregation_type not available
-            else:
-                raise ValueError(f'Unknown aggregation type {agg_type}')
 
         def extract_vals(row, col_vars):
             '''
@@ -465,10 +409,10 @@ class VectorDataLoader(DataLoaderInterface):
 
         # If no reprojection to do
         if in_proj == out_proj:
-            logging.debug("- self.reproject() called but don't need to")
+            logging.debug("\tself.reproject() called but don't need to")
             return self.data
         else:
-            logging.info(f"- Reprojecting data from {in_proj} to {out_proj}")
+            logging.info(f"\tReprojecting data from {in_proj} to {out_proj}")
         # Choose appropriate method of reprojection based on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return reproject_df(self.data, in_proj, out_proj, x_col, y_col)
