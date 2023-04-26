@@ -337,7 +337,7 @@ class VectorDataLoader(DataLoaderInterface):
         # Get list of variables that aren't coords
         col_vars = self.get_data_col_name().split(',')
         # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds)
+        dps = self.trim_datapoints(bounds)
         if type(dps) == xr.core.dataset.Dataset:
             dps = dps.to_dataframe()
         dps = dps[col_vars]
