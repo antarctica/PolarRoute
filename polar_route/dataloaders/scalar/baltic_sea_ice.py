@@ -18,7 +18,8 @@ class BalticSeaIceDataLoader(ScalarDataLoader):
                 Dataset has coordinates 'lat', 'long', and variable 'SIC'         
         '''
         # Open Dataset
-        data = xr.open_mfdataset(self.files)
+        if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
+        else:                       data = xr.open_mfdataset(self.files)
         # Change column names
         data = data.rename({'ice_concentration': 'SIC',
                             'lon': 'long'})

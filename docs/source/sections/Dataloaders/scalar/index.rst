@@ -37,7 +37,8 @@ Below is a simple example of how to load in a NetCDF file::
         def import_data(self, bounds):
             logging.debug("Importing my data...")
             # Open Dataset
-            data = xr.open_mfdataset(self.files)
+            if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
+            else:                       data = xr.open_mfdataset(self.files)
 
             # Rename coordinate columns to 'lat', 'long', 'time' if they aren't already
             data = data.rename({'lon':'long'})

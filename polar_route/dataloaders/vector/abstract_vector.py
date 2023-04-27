@@ -34,8 +34,7 @@ class VectorDataLoader(DataLoaderInterface):
                 Name of scalar variable. Must be the column name if self.data
                 is pd.DataFrame. Must be variable if self.data is xr.Dataset
         '''
-        print(f"Initialising {params['dataloader_name']} dataloader")
-        
+        logging.info(f"Initialising {params['dataloader_name']} dataloader")
         # Translates parameters from config input to desired inputs
         params = self.add_params(params)
         # Creates a class attribute for all keys in params
@@ -142,19 +141,25 @@ class VectorDataLoader(DataLoaderInterface):
                         
             # Return column of data from within bounds
             return data.loc[mask]
-        
+
         def trim_datapoints_from_xr(data, bounds):
             '''
             Extracts data from a xr.Dataset
             '''
             # Select data region within spatial bounds
-            # TODO make sure boundaries act same as df
+            # NOTE slice in xarray is inclusive of bounds
             data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
             data = data.sel(long=slice(bounds.get_long_min(), bounds.get_long_max()))
             # Select data region within temporal bounds if time exists as a coordinate
             if 'time' in data.coords.keys():
                 data = data.sel(time=slice(bounds.get_time_min(),  bounds.get_time_max()))
 
+            # Trim off any data on the min boundary to be consistent with df
+            if bounds.get_lat_min() in data.lat:
+                data = data.where(data.lat  != bounds.get_lat_min(), drop=True)
+            if bounds.get_long_min() in data.long:
+                data = data.where(data.long != bounds.get_long_min(), drop=True)
+            
             # Return column of data from within bounds
             return data
         
@@ -170,11 +175,11 @@ class VectorDataLoader(DataLoaderInterface):
             logging.debug('Data is already trimmed to bounds!')
             return data
         
-        if type(data) == type(pd.DataFrame()):
+        if type(data) == pd.core.frame.DataFrame:
             return trim_datapoints_from_df(data, bounds)
-        elif type(data) == type(xr.Dataset()):
+        elif type(data) == xr.core.dataset.Dataset:
             return trim_datapoints_from_xr(data, bounds)
-    
+
     def get_dp_from_coord(self, long=None, lat=None, return_coords=False):
         '''
         Extracts datapoint from self.data with lat and long specified in kwargs.
@@ -186,7 +191,7 @@ class VectorDataLoader(DataLoaderInterface):
             lat (float) : Latitude coordinate to search for
             
         Returns:
-            pd.Series:  
+            pd.Dataframe:  
                 Column of data values with chosen lat/long. Could be many 
                 datapoints because either bad data or multiple time steps 
         '''
@@ -226,51 +231,11 @@ class VectorDataLoader(DataLoaderInterface):
         if hasattr(self, 'data_name'): data_name = self.data_name
         else:                          data_name = self.get_data_col_name()
         
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
-        
-
-    def get_datapoints(self, bounds, return_coords=False, data=None):
-        '''
-        Extracts datapoints from self.data within boundary defined by 'bounds'.
-        self.data can be pd.DataFrame or xr.Dataset
-        
-        Args:
-            bounds (Boundary): Limits of lat/long/time to select data from
-            return_coords (boolean): 
-                Flag to determine if coordinates are provided for each 
-                datapoint found. Default is False.
-            
-        Returns:
-            pd.DataFrame: 
-                Column of data values within selected region. If return_coords
-                is true, also returns with coordinate columns 
-        '''
-        if data is None:
-            data = self.data
-        # Cast to dataframe for output
-        if type(data) == type(xr.Dataset()):
-            data = self.trim_datapoints(bounds, data=data)
-            # Cast to dataframe
-            data = data.to_dataframe().reset_index().dropna()
-            
-        # Trim to boundary specified
-        data = self.trim_datapoints(bounds, data=data)
-
-        # Retrieve data column name
-        if hasattr(self, 'data_name'): data_name = self.data_name
-        else:                          data_name = self.get_data_col_name()
-        
-        # Include lat/long/time if requested
-        if return_coords: columns = list(data.columns)
-        else:             columns = data_name.split(',')
-        
-        
-        # Return column of data from within bounds
-        return data[columns]
-
+    
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
         Retrieve aggregated value from within bounds
@@ -292,6 +257,8 @@ class VectorDataLoader(DataLoaderInterface):
             ValueError: aggregation type 'MEDIAN' not valid for vectors
             ValueError: aggregation type not in list of available methods
         '''
+
+
         def extract_vals(row, col_vars):
             '''
             Extracts column variable values from a row, returns them in a 
@@ -314,7 +281,10 @@ class VectorDataLoader(DataLoaderInterface):
         # Get list of variables that aren't coords
         col_vars = self.get_data_col_name().split(',')
         # Remove lat, long and time column if they exist
-        dps = self.get_datapoints(bounds)[col_vars]
+        dps = self.trim_datapoints(bounds)
+        if type(dps) == xr.core.dataset.Dataset:
+            dps = dps.to_dataframe()
+        dps = dps[col_vars]
         # Create a magnitude column 
         dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
 
@@ -439,14 +409,14 @@ class VectorDataLoader(DataLoaderInterface):
 
         # If no reprojection to do
         if in_proj == out_proj:
-            logging.debug("- self.reproject() called but don't need to")
+            logging.debug("\tself.reproject() called but don't need to")
             return self.data
         else:
-            logging.info(f"- Reprojecting data from {in_proj} to {out_proj}")
+            logging.info(f"\tReprojecting data from {in_proj} to {out_proj}")
         # Choose appropriate method of reprojection based on data type
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return reproject_df(self.data, in_proj, out_proj, x_col, y_col)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return reproject_xr(self.data, in_proj, out_proj, x_col, y_col)
     
     def downsample(self, agg_type=None):
@@ -526,7 +496,7 @@ class VectorDataLoader(DataLoaderInterface):
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
-            
+        
         # If no downsampling
         if self.downsample_factors == (1,1) or \
            self.downsample_factors == [1,1]:
@@ -535,9 +505,9 @@ class VectorDataLoader(DataLoaderInterface):
         else:
             logging.info(f"- Downsampling data by {self.downsample_factors}")
         # Otherwise, downsample appropriately
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return downsample_df(self.data, self.downsample_factors, agg_type)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return downsample_xr(self.data, self.downsample_factors, agg_type)
         
     def get_data_col_name(self):
@@ -573,9 +543,9 @@ class VectorDataLoader(DataLoaderInterface):
             return ','.join(data_names)
         
         # Choose method of extraction based on data type
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return get_data_names_from_df(self.data)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return get_data_names_from_xr(self.data)
 
     def set_data_col_name(self, new_names):
@@ -614,7 +584,7 @@ class VectorDataLoader(DataLoaderInterface):
                      for i, old_col in enumerate(old_col_names)}
         # Change names
         # Change data name depending on data type
-        if type(self.data) == type(pd.DataFrame()):
+        if type(self.data) == pd.core.frame.DataFrame:
             return set_names_df(self.data, name_dict)
-        elif type(self.data) == type(xr.Dataset()):
+        elif type(self.data) == xr.core.dataset.Dataset:
             return set_names_xr(self.data, name_dict)
