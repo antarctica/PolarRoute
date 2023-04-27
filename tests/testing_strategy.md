@@ -6,7 +6,6 @@ Evidence that all the required regression tests have passed needs to be submitte
 Pull requests will not be accepted unless all required regression tests pass. 
 
 ## Mesh Construction
-
 | **Files altered**          | **Tests**                             |
 |----------------------------|---------------------------------------|
 | `mesh_builder.py`          | `tests/regression_tests/test_mesh.py` |
@@ -21,7 +20,6 @@ Pull requests will not be accepted unless all required regression tests pass.
 |                            |                                       |
 
 
-
 ## Vessel Performance Modelling
 | **Files altered**                   | **Tests**                               |
 |-------------------------------------|-----------------------------------------|
@@ -32,13 +30,11 @@ Pull requests will not be accepted unless all required regression tests pass.
 
 
 ## Route Planning
-
 | **Files altered**    | **Tests**                                           |
 |----------------------|-----------------------------------------------------|
 | `crossing.py`        | `tests/regression_tests/test_routes_dijkstra.py`    |
 | `route_planner.py`   | `tests/regression_tests/test_routes_smoothed.py`    |
 |                      |                                                     |
-
 
 
 ## Testing files
