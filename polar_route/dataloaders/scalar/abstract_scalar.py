@@ -598,7 +598,7 @@ class ScalarDataLoader(DataLoaderInterface):
             return data
             
         def reproject_xr(data, in_proj, out_proj, x_col, y_col):
-           '''
+            '''
             Reprojects a xr.Dataset
             
             Args:
