@@ -10,7 +10,7 @@ class TestEnvMesh(unittest.TestCase):
    def setUp(self):
       self.config = None
       self.env_mesh = None
-      self.json_file = "../regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json"
+      self.json_file = "../regression_tests/example_meshes/env_meshes/grf_normal.json"
       with open (self.json_file , "r") as config_file:
           self.json_file = json.load(config_file)
           self.config = self.json_file ['config']
@@ -21,8 +21,6 @@ class TestEnvMesh(unittest.TestCase):
 
 
    def test_load_from_json (self):
-     
-
       self.assertEqual (self.loaded_env_mesh.bounds.get_bounds() , self.env_mesh.bounds.get_bounds())
 
       self.assertEqual (len (self.loaded_env_mesh.agg_cellboxes), len (self.env_mesh.agg_cellboxes))
@@ -31,6 +29,9 @@ class TestEnvMesh(unittest.TestCase):
    def test_update_agg_cellbox(self):
       self.loaded_env_mesh.update_cellbox(0 , {"x":"5"})
       self.assertEqual (self.loaded_env_mesh.agg_cellboxes[0].get_agg_data()["x"] , "5")
+
+   def test_to_tif(self):
+      self.env_mesh.to_tif( "elevation" , (10,10), "./")
    
 
 

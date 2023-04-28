@@ -11,7 +11,7 @@ from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
 from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
-from osgeo import gdal, ogr
+from osgeo import gdal, ogr, osr
 
 from polar_route.mesh_validation.sampler import Sampler
 
@@ -163,7 +163,7 @@ class EnvironmentMesh:
 
         return geojson
 
-    def to_tif(self, data_name, sampling_resolution, path, projection = "EPSG:4326" , color_map="blues" ):
+    def to_tif(self, data_name, sampling_resolution, path, projection = "EPSG:4326" , color_map="reds" ):
         """
             generates a representation of the mesh in geotif image format.
             Args:
@@ -182,7 +182,7 @@ class EnvironmentMesh:
 
         """
         #define the data extent as the mesh bounds
-        extent = [self.bounds.get_min_long() , self.bounds.get_min_lat() , self.bounds.get_max_long() , self.bounds.get_max_lat()]
+        extent = [self.bounds.get_long_min() , self.bounds.get_lat_min() , self.bounds.get_long_max() , self.bounds.get_lat_max()]
 
         # create raster band and populate with sampled data of image_size (sampling_resolution)
         # Get GDAL driver GeoTiff
@@ -195,7 +195,7 @@ class EnvironmentMesh:
         data_type = gdal.GDT_Float32
         #sampling data based on the image size
         sampler = Sampler (2 , nlines*ncols)
-        ranges = [[self.bounds.get_min_lat(), self.bounds.get_max_lat()],[self.bounds.get_min_long(), self.bounds.get_min_long() ]]
+        ranges = [[self.bounds.get_lat_min(), self.bounds.get_lat_max()],[self.bounds.get_long_min(), self.bounds.get_long_min() ]]
         samples = sampler.generate_samples(ranges)
         def get_sample_value (sample):
                 lat =  sample[0]
@@ -211,7 +211,8 @@ class EnvironmentMesh:
         for sample in samples:
             data = np.append (data, get_sample_value(sample))
         
-    
+       
+        data = np.reshape(data , (nlines, ncols))
         # Create a temp grid
         #options = ['COMPRESS=JPEG', 'JPEG_QUALITY=80', 'TILED=YES']
         grid_data = driver.Create('grid_data', ncols, nlines, 1, data_type)#, options)
@@ -220,7 +221,7 @@ class EnvironmentMesh:
         grid_data.GetRasterBand(1).WriteArray(data)
         
         #create Spatial Reference System
-        srs = ogr.SpatialReference()
+        srs = osr.SpatialReference()
         srs.ImportFromProj4('+init=EPSG:4326')
         #TODO: handle different projections
        # if projection != "EPSG:4326":
@@ -235,7 +236,7 @@ class EnvironmentMesh:
         grid_data.SetProjection(srs.ExportToWkt())
         grid_data.SetGeoTransform(get_geo_transform(extent, nlines, ncols))
         # Save the file
-        file_name = path+ 'mesh_'+ data_name +'.tif'
+        file_name = path+ 'mesh_'+ data_name + '_'+ str(nlines)+'x' + str(ncols)+'.tif'
         print(f'Generated GeoTIFF: {file_name}')
         driver.CreateCopy(file_name, grid_data, 0)  
  
