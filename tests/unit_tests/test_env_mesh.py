@@ -31,7 +31,7 @@ class TestEnvMesh(unittest.TestCase):
       self.assertEqual (self.loaded_env_mesh.agg_cellboxes[0].get_agg_data()["x"] , "5")
 
    def test_to_tif(self):
-      self.env_mesh.to_tif( "elevation" , (10,10), "./")
+      self.env_mesh.to_tif( "elevation" , (5,5), "./")
    
 
 

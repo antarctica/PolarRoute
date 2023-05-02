@@ -163,7 +163,7 @@ class EnvironmentMesh:
 
         return geojson
 
-    def to_tif(self, data_name, sampling_resolution, path, projection = "EPSG:4326" , color_map="reds" ):
+    def to_tif(self, data_name, sampling_resolution, path, projection = "EPSG:4326" , color_map="blues" ):
         """
             generates a representation of the mesh in geotif image format.
             Args:
@@ -195,7 +195,7 @@ class EnvironmentMesh:
         data_type = gdal.GDT_Float32
         #sampling data based on the image size
         sampler = Sampler (2 , nlines*ncols)
-        ranges = [[self.bounds.get_lat_min(), self.bounds.get_lat_max()],[self.bounds.get_long_min(), self.bounds.get_long_min() ]]
+        ranges = [[self.bounds.get_lat_min(), self.bounds.get_lat_max()],[self.bounds.get_long_min(), self.bounds.get_long_max() ]]
         samples = sampler.generate_samples(ranges)
         def get_sample_value (sample):
                 lat =  sample[0]
@@ -209,9 +209,10 @@ class EnvironmentMesh:
                 return value
         data = []
         for sample in samples:
-            data = np.append (data, get_sample_value(sample))
-        
-       
+            sample_value = get_sample_value(sample)
+            data = np.append (data, sample_value)
+            print (">> " , sample , " >> " , sample_value)
+
         data = np.reshape(data , (nlines, ncols))
         # Create a temp grid
         #options = ['COMPRESS=JPEG', 'JPEG_QUALITY=80', 'TILED=YES']
@@ -222,10 +223,15 @@ class EnvironmentMesh:
         
         #create Spatial Reference System
         srs = osr.SpatialReference()
-        srs.ImportFromProj4('+init=EPSG:4326')
+        srs.ImportFromEPSG(4326)
+        
         #TODO: handle different projections
-       # if projection != "EPSG:4326":
-            # map projection to "EPSG:4326"
+        # output SpatialReference
+        outSpatialRef = osr.SpatialReference()
+        outSpatialRef.ImportFromEPSG(4326)
+
+        # create the CoordinateTransformation
+        coordTrans = osr.CoordinateTransformation(srs, outSpatialRef)
 
         def get_geo_transform(extent, nlines, ncols):
             resx = (extent[2] - extent[0]) / ncols
@@ -235,6 +241,7 @@ class EnvironmentMesh:
         # Setup projection and geo-transform
         grid_data.SetProjection(srs.ExportToWkt())
         grid_data.SetGeoTransform(get_geo_transform(extent, nlines, ncols))
+        print (grid_data.getRasterBand (1).ReadAsArray())
         # Save the file
         file_name = path+ 'mesh_'+ data_name + '_'+ str(nlines)+'x' + str(ncols)+'.tif'
         print(f'Generated GeoTIFF: {file_name}')
