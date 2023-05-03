@@ -32,6 +32,6 @@ This includes a collection of test files which should be run according to which 
 - [ ] I have commented my code, particularly in hard-to-understand areas.  
 - [ ] I have updated the documentation of the codebase where required.  
 - [ ] My changes generate no new warnings.   
-- [ ] My PR has been made to the `intergration_testing` branch (**DO NOT SUBMIT A PR TO MAIN**)  
+- [ ] My PR has been made to the `0.2.x` branch (**DO NOT SUBMIT A PR TO MAIN**)  
 
    
