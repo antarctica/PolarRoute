@@ -10,9 +10,10 @@ Fixes # (issue)
 <!--- If this PR adds functionality or resolves problems associated with an issue on GitHub, please include a link to the issue -->
 
 # Testing
-To ensure that the functionality of the PolarRoute codebase remains consistent throughout the development cycle a testing strategy has been developed, which can be viewed in the document `.github/PULL_REQUEST_TEMPLATE/testing_strategy.md`. 
+To ensure that the functionality of the PolarRoute codebase remains consistent throughout the development cycle a testing strategy has been developed, which can be viewed in the document `test/testing_strategy.md`. 
 This includes a collection of test files which should be run according to which part of the codebase has been altered in a pull request. Please consult the testing strategy to determine which tests need to be run. 
 
+- [ ] My changes have not altered any of the files listed in the testing strategy
 
 - [ ] My changes result in all required regression tests passing without the need to update test files.  
 
