@@ -83,6 +83,6 @@ def calculate_vessel_mesh(mesh_json, vessel_config):
     new_mesh.model_performance()
 
     end = time.perf_counter()
-    LOGGER.info(f'Mesh built in {end - start} seconds')
+    LOGGER.info(f'Vessel simulated in {end - start} seconds')
 
     return new_mesh.to_json()
