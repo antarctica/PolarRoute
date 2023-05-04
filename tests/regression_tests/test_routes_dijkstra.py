@@ -1,7 +1,11 @@
 import json
 import pytest
+import time
 
+from polar_route import __version__ as pr_version
 from polar_route import RoutePlanner
+
+
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
 
@@ -13,6 +17,11 @@ from .route_test_functions import test_fuel
 from .route_test_functions import test_cell_indices
 from .route_test_functions import test_cases
 
+import logging
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
+
+# location of test files to be recalcaulted for regression testing
 TEST_ROUTES = [
     './example_routes/dijkstra/fuel/gaussian_random_field.json',
     './example_routes/dijkstra/fuel/checkerboard.json',
@@ -23,6 +32,9 @@ TEST_ROUTES = [
     './example_routes/dijkstra/time/great_circle_forward.json',
     './example_routes/dijkstra/time/great_circle_reverse.json',
 ]
+
+def setup_module():
+    LOGGER.info(f'PolarRoute version: {pr_version}')
 
 # Pairing old and new outputs
 @pytest.fixture(scope='session', autouse=False, params=TEST_ROUTES)
@@ -36,6 +48,9 @@ def route_pair(request):
     Returns:
         list: [reference json, new json]
     """
+
+    LOGGER.info(f'Test File: {request.param}')
+
     # Load reference JSON
     with open(request.param, 'r') as fp:
         old_route = json.load(fp)
@@ -56,6 +71,7 @@ def calculate_dijkstra_route(config, mesh):
     Returns:
         json: New route output
     """
+    start = time.perf_counter()
 
     # Initial set up
     waypoints   = extract_waypoints(mesh)
@@ -66,5 +82,8 @@ def calculate_dijkstra_route(config, mesh):
     
     # Generate json to compare to old output
     new_route = rp.to_json()
+
+    end = time.perf_counter()
+    LOGGER.info(f'Route calculated in {end - start} seconds')
 
     return new_route
