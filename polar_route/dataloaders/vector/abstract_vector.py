@@ -284,7 +284,7 @@ class VectorDataLoader(DataLoaderInterface):
         dps = self.trim_datapoints(bounds)
         if type(dps) == xr.core.dataset.Dataset:
             dps = dps.to_dataframe()
-        dps = dps[col_vars]
+        dps = dps[col_vars].dropna()
         # Create a magnitude column 
         dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
 
@@ -319,7 +319,7 @@ class VectorDataLoader(DataLoaderInterface):
     # TODO get_hom_condition()
     # Using Curl / Divergence / Vorticity
     # Reynolds number?
-    def get_hom_condition(self, bounds, splitting_conds, agg_type):
+    def get_hom_condition(self, bounds, splitting_conds, agg_type='MEAN'):
         '''
         Not implemented yet. Retrieves homogeneity condition of data within
         boundary.
@@ -351,12 +351,13 @@ class VectorDataLoader(DataLoaderInterface):
                 data points \n
                 'HET' = the proportion of data points within this cellbox over a
                 given threshold if between the upper and lower bound
-                
-        Raises:
-            NotImplementedError: 
-                This method hasn't been defined for a vector field yet
         '''
-        raise NotImplementedError
+        
+        reynolds = self.calc_reynolds_number(bounds)
+        if reynolds > splitting_conds['threshold']:
+            return 'HET'
+        else:
+            return 'CLR'
         
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
@@ -588,3 +589,59 @@ class VectorDataLoader(DataLoaderInterface):
             return set_names_df(self.data, name_dict)
         elif type(self.data) == xr.core.dataset.Dataset:
             return set_names_xr(self.data, name_dict)
+
+    def calc_reynolds_number(self, bounds):
+        # Extract the speed
+        velocity = self.get_value(bounds, agg_type='MEAN')
+        speed = np.linalg.norm(list(velocity.values())) # Calculates magnitude
+        # Extract the characteristic length
+        length = bounds.calc_size()
+        # Calculate the reynolds number and return
+        return 1028 * 0.00167 * speed * length
+
+    def calc_divergence(self, bounds, data=None, collapse=True):
+        # Create a meshgrid of vectors from the data
+        vector_field = self._create_vector_meshgrid(bounds, data)
+        # Get component values for each vector
+        fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
+        # Compute partial derivatives
+        dfx_dy = np.gradient(fx, axis=1)
+        dfy_dx = np.gradient(fy, axis=0)
+        # Compute divergence
+        div = dfy_dx + dfx_dy
+        
+        # If want to collapse to max mag value, return scalar
+        if collapse:   return max(np.nanmax(div), np.nanmin(div), key=abs)
+        # Else return field
+        else:          return div
+
+
+    def calc_curl(self, bounds, data=None, collapse=True):
+        # Create a meshgrid of vectors from the data
+        dps = self.trim_datapoints(bounds, data=data)
+        vector_field = self._create_vector_meshgrid(dps, self.data_name)
+        # Get component values for each vector
+        fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
+        # Compute partial derivatives
+        dfx_dy = np.gradient(fx, axis=1)
+        dfy_dx = np.gradient(fy, axis=0)
+        # Compute curl
+        curl = dfy_dx - dfx_dy
+        
+        # If want to collapse to max mag value, return scalar
+        if collapse:   return max(np.nanmax(curl), np.nanmin(curl), key=abs)
+        # Else return field
+        else:          return curl
+    
+    @staticmethod
+    def _create_vector_meshgrid(data, data_names):
+        # Manipulate into meshgrid of 2D vectors
+        x, y = data_names.split(',')
+        # Fields of each vector component
+        vector_x_field = data.pivot(index='lat', columns='long', values=x)
+        vector_y_field = data.pivot(index='lat', columns='long', values=y)
+        # Combine into field of vectors
+        vector_field = np.stack((vector_x_field, vector_y_field), axis=-1)
+        vector_field = np.swapaxes(vector_field, 0, 1)
+        
+        return vector_field
