@@ -5,10 +5,9 @@
 
 import json
 import pytest
-
-from polar_route import __version__ as pr_version
 import time
 
+from polar_route import __version__ as pr_version
 from polar_route import MeshBuilder
 
 # Import tests, which are automatically run
@@ -93,19 +92,3 @@ def calculate_env_mesh(mesh_config):
 
 
     return new_mesh.to_json()
-
-
-if __name__ == '__main__':
-    LOGGER.info("TEST TEST TEST")
-
-# if __name__ == '__main__':
-
-#     level = logging.DEBUG
-#     log_format="[%(asctime)-17s :%(levelname)-8s] - %(message)s"
-#     logging.basicConfig(
-#             level=level,
-#             format=log_format,
-#             datefmt="%d-%m-%y %T",
-#         )
-    
-#     logging.getLogger(__name__)
