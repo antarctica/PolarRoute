@@ -205,15 +205,15 @@ class EnvironmentMesh:
             pixel_height = mesh_height/ ncols
             pixel_width = mesh_width/ nlines
             samples = []
-            for lat in np.arange(self.bounds.get_lat_min(), self.bounds.get_lat_max(), pixel_height):
+            for lat in np.arange(self.bounds.get_lat_max(), self.bounds.get_lat_min(), -1*pixel_height): # has to move in this direction as we start rendering from the upper left pixel
                 for long in np.arange(self.bounds.get_long_min(), self.bounds.get_long_max(), pixel_width):
-                    pixel_lat = lat + 0.5* pixel_height   # centeralize the pixel lat value 
+                    pixel_lat = lat - 0.5* pixel_height   # centeralize the pixel lat value 
                     pixel_long = long + 0.5*pixel_width   # centeralize the pixel long value
                     samples = np.append (samples , pixel_lat)
                     samples = np.append (samples , pixel_long)
             samples = np.reshape(samples , (nlines* ncols, 2)) # shape the samples in 2d array (each entry in the array holds sample lat and long
             return samples
-
+        logging.info ("Generating the tif image ...")
         samples = generate_samples()
         # create raster band and populate with sampled data of image_size (sampling_resolution)
         # get GDAL driver GeoTiff
@@ -223,6 +223,7 @@ class EnvironmentMesh:
         def get_sample_value (sample):
                 lat =  sample[0]
                 long = sample[1]
+                value = np.nan
                 for agg_cellbox in self.agg_cellboxes:
                     if agg_cellbox.contains_point(lat , long):
                         value =  agg_cellbox.agg_data [data_name] #get the agg_value 

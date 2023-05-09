@@ -10,7 +10,7 @@ class TestEnvMesh(unittest.TestCase):
    def setUp(self):
       self.config = None
       self.env_mesh = None
-      self.json_file = "../regression_tests/example_meshes/env_meshes/grf_normal.json"
+      self.json_file = "../regression_tests/example_meshes/env_meshes/grf_reprojection.json"
       with open (self.json_file , "r") as config_file:
           self.json_file = json.load(config_file)
           self.config = self.json_file ['config']
