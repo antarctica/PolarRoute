@@ -16,7 +16,7 @@ class TestEnvMesh(unittest.TestCase):
           self.config = self.json_file ['config']
           self.env_mesh = MeshBuilder(self.config).build_environmental_mesh()
       self.loaded_env_mesh = EnvironmentMesh.load_from_json(self.json_file)
-      # self.loaded_env_mesh.save("loaded_mesh.json")
+
       
 
 
@@ -31,8 +31,8 @@ class TestEnvMesh(unittest.TestCase):
       self.assertEqual (self.loaded_env_mesh.agg_cellboxes[0].get_agg_data()["x"] , "5")
 
    def test_to_tif(self):
-      self.env_mesh.to_tif( "elevation" , (5,5), "./")
-   
+      self.env_mesh.save("./resources/" , format="tif" ,  format_params = {"data_name":"elevation" , "sampling_resolution":(100,100), "projection":"3031"} )
+
 
 
 

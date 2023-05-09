@@ -11,10 +11,9 @@ from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
 from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
-from osgeo import gdal, ogr, osr
 
 from polar_route.mesh_validation.sampler import Sampler
-
+from osgeo import gdal, ogr, osr
 
 class EnvironmentMesh:
     """
@@ -163,15 +162,15 @@ class EnvironmentMesh:
 
         return geojson
 
-    def to_tif(self, data_name, sampling_resolution, path, projection = "EPSG:4326" , color_map="blues" ):
+    def to_tif(self, params,  path):
         """
             generates a representation of the mesh in geotif image format.
             Args:
-
-                data_name(string): the name of the mesh data that will be included in the tif image (ex. SIC, elevation)
-                sampling_resolution (tuple): the sampling resolution the geotiff will be generated at (how many pixels in the final image)
-                projection (string): the sampling projection used to create the geotiff image
-                colour_map (string): the name of the colour_map that will be used to display the scalar value in the generated geotif image (ex. Greys, Greens).
+                params(dict): a dict that might contain the folowing params:
+                        data_name(string): the name of the mesh data that will be included in the tif image (ex. SIC, elevation)
+                        sampling_resolution (tuple): the sampling resolution the geotiff will be generated at (how many pixels in the final image)
+                        projection (int): an int representing the ESPG sampling projection used to create the geotiff image  (default is 4326)
+                        colour_table (GDALColorTable): an object thatd efines the colors used to display the scalar value in the generated geotif image.
                 path (string): the path to save the generated tif image
 
 
@@ -181,22 +180,46 @@ class EnvironmentMesh:
                 in 'data_name' argument (ex. SIC, elevation)
 
         """
-        #define the data extent as the mesh bounds
-        extent = [self.bounds.get_long_min() , self.bounds.get_lat_min() , self.bounds.get_long_max() , self.bounds.get_lat_max()]
-
-        # create raster band and populate with sampled data of image_size (sampling_resolution)
-        # Get GDAL driver GeoTiff
-        driver = gdal.GetDriverByName('GTiff')
-        
-        # Get image dimensions
-        nlines = sampling_resolution[0]
-        ncols = sampling_resolution[1]
+        if (params == None):
+            raise ValueError('Parameters missing! Can not save mesh in tif format with None parameters')
+        if ( "data_name" not in params.keys() ):
+            raise ValueError('data_name should be specified in the params while saving in tif format')
+        data_name = params["data_name"]
+        DEFAULT_PROJ = 4326
+        projection = DEFAULT_PROJ
+        if "projection" in params.keys():
+            projection = int (params["projection"])
     
+        # Get image dimensions
+        if ( "sampling_resolution" not in params.keys() ):
+            raise ValueError('sampling_resolution should be specified in the params while saving in tif format')
+        nlines = params["sampling_resolution"][0]
+        ncols =  params["sampling_resolution"][1]
+
+        #define image extent based on mesh bounds
+        extent = [self.bounds.get_long_min(), self.bounds.get_lat_min(), self.bounds.get_long_max() , self.bounds.get_lat_max()]
+
+        def generate_samples ():
+            mesh_height = self.bounds.get_lat_max() - self.bounds.get_lat_min()
+            mesh_width = self.bounds.get_long_max() - self.bounds.get_long_min()
+            pixel_height = mesh_height/ ncols
+            pixel_width = mesh_width/ nlines
+            samples = []
+            for lat in np.arange(self.bounds.get_lat_min(), self.bounds.get_lat_max(), pixel_height):
+                for long in np.arange(self.bounds.get_long_min(), self.bounds.get_long_max(), pixel_width):
+                    pixel_lat = lat + 0.5* pixel_height   # centeralize the pixel lat value 
+                    pixel_long = long + 0.5*pixel_width   # centeralize the pixel long value
+                    samples = np.append (samples , pixel_lat)
+                    samples = np.append (samples , pixel_long)
+            samples = np.reshape(samples , (nlines* ncols, 2)) # shape the samples in 2d array (each entry in the array holds sample lat and long
+            return samples
+
+        samples = generate_samples()
+        # create raster band and populate with sampled data of image_size (sampling_resolution)
+        # get GDAL driver GeoTiff
+        driver = gdal.GetDriverByName('GTiff')
         data_type = gdal.GDT_Float32
-        #sampling data based on the image size
-        sampler = Sampler (2 , nlines*ncols)
-        ranges = [[self.bounds.get_lat_min(), self.bounds.get_lat_max()],[self.bounds.get_long_min(), self.bounds.get_long_max() ]]
-        samples = sampler.generate_samples(ranges)
+  
         def get_sample_value (sample):
                 lat =  sample[0]
                 long = sample[1]
@@ -204,56 +227,58 @@ class EnvironmentMesh:
                     if agg_cellbox.contains_point(lat , long):
                         value =  agg_cellbox.agg_data [data_name] #get the agg_value 
                         break  # break to make sure we avoid getting multiple values (for lat and long on the bounds of multiple cellboxes)
-          
-         
                 return value
+        # generating the samples data
         data = []
         for sample in samples:
             sample_value = get_sample_value(sample)
             data = np.append (data, sample_value)
-            print (">> " , sample , " >> " , sample_value)
 
         data = np.reshape(data , (nlines, ncols))
-        # Create a temp grid
-        #options = ['COMPRESS=JPEG', 'JPEG_QUALITY=80', 'TILED=YES']
-        grid_data = driver.Create('grid_data', ncols, nlines, 1, data_type)#, options)
-        
-        # Write data for each bands
-        grid_data.GetRasterBand(1).WriteArray(data)
-        
-        #create Spatial Reference System
-        srs = osr.SpatialReference()
-        srs.ImportFromEPSG(4326)
-        
-        #TODO: handle different projections
-        # output SpatialReference
-        outSpatialRef = osr.SpatialReference()
-        outSpatialRef.ImportFromEPSG(4326)
-
-        # create the CoordinateTransformation
-        coordTrans = osr.CoordinateTransformation(srs, outSpatialRef)
-
+        # create a temp grid
+        grid_data = driver.Create('grid_data', ncols, nlines, 1, data_type)
+        # setup geo-transform
         def get_geo_transform(extent, nlines, ncols):
             resx = (extent[2] - extent[0]) / ncols
             resy = (extent[3] - extent[1]) / nlines
             return [extent[0], resx, 0, extent[3] , 0, -resy]
-        
-        # Setup projection and geo-transform
-        grid_data.SetProjection(srs.ExportToWkt())
         grid_data.SetGeoTransform(get_geo_transform(extent, nlines, ncols))
-        print (grid_data.getRasterBand (1).ReadAsArray())
-        # Save the file
-        file_name = path+ 'mesh_'+ data_name + '_'+ str(nlines)+'x' + str(ncols)+'.tif'
-        print(f'Generated GeoTIFF: {file_name}')
-        driver.CreateCopy(file_name, grid_data, 0)  
+        # Write data 
+        srs = osr.SpatialReference() 
+        srs.ImportFromEPSG(DEFAULT_PROJ)
+        
+        grid_data.SetProjection( srs.ExportToWkt())
+        grid_data.GetRasterBand(1).WriteArray(data)
+         
+
+        #check if color table is provided
+        if "color_table" in params.keys():
+            grid_data.GetRasterBand(1).SetRasterColorTable( params["color_table"] )
  
-        # Close the file
+        # Save the file
+        file_path = f'{path}mesh_{data_name}_{str(nlines)}x{str(ncols)}.tif'
+        driver.CreateCopy(file_path, grid_data, 0)
+        if projection!=DEFAULT_PROJ:  
+            dest = osr.SpatialReference() 
+            dest.ImportFromEPSG(projection)
+            # transform to target proj and save
+            warp = gdal.Warp(str(file_path),  str(file_path) ,dstSRS=dest.ExportToWkt())
+            warp = None # Closes the files
+      
+        logging.info(f'Generated GeoTIFF: {file_path}')
+        # close the file
         driver = None
         grid_data = None
  
-        # Delete the temp grid
+        # delete the temp grid
         import os                
         os.remove('grid_data')
+
+    def generate_random_samples(self, nlines, ncols):
+        sampler = Sampler (2 , nlines*ncols)
+        ranges = [[self.bounds.get_lat_min(), self.bounds.get_lat_max()],[self.bounds.get_long_min(), self.bounds.get_long_max() ]]
+        samples = sampler.generate_samples(ranges)
+        return samples
 
        
         
@@ -304,7 +329,7 @@ class EnvironmentMesh:
         else:
             raise ValueError('Invalid cellbox index')
 
-    def save(self, path, format="JSON"):
+    def save(self, path, format="JSON", format_params=None):
         """
             Saves this object to a location in local storage. 
 
@@ -319,17 +344,20 @@ class EnvironmentMesh:
         
 
         logging.info(f"- saving the environment mesh to {path}")
-        with open(path, 'w') as f:
-            if format.upper() == "JSON":
-                logging.info(f"Saving mesh in {format} format")
-                json.dump(self.to_json(), f)
-            elif format.upper() == "GEOJSON":
-                logging.info(f"Saving mesh in {format} format")
-                json.dump(self.to_geojson(), f)
-            else:
-                logging.warning(f"Cannot save mesh in a {format} format")
+        if format.upper() == "TIF":
+                self.to_tif(format_params , path)
+        else:
+            with open(path, 'w') as f:
+                if format.upper() == "JSON":
+                    logging.info(f"Saving mesh in {format} format")
+                    json.dump(self.to_json(), f)
+                elif format.upper() == "GEOJSON":
+                    logging.info(f"Saving mesh in {format} format")
+                    json.dump(self.to_geojson(), f)
+                else:
+                    logging.warning(f"Cannot save mesh in a {format} format")
 
-            if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
+        if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
                dump_path = path.replace (".json" , ".dump")
                with open(dump_path, 'w') as dump_f:
                     self.dump_mesh(dump_f)

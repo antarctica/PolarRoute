@@ -152,7 +152,6 @@ def export_mesh_cli():
     """
         CLI entry point for exporting a mesh to standard formats.
     """
-    print("test tit")
     args = get_args("export_mesh.output.json", 
                     config_arg = False, mesh_arg = True, format_arg = True)
     
