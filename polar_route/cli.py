@@ -176,12 +176,12 @@ def calculate_route_cli():
         CLI entry point to calculate the cost of a manually defined route within an existing mesh.
     """
     args = get_args("calculated_route.json",
-                    config_arg = False, mesh_arg = True)
+                    config_arg = False, mesh_arg = True, waypoints_arg = True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    logging.info(f"Calculating the cost of route {args.route} from mesh {args.mesh}")
+    logging.info(f"Calculating the cost of route {args.waypoints.name} from mesh {args.mesh.name}")
 
-    calc_route = route_calc(args.route, args.mesh)
+    calc_route = route_calc(args.waypoints.name, args.mesh.name)
 
     logging.info(f"Saving calculated route to {args.output}")
     with open(args.output, "w") as f:

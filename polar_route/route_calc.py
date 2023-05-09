@@ -5,6 +5,7 @@ import geopandas as gpd
 from shapely import wkt
 from shapely.geometry import Point
 from shapely.geometry import LineString
+import logging
 
 def traveltime_in_cell(xdist, ydist, U, V, S):
     """
