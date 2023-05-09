@@ -5,7 +5,9 @@
 
 import json
 import pytest
+import time
 
+from polar_route import __version__ as pr_version
 from polar_route import VesselPerformanceModeller
 
 # Import tests, which are automatically run
@@ -16,6 +18,10 @@ from .mesh_test_functions import test_mesh_cellbox_values
 from .mesh_test_functions import test_mesh_neighbour_graph_count
 from .mesh_test_functions import test_mesh_neighbour_graph_ids
 from .mesh_test_functions import test_mesh_neighbour_graph_values
+
+import logging
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 
 #File locations of all vessel performance meshes to be recalculated for regression testing.
 INPUT_MESHES = [
@@ -43,6 +49,8 @@ def mesh_pair(request):
     Returns:
         list: old and new mesh jsons for comparison
     """
+    LOGGER.info(f'Test File: {request.param[0]}')
+
     input_mesh_file = request.param[0]
     output_mesh_file = request.param[1]
     # Open vessel mesh for reference
@@ -68,8 +76,13 @@ def calculate_vessel_mesh(mesh_json, vessel_config):
     Returns:
         json: Newly regenerated mesh
     """
+    start = time.perf_counter()
+
     new_mesh = VesselPerformanceModeller(mesh_json, vessel_config)
     new_mesh.model_accessibility()
     new_mesh.model_performance()
+
+    end = time.perf_counter()
+    LOGGER.info(f'Vessel simulated in {end - start} seconds')
 
     return new_mesh.to_json()

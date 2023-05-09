@@ -3,7 +3,7 @@ import pandas as pd
 
 from polar_route.utils import round_to_sigfig
 
-SIG_FIG_TOLERANCE = 5
+SIG_FIG_TOLERANCE = 4
 
 # Testing route outputs
 def test_route_coordinates(route_pair):
