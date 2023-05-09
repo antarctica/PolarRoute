@@ -24,5 +24,6 @@ waypoints/*
 outputs/*
 docs_builder/*
 testing.ipynb
-docs/*
+docs/build/*
+docs/html/*
 dev_venv/*

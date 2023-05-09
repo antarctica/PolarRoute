@@ -19,7 +19,8 @@ class SOSEDataLoader(VectorDataLoader):
         '''
 
         # Open dataset and cast to pandas df
-        data = xr.open_mfdataset(self.files)
+        if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
+        else:                       data = xr.open_mfdataset(self.files)
         # Cast to dataframe to modify lon coordinate
         df = data.to_dataframe().reset_index()
         

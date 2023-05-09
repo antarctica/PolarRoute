@@ -1,6 +1,9 @@
 import json
 import pytest
+import time
 
+
+from polar_route import __version__ as pr_version
 from polar_route import RoutePlanner
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
@@ -12,6 +15,10 @@ from .route_test_functions import test_time
 from .route_test_functions import test_fuel
 from .route_test_functions import test_distance
 from .route_test_functions import test_speed
+
+import logging
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
 
 TEST_ROUTES = [
     './example_routes/smoothed/fuel/gaussian_random_field.json',
@@ -36,6 +43,8 @@ def route_pair(request):
     Returns:
         list: [reference json, new json]
     """
+    LOGGER.info(f'Test File: {request.param}')
+
     # Load reference JSON
     with open(request.param, 'r') as fp:
         old_route = json.load(fp)
@@ -56,6 +65,7 @@ def calculate_smoothed_route(config, mesh):
     Returns:
         json: New route output
     """
+    start = time.perf_counter()
 
     # Initial set up
     waypoints   = extract_waypoints(mesh)
@@ -67,5 +77,8 @@ def calculate_smoothed_route(config, mesh):
     
     # Generate json to compare to old output
     new_route = rp.to_json()
+
+    end = time.perf_counter()
+    LOGGER.info(f'Route smoothed in {end - start} seconds')
 
     return new_route
