@@ -9,6 +9,7 @@ from polar_route.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 from polar_route.route_planner import RoutePlanner
 from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from polar_route.route_calc import route_calc
 
 
 @setup_logging
@@ -168,5 +169,23 @@ def export_mesh_cli():
 
     logging.info(f"exporting mesh to {args.output} in format {args.format}")
     env_mesh.save(args.output, args.format)
+
+@timed_call
+def calculate_route_cli():
+    """
+        CLI entry point to calculate the cost of a manually defined route within an existing mesh.
+    """
+    args = get_args("calculated_route.json",
+                    config_arg = False, mesh_arg = True)
+    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
+
+    logging.info(f"Calculating the cost of route {args.route} from mesh {args.mesh}")
+
+    calc_route = route_calc(args.route, args.mesh)
+
+    logging.info(f"Saving calculated route to {args.output}")
+    with open(args.output, "w") as f:
+        json.dump(calc_route, f, indent=4)
+
 
 
