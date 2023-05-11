@@ -316,9 +316,6 @@ class VectorDataLoader(DataLoaderInterface):
         # Extract variable values from single row (or dict) and return
         return extract_vals(row, col_vars)
 
-    # TODO get_hom_condition()
-    # Using Curl / Divergence / Vorticity
-    # Reynolds number?
     def get_hom_condition(self, bounds, splitting_conds, agg_type='MEAN'):
         '''
         Not implemented yet. Retrieves homogeneity condition of data within
@@ -614,16 +611,16 @@ class VectorDataLoader(DataLoaderInterface):
         elif type(self.data) == xr.core.dataset.Dataset:
             return set_names_xr(self.data, name_dict)
 
-    def calc_reynolds_number(self, bounds):
+    def calc_reynolds_number(self, bounds, agg_type='MEAN'):
         # Extract the speed
-        velocity = self.get_value(bounds, agg_type='MEAN')
+        velocity = self.get_value(bounds, agg_type=agg_type)
         speed = np.linalg.norm(list(velocity.values())) # Calculates magnitude
         # Extract the characteristic length
         length = bounds.calc_size()
         # Calculate the reynolds number and return
         return 1028 * 0.00167 * speed * length
 
-    def calc_divergence(self, bounds, data=None, collapse=True):
+    def calc_divergence(self, bounds, data=None, collapse=True, agg_type='MAX'):
         # Create a meshgrid of vectors from the data
         vector_field = self._create_vector_meshgrid(bounds, data)
         # Get component values for each vector
@@ -635,12 +632,14 @@ class VectorDataLoader(DataLoaderInterface):
         div = dfy_dx + dfx_dy
         
         # If want to collapse to max mag value, return scalar
-        if collapse:   return max(np.nanmax(div), np.nanmin(div), key=abs)
+        if collapse:   
+            if agg_type == 'MAX': return max(np.nanmax(div), np.nanmin(div), key=abs)
+            else:                 return np.nanmean(div)
         # Else return field
         else:          return div
 
 
-    def calc_curl(self, bounds, data=None, collapse=True):
+    def calc_curl(self, bounds, data=None, collapse=True, agg_type='MAX'):
         # Create a meshgrid of vectors from the data
         dps = self.trim_datapoints(bounds, data=data)
         vector_field = self._create_vector_meshgrid(dps, self.data_name)
@@ -653,16 +652,18 @@ class VectorDataLoader(DataLoaderInterface):
         curl = dfy_dx - dfx_dy
         
         # If want to collapse to max mag value, return scalar
-        if collapse:   return max(np.nanmax(curl), np.nanmin(curl), key=abs)
+        if collapse:
+            if agg_type == 'MAX': return max(np.nanmax(curl), np.nanmin(curl), key=abs)
+            else:                 return np.nanmean(curl)
         # Else return field
         else:          return curl
 
-    def calc_dmag(self, bounds, data=None, collapse=True):
+    def calc_dmag(self, bounds, data=None, collapse=True, agg_type='MEAN'):
         # Create a meshgrid of vectors from the data
         dps = self.trim_datapoints(bounds, data=data).dropna()
         data_names = self.data_name.split(',')
         each_vector = dps[data_names].to_numpy()
-        ave_vector = list(self.get_value(bounds, agg_type='MEAN').values())
+        ave_vector = list(self.get_value(bounds, agg_type=agg_type).values())
         
         delta_vector = each_vector - ave_vector
         
