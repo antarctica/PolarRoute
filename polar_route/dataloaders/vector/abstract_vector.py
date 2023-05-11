@@ -343,22 +343,46 @@ class VectorDataLoader(DataLoaderInterface):
         Returns:
             str:
                 The homogeniety condtion returned is of the form: \n
-                'CLR' = the proportion of data points within this cellbox over a 
-                given threshold is lower than the lowerbound \n
-                'HOM' = the proportion of data points within this cellbox over a
-                given threshold is higher than the upperbound \n
                 'MIN' = the cellbox contains less than a minimum number of 
                 data points \n
-                'HET' = the proportion of data points within this cellbox over a
-                given threshold if between the upper and lower bound
+                'HET' = Threshold values defined in config are exceeded \n
+                'CLR' = None of the HET conditions were triggered \n
         '''
+        # Get length of dataset in bounds  
+        if type(self.data) == pd.core.frame.DataFrame:
+            num_dp = len(self.trim_datapoints(bounds))
+        elif type(self.data) == xr.core.dataset.Dataset:
+            num_dp = min(self.trim_datapoints(bounds).count().values())
+
+        # Check to see if it's above the minimum threshold
+        if num_dp < self.min_dp:
+            return 'MIN'
         
-        reynolds = self.calc_reynolds_number(bounds)
-        if reynolds > splitting_conds['threshold']:
-            return 'HET'
-        else:
-            return 'CLR'
+        # To allow multiple modes of splitting, chuck them in the splitting conditions
+        # Split if magnitude of curl(data) is larger than threshold 
+        if 'curl' in splitting_conds:
+            curl = self.calc_curl(bounds)
+            if np.abs(curl) > splitting_conds['curl']:
+                return 'HET'
+        # Split if max magnitude(any_vector - ave_vector) is larger than threshold
+        if 'dmag' in splitting_conds:
+            dmag = self.calc_dmag(bounds)
+            if np.abs(dmag) > splitting_conds['dmag']:
+                return 'HET'
+            
+        # Split if Reynolds number is larger than threshold
+        if 'reynolds' in splitting_conds:        
+            reynolds = self.calc_reynolds_number(bounds)
+            if reynolds > splitting_conds['reynolds']:
+                return 'HET'
         
+        # TODO
+        # HOM would only apply if whole cell is faster than vehicle, which wouldn't be calculated in the mesh generation stage?
+        # Non-navigable cells pruned in next step so leaving out for now
+                
+        # If none of the above return conditions are triggered, cell is clear
+        return 'CLR'
+
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
         '''
@@ -632,6 +656,24 @@ class VectorDataLoader(DataLoaderInterface):
         if collapse:   return max(np.nanmax(curl), np.nanmin(curl), key=abs)
         # Else return field
         else:          return curl
+
+    def calc_dmag(self, bounds, data=None, collapse=True):
+        # Create a meshgrid of vectors from the data
+        dps = self.trim_datapoints(bounds, data=data).dropna()
+        data_names = self.data_name.split(',')
+        each_vector = dps[data_names].to_numpy()
+        ave_vector = list(self.get_value(bounds, agg_type='MEAN').values())
+        
+        delta_vector = each_vector - ave_vector
+        
+        d_mag = np.linalg.norm(delta_vector, axis=1)
+        if len(d_mag) == 0:
+            return np.nan
+        
+        # If want to collapse to max mag value, return scalar
+        elif collapse:   return np.nanmean(d_mag)
+        # Else return field
+        else:          return d_mag
     
     @staticmethod
     def _create_vector_meshgrid(data, data_names):
@@ -645,3 +687,5 @@ class VectorDataLoader(DataLoaderInterface):
         vector_field = np.swapaxes(vector_field, 0, 1)
         
         return vector_field
+    
+    
