@@ -72,7 +72,12 @@ class VectorDataLoader(DataLoaderInterface):
         # or if set in params, set col name to data name
         else:
             logging.debug(f'- Setting data column name to {self.data_name}')
-            self.data = self.set_data_col_name(self.data_name)
+            self.data = self.set_data_col_name(self.data_name.split(','))
+        # Store data names in a list for easier access in future
+        self.data_name_list = self.data_name.split(',')
+        
+        # Add magnitude and direction to dataset
+        self.data = self.add_mag_dir()
 
     @abstractmethod
     def import_data(self, bounds):
@@ -112,6 +117,36 @@ class VectorDataLoader(DataLoaderInterface):
                 Params dictionary with addition of translated key/value pairs
         '''
         return params
+    
+    def add_mag_dir(self, data=None, data_names=None):
+        
+        def add_mag_dir_to_df(data, names):
+            x, y = names
+            data['magnitude'] = np.linalg.norm([data[x], data[y]], axis=0)
+            data['direction'] = np.arctan(data[y] / data[x])
+            return data
+        
+        def add_mag_dir_to_xr(data, names):
+            x, y = names
+            data = data.assign(
+                magnitude=lambda l: (['lat', 'long'],
+                                     np.linalg.norm([l[x], l[y]], axis=0)))
+            data = data.assign(
+                direction=lambda l:(['lat','long'],
+                                     np.arctan(l[y].data / l[x].data)))
+            return data
+        
+        if data is None:
+            data = self.data
+        
+        if data_names is None:
+            names = self.data_name_list
+        
+        
+        if type(data) == pd.core.frame.DataFrame:
+            return add_mag_dir_to_df(data, names)
+        elif type(data) == xr.core.dataset.Dataset:
+            return add_mag_dir_to_xr(data, names)
 
     def trim_datapoints(self, bounds, data=None):
         '''
@@ -205,7 +240,7 @@ class VectorDataLoader(DataLoaderInterface):
 
             # Include lat/long/time if requested
             if return_coords: columns = list(data.columns)
-            else:             columns = [names.split(',')]
+            else:             columns = names
             # Return column of data from within bounds
             return data.loc[mask][columns]
         
@@ -219,7 +254,7 @@ class VectorDataLoader(DataLoaderInterface):
             data = data.to_dataframe().reset_index()
             # Include lat/long/time if requested
             if return_coords: columns = list(data.columns)
-            else:             columns = [names.split(',')]
+            else:             columns = names
             # Return column of data from within bounds
             return data[columns]
         
@@ -228,13 +263,10 @@ class VectorDataLoader(DataLoaderInterface):
             'Must provide lat and long to this method!'
             
         # Choose which method to retrieve data based on input type
-        if hasattr(self, 'data_name'): data_name = self.data_name
-        else:                          data_name = self.get_data_col_name()
-        
         if type(self.data) == pd.core.frame.DataFrame:
-            return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
+            return get_dp_from_coord_df(self.data, self.data_name_list, long, lat, return_coords)
         elif type(self.data) == xr.core.dataset.Dataset:
-            return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
+            return get_dp_from_coord_xr(self.data, self.data_name_list, long, lat, return_coords)
     
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
@@ -257,8 +289,6 @@ class VectorDataLoader(DataLoaderInterface):
             ValueError: aggregation type 'MEDIAN' not valid for vectors
             ValueError: aggregation type not in list of available methods
         '''
-
-
         def extract_vals(row, col_vars):
             '''
             Extracts column variable values from a row, returns them in a 
@@ -269,17 +299,18 @@ class VectorDataLoader(DataLoaderInterface):
             # For each variable
             for col in col_vars:
                 # If there isn't a row (i.e. no data), value is NaN
-                if row == None: 
+                if row is None: 
                     values[col] = np.nan
                 # Otherwise, extract value from row
                 else:           
                     values[col] = row[col]
             return values
+        
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
         # Get list of variables that aren't coords
-        col_vars = self.get_data_col_name().split(',')
+        col_vars = self.data_name_list
         # Remove lat, long and time column if they exist
         dps = self.trim_datapoints(bounds)
         if type(dps) == xr.core.dataset.Dataset:
@@ -570,6 +601,17 @@ class VectorDataLoader(DataLoaderInterface):
         elif type(self.data) == xr.core.dataset.Dataset:
             return get_data_names_from_xr(self.data)
 
+    def get_data_col_name_list(self):
+        '''
+        Retrieve names of data columns (for pd.DataFrame), or variable 
+        (for xr.Dataset). Used for when data_name not defined in params.
+
+        Returns:
+            list: 
+                Contains strings of data names
+        '''
+        return self.get_data_col_name().split(',')
+
     def set_data_col_name(self, new_names):
         '''
         Sets name of data column/data variables
@@ -595,15 +637,13 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Rename data variable to new name
             return data.rename(name_dict)
-        # Split string into column names
-        new_col_names = new_names.split(',')
         # Get existing column names
-        old_col_names = self.get_data_col_name().split(',')
+        old_names = self.get_data_col_name().split(',')
         # Ensure that can do replacement of columns
-        assert len(old_col_names) == len(new_col_names)
+        assert len(old_names) == len(new_names)
         # Set up mapping of old names to new names
-        name_dict = {old_col: new_col_names[i] 
-                     for i, old_col in enumerate(old_col_names)}
+        name_dict = {old_col: new_names[i] 
+                     for i, old_col in enumerate(old_names)}
         # Change names
         # Change data name depending on data type
         if type(self.data) == pd.core.frame.DataFrame:
@@ -642,7 +682,7 @@ class VectorDataLoader(DataLoaderInterface):
     def calc_curl(self, bounds, data=None, collapse=True, agg_type='MAX'):
         # Create a meshgrid of vectors from the data
         dps = self.trim_datapoints(bounds, data=data)
-        vector_field = self._create_vector_meshgrid(dps, self.data_name)
+        vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
         # Get component values for each vector
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
         # Compute partial derivatives
@@ -661,7 +701,7 @@ class VectorDataLoader(DataLoaderInterface):
     def calc_dmag(self, bounds, data=None, collapse=True, agg_type='MEAN'):
         # Create a meshgrid of vectors from the data
         dps = self.trim_datapoints(bounds, data=data).dropna()
-        data_names = self.data_name.split(',')
+        data_names = self.data_name_list
         each_vector = dps[data_names].to_numpy()
         ave_vector = list(self.get_value(bounds, agg_type=agg_type).values())
         
@@ -677,9 +717,9 @@ class VectorDataLoader(DataLoaderInterface):
         else:          return d_mag
     
     @staticmethod
-    def _create_vector_meshgrid(data, data_names):
+    def _create_vector_meshgrid(data, data_name_list):
         # Manipulate into meshgrid of 2D vectors
-        x, y = data_names.split(',')
+        x, y = data_name_list
         # Fields of each vector component
         vector_x_field = data.pivot(index='lat', columns='long', values=x)
         vector_y_field = data.pivot(index='lat', columns='long', values=y)
