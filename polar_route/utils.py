@@ -114,6 +114,22 @@ def round_to_sigfig(x, sigfig=5):
         return rounded
 
 
+def divergence(flow):
+    flow = np.swapaxes(flow, 0, 1)
+    Fx, Fy = flow[:, :, 0], flow[:, :, 1]
+    dFx_dx = np.gradient(Fx, axis=0)
+    dFy_dy = np.gradient(Fy, axis=1)
+    return dFx_dx + dFy_dy
+
+def curl(flow):
+    flow = np.swapaxes(flow, 0, 1)
+    Fx, Fy = flow[:, :, 0], flow[:, :, 1]
+    dFx_dy = np.gradient(Fx, axis=1)
+    dFy_dx = np.gradient(Fy, axis=0)
+    curl = dFy_dx - dFx_dy
+    return curl
+
+
 # GRF functions
 def fftind(size):
     '''
