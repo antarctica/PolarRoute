@@ -288,7 +288,7 @@ class VectorDataLoader(DataLoaderInterface):
         Raises:
             ValueError: aggregation type not in list of available methods
         '''
-        def get_value_from_df(dps, bounds, agg_type, skipna):
+        def get_value_from_df(dps, variable_names, bounds, agg_type, skipna):
             '''
             Aggregates a value from a pd.Series.
             
@@ -306,35 +306,33 @@ class VectorDataLoader(DataLoaderInterface):
             Returns:
                 np.float64: Aggregated value
             '''
-            # Skip NaN's if desired
-            if skipna:  dps = dps.dropna()
-
-            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
-            # If want the number of datapoints
-            if agg_type =='COUNT':
-                return len(dps)
+            data_count = len(dps)
+            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If no data
-            elif len(dps) == 0:
+            if data_count == 0:
                 values = [np.nan, np.nan]
-            # Return float of aggregated value
+            # If want the number of datapoints
+            elif agg_type =='COUNT':
+                values = [data_count, data_count]
             elif agg_type == 'MIN':
-                return dps.min(skipna=skipna)
+                index = dps['_magnitude'].idxmin(skipna=skipna)
+                values = [dps[name][index] for name in variable_names]
             elif agg_type == 'MAX':
-                return dps.max(skipna=skipna)
+                index = dps['_magnitude'].idxmax(skipna=skipna)
+                values = [dps[name][index] for name in variable_names]
             elif agg_type == 'MEAN':
-                return dps.mean(skipna=skipna)
-            elif agg_type == 'MEDIAN':
-                return dps.median(skipna=skipna)
+                values = [dps[name].mean(skipna=skipna) for name in variable_names]
             elif agg_type == 'STD':
-                return dps.std(skipna=skipna)
-            # If aggregation_type not available
+                values = [dps[name].std(skipna=skipna) for name in variable_names]
+            elif agg_type == 'MEDIAN':
+                raise ValueError('Aggregation type "MEDIAN" is non-sensical for vector dataset!')
             else:
                 raise ValueError(f'Unknown aggregation type {agg_type}')
             
             return values
 
         
-        def get_value_from_xr(dps, bounds, agg_type, skipna):
+        def get_value_from_xr(dps, variable_names, bounds, agg_type, skipna):
             '''
             Aggregates a value from a xr.DataArray.
             
@@ -350,51 +348,64 @@ class VectorDataLoader(DataLoaderInterface):
                     Flag for whether NaN's should be included in aggregation. 
             
             Returns:
-                np.float64: Aggregated value
+                dict:
+                    {variable_name: np.float64}: Aggregated value in a dictionary
             '''
-            # Extract values to be worked on by numpy functions
-            dps = dps.values
-            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
-            # If want the number of datapoints
-            if agg_type =='COUNT':
-                return dps.size
-            # If no data
-            elif dps.size == 0:
-                return np.nan
-            # Return float of aggregated value
+            # Info on size of array
+            data_count = dps._magnitude.size 
+            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            # If no data, return np.nan for each variable
+            if data_count == 0:
+                values = [np.nan, np.nan]
+            # If want count
+            elif agg_type == 'COUNT':
+                # If including nan's, just want size
+                if skipna:  
+                    values = [data_count, data_count]
+                # Otherwise count non-nan values
+                else:       
+                    values = [dps[name].count().item() for name in variable_names]
             elif agg_type == 'MIN':
-                if skipna:  return np.nanmin(dps)
-                else:       return np.min(dps)
+                # Get 2D index of minimum magnitude point
+                index = np.unravel_index(
+                            dps._magnitude.argmin(skipna=skipna), 
+                            dps._magnitude.shape)
+                # Get cartesian vector from index
+                values = [dps[name][index].item() for name in variable_names]
             elif agg_type == 'MAX':
-                if skipna:  return np.nanmax(dps)
-                else:       return np.max(dps)
+                # Get 2D index of minimum magnitude point
+                index = np.unravel_index(
+                            dps._magnitude.argmax(skipna=skipna), 
+                            dps._magnitude.shape)
+                # Get cartesian vector from index
+                values = [dps[name][index].item() for name in variable_names]
+            # And the rest self explanatory
             elif agg_type == 'MEAN':
-                if skipna:  return np.nanmean(dps)
-                else:       return np.mean(dps)
-            elif agg_type == 'MEDIAN':
-                if skipna:  return np.nanmedian(dps)
-                else:       return np.median(dps)
+                values = [dps[name].mean(skipna=skipna) for name in variable_names]
             elif agg_type == 'STD':
-                if skipna:  return np.nanstd(dps)
-                else:       return np.std(dps)
-            # If aggregation_type not available
+                values = [dps[name].std(skipna=skipna) for name in variable_names]
+            elif agg_type == 'MEDIAN':
+                raise ValueError('Aggregation type "MEDIAN" is non-sensical for vector dataset!')
             else:
                 raise ValueError(f'Unknown aggregation type {agg_type}')
+            
+            return values
+    
 
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
             
-        # Limit data series to just the data, excluding coords/index
-        dps = self.trim_datapoints(bounds)[self.data_name]
-
+        # Limit data to boundary
+        dps = self.trim_datapoints(bounds)
+        # Get list of values
         if type(self.data) == pd.core.frame.DataFrame:
-            value = get_value_from_df(dps, bounds, agg_type, skipna)
+            values = get_value_from_df(dps, bounds, agg_type, skipna)
         elif type(self.data) == xr.core.dataset.Dataset:
-            value = get_value_from_xr(dps, bounds, agg_type, skipna)
+            values = get_value_from_xr(dps, self.data_name_list, bounds, agg_type, skipna)
             
-        # Cast to regular float before returning so can be saved in JSON later
-        return {self.data_name: float(value)}
+        # Put in dict to map variable to values
+        return {self.data_name_list[i]: values[i] for i in range(len(self.data_name_list))}
 
     def get_hom_condition(self, bounds, splitting_conds, agg_type='MEAN'):
         '''
