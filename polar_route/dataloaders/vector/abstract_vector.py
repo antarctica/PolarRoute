@@ -129,11 +129,11 @@ class VectorDataLoader(DataLoaderInterface):
         def add_mag_dir_to_xr(data, names):
             x, y = names
             data = data.assign(
-                magnitude=lambda l: (['lat', 'long'],
-                                     np.linalg.norm([l[x], l[y]], axis=0)))
+                _magnitude=lambda l: (['lat', 'long'],
+                                        np.linalg.norm([l[x], l[y]], axis=0)))
             data = data.assign(
-                direction=lambda l:(['lat','long'],
-                                     np.arctan(l[y].data / l[x].data)))
+                _direction=lambda l:(['lat','long'],
+                                        np.arctan(l[y].data / l[x].data)))
             return data
         
         if data is None:
@@ -275,77 +275,126 @@ class VectorDataLoader(DataLoaderInterface):
         Args:
             aggregation_type (str): Method of aggregation of datapoints within
                 bounds. Can be upper or lower case. 
-                Accepts 'MIN', 'MAX', 'MEAN', 'STD'
-                Errors on 'MEDIAN' since nonsensical for 2D vectors
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD', 'COUNT'
             bounds (Boundary): Boundary object with limits of lat/long
             skipna (bool): Defines whether to propogate NaN's or not
                 Default = True (ignore's NaN's)
 
         Returns:
-            float: 
+            dict: 
+                {variable (str): aggregated_value (float)}
                 Aggregated value within bounds following aggregation_type
                 
         Raises:
-            ValueError: aggregation type 'MEDIAN' not valid for vectors
             ValueError: aggregation type not in list of available methods
         '''
-        def extract_vals(row, col_vars):
+        def get_value_from_df(dps, bounds, agg_type, skipna):
             '''
-            Extracts column variable values from a row, returns them in a 
-            dictionary {variable: value}
+            Aggregates a value from a pd.Series.
+            
+            Args:
+                dps (pd.Series): Datapoints within boundary
+                bounds (Boundary): 
+                    Boundary dps was trimmed to. Not used for any calculations,
+                    just the logging.debug message.
+                agg_type (str):
+                    Method of aggregation for the value, 
+                    e.g. agg_type = 'MIN' => min(dps) returned 
+                skipna (bool): 
+                    Flag for whether NaN's should be included in aggregation. 
+            
+            Returns:
+                np.float64: Aggregated value
             '''
-            # Initialise empty dictionary
-            values = {}
-            # For each variable
-            for col in col_vars:
-                # If there isn't a row (i.e. no data), value is NaN
-                if row is None: 
-                    values[col] = np.nan
-                # Otherwise, extract value from row
-                else:           
-                    values[col] = row[col]
+            # Skip NaN's if desired
+            if skipna:  dps = dps.dropna()
+
+            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            # If want the number of datapoints
+            if agg_type =='COUNT':
+                return len(dps)
+            # If no data
+            elif len(dps) == 0:
+                values = [np.nan, np.nan]
+            # Return float of aggregated value
+            elif agg_type == 'MIN':
+                return dps.min(skipna=skipna)
+            elif agg_type == 'MAX':
+                return dps.max(skipna=skipna)
+            elif agg_type == 'MEAN':
+                return dps.mean(skipna=skipna)
+            elif agg_type == 'MEDIAN':
+                return dps.median(skipna=skipna)
+            elif agg_type == 'STD':
+                return dps.std(skipna=skipna)
+            # If aggregation_type not available
+            else:
+                raise ValueError(f'Unknown aggregation type {agg_type}')
+            
             return values
+
         
+        def get_value_from_xr(dps, bounds, agg_type, skipna):
+            '''
+            Aggregates a value from a xr.DataArray.
+            
+            Args:
+                dps (xr.DataArray): Datapoints within boundary
+                bounds (Boundary): 
+                    Boundary dps was trimmed to. Not used for any calculations,
+                    just the logging.debug message.
+                agg_type (str):
+                    Method of aggregation for the value, 
+                    e.g. agg_type = 'MIN' => min(dps) returned 
+                skipna (bool): 
+                    Flag for whether NaN's should be included in aggregation. 
+            
+            Returns:
+                np.float64: Aggregated value
+            '''
+            # Extract values to be worked on by numpy functions
+            dps = dps.values
+            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            # If want the number of datapoints
+            if agg_type =='COUNT':
+                return dps.size
+            # If no data
+            elif dps.size == 0:
+                return np.nan
+            # Return float of aggregated value
+            elif agg_type == 'MIN':
+                if skipna:  return np.nanmin(dps)
+                else:       return np.min(dps)
+            elif agg_type == 'MAX':
+                if skipna:  return np.nanmax(dps)
+                else:       return np.max(dps)
+            elif agg_type == 'MEAN':
+                if skipna:  return np.nanmean(dps)
+                else:       return np.mean(dps)
+            elif agg_type == 'MEDIAN':
+                if skipna:  return np.nanmedian(dps)
+                else:       return np.median(dps)
+            elif agg_type == 'STD':
+                if skipna:  return np.nanstd(dps)
+                else:       return np.std(dps)
+            # If aggregation_type not available
+            else:
+                raise ValueError(f'Unknown aggregation type {agg_type}')
+
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
-        # Get list of variables that aren't coords
-        col_vars = self.data_name_list
-        # Remove lat, long and time column if they exist
-        dps = self.trim_datapoints(bounds)
-        if type(dps) == xr.core.dataset.Dataset:
-            dps = dps.to_dataframe()
-        dps = dps[col_vars].dropna()
-        # Create a magnitude column 
-        dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
+            
+        # Limit data series to just the data, excluding coords/index
+        dps = self.trim_datapoints(bounds)[self.data_name]
 
-        # If no data
-        if len(dps) == 0:
-            row = {col: np.nan for col in col_vars}
-        # Return float of aggregated value
-        elif agg_type == 'MIN': # Find min mag vector
-            row = dps[dps.mag == dps.mag.min(skipna=skipna)]
-        elif agg_type == 'MAX': # Find max mag vector
-           row = dps[dps.mag == dps.mag.max(skipna=skipna)]
-        elif agg_type == 'MEAN': # Average each vector axis
-            # TODO below is a workaround to make this work like standard code. 
-            # Needs to do a mean on only vectors that have both x,y components
-            row = {col: dps[col].mean(skipna=skipna) for col in col_vars}
-        elif agg_type == 'STD': # Std Dev each vector axis
-            # TODO Needs a fix like above statement
-            row = {col: dps[col].std(skipna=skipna) for col in col_vars}
-        elif agg_type == 'COUNT':
-            # TODO Needs a fix like above statement
-            row = {col: len(dps[col].dropna()) for col in col_vars}
-        # Median of vectors does not make sense
-        elif agg_type == 'MEDIAN':
-            raise ArithmeticError('Cannot find median of multi-dimensional variable!')
-        # If aggregation_type not available
-        else:
-            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
-        
-        # Extract variable values from single row (or dict) and return
-        return extract_vals(row, col_vars)
+        if type(self.data) == pd.core.frame.DataFrame:
+            value = get_value_from_df(dps, bounds, agg_type, skipna)
+        elif type(self.data) == xr.core.dataset.Dataset:
+            value = get_value_from_xr(dps, bounds, agg_type, skipna)
+            
+        # Cast to regular float before returning so can be saved in JSON later
+        return {self.data_name: float(value)}
 
     def get_hom_condition(self, bounds, splitting_conds, agg_type='MEAN'):
         '''
@@ -608,7 +657,7 @@ class VectorDataLoader(DataLoaderInterface):
 
         Returns:
             list: 
-                Contains strings of data names
+                Contains strings of data namesk
         '''
         return self.get_data_col_name().split(',')
 
@@ -650,6 +699,17 @@ class VectorDataLoader(DataLoaderInterface):
             return set_names_df(self.data, name_dict)
         elif type(self.data) == xr.core.dataset.Dataset:
             return set_names_xr(self.data, name_dict)
+        
+    def set_data_col_name_list(self, new_names):
+        assert type(new_names) == list, f"'new_names' must be a list! Instead it is a {type(new_names)}"
+        assert len(new_names) == 2, f"'new_names' must have a length of 2! Instead it has length {len(new_names)}"
+        str_items = [isinstance(name, str) for name in new_names]
+        assert all(str_items, f"'new_names' must be list of 'str'. Currently {sum(str_items)} / 2 are strings!")
+        new_data_name = ','.join(new_names)
+        
+        logging.info(f'Setting data names to {new_names}')
+        self.data_name_list = new_names
+        self.data = self.set_data_col_name(new_data_name)
 
     def calc_reynolds_number(self, bounds, agg_type='MEAN'):
         # Extract the speed
