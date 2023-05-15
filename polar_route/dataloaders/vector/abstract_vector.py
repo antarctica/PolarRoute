@@ -819,7 +819,11 @@ class VectorDataLoader(DataLoaderInterface):
         Raises:
             ValueError: If agg_type is not 'MAX' or 'MEAN'
         '''
-        # TODO Data conversion to pd.DataFrame
+        # Create a meshgrid of vectors from the data
+        if data is None:    data = self.trim_datapoints(bounds, data=data)
+        # Convert to dataframe if not already
+        if type(data) == xr.core.dataset.Dataset:
+            dps = dps.to_dataframe()
         # Create a meshgrid of vectors from the data
         vector_field = self._create_vector_meshgrid(bounds, data)
         # Get component values for each vector
@@ -865,9 +869,12 @@ class VectorDataLoader(DataLoaderInterface):
         Raises:
             ValueError: If agg_type is not 'MAX' or 'MEAN'
         '''
-        # TODO Data conversion to pd.DataFrame
         # Create a meshgrid of vectors from the data
-        dps = self.trim_datapoints(bounds, data=data)
+        if data is None:    data = self.trim_datapoints(bounds, data=data)
+        # Convert to dataframe if not already
+        if type(data) == xr.core.dataset.Dataset:
+            dps = dps.to_dataframe()
+            
         vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
         # Get component values for each vector
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
@@ -915,7 +922,11 @@ class VectorDataLoader(DataLoaderInterface):
             ValueError: If agg_type is not 'MAX' or 'MEAN'
         '''
         # Create a meshgrid of vectors from the data
-        dps = self.trim_datapoints(bounds, data=data).dropna()
+        # Create a meshgrid of vectors from the data
+        if data is None:    data = self.trim_datapoints(bounds, data=data)
+        # Convert to dataframe if not already
+        if type(data) == xr.core.dataset.Dataset:
+            dps = dps.to_dataframe()
         data_names = self.data_name_list
         each_vector = dps[data_names].to_numpy()
         ave_vector = list(self.get_value(bounds, agg_type=agg_type).values())
