@@ -180,24 +180,6 @@ class EnvironmentMesh:
                 in 'data_name' argument (ex. SIC, elevation)
 
         """
-        if (params == None):
-            raise ValueError('Parameters missing! Can not save mesh in tif format with None parameters')
-        if ( "data_name" not in params.keys() ):
-            raise ValueError('data_name should be specified in the params while saving in tif format')
-        data_name = params["data_name"]
-        DEFAULT_PROJ = 4326
-        projection = DEFAULT_PROJ
-        if "projection" in params.keys():
-            projection = int (params["projection"])
-    
-        # Get image dimensions
-        if ( "sampling_resolution" not in params.keys() ):
-            raise ValueError('sampling_resolution should be specified in the params while saving in tif format')
-        nlines = params["sampling_resolution"][0]
-        ncols =  params["sampling_resolution"][1]
-
-        #define image extent based on mesh bounds
-        extent = [self.bounds.get_long_min(), self.bounds.get_lat_min(), self.bounds.get_long_max() , self.bounds.get_lat_max()]
 
         def generate_samples ():
             mesh_height = self.bounds.get_lat_max() - self.bounds.get_lat_min()
@@ -213,13 +195,6 @@ class EnvironmentMesh:
                     samples = np.append (samples , pixel_long)
             samples = np.reshape(samples , (nlines* ncols, 2)) # shape the samples in 2d array (each entry in the array holds sample lat and long
             return samples
-        logging.info ("Generating the tif image ...")
-        samples = generate_samples()
-        # create raster band and populate with sampled data of image_size (sampling_resolution)
-        # get GDAL driver GeoTiff
-        driver = gdal.GetDriverByName('GTiff')
-        data_type = gdal.GDT_Float32
-  
         def get_sample_value (sample):
                 lat =  sample[0]
                 long = sample[1]
@@ -229,29 +204,51 @@ class EnvironmentMesh:
                         value =  agg_cellbox.agg_data [data_name] #get the agg_value 
                         break  # break to make sure we avoid getting multiple values (for lat and long on the bounds of multiple cellboxes)
                 return value
-        # generating the samples data
-        data = []
-        for sample in samples:
-            sample_value = get_sample_value(sample)
-            data = np.append (data, sample_value)
-
-        data = np.reshape(data , (nlines, ncols))
-        # create a temp grid
-        grid_data = driver.Create('grid_data', ncols, nlines, 1, data_type)
-        # setup geo-transform
         def get_geo_transform(extent, nlines, ncols):
             resx = (extent[2] - extent[0]) / ncols
             resy = (extent[3] - extent[1]) / nlines
             return [extent[0], resx, 0, extent[3] , 0, -resy]
+        def validate_params(params):
+          if (params == None):
+             raise ValueError('Parameters missing! Can not save mesh in tif format with None parameters')
+          if ( "data_name" not in params.keys() ):
+             raise ValueError('data_name should be specified in the params while saving in tif format')
+          if ( "sampling_resolution" not in params.keys() ):
+             raise ValueError('sampling_resolution should be specified in the params while saving in tif format')
+
+        validate_params(params)
+        data_name = params["data_name"]
+        DEFAULT_PROJ = 4326
+        projection = DEFAULT_PROJ
+        if "projection" in params.keys():
+            projection = int (params["projection"])
+    
+        # Get image dimensions
+        nlines = params["sampling_resolution"][0]
+        ncols =  params["sampling_resolution"][1]
+
+        #define image extent based on mesh bounds
+        extent = [self.bounds.get_long_min(), self.bounds.get_lat_min(), self.bounds.get_long_max() , self.bounds.get_lat_max()]
+
+        logging.info ("Generating the tif image ...")
+        samples = generate_samples()
+        # create raster band and populate with sampled data of image_size (sampling_resolution)
+        # get GDAL driver GeoTiff
+        driver = gdal.GetDriverByName('GTiff')
+        data_type = gdal.GDT_Float32
+
+        # reading the samples value
+        data = np.array ([get_sample_value(sample) for sample in samples]).reshape(data , (nlines, ncols))
+        # create a temp grid
+        grid_data = driver.Create('grid_data', ncols, nlines, 1, data_type)
+        # setup geo-transform
         grid_data.SetGeoTransform(get_geo_transform(extent, nlines, ncols))
         # Write data 
         srs = osr.SpatialReference() 
         srs.ImportFromEPSG(DEFAULT_PROJ)
-        
         grid_data.SetProjection( srs.ExportToWkt())
         grid_data.GetRasterBand(1).WriteArray(data)
          
-
         #check if color table is provided
         if "color_table" in params.keys():
             grid_data.GetRasterBand(1).SetRasterColorTable( params["color_table"] )
@@ -263,26 +260,10 @@ class EnvironmentMesh:
             dest = osr.SpatialReference() 
             dest.ImportFromEPSG(projection)
             # transform to target proj and save
-            warp = gdal.Warp(str(file_path),  str(file_path) ,dstSRS=dest.ExportToWkt())
-            warp = None # Closes the files
-      
-        logging.info(f'Generated GeoTIFF: {file_path}')
-        # close the file
-        driver = None
-        grid_data = None
- 
-        # delete the temp grid
-        import os                
-        os.remove('grid_data')
-
-    def generate_random_samples(self, nlines, ncols):
-        sampler = Sampler (2 , nlines*ncols)
-        ranges = [[self.bounds.get_lat_min(), self.bounds.get_lat_max()],[self.bounds.get_long_min(), self.bounds.get_long_max() ]]
-        samples = sampler.generate_samples(ranges)
-        return samples
-
-       
+            gdal.Warp(str(file_path),  str(file_path) ,dstSRS=dest.ExportToWkt())
         
+        logging.info(f'Generated GeoTIFF: {file_path}')
+   
     def cellboxes_to_json(self):
         """
             returns a list of dictionaries containing information about each cellbox
