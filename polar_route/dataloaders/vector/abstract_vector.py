@@ -119,14 +119,51 @@ class VectorDataLoader(DataLoaderInterface):
         return params
     
     def add_mag_dir(self, data=None, data_names=None):
+        '''
+        Adds magnitude and direction variables/columns to data for easier
+        retrieval of value 
+        
+        Args:
+            data (pd.DataFrame or xr.Dataset):
+                Data with 'lat' and 'long' columns/dimensions. Assumes that the
+                existing data is in cartesian form (x and y components). 
+                If None, will use self.data
+            data_names (list):
+                List of data columns/variables to use in calculation
+                If None, will use self.data_name_list
+                
+        Returns:
+            data (pd.DataFrame or xr.Dataset):
+                Original dataset with two new columns/variables called 
+                '_magnitude' and '_direction', containing the corresponding
+                values for each.
+        '''
         
         def add_mag_dir_to_df(data, names):
+            '''
+            Adds magnitude and direction columns to pd.DataFrame
+            
+            Args:
+                Same as parent method
+                
+            Returns:
+                Same as parent method
+            '''
             x, y = names
             data['magnitude'] = np.linalg.norm([data[x], data[y]], axis=0)
             data['direction'] = np.arctan(data[y] / data[x])
             return data
         
         def add_mag_dir_to_xr(data, names):
+            '''
+            Adds magnitude and direction columns to xr.Dataset
+            
+            Args:
+                Same as parent method
+                
+            Returns:
+                Same as parent method
+            '''
             x, y = names
             data = data.assign(
                 _magnitude=lambda l: (['lat', 'long'],
@@ -136,13 +173,11 @@ class VectorDataLoader(DataLoaderInterface):
                                         np.arctan(l[y].data / l[x].data)))
             return data
         
-        if data is None:
-            data = self.data
+        # Set defaults if not passed to method
+        if data is None:        data = self.data
+        if data_names is None:  names = self.data_name_list
         
-        if data_names is None:
-            names = self.data_name_list
-        
-        
+        # Perform operation on appropriate datatype
         if type(data) == pd.core.frame.DataFrame:
             return add_mag_dir_to_df(data, names)
         elif type(data) == xr.core.dataset.Dataset:
@@ -381,9 +416,9 @@ class VectorDataLoader(DataLoaderInterface):
                 values = [dps[name][index].item() for name in variable_names]
             # And the rest self explanatory
             elif agg_type == 'MEAN':
-                values = [dps[name].mean(skipna=skipna) for name in variable_names]
+                values = [dps[name].mean(skipna=skipna).item() for name in variable_names]
             elif agg_type == 'STD':
-                values = [dps[name].std(skipna=skipna) for name in variable_names]
+                values = [dps[name].std(skipna=skipna).item() for name in variable_names]
             elif agg_type == 'MEDIAN':
                 raise ValueError('Aggregation type "MEDIAN" is non-sensical for vector dataset!')
             else:
@@ -400,7 +435,7 @@ class VectorDataLoader(DataLoaderInterface):
         dps = self.trim_datapoints(bounds)
         # Get list of values
         if type(self.data) == pd.core.frame.DataFrame:
-            values = get_value_from_df(dps, bounds, agg_type, skipna)
+            values = get_value_from_df(dps, self.data_name_list, bounds, agg_type, skipna)
         elif type(self.data) == xr.core.dataset.Dataset:
             values = get_value_from_xr(dps, self.data_name_list, bounds, agg_type, skipna)
             
@@ -674,7 +709,7 @@ class VectorDataLoader(DataLoaderInterface):
 
     def set_data_col_name(self, new_names):
         '''
-        Sets name of data column/data variables
+        Sets name of data column/data variables from a comma-seperated string
         
         Args:
             name_dict (dict): 
@@ -712,19 +747,48 @@ class VectorDataLoader(DataLoaderInterface):
             return set_names_xr(self.data, name_dict)
         
     def set_data_col_name_list(self, new_names):
+        '''
+        Sets name of data column/data variables from a list of strings.
+        Also updates self.data_name_list with new names from list
+        
+        Args:
+            new_names (list):
+                List of strings containing new variable names
+        
+        Returns:
+            pd.DataFrame or xr.Dataset:
+                Original dataset with data variables renamed
+        '''
+        # Check validity of input
         assert type(new_names) == list, f"'new_names' must be a list! Instead it is a {type(new_names)}"
         assert len(new_names) == 2, f"'new_names' must have a length of 2! Instead it has length {len(new_names)}"
         str_items = [isinstance(name, str) for name in new_names]
-        assert all(str_items, f"'new_names' must be list of 'str'. Currently {sum(str_items)} / 2 are strings!")
+        assert all(str_items), f"'new_names' must be list of 'str'. Currently {sum(str_items)} / 2 are strings!"
         new_data_name = ','.join(new_names)
         
+        # Set names
         logging.info(f'Setting data names to {new_names}')
         self.data_name_list = new_names
-        self.data = self.set_data_col_name(new_data_name)
+        return self.set_data_col_name(new_data_name)
 
-    def calc_reynolds_number(self, bounds, agg_type='MEAN'):
+    def calc_reynolds_number(self, bounds):
+        '''
+        Calculates an approximate Reynolds number from the mean vector velocity
+        and cellbox size.
+        
+        CURRENTLY ASSUMES DENSITY AND VISCOSITY OF SEAWATER AT 4°C! 
+        WILL NEED MINOR REWORKING TO INCLUDE DIFFERENT FLUIDS
+        
+        Args:
+            bounds (Boundary): 
+                Cellbox boundary to calculate characteristic length from
+                
+        Returns:
+            float:
+                Reynolds number of cellbox
+        '''
         # Extract the speed
-        velocity = self.get_value(bounds, agg_type=agg_type)
+        velocity = self.get_value(bounds, agg_type='MEAN')
         speed = np.linalg.norm(list(velocity.values())) # Calculates magnitude
         # Extract the characteristic length
         length = bounds.calc_size()
@@ -732,6 +796,30 @@ class VectorDataLoader(DataLoaderInterface):
         return 1028 * 0.00167 * speed * length
 
     def calc_divergence(self, bounds, data=None, collapse=True, agg_type='MAX'):
+        '''
+        Calculates the divergence of vectors in a cellbox
+        
+        Args:
+            bounds (Boundary):
+                Cellbox boundary in which all relevant vectors are contained
+            data (pd.DataFrame or xr.Dataset):
+                Dataset with 'lat' and 'long' columns/dimensions with vectors
+            collapes (bool): 
+                Flag determining whether to return an aggregated value, or a 
+                vector field (values for each individual vector).
+            agg_type (str):
+                Method of aggregation if collapsing value. 
+                Accepts 'MAX' or 'MEAN'
+        
+        Returns:
+            float or pd.DataFrame:
+                float value of aggregated div if collapse=True, or
+                pd.DataFrame of div vector field if collapse=False 
+
+        Raises:
+            ValueError: If agg_type is not 'MAX' or 'MEAN'
+        '''
+        # TODO Data conversion to pd.DataFrame
         # Create a meshgrid of vectors from the data
         vector_field = self._create_vector_meshgrid(bounds, data)
         # Get component values for each vector
@@ -744,13 +832,40 @@ class VectorDataLoader(DataLoaderInterface):
         
         # If want to collapse to max mag value, return scalar
         if collapse:   
-            if agg_type == 'MAX': return max(np.nanmax(div), np.nanmin(div), key=abs)
-            else:                 return np.nanmean(div)
+            if agg_type == 'MAX':       return max(np.nanmax(div), np.nanmin(div), key=abs)
+            elif agg_type == 'MEAN':    return np.nanmean(div)
+            else: 
+                raise ValueError(f"agg_type '{agg_type}' not understood! Requires 'MAX' or 'MEAN'")
         # Else return field
-        else:          return div
+        else:
+            return div
 
 
     def calc_curl(self, bounds, data=None, collapse=True, agg_type='MAX'):
+        '''
+        Calculates the curl of vectors in a cellbox
+        
+        Args:
+            bounds (Boundary):
+                Cellbox boundary in which all relevant vectors are contained
+            data (pd.DataFrame or xr.Dataset):
+                Dataset with 'lat' and 'long' columns/dimensions with vectors
+            collapes (bool): 
+                Flag determining whether to return an aggregated value, or a 
+                vector field (values for each individual vector).
+            agg_type (str):
+                Method of aggregation if collapsing value. 
+                Accepts 'MAX' or 'MEAN'
+        
+        Returns:
+            float or pd.DataFrame:
+                float value of aggregated curl if collapse=True, or
+                pd.DataFrame of curl vector field if collapse=False
+                
+        Raises:
+            ValueError: If agg_type is not 'MAX' or 'MEAN'
+        '''
+        # TODO Data conversion to pd.DataFrame
         # Create a meshgrid of vectors from the data
         dps = self.trim_datapoints(bounds, data=data)
         vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
@@ -765,11 +880,40 @@ class VectorDataLoader(DataLoaderInterface):
         # If want to collapse to max mag value, return scalar
         if collapse:
             if agg_type == 'MAX': return max(np.nanmax(curl), np.nanmin(curl), key=abs)
-            else:                 return np.nanmean(curl)
+            elif agg_type == 'MEAN':    return np.nanmean(curl)
+            else: 
+                raise ValueError(f"agg_type '{agg_type}' not understood! Requires 'MAX' or 'MEAN'")
         # Else return field
-        else:          return curl
+        else:
+            return curl
 
     def calc_dmag(self, bounds, data=None, collapse=True, agg_type='MEAN'):
+        '''
+        Calculates the dmag of vectors in a cellbox.
+        dmag is defined as being the difference in magnitudes between 
+        each vector and the average vector within the bounds.\n
+        dmag = mag(vector - mean_vector)
+        
+        Args:
+            bounds (Boundary):
+                Cellbox boundary in which all relevant vectors are contained
+            data (pd.DataFrame or xr.Dataset):
+                Dataset with 'lat' and 'long' columns/dimensions with vectors
+            collapes (bool): 
+                Flag determining whether to return an aggregated value, or a 
+                vector field (values for each individual vector).
+            agg_type (str):
+                Method of aggregation if collapsing value. 
+                Accepts 'MAX' or 'MEAN'
+        
+        Returns:
+            float or pd.DataFrame:
+                float value of aggregated dmag if collapse=True, or
+                pd.DataFrame of dmag vector field if collapse=False
+                
+        Raises:
+            ValueError: If agg_type is not 'MAX' or 'MEAN'
+        '''
         # Create a meshgrid of vectors from the data
         dps = self.trim_datapoints(bounds, data=data).dropna()
         data_names = self.data_name_list
@@ -783,12 +927,32 @@ class VectorDataLoader(DataLoaderInterface):
             return np.nan
         
         # If want to collapse to max mag value, return scalar
-        elif collapse:   return np.nanmean(d_mag)
+        elif collapse:   
+            if agg_type == 'MAX':       return np.nanmax(d_mag)
+            elif agg_type == 'MEAN':    return np.nanmean(d_mag)
+            else:
+                raise ValueError(f"agg_type '{agg_type}' not understood! Requires 'MAX' or 'MEAN'")
         # Else return field
         else:          return d_mag
+
     
     @staticmethod
     def _create_vector_meshgrid(data, data_name_list):
+        '''
+        Creates a np.meshgrid containing 2D vectors from a pd.DataFrame
+        
+        Args:
+            data (pd.DataFrame): 
+                Dataframe with columns 'lat', 'long', and vector x/y components
+                lat | long | {v_x} | {v_y}
+            data_name_list (list): 
+                List of strings containing the vector component names
+        
+        Returns:
+            np.meshgrid:
+                lat/long table containing vectors as np.arrays at each coord pair
+        
+        '''
         # Manipulate into meshgrid of 2D vectors
         x, y = data_name_list
         # Fields of each vector component
