@@ -31,7 +31,7 @@ class TestEnvMesh(unittest.TestCase):
       self.assertEqual (self.loaded_env_mesh.agg_cellboxes[0].get_agg_data()["x"] , "5")
 
    def test_to_tif(self):
-      self.env_mesh.save("./resources/" , format="tif" ,  format_params = {"data_name":"elevation" , "sampling_resolution":(100,100), "projection":"3031"} )
+      self.env_mesh.save("./resources/elevation.tif" , format="tif" ,  format_params = {"data_name":"elevation" , "sampling_resolution":(100,100), "projection":"3031"} )
 
 
 

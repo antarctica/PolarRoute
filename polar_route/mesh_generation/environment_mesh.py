@@ -281,15 +281,14 @@ class EnvironmentMesh:
             grid_data.GetRasterBand(1).SetRasterColorTable( params["color_table"] )
  
         # Save the file
-        file_path = f'{path}mesh_{data_name}_{str(nlines)}x{str(ncols)}.tif'
-        driver.CreateCopy(file_path, grid_data, 0)
+        driver.CreateCopy(path, grid_data, 0)
         if projection!=DEFAULT_PROJ:  
             dest = osr.SpatialReference() 
             dest.ImportFromEPSG(projection)
             # transform to target proj and save
-            gdal.Warp(str(file_path),  str(file_path) ,dstSRS=dest.ExportToWkt())
+            gdal.Warp(str(path),  str(path) ,dstSRS=dest.ExportToWkt())
         
-        logging.info(f'Generated GeoTIFF: {file_path}')
+        logging.info(f'Generated GeoTIFF: {path}')
    
     def cellboxes_to_json(self):
         """
