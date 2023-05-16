@@ -170,7 +170,7 @@ class EnvironmentMesh:
                         data_name(string): the name of the mesh data that will be included in the tif image (ex. SIC, elevation)
                         sampling_resolution (tuple): the sampling resolution the geotiff will be generated at (how many pixels in the final image)
                         projection (int): an int representing the ESPG sampling projection used to create the geotiff image  (default is 4326)
-                        colour_table (GDALColorTable): an object thatd efines the colors used to display the scalar value in the generated geotif image.
+                        colour_table (GDALColorTable): an object that defines the colors used to display the scalar value in the generated geotif image.
                 path (string): the path to save the generated tif image
 
 
@@ -182,6 +182,11 @@ class EnvironmentMesh:
         """
 
         def generate_samples ():
+            """
+                generates uniform lat, long samples covering the image resolution space
+                Returns:
+                    samples([[lat,long],..]): an array of samples, each item in the array is a 2d array that contains each sample lat and long
+            """
             mesh_height = self.bounds.get_lat_max() - self.bounds.get_lat_min()
             mesh_width = self.bounds.get_long_max() - self.bounds.get_long_min()
             pixel_height = mesh_height/ ncols
@@ -196,6 +201,14 @@ class EnvironmentMesh:
             samples = np.reshape(samples , (nlines* ncols, 2)) # shape the samples in 2d array (each entry in the array holds sample lat and long
             return samples
         def get_sample_value (sample):
+                """
+                    finds the aggregated cellbox that contains the sample lat and long and returns the value within
+                    Args:
+                      sample ([lat,long]): an array conatins the sample latitude and longtitude
+                    Returns:
+                         the aggregated value of 'data_name'(specified in to_tif params) 
+            
+                 """
                 lat =  sample[0]
                 long = sample[1]
                 value = np.nan
@@ -205,10 +218,25 @@ class EnvironmentMesh:
                         break  # break to make sure we avoid getting multiple values (for lat and long on the bounds of multiple cellboxes)
                 return value
         def get_geo_transform(extent, nlines, ncols):
+            """
+                transforms from the image coordinate space (row, column) to the georeferenced coordinate space 
+                Returns:
+                  GT : array consists of 6 items representing how GDAL would place the top left pixel on the generated Geotiff:
+                    GT[0] x-coordinate of the upper-left corner of the upper-left pixel.
+                    GT[1] w-e pixel resolution / pixel width.
+                    GT[2] row rotation (typically zero).
+                    GT[3] y-coordinate of the upper-left corner of the upper-left pixel.
+                    GT[4] column rotation (typically zero).
+                    GT[5] n-s pixel resolution / pixel height (negative value for a north-up image).
+
+            """
             resx = (extent[2] - extent[0]) / ncols
             resy = (extent[3] - extent[1]) / nlines
             return [extent[0], resx, 0, extent[3] , 0, -resy]
         def validate_params(params):
+          """
+                validates that the parameters needed for the export are not missing
+          """
           if (params == None):
              raise ValueError('Parameters missing! Can not save mesh in tif format with None parameters')
           if ( "data_name" not in params.keys() ):
@@ -235,12 +263,11 @@ class EnvironmentMesh:
         # create raster band and populate with sampled data of image_size (sampling_resolution)
         # get GDAL driver GeoTiff
         driver = gdal.GetDriverByName('GTiff')
-        data_type = gdal.GDT_Float32
-
         # reading the samples value
-        data = np.array ([get_sample_value(sample) for sample in samples]).reshape(data , (nlines, ncols))
+        data= []
+        data = np.reshape(np.asarray ([get_sample_value(sample) for sample in samples] , dtype=np.float32) , (nlines, ncols))
         # create a temp grid
-        grid_data = driver.Create('grid_data', ncols, nlines, 1, data_type)
+        grid_data = driver.Create('grid_data', ncols, nlines, 1, gdal.GDT_Float32)
         # setup geo-transform
         grid_data.SetGeoTransform(get_geo_transform(extent, nlines, ncols))
         # Write data 
@@ -322,6 +349,7 @@ class EnvironmentMesh:
                     Supported formats are:
                         JSON
                         GEOJSON
+                format_params (dict) (optional): a dict that contains format related parameters (ex. sampling_resolution/data_name for the tif format)
         """
         
 
