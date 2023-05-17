@@ -152,9 +152,9 @@ positional arguments:
 
 
 supported output formats are:
-  * .json (default)
-  * geo.json (collection of polygons for each cell in the mesh)
-  * .tif (rasterised mesh)
+  * .json (default) [JSON]
+  * geo.json (collection of polygons for each cell in the mesh) [GEOJSON]
+  * .tif (rasterised mesh) [TIF]
 
 
 ^^^^^^^^^^^^^^^^^^
