@@ -216,6 +216,7 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             Extracts data from a xr.Dataset
             '''
+
             # Select data region within spatial bounds
             # NOTE slice in xarray is inclusive of bounds
             data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
@@ -236,7 +237,7 @@ class VectorDataLoader(DataLoaderInterface):
         # If no specific data passed in, default to entire dataset
         if data is None:
             data = self.data
-        
+            
         # Skip trimming if data already completely within bounds
         if data.lat.min() >  bounds.get_lat_min() and \
            data.lat.max() <= bounds.get_lat_max() and \
@@ -819,13 +820,11 @@ class VectorDataLoader(DataLoaderInterface):
         Raises:
             ValueError: If agg_type is not 'MAX' or 'MEAN'
         '''
+        if data is None:    dps = self.trim_datapoints(bounds, data=data)
+        else:               dps = data
+        
         # Create a meshgrid of vectors from the data
-        if data is None:    data = self.trim_datapoints(bounds, data=data)
-        # Convert to dataframe if not already
-        if type(data) == xr.core.dataset.Dataset:
-            dps = dps.to_dataframe()
-        # Create a meshgrid of vectors from the data
-        vector_field = self._create_vector_meshgrid(bounds, data)
+        vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
         # Get component values for each vector
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
         # Compute partial derivatives
@@ -869,12 +868,9 @@ class VectorDataLoader(DataLoaderInterface):
         Raises:
             ValueError: If agg_type is not 'MAX' or 'MEAN'
         '''
+        if data is None:    dps = self.trim_datapoints(bounds, data=data)
+        else:               dps = data
         # Create a meshgrid of vectors from the data
-        if data is None:    data = self.trim_datapoints(bounds, data=data)
-        # Convert to dataframe if not already
-        if type(data) == xr.core.dataset.Dataset:
-            dps = dps.to_dataframe()
-            
         vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
         # Get component values for each vector
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
@@ -921,12 +917,9 @@ class VectorDataLoader(DataLoaderInterface):
         Raises:
             ValueError: If agg_type is not 'MAX' or 'MEAN'
         '''
-        # Create a meshgrid of vectors from the data
-        # Create a meshgrid of vectors from the data
-        if data is None:    data = self.trim_datapoints(bounds, data=data)
-        # Convert to dataframe if not already
-        if type(data) == xr.core.dataset.Dataset:
-            dps = dps.to_dataframe()
+        if data is None:    dps = self.trim_datapoints(bounds, data=data)
+        else:               dps = data
+            
         data_names = self.data_name_list
         each_vector = dps[data_names].to_numpy()
         ave_vector = list(self.get_value(bounds, agg_type=agg_type).values())
@@ -960,19 +953,35 @@ class VectorDataLoader(DataLoaderInterface):
                 List of strings containing the vector component names
         
         Returns:
-            np.meshgrid:
-                lat/long table containing vectors as np.arrays at each coord pair
+            np.array:
+                Table containing vectors as np.arrays at each coord
         
         '''
-        # Manipulate into meshgrid of 2D vectors
-        x, y = data_name_list
-        # Fields of each vector component
-        vector_x_field = data.pivot(index='lat', columns='long', values=x)
-        vector_y_field = data.pivot(index='lat', columns='long', values=y)
-        # Combine into field of vectors
-        vector_field = np.stack((vector_x_field, vector_y_field), axis=-1)
-        vector_field = np.swapaxes(vector_field, 0, 1)
+        def meshgrid_from_df(data, data_name_list):
+
+            # Manipulate into meshgrid of 2D vectors
+            x, y = data_name_list
+            # Fields of each vector component
+            vector_x_field = data.pivot(index='lat', columns='long', values=x)
+            vector_y_field = data.pivot(index='lat', columns='long', values=y)
+            # Combine into field of vectors
+            vector_field = np.stack((vector_x_field, vector_y_field), axis=-1)
+            vector_field = np.swapaxes(vector_field, 0, 1)
+            return vector_field
         
-        return vector_field
+        def meshgrid_from_xr(data, data_name_list):
+            # Extract out each variable and combine as tuple
+            data_arrays = (data[name].values 
+                           for name in data_name_list)
+            # Zip them together to make 2D array of n-dimensional vectors
+            return np.dstack(data_arrays)
+        
+        if type(data) == pd.core.frame.DataFrame:
+            return meshgrid_from_df(data, data_name_list)
+        elif type(data) == xr.core.dataset.Dataset:
+            return meshgrid_from_xr(data, data_name_list)
+        
+        
+
     
     
