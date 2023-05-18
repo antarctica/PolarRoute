@@ -825,16 +825,26 @@ class VectorDataLoader(DataLoaderInterface):
         
         # Create a meshgrid of vectors from the data
         vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
+
         # Get component values for each vector
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
-        # Compute partial derivatives
-        dfx_dy = np.gradient(fx, axis=1)
-        dfy_dx = np.gradient(fy, axis=0)
-        # Compute divergence
-        div = dfy_dx + dfx_dy
+        # If not enough datapoints to compute gradient
+        if 1 in fx.shape or 1 in fy.shape:
+            logging.debug('Unable to compute gradient in cell')
+            div = np.nan
+        else:
+            # Compute partial derivatives
+            dfx_dy = np.gradient(fx, axis=1)
+            dfy_dx = np.gradient(fy, axis=0)
+            # Compute curl
+            div = dfy_dx + dfx_dy
         
+        # If div is nan
+        if np.isnan(div).all():
+            logging.debug('All NaN cellbox encountered')
+            return np.nan
         # If want to collapse to max mag value, return scalar
-        if collapse:   
+        elif collapse:   
             if agg_type == 'MAX':       return max(np.nanmax(div), np.nanmin(div), key=abs)
             elif agg_type == 'MEAN':    return np.nanmean(div)
             else: 
@@ -874,14 +884,23 @@ class VectorDataLoader(DataLoaderInterface):
         vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
         # Get component values for each vector
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
-        # Compute partial derivatives
-        dfx_dy = np.gradient(fx, axis=1)
-        dfy_dx = np.gradient(fy, axis=0)
-        # Compute curl
-        curl = dfy_dx - dfx_dy
-        
+        # If not enough datapoints to compute gradient
+        if 1 in fx.shape or 1 in fy.shape:
+            logging.debug('Unable to compute gradient in cell')
+            curl = np.nan
+        else:
+            # Compute partial derivatives
+            dfx_dy = np.gradient(fx, axis=1)
+            dfy_dx = np.gradient(fy, axis=0)
+            # Compute curl
+            curl = dfy_dx - dfx_dy
+
+        # If div is nan
+        if np.isnan(curl).all():
+            logging.debug('All NaN cellbox encountered')
+            return np.nan
         # If want to collapse to max mag value, return scalar
-        if collapse:
+        elif collapse:
             if agg_type == 'MAX': return max(np.nanmax(curl), np.nanmin(curl), key=abs)
             elif agg_type == 'MEAN':    return np.nanmean(curl)
             else: 
@@ -928,10 +947,14 @@ class VectorDataLoader(DataLoaderInterface):
         
         d_mag = np.linalg.norm(delta_vector, axis=1)
         if len(d_mag) == 0:
+            logging.debug('Empty cellbox encountered')
             return np.nan
-        
+        # If div is nan
+        elif np.isnan(d_mag).all():
+            logging.debug('All NaN cellbox encountered')
+            return np.nan
         # If want to collapse to max mag value, return scalar
-        elif collapse:   
+        elif collapse:
             if agg_type == 'MAX':       return np.nanmax(d_mag)
             elif agg_type == 'MEAN':    return np.nanmean(d_mag)
             else:
