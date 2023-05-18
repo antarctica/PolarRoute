@@ -40,13 +40,14 @@ def traveltime_distance(cellBox, Wp, Cp, Speed='speed', Vector_x='uC', Vector_y=
     """
         Calculate travel time and distance
     """
+    case = 0
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
     x = (Cp[0] - Wp[0]) * m_long * np.cos(Wp[1] * (np.pi / 180))
     y = (Cp[1] - Wp[1]) * m_lat
     Su = cellBox[Vector_x]
     Sv = cellBox[Vector_y]
-    Ssp = cellBox[Speed] * (1000 / (60 * 60))
+    Ssp = cellBox[Speed][case] * (1000 / (60 * 60))
     traveltime, distance = traveltime_in_cell(x, y, Su, Sv, Ssp)
     return traveltime, distance
 
@@ -70,18 +71,19 @@ def route_calc(route_file, mesh_file):
     line_segs_last_points = []
     line_segs_mid_points = []
     line_segs_cell_id = []
+
     for idx in range(len(mesh)):
-        # tp = tracks['geometry'].iloc[0].intersection(mesh['geometry'].iloc[idx])
-        tp = mesh['geometry'].iloc[idx].intersection(tracks['geometry'].iloc[0])
-        if len(np.array(tp)) > 0:
-            pnts = [Point(point) for point in tp.coords]
-            if len(pnts) <= 1:
-                continue
-            first, last = tp.boundary
-            line_segs_first_points.append(pnts[0])
-            line_segs_mid_points.append(pnts[1:-1])
-            line_segs_last_points.append(pnts[-1])
-            line_segs_cell_id.append(idx)
+        if not tracks['geometry'].iloc[0].intersects(mesh['geometry'].iloc[idx]):
+            continue
+        tp = tracks['geometry'].iloc[0].intersection(mesh['geometry'].iloc[idx])
+        pnts = [Point(point) for point in tp.coords]
+        if len(pnts) <= 1:
+            continue
+        line_segs_first_points.append(pnts[0])
+        line_segs_mid_points.append(pnts[1:-1])
+        line_segs_last_points.append(pnts[-1])
+        line_segs_cell_id.append(idx)
+
     user_track = pd.DataFrame(
         {'startPoints': line_segs_first_points, 'midPoints': line_segs_mid_points, 'endPoints': line_segs_last_points,
          'cellID': line_segs_cell_id})
@@ -98,12 +100,12 @@ def route_calc(route_file, mesh_file):
             start_point_segment = user_track['startPoints'].iloc[track_id]
             end_point_segment = user_track['endPoints'].iloc[track_id]
             path_point.append(start_point_segment)
-            cell_ids.append(track_id)
+            cell_ids.append(user_track['cellID'].iloc[track_id])
 
             if len(user_track['midPoints'].iloc[track_id]) != 0:
                 for midpnt in user_track['midPoints'].iloc[track_id]:
                     path_point.append(midpnt)
-                    cell_ids.append(track_id)
+                    cell_ids.append(user_track['cellID'].iloc[track_id])
 
             if end_point_segment == end_point:
                 pathing = False
@@ -115,14 +117,17 @@ def route_calc(route_file, mesh_file):
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
     track_line_string = LineString(user_track['Point'])
-    track_coords = np.array(track_line_string.coords.xy)
 
-    traveltimes = []
-    distances = []
-    cellboxes = []
-    for idx in range(len(user_track) - 1):
-        start_point = np.array(user_track['Point'].iloc[idx])
-        end_point = np.array(user_track['Point'].iloc[idx + 1])
+    traveltimes = list()
+    distances = list()
+    cellboxes = list()
+
+    cellboxes.append(mesh.iloc[user_track['CellID'].iloc[0]])
+    traveltimes.append(0.0)
+    distances.append(0.0)
+    for idx in range(len(user_track)-1):
+        start_point = np.array((user_track['Point'].iloc[idx].xy[0][0], user_track['Point'].iloc[idx].xy[1][0]))
+        end_point = np.array((user_track['Point'].iloc[idx+1].xy[0][0], user_track['Point'].iloc[idx+1].xy[1][0]))
         cell_box = mesh.iloc[user_track['CellID'].iloc[idx]]
         traveltime, distance = traveltime_distance(cell_box, start_point, end_point, Speed='speed', Vector_x='uC',
                                                    Vector_y='vC')
@@ -136,7 +141,10 @@ def route_calc(route_file, mesh_file):
     path['path_points'] = user_track['Point']
     path['path_traveltimes'] = np.cumsum(traveltimes)
     path['path_distances'] = np.cumsum(distances)
-    path['path_fuel'] = np.cumsum(traveltimes * path['fuel'])
+    path_fuels = []
+    for idx in range(len(traveltimes)):
+        path_fuels.append(traveltimes[idx] * path['fuel'][idx][0])
+    path['path_fuel'] = np.cumsum(path_fuels)
 
     path_geojson = pd.DataFrame()  # path[['path_points','path_traveltimes','path_distances','path_fuel']]
     path_geojson['geometry'] = [LineString(path['path_points'])]
