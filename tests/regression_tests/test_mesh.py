@@ -88,7 +88,9 @@ def calculate_env_mesh(mesh_config):
     new_mesh = mesh_builder.build_environmental_mesh()
 
     end = time.perf_counter()
-    LOGGER.info(f'Mesh built in {end - start} seconds')
+    
+    cellbox_count = len(new_mesh.agg_cellboxes)
+    LOGGER.info(f'Mesh containing {cellbox_count} cellboxes built in {end - start} seconds')
 
 
     return new_mesh.to_json()
