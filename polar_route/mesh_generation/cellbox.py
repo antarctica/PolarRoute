@@ -20,7 +20,7 @@ this includes and is not limited to: Ocean Currents, Sea Ice Concentration and B
 
 import numpy as np
 from polar_route.mesh_generation.boundary import Boundary
-from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
+from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
 
 
 class CellBox:

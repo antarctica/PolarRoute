@@ -235,9 +235,9 @@ class MeshBuilder:
 
     def split_and_replace(self, cellbox):
         """
-            Replaces a cellBox given by parameter 'cellBox' in this grid with
-            4 smaller cellBoxes representing the four corners of the given cellBox.
-            A neighbours map is then created for each of the 4 new cellBoxes
+            Replaces a cellbox given by parameter 'cellbox' in this grid with
+            4 smaller cellboxes representing the four corners of the given cellbox.
+            A neighbours map is then created for each of the 4 new cellboxes
             and the neighbours map for all surrounding cell boxes is updated.
 
             Args:
