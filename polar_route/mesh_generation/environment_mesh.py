@@ -4,6 +4,13 @@ import geopandas as gpd
 import pandas as pd
 from shapely import wkt
 import numpy as np
+import subprocess
+import sys
+import os
+import tempfile
+
+
+
 
 
 from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
@@ -170,7 +177,8 @@ class EnvironmentMesh:
                         data_name(string): the name of the mesh data that will be included in the tif image (ex. SIC, elevation)
                         sampling_resolution (tuple): the sampling resolution the geotiff will be generated at (how many pixels in the final image)
                         projection (int): an int representing the ESPG sampling projection used to create the geotiff image  (default is 4326)
-                        colour_table (GDALColorTable): an object that defines the colors used to display the scalar value in the generated geotif image.
+                        colour_conf (string): a string contains the path to color config file, which is a text-based file (ex, color_conf.txt), containing the association between elevation values and colors.\n
+                            It contains 4 columns per line: the elevation value and the corresponding red, green, blue value between 0 and 255 (RGB).
                 path (string): the path to save the generated tif image
 
 
@@ -243,6 +251,35 @@ class EnvironmentMesh:
              raise ValueError('data_name should be specified in the params while saving in tif format')
           if ( "sampling_resolution" not in params.keys() ):
              raise ValueError('sampling_resolution should be specified in the params while saving in tif format')
+          
+        def set_color (data , input_file):
+            """
+                    method that changes the color of the generated tif instead of using the default greyscale. \n
+                    It defines a scale of colors based on the range of data values.
+                    Args:
+                      data ([float]): an array conatins the values of the 'data_name'
+                      input_path(string): the path of the generated grey tif
+            
+            """
+           
+            fp, color_file = tempfile.mkstemp(suffix='.txt')
+           
+            _max = np.nanmax(data)
+            _min = np.nanmin(data)
+            _range = _max-_min
+            colors = [ '0 0 139', '0 0 128', '173 216 230' , '255 255 255']
+            with open(color_file, 'w') as f:
+                for i, c in enumerate(colors[:-1]):
+                    f.write(str(int(_min+ (i + 1)*_range/len(colors))) +
+                            ' ' + c + '\n')
+                f.write(str(int(_max- _range/len(colors))) +
+                        ' ' + colors[-1] + '\n')
+            os.close(fp)
+            if "color_conf" in params.keys():
+                  color_file = params["color_conf"]
+            cmd = "gdaldem color-relief " + input_file \
+                + ' ' + color_file + ' ' + input_file
+            subprocess.check_call(cmd, shell=True)
 
         validate_params(params)
         data_name = params["data_name"]
@@ -261,7 +298,6 @@ class EnvironmentMesh:
         logging.info ("Generating the tif image ...")
         samples = generate_samples()
         # create raster band and populate with sampled data of image_size (sampling_resolution)
-        # get GDAL driver GeoTiff
         driver = gdal.GetDriverByName('GTiff')
         # reading the samples value
         data= []
@@ -276,10 +312,6 @@ class EnvironmentMesh:
         grid_data.SetProjection( srs.ExportToWkt())
         grid_data.GetRasterBand(1).WriteArray(data)
          
-        #check if color table is provided
-        if "color_table" in params.keys():
-            grid_data.GetRasterBand(1).SetRasterColorTable( params["color_table"] )
- 
         # Save the file
         driver.CreateCopy(path, grid_data, 0)
         if projection!=DEFAULT_PROJ:  
@@ -287,7 +319,8 @@ class EnvironmentMesh:
             dest.ImportFromEPSG(projection)
             # transform to target proj and save
             gdal.Warp(str(path),  str(path) ,dstSRS=dest.ExportToWkt())
-        
+
+        set_color (data , path)
         logging.info(f'Generated GeoTIFF: {path}')
    
     def cellboxes_to_json(self):
