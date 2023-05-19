@@ -9,7 +9,7 @@ class Metadata:
 
 
     Attributes:
-       data_loader : object of the DataLoader class that enable projecting to the cellBox data
+       data_loader : object of the DataLoader class that enable projecting to the cellbox data
        splitting_conditions: list of conditions that determine how to split the data accessed by data_loader 
        value_fill_type (string): indicates how to fill a CellBox if it has void data
          (ex. use the data in the parent cellbox or assign 0 to the data)
@@ -21,9 +21,9 @@ class Metadata:
         """
 
             Args:
-               data_loader (DataLoader): object of the DataLoader class that enables projecting to the cellBox data
+               data_loader (DataLoader): object of the DataLoader class that enables projecting to the cellbox data
                splitting_conditions (List<dict>): list of conditions that determine how to split CellBox
-               value_fill_tyep (string): represents the way the data of a cellBox will be filled
+               value_fill_tyep (string): represents the way the data of a cellbox will be filled
                  in case it has void data (ex. parent , 0 )
                 
         """ 

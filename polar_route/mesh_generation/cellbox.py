@@ -247,7 +247,7 @@ class CellBox:
         half_width = self.bounds.get_width() / 2
         half_height = self.bounds.get_height() / 2
 
-        # create 4 new cellBoxes
+        # create 4 new cellboxes
         time_range = self.bounds.get_time_range()
         lat = self.bounds.get_lat_min()
         lat_range = [lat + half_height, lat + self.bounds.get_height()]

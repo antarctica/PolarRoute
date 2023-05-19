@@ -75,9 +75,9 @@ MeshBuilder
 
 AggregatedCellBox
 ******************
-.. automodule:: polar_route.mesh_generation.aggregated_cellBox
+.. automodule:: polar_route.mesh_generation.aggregated_cellbox
 
-.. autoclass:: polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox
+.. autoclass:: polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox
    :special-members: __init__
    :members:  contains_point, to_json
 

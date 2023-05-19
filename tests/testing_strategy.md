@@ -13,7 +13,7 @@ Pull requests will not be accepted unless all required regression tests pass.
 | `mesh.py`                  |                                       |
 | `neighbour_graph.py`       |                                       |
 | `metadata.py`              |                                       |
-| `aggregated_cellBox.py`    |                                       |
+| `aggregated_cellbox.py`    |                                       |
 | `boundary.py`              |                                       |
 | `cellbox.py`               |                                       |
 | `direction.py`             |                                       |
