@@ -23,12 +23,14 @@ Pull requests will not be accepted unless all required regression tests pass.
 
 
 ## Vessel Performance Modelling
-| **Files altered**                   | **Tests**                               |
-|-------------------------------------|-----------------------------------------|
-| `abstract_vessel.py`                | `tests/regression_tests/test_vessel.py` |
-| `vessel_factory.py`                 |                                         |
-| `vessel_performance_modeller.py`    |                                         |
-|                                     |                                         |
+| **Files altered**              | **Tests**                             |
+|--------------------------------|----------------------------------------|
+| abstract_vessel.py             | tests/regression_tests/test_vessel.py  |
+| vessel_factory.py              |                                        |
+| vessel_performance_modeller.py |                                        |
+| SDA.py                         |                                        |
+| underwater_vessel.py           |                                        |
+| abstract_ship.py               |                                        |
 
 
 ## Route Planning

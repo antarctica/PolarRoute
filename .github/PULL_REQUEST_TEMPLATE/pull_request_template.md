@@ -1,7 +1,7 @@
 # PolarRoute Pull Request Template
 
 Date: <!--- Include date PR was created -->   
-Version Number: <!--- Include version number of PolarRoute the PR will be included in (e.g. 0.1.0) -->   
+Version Number: <!--- Include version number of PolarRoute the PR will be included in (e.g. 0.1.0 -> 0.1.1) -->   
  
 ## Description of change
 <!--- Describe your changes in detail -->
