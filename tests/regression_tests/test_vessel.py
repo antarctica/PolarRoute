@@ -49,7 +49,7 @@ def mesh_pair(request):
     Returns:
         list: old and new mesh jsons for comparison
     """
-    LOGGER.info(f'Test File: {request.param[0]}')
+    LOGGER.info(f'Test File: {request.param[1]}')
 
     input_mesh_file = request.param[0]
     output_mesh_file = request.param[1]
@@ -83,6 +83,8 @@ def calculate_vessel_mesh(mesh_json, vessel_config):
     new_mesh.model_performance()
 
     end = time.perf_counter()
-    LOGGER.info(f'Vessel simulated in {end - start} seconds')
+
+    cellbox_count = len(new_mesh.env_mesh.agg_cellboxes)
+    LOGGER.info(f'Vessel simulated against {cellbox_count} cellboxes in {end - start} seconds')
 
     return new_mesh.to_json()
