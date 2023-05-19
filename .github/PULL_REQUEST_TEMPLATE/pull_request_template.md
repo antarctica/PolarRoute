@@ -6,7 +6,7 @@ Version Number: <!--- Include version number of PolarRoute the PR will be includ
 ## Description of change
 <!--- Describe your changes in detail -->
 
-Fixes # (issue)
+## Fixes # (issue)
 <!--- If this PR adds functionality or resolves problems associated with an issue on GitHub, please include a link to the issue -->
 
 # Testing
