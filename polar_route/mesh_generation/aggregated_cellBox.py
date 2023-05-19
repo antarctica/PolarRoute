@@ -99,7 +99,7 @@ class AggregatedCellBox:
 
     def to_json(self):
         '''
-            convert cellbox to JSON
+            convert cellBox to JSON
 
             The returned object is of the form -
 
@@ -135,7 +135,7 @@ class AggregatedCellBox:
 
     def contains_point(self, lat, long):
         """
-            Returns true if a given lat/long coordinate is contained within this cellbox.
+            Returns true if a given lat/long coordinate is contained within this cellBox.
 
             Args:
                 lat (float): latitude of a given point

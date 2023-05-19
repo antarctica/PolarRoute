@@ -189,7 +189,7 @@ class JGridCellBox (CellBox):
         
     def contains_point(self, lat, long):
         """
-            Returns true if a given lat/long coordinate is contained within this cellbox.
+            Returns true if a given lat/long coordinate is contained within this cellBox.
 
             Args:
                 lat (float): latitude of a given point
