@@ -16,8 +16,9 @@ This includes a collection of test files which should be run according to which 
 - [ ] My changes have not altered any of the files listed in the testing strategy
 
 - [ ] My changes result in all required regression tests passing without the need to update test files.  
-
-> *include pytest.txt file showing all tests passing.*  
+  
+> *list which files have been altered and include a pytest.txt file for each of
+>  the tests required to be run*  
 
 - [ ] My changes require one or more test files to be updated for all regression tests to pass.   
 
