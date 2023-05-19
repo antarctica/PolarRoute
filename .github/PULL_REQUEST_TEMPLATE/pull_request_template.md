@@ -18,7 +18,11 @@ This includes a collection of test files which should be run according to which 
 - [ ] My changes result in all required regression tests passing without the need to update test files.  
   
 > *list which files have been altered and include a pytest.txt file for each of
->  the tests required to be run*  
+> the tests required to be run*
+>
+> The files which have been changed during this PR can be listed using the command
+
+    git diff --name-only 0.2.x
 
 - [ ] My changes require one or more test files to be updated for all regression tests to pass.   
 
