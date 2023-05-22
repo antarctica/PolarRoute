@@ -173,19 +173,19 @@ class EnvironmentMesh:
         """
             generates a representation of the mesh in geotif image format.
             Args:
-                params_file(string): a path to a file that might contain a dict of the folowing params:
+                params_file(string) (optional): a path to a file that contains a dict of the folowing export parameters (an example file can be found in unit_tests/resources/format_conf.json):
                         data_name(string): the name of the mesh data that will be included in the tif image (ex. SIC, elevation)
                         sampling_resolution ([int]): a 2d array that represents the sampling resolution the geotiff will be generated at (how many pixels in the final image)
                         projection (int): an int representing the ESPG sampling projection used to create the geotiff image  (default is 4326)
-                        colour_conf (string): a string contains the path to color config file, which is a text-based file (ex, color_conf.txt), containing the association between elevation values and colors.\n
-                            It contains 4 columns per line: the elevation value and the corresponding red, green, blue value between 0 and 255 (RGB).
-                path (string): the path to save the generated tif image
+                        colour_conf (string): a string contains the path to color config file, which is a text-based file containing the association between elevation values and colors.\n
+                            It contains 4 columns per line: the elevation value and the corresponding red, green, blue value between 0 and 255 (RGB), an example file is in unit_tests/resources/color_conf.txt.
+                path (string): the path to save the generated tif image in
 
 
             NOTE:
                 geotif format does not contain all the data included in the standard 
                 .to_json() format. It contains only a visual representation of the values specified 
-                in 'data_name' argument (ex. SIC, elevation)
+                in 'data_name' in params_file (default is SIC)
 
         """
 
