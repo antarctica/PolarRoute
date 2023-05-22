@@ -132,7 +132,7 @@ class EnvironmentMesh:
         output["cellboxes"] = self.cellboxes_to_json()
         output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
-        return json.loads(json.dumps(output))
+        return json.loads(json.dumps(output, indent=4))
     
     def to_geojson(self):
         """
@@ -224,10 +224,10 @@ class EnvironmentMesh:
         with open(path, 'w') as f:
             if format.upper() == "JSON":
                 logging.info(f"Saving mesh in {format} format")
-                json.dump(self.to_json(), f)
+                json.dump(self.to_json(), f, indent=4)
             elif format.upper() == "GEOJSON":
                 logging.info(f"Saving mesh in {format} format")
-                json.dump(self.to_geojson(), f)
+                json.dump(self.to_geojson(), f, indent=4)
             else:
                 logging.warning(f"Cannot save mesh in a {format} format")
 
