@@ -15,7 +15,7 @@ import tempfile
 
 from polar_route.mesh_generation.jgrid_aggregated_cellbox import JGridAggregatedCellBox
 from polar_route.mesh_generation.boundary import Boundary
-from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
+from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
 

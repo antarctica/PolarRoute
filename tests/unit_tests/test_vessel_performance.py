@@ -2,7 +2,7 @@ import unittest
 from copy import copy
 import numpy as np
 from polar_route.vessel_performance.vessels.SDA import SDA, wind_resistance, wind_mag_dir, c_wind, calc_wind, fuel_eq
-from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
+from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from polar_route.mesh_generation.boundary import Boundary
 
 
