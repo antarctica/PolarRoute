@@ -139,7 +139,7 @@ class Boundary:
             if datetime.strptime(time_range[0], '%Y-%m-%d') >= datetime.strptime(time_range[1], '%Y-%m-%d'):
                      raise ValueError(f'Boundary: Start time range should be smaller than range end')
 
-    # Functions used for getting data from a cellBox
+    # Functions used for getting data from a cellbox
     def getcx(self):
         """
             returns x-position of the centroid of the cellbox
