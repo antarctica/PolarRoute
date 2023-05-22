@@ -169,13 +169,13 @@ class EnvironmentMesh:
 
         return geojson
 
-    def to_tif(self, params,  path):
+    def to_tif(self, params_file,  path):
         """
             generates a representation of the mesh in geotif image format.
             Args:
-                params(dict): a dict that might contain the folowing params:
+                params_file(string): a path to a file that might contain a dict of the folowing params:
                         data_name(string): the name of the mesh data that will be included in the tif image (ex. SIC, elevation)
-                        sampling_resolution (tuple): the sampling resolution the geotiff will be generated at (how many pixels in the final image)
+                        sampling_resolution ([int]): a 2d array that represents the sampling resolution the geotiff will be generated at (how many pixels in the final image)
                         projection (int): an int representing the ESPG sampling projection used to create the geotiff image  (default is 4326)
                         colour_conf (string): a string contains the path to color config file, which is a text-based file (ex, color_conf.txt), containing the association between elevation values and colors.\n
                             It contains 4 columns per line: the elevation value and the corresponding red, green, blue value between 0 and 255 (RGB).
@@ -241,33 +241,45 @@ class EnvironmentMesh:
             resx = (extent[2] - extent[0]) / ncols
             resy = (extent[3] - extent[1]) / nlines
             return [extent[0], resx, 0, extent[3] , 0, -resy]
-        def validate_params(params):
+        def load_params(params_file):
           """
-                validates that the parameters needed for the export are not missing
+               loads the parameters of the tif export and override the default values.
+               Args:
+                params_file (string): a path to a file containing a dict of the export params 
+               Returns:
+                params (dict): a dict object that contains the loaded parameters
           """
-          if (params == None):
-             raise ValueError('Parameters missing! Can not save mesh in tif format with None parameters')
-          if ( "data_name" not in params.keys() ):
-             raise ValueError('data_name should be specified in the params while saving in tif format')
-          if ( "sampling_resolution" not in params.keys() ):
-             raise ValueError('sampling_resolution should be specified in the params while saving in tif format')
-          
-        def set_color (data , input_file):
+          params = {"data_name":"SIC" , "sampling_resolution":[100,100], "projection":"4326"} # the default values
+          if (params_file != None):
+            with open(params_file) as f:
+                data = f.read()
+                input_params = json.loads(data)
+            if (input_params != None):
+                    if ( "projection" in input_params.keys() ):
+                        params["projection" ] = input_params["projection" ]
+                    if ( "data_name" in input_params.keys() ):
+                        params["data_name" ] = input_params["data_name" ]
+                    if ( "sampling_resolution"  in input_params.keys() ):
+                        params["sampling_resolution" ] = input_params["sampling_resolution" ]
+                    if ( "color_conf"  in input_params.keys() ):
+                        params["color_conf" ] = input_params["color_conf" ]
+          return params
+        
+        def set_color (data , input_file , params):
             """
                     method that changes the color of the generated tif instead of using the default greyscale. \n
-                    It defines a scale of colors based on the range of data values.
+                    It defines a scale of RGB colors based on the range of data values(an example file is in unit_tests/resources/color_conf.txt).
                     Args:
                       data ([float]): an array conatins the values of the 'data_name'
                       input_path(string): the path of the generated grey tif
+                      params (dict): a dict that contains the export parametrs
             
             """
-           
             fp, color_file = tempfile.mkstemp(suffix='.txt')
-           
             _max = np.nanmax(data)
             _min = np.nanmin(data)
             _range = _max-_min
-            colors = [ '0 0 139', '0 0 128', '173 216 230' , '255 255 255']
+            colors = [ '0 0 139', '0 0 128', '173 216 230' , '255 255 255'] # default color
             with open(color_file, 'w') as f:
                 for i, c in enumerate(colors[:-1]):
                     f.write(str(int(_min+ (i + 1)*_range/len(colors))) +
@@ -280,13 +292,25 @@ class EnvironmentMesh:
             cmd = "gdaldem color-relief " + input_file \
                 + ' ' + color_file + ' ' + input_file
             subprocess.check_call(cmd, shell=True)
+        def transform_proj( path, params, default_proj):
+            """
+                    method that transforms the generated tif into another projection
+                    Args:
+                      path(string): the path of the generated tif
+                      params (dict): a dict that contains the export parametrs
+                      default_proj (stirng): a string represents the default projection (EPSG:4326)
+            
+            """
+            if params["projection"] != str(default_proj):  
+                dest = osr.SpatialReference() 
+                dest.ImportFromEPSG(int (params["projection"]))
+                # transform to target proj and save
+                gdal.Warp(str(path),  str(path) ,dstSRS=dest.ExportToWkt())
 
-        validate_params(params)
+        params = {}
+        params = load_params (params_file)
         data_name = params["data_name"]
         DEFAULT_PROJ = 4326
-        projection = DEFAULT_PROJ
-        if "projection" in params.keys():
-            projection = int (params["projection"])
     
         # Get image dimensions
         nlines = params["sampling_resolution"][0]
@@ -314,14 +338,12 @@ class EnvironmentMesh:
          
         # Save the file
         driver.CreateCopy(path, grid_data, 0)
-        if projection!=DEFAULT_PROJ:  
-            dest = osr.SpatialReference() 
-            dest.ImportFromEPSG(projection)
-            # transform to target proj and save
-            gdal.Warp(str(path),  str(path) ,dstSRS=dest.ExportToWkt())
+        transform_proj(path, params, DEFAULT_PROJ)
 
-        set_color (data , path)
+        set_color (data , path , params)
         logging.info(f'Generated GeoTIFF: {path}')
+
+
    
     def cellboxes_to_json(self):
         """
@@ -381,7 +403,7 @@ class EnvironmentMesh:
                     Supported formats are:
                         JSON
                         GEOJSON
-                format_params (dict) (optional): a dict that contains format related parameters (ex. sampling_resolution/data_name for the tif format)
+                format_params (string) (optional): a path to a file that contains a dict of format related parameters (ex. sampling_resolution, data_name, color_conf for the tif format)
         """
         
 
