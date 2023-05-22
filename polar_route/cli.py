@@ -92,7 +92,7 @@ def create_mesh_cli():
 
     logging.info("Saving mesh to {}".format(args.output))
     info = cg.to_json()
-    json.dump(info, open(args.output, "w"))
+    json.dump(info, open(args.output, "w"), indent=4)
 
 
 @timed_call
@@ -114,7 +114,7 @@ def add_vehicle_cli():
 
     logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
-    json.dump(info, open(args.output, "w"))
+    json.dump(info, open(args.output, "w"), indent=4)
 
 
 @timed_call
@@ -140,12 +140,12 @@ def optimise_routes_cli():
 
     if args.path_only:
         if args.dijkstra:
-             json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
-        json.dump(info['paths'], open(args.output, 'w'))
+             json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
+        json.dump(info['paths'], open(args.output, 'w'), indent=4)
     else:
         if args.dijkstra:
-             json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
-        json.dump(info, open(args.output, "w"))
+             json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
+        json.dump(info, open(args.output, "w"), indent=4)
 
 @timed_call
 def export_mesh_cli():
