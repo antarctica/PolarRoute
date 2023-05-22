@@ -4,6 +4,8 @@
 from datetime import datetime
 from datetime import timedelta
 
+from math import cos, sin, asin, sqrt, radians
+
 class Boundary:
     """
     A Boundary is a class that defines the geo-spatial/temporal
@@ -244,6 +246,26 @@ class Boundary:
                     [ self.long_range[1], self.lat_range[0]],
                     [self.long_range[0], self.lat_range[0], ]]
         return bounds
+    
+    def calc_size(self):
+        """
+        Calculate the great circle distance (in meters) between 
+        two points on the earth (specified in decimal degrees)
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(radians, [self.get_long_min(), 
+                                               self.get_lat_min(),
+                                               self.get_long_max(),
+                                               self.get_lat_max()])
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+        c = 2 * asin(sqrt(a))
+        # Get diagonal length
+        m = (6371 * c * 1000)
+        # Divide by sqrt(2) to get 'square' side length
+        return m / sqrt(2)
 
     def __str__(self):
 

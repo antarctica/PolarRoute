@@ -72,7 +72,12 @@ class VectorDataLoader(DataLoaderInterface):
         # or if set in params, set col name to data name
         else:
             logging.debug(f'- Setting data column name to {self.data_name}')
-            self.data = self.set_data_col_name(self.data_name)
+            self.data = self.set_data_col_name(self.data_name.split(','))
+        # Store data names in a list for easier access in future
+        self.data_name_list = self.data_name.split(',')
+        
+        # Add magnitude and direction to dataset
+        self.data = self.add_mag_dir()
 
     @abstractmethod
     def import_data(self, bounds):
@@ -112,6 +117,71 @@ class VectorDataLoader(DataLoaderInterface):
                 Params dictionary with addition of translated key/value pairs
         '''
         return params
+    
+    def add_mag_dir(self, data=None, data_names=None):
+        '''
+        Adds magnitude and direction variables/columns to data for easier
+        retrieval of value 
+        
+        Args:
+            data (pd.DataFrame or xr.Dataset):
+                Data with 'lat' and 'long' columns/dimensions. Assumes that the
+                existing data is in cartesian form (x and y components). 
+                If None, will use self.data
+            data_names (list):
+                List of data columns/variables to use in calculation
+                If None, will use self.data_name_list
+                
+        Returns:
+            data (pd.DataFrame or xr.Dataset):
+                Original dataset with two new columns/variables called 
+                '_magnitude' and '_direction', containing the corresponding
+                values for each.
+        '''
+        
+        def add_mag_dir_to_df(data, names):
+            '''
+            Adds magnitude and direction columns to pd.DataFrame
+            
+            Args:
+                Same as parent method
+                
+            Returns:
+                Same as parent method
+            '''
+            x, y = names
+            data['magnitude'] = np.linalg.norm([data[x], data[y]], axis=0)
+            data['direction'] = np.arctan(data[y] / data[x])
+            return data
+        
+        def add_mag_dir_to_xr(data, names):
+            '''
+            Adds magnitude and direction columns to xr.Dataset
+            
+            Args:
+                Same as parent method
+                
+            Returns:
+                Same as parent method
+            '''
+            x, y = names
+            data = data.assign(
+                _magnitude=lambda l: (['lat', 'long'],
+                                        np.linalg.norm([l[x], l[y]], axis=0)))
+            data = data.assign(
+                _direction=lambda l:(['lat','long'],
+                                        np.arctan(l[y].data / l[x].data)))
+            return data
+        
+        # Set defaults if not passed to method
+        if data is None:        data = self.data
+        if data_names is None:  names = self.data_name_list
+        
+        # Perform operation on appropriate datatype
+        if type(data) == pd.core.frame.DataFrame:
+            return add_mag_dir_to_df(data, names)
+        elif type(data) == xr.core.dataset.Dataset:
+            return add_mag_dir_to_xr(data, names)
 
     def trim_datapoints(self, bounds, data=None):
         '''
@@ -146,6 +216,7 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             Extracts data from a xr.Dataset
             '''
+
             # Select data region within spatial bounds
             # NOTE slice in xarray is inclusive of bounds
             data = data.sel(lat=slice(bounds.get_lat_min(),  bounds.get_lat_max() ))
@@ -166,7 +237,7 @@ class VectorDataLoader(DataLoaderInterface):
         # If no specific data passed in, default to entire dataset
         if data is None:
             data = self.data
-        
+            
         # Skip trimming if data already completely within bounds
         if data.lat.min() >  bounds.get_lat_min() and \
            data.lat.max() <= bounds.get_lat_max() and \
@@ -205,7 +276,7 @@ class VectorDataLoader(DataLoaderInterface):
 
             # Include lat/long/time if requested
             if return_coords: columns = list(data.columns)
-            else:             columns = [names.split(',')]
+            else:             columns = names
             # Return column of data from within bounds
             return data.loc[mask][columns]
         
@@ -219,7 +290,7 @@ class VectorDataLoader(DataLoaderInterface):
             data = data.to_dataframe().reset_index()
             # Include lat/long/time if requested
             if return_coords: columns = list(data.columns)
-            else:             columns = [names.split(',')]
+            else:             columns = names
             # Return column of data from within bounds
             return data[columns]
         
@@ -228,13 +299,10 @@ class VectorDataLoader(DataLoaderInterface):
             'Must provide lat and long to this method!'
             
         # Choose which method to retrieve data based on input type
-        if hasattr(self, 'data_name'): data_name = self.data_name
-        else:                          data_name = self.get_data_col_name()
-        
         if type(self.data) == pd.core.frame.DataFrame:
-            return get_dp_from_coord_df(self.data, data_name, long, lat, return_coords)
+            return get_dp_from_coord_df(self.data, self.data_name_list, long, lat, return_coords)
         elif type(self.data) == xr.core.dataset.Dataset:
-            return get_dp_from_coord_xr(self.data, data_name, long, lat, return_coords)
+            return get_dp_from_coord_xr(self.data, self.data_name_list, long, lat, return_coords)
     
     def get_value(self, bounds, agg_type=None, skipna=True):
         '''
@@ -243,83 +311,139 @@ class VectorDataLoader(DataLoaderInterface):
         Args:
             aggregation_type (str): Method of aggregation of datapoints within
                 bounds. Can be upper or lower case. 
-                Accepts 'MIN', 'MAX', 'MEAN', 'STD'
-                Errors on 'MEDIAN' since nonsensical for 2D vectors
+                Accepts 'MIN', 'MAX', 'MEAN', 'MEDIAN', 'STD', 'COUNT'
             bounds (Boundary): Boundary object with limits of lat/long
             skipna (bool): Defines whether to propogate NaN's or not
                 Default = True (ignore's NaN's)
 
         Returns:
-            float: 
+            dict: 
+                {variable (str): aggregated_value (float)}
                 Aggregated value within bounds following aggregation_type
                 
         Raises:
-            ValueError: aggregation type 'MEDIAN' not valid for vectors
             ValueError: aggregation type not in list of available methods
         '''
-
-
-        def extract_vals(row, col_vars):
+        def get_value_from_df(dps, variable_names, bounds, agg_type, skipna):
             '''
-            Extracts column variable values from a row, returns them in a 
-            dictionary {variable: value}
+            Aggregates a value from a pd.Series.
+            
+            Args:
+                dps (pd.Series): Datapoints within boundary
+                bounds (Boundary): 
+                    Boundary dps was trimmed to. Not used for any calculations,
+                    just the logging.debug message.
+                agg_type (str):
+                    Method of aggregation for the value, 
+                    e.g. agg_type = 'MIN' => min(dps) returned 
+                skipna (bool): 
+                    Flag for whether NaN's should be included in aggregation. 
+            
+            Returns:
+                np.float64: Aggregated value
             '''
-            # Initialise empty dictionary
-            values = {}
-            # For each variable
-            for col in col_vars:
-                # If there isn't a row (i.e. no data), value is NaN
-                if row == None: 
-                    values[col] = np.nan
-                # Otherwise, extract value from row
-                else:           
-                    values[col] = row[col]
+            data_count = len(dps)
+            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            # If no data
+            if data_count == 0:
+                values = [np.nan, np.nan]
+            # If want the number of datapoints
+            elif agg_type =='COUNT':
+                values = [data_count, data_count]
+            elif agg_type == 'MIN':
+                index = dps['_magnitude'].idxmin(skipna=skipna)
+                values = [dps[name][index] for name in variable_names]
+            elif agg_type == 'MAX':
+                index = dps['_magnitude'].idxmax(skipna=skipna)
+                values = [dps[name][index] for name in variable_names]
+            elif agg_type == 'MEAN':
+                values = [dps[name].mean(skipna=skipna) for name in variable_names]
+            elif agg_type == 'STD':
+                values = [dps[name].std(skipna=skipna) for name in variable_names]
+            elif agg_type == 'MEDIAN':
+                raise ValueError('Aggregation type "MEDIAN" is non-sensical for vector dataset!')
+            else:
+                raise ValueError(f'Unknown aggregation type {agg_type}')
+            
             return values
+
+        
+        def get_value_from_xr(dps, variable_names, bounds, agg_type, skipna):
+            '''
+            Aggregates a value from a xr.DataArray.
+            
+            Args:
+                dps (xr.DataArray): Datapoints within boundary
+                bounds (Boundary): 
+                    Boundary dps was trimmed to. Not used for any calculations,
+                    just the logging.debug message.
+                agg_type (str):
+                    Method of aggregation for the value, 
+                    e.g. agg_type = 'MIN' => min(dps) returned 
+                skipna (bool): 
+                    Flag for whether NaN's should be included in aggregation. 
+            
+            Returns:
+                dict:
+                    {variable_name: np.float64}: Aggregated value in a dictionary
+            '''
+            # Info on size of array
+            data_count = dps._magnitude.size 
+            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            # If no data, return np.nan for each variable
+            if data_count == 0:
+                values = [np.nan, np.nan]
+            # If want count
+            elif agg_type == 'COUNT':
+                # If including nan's, just want size
+                if skipna:  
+                    values = [data_count, data_count]
+                # Otherwise count non-nan values
+                else:       
+                    values = [dps[name].count().item() for name in variable_names]
+            elif agg_type == 'MIN':
+                # Get 2D index of minimum magnitude point
+                index = np.unravel_index(
+                            dps._magnitude.argmin(skipna=skipna), 
+                            dps._magnitude.shape)
+                # Get cartesian vector from index
+                values = [dps[name][index].item() for name in variable_names]
+            elif agg_type == 'MAX':
+                # Get 2D index of minimum magnitude point
+                index = np.unravel_index(
+                            dps._magnitude.argmax(skipna=skipna), 
+                            dps._magnitude.shape)
+                # Get cartesian vector from index
+                values = [dps[name][index].item() for name in variable_names]
+            # And the rest self explanatory
+            elif agg_type == 'MEAN':
+                values = [dps[name].mean(skipna=skipna).item() for name in variable_names]
+            elif agg_type == 'STD':
+                values = [dps[name].std(skipna=skipna).item() for name in variable_names]
+            elif agg_type == 'MEDIAN':
+                raise ValueError('Aggregation type "MEDIAN" is non-sensical for vector dataset!')
+            else:
+                raise ValueError(f'Unknown aggregation type {agg_type}')
+            
+            return values
+    
+
         # Set to params if no specific aggregate type specified
         if agg_type is None:
             agg_type = self.aggregate_type
-        # Get list of variables that aren't coords
-        col_vars = self.get_data_col_name().split(',')
-        # Remove lat, long and time column if they exist
+            
+        # Limit data to boundary
         dps = self.trim_datapoints(bounds)
-        if type(dps) == xr.core.dataset.Dataset:
-            dps = dps.to_dataframe()
-        dps = dps[col_vars]
-        # Create a magnitude column 
-        dps['mag'] = np.sqrt(np.square(dps).sum(axis=1))
+        # Get list of values
+        if type(self.data) == pd.core.frame.DataFrame:
+            values = get_value_from_df(dps, self.data_name_list, bounds, agg_type, skipna)
+        elif type(self.data) == xr.core.dataset.Dataset:
+            values = get_value_from_xr(dps, self.data_name_list, bounds, agg_type, skipna)
+            
+        # Put in dict to map variable to values
+        return {self.data_name_list[i]: values[i] for i in range(len(self.data_name_list))}
 
-        # If no data
-        if len(dps) == 0:
-            row = {col: np.nan for col in col_vars}
-        # Return float of aggregated value
-        elif agg_type == 'MIN': # Find min mag vector
-            row = dps[dps.mag == dps.mag.min(skipna=skipna)]
-        elif agg_type == 'MAX': # Find max mag vector
-           row = dps[dps.mag == dps.mag.max(skipna=skipna)]
-        elif agg_type == 'MEAN': # Average each vector axis
-            # TODO below is a workaround to make this work like standard code. 
-            # Needs to do a mean on only vectors that have both x,y components
-            row = {col: dps[col].mean(skipna=skipna) for col in col_vars}
-        elif agg_type == 'STD': # Std Dev each vector axis
-            # TODO Needs a fix like above statement
-            row = {col: dps[col].std(skipna=skipna) for col in col_vars}
-        elif agg_type == 'COUNT':
-            # TODO Needs a fix like above statement
-            row = {col: len(dps[col].dropna()) for col in col_vars}
-        # Median of vectors does not make sense
-        elif agg_type == 'MEDIAN':
-            raise ArithmeticError('Cannot find median of multi-dimensional variable!')
-        # If aggregation_type not available
-        else:
-            raise ValueError(f'Unknown aggregation type {self.aggregate_type}')
-        
-        # Extract variable values from single row (or dict) and return
-        return extract_vals(row, col_vars)
-
-    # TODO get_hom_condition()
-    # Using Curl / Divergence / Vorticity
-    # Reynolds number?
-    def get_hom_condition(self, bounds, splitting_conds, agg_type):
+    def get_hom_condition(self, bounds, splitting_conds, agg_type='MEAN'):
         '''
         Not implemented yet. Retrieves homogeneity condition of data within
         boundary.
@@ -343,21 +467,46 @@ class VectorDataLoader(DataLoaderInterface):
         Returns:
             str:
                 The homogeniety condtion returned is of the form: \n
-                'CLR' = the proportion of data points within this cellbox over a 
-                given threshold is lower than the lowerbound \n
-                'HOM' = the proportion of data points within this cellbox over a
-                given threshold is higher than the upperbound \n
                 'MIN' = the cellbox contains less than a minimum number of 
                 data points \n
-                'HET' = the proportion of data points within this cellbox over a
-                given threshold if between the upper and lower bound
-                
-        Raises:
-            NotImplementedError: 
-                This method hasn't been defined for a vector field yet
+                'HET' = Threshold values defined in config are exceeded \n
+                'CLR' = None of the HET conditions were triggered \n
         '''
-        raise NotImplementedError
+        # Get length of dataset in bounds  
+        if type(self.data) == pd.core.frame.DataFrame:
+            num_dp = len(self.trim_datapoints(bounds))
+        elif type(self.data) == xr.core.dataset.Dataset:
+            num_dp = min(self.trim_datapoints(bounds).count().values())
+
+        # Check to see if it's above the minimum threshold
+        if num_dp < self.min_dp:
+            return 'MIN'
         
+        # To allow multiple modes of splitting, chuck them in the splitting conditions
+        # Split if magnitude of curl(data) is larger than threshold 
+        if 'curl' in splitting_conds:
+            curl = self.calc_curl(bounds)
+            if np.abs(curl) > splitting_conds['curl']:
+                return 'HET'
+        # Split if max magnitude(any_vector - ave_vector) is larger than threshold
+        if 'dmag' in splitting_conds:
+            dmag = self.calc_dmag(bounds)
+            if np.abs(dmag) > splitting_conds['dmag']:
+                return 'HET'
+            
+        # Split if Reynolds number is larger than threshold
+        if 'reynolds' in splitting_conds:        
+            reynolds = self.calc_reynolds_number(bounds)
+            if reynolds > splitting_conds['reynolds']:
+                return 'HET'
+        
+        # TODO
+        # HOM would only apply if whole cell is faster than vehicle, which wouldn't be calculated in the mesh generation stage?
+        # Non-navigable cells pruned in next step so leaving out for now
+                
+        # If none of the above return conditions are triggered, cell is clear
+        return 'CLR'
+
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
         '''
@@ -548,9 +697,20 @@ class VectorDataLoader(DataLoaderInterface):
         elif type(self.data) == xr.core.dataset.Dataset:
             return get_data_names_from_xr(self.data)
 
+    def get_data_col_name_list(self):
+        '''
+        Retrieve names of data columns (for pd.DataFrame), or variable 
+        (for xr.Dataset). Used for when data_name not defined in params.
+
+        Returns:
+            list: 
+                Contains strings of data namesk
+        '''
+        return self.get_data_col_name().split(',')
+
     def set_data_col_name(self, new_names):
         '''
-        Sets name of data column/data variables
+        Sets name of data column/data variables from a comma-seperated string
         
         Args:
             name_dict (dict): 
@@ -573,18 +733,278 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Rename data variable to new name
             return data.rename(name_dict)
-        # Split string into column names
-        new_col_names = new_names.split(',')
         # Get existing column names
-        old_col_names = self.get_data_col_name().split(',')
+        old_names = self.get_data_col_name().split(',')
         # Ensure that can do replacement of columns
-        assert len(old_col_names) == len(new_col_names)
+        assert len(old_names) == len(new_names)
         # Set up mapping of old names to new names
-        name_dict = {old_col: new_col_names[i] 
-                     for i, old_col in enumerate(old_col_names)}
+        name_dict = {old_col: new_names[i] 
+                     for i, old_col in enumerate(old_names)}
         # Change names
         # Change data name depending on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return set_names_df(self.data, name_dict)
         elif type(self.data) == xr.core.dataset.Dataset:
             return set_names_xr(self.data, name_dict)
+        
+    def set_data_col_name_list(self, new_names):
+        '''
+        Sets name of data column/data variables from a list of strings.
+        Also updates self.data_name_list with new names from list
+        
+        Args:
+            new_names (list):
+                List of strings containing new variable names
+        
+        Returns:
+            pd.DataFrame or xr.Dataset:
+                Original dataset with data variables renamed
+        '''
+        # Check validity of input
+        assert type(new_names) == list, f"'new_names' must be a list! Instead it is a {type(new_names)}"
+        assert len(new_names) == 2, f"'new_names' must have a length of 2! Instead it has length {len(new_names)}"
+        str_items = [isinstance(name, str) for name in new_names]
+        assert all(str_items), f"'new_names' must be list of 'str'. Currently {sum(str_items)} / 2 are strings!"
+        new_data_name = ','.join(new_names)
+        
+        # Set names
+        logging.info(f'Setting data names to {new_names}')
+        self.data_name_list = new_names
+        return self.set_data_col_name(new_data_name)
+
+    def calc_reynolds_number(self, bounds):
+        '''
+        Calculates an approximate Reynolds number from the mean vector velocity
+        and cellbox size.
+        
+        CURRENTLY ASSUMES DENSITY AND VISCOSITY OF SEAWATER AT 4°C! 
+        WILL NEED MINOR REWORKING TO INCLUDE DIFFERENT FLUIDS
+        
+        Args:
+            bounds (Boundary): 
+                Cellbox boundary to calculate characteristic length from
+                
+        Returns:
+            float:
+                Reynolds number of cellbox
+        '''
+        # Extract the speed
+        velocity = self.get_value(bounds, agg_type='MEAN')
+        speed = np.linalg.norm(list(velocity.values())) # Calculates magnitude
+        # Extract the characteristic length
+        length = bounds.calc_size()
+        # Calculate the reynolds number and return
+        return 1028 * 0.00167 * speed * length
+
+    def calc_divergence(self, bounds, data=None, collapse=True, agg_type='MAX'):
+        '''
+        Calculates the divergence of vectors in a cellbox
+        
+        Args:
+            bounds (Boundary):
+                Cellbox boundary in which all relevant vectors are contained
+            data (pd.DataFrame or xr.Dataset):
+                Dataset with 'lat' and 'long' columns/dimensions with vectors
+            collapes (bool): 
+                Flag determining whether to return an aggregated value, or a 
+                vector field (values for each individual vector).
+            agg_type (str):
+                Method of aggregation if collapsing value. 
+                Accepts 'MAX' or 'MEAN'
+        
+        Returns:
+            float or pd.DataFrame:
+                float value of aggregated div if collapse=True, or
+                pd.DataFrame of div vector field if collapse=False 
+
+        Raises:
+            ValueError: If agg_type is not 'MAX' or 'MEAN'
+        '''
+        if data is None:    dps = self.trim_datapoints(bounds, data=data)
+        else:               dps = data
+        
+        # Create a meshgrid of vectors from the data
+        vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
+
+        # Get component values for each vector
+        fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
+        # If not enough datapoints to compute gradient
+        if 1 in fx.shape or 1 in fy.shape:
+            logging.debug('Unable to compute gradient in cell')
+            div = np.nan
+        else:
+            # Compute partial derivatives
+            dfx_dy = np.gradient(fx, axis=1)
+            dfy_dx = np.gradient(fy, axis=0)
+            # Compute curl
+            div = dfy_dx + dfx_dy
+        
+        # If div is nan
+        if np.isnan(div).all():
+            logging.debug('All NaN cellbox encountered')
+            return np.nan
+        # If want to collapse to max mag value, return scalar
+        elif collapse:   
+            if agg_type == 'MAX':       return max(np.nanmax(div), np.nanmin(div), key=abs)
+            elif agg_type == 'MEAN':    return np.nanmean(div)
+            else: 
+                raise ValueError(f"agg_type '{agg_type}' not understood! Requires 'MAX' or 'MEAN'")
+        # Else return field
+        else:
+            return div
+
+
+    def calc_curl(self, bounds, data=None, collapse=True, agg_type='MAX'):
+        '''
+        Calculates the curl of vectors in a cellbox
+        
+        Args:
+            bounds (Boundary):
+                Cellbox boundary in which all relevant vectors are contained
+            data (pd.DataFrame or xr.Dataset):
+                Dataset with 'lat' and 'long' columns/dimensions with vectors
+            collapes (bool): 
+                Flag determining whether to return an aggregated value, or a 
+                vector field (values for each individual vector).
+            agg_type (str):
+                Method of aggregation if collapsing value. 
+                Accepts 'MAX' or 'MEAN'
+        
+        Returns:
+            float or pd.DataFrame:
+                float value of aggregated curl if collapse=True, or
+                pd.DataFrame of curl vector field if collapse=False
+                
+        Raises:
+            ValueError: If agg_type is not 'MAX' or 'MEAN'
+        '''
+        if data is None:    dps = self.trim_datapoints(bounds, data=data)
+        else:               dps = data
+        # Create a meshgrid of vectors from the data
+        vector_field = self._create_vector_meshgrid(dps, self.data_name_list)
+        # Get component values for each vector
+        fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
+        # If not enough datapoints to compute gradient
+        if 1 in fx.shape or 1 in fy.shape:
+            logging.debug('Unable to compute gradient in cell')
+            curl = np.nan
+        else:
+            # Compute partial derivatives
+            dfx_dy = np.gradient(fx, axis=1)
+            dfy_dx = np.gradient(fy, axis=0)
+            # Compute curl
+            curl = dfy_dx - dfx_dy
+
+        # If div is nan
+        if np.isnan(curl).all():
+            logging.debug('All NaN cellbox encountered')
+            return np.nan
+        # If want to collapse to max mag value, return scalar
+        elif collapse:
+            if agg_type == 'MAX': return max(np.nanmax(curl), np.nanmin(curl), key=abs)
+            elif agg_type == 'MEAN':    return np.nanmean(curl)
+            else: 
+                raise ValueError(f"agg_type '{agg_type}' not understood! Requires 'MAX' or 'MEAN'")
+        # Else return field
+        else:
+            return curl
+
+    def calc_dmag(self, bounds, data=None, collapse=True, agg_type='MEAN'):
+        '''
+        Calculates the dmag of vectors in a cellbox.
+        dmag is defined as being the difference in magnitudes between 
+        each vector and the average vector within the bounds.\n
+        dmag = mag(vector - mean_vector)
+        
+        Args:
+            bounds (Boundary):
+                Cellbox boundary in which all relevant vectors are contained
+            data (pd.DataFrame or xr.Dataset):
+                Dataset with 'lat' and 'long' columns/dimensions with vectors
+            collapes (bool): 
+                Flag determining whether to return an aggregated value, or a 
+                vector field (values for each individual vector).
+            agg_type (str):
+                Method of aggregation if collapsing value. 
+                Accepts 'MAX' or 'MEAN'
+        
+        Returns:
+            float or pd.DataFrame:
+                float value of aggregated dmag if collapse=True, or
+                pd.DataFrame of dmag vector field if collapse=False
+                
+        Raises:
+            ValueError: If agg_type is not 'MAX' or 'MEAN'
+        '''
+        if data is None:    dps = self.trim_datapoints(bounds, data=data)
+        else:               dps = data
+            
+        data_names = self.data_name_list
+        each_vector = dps[data_names].to_numpy()
+        ave_vector = list(self.get_value(bounds, agg_type=agg_type).values())
+        
+        delta_vector = each_vector - ave_vector
+        
+        d_mag = np.linalg.norm(delta_vector, axis=1)
+        if len(d_mag) == 0:
+            logging.debug('Empty cellbox encountered')
+            return np.nan
+        # If div is nan
+        elif np.isnan(d_mag).all():
+            logging.debug('All NaN cellbox encountered')
+            return np.nan
+        # If want to collapse to max mag value, return scalar
+        elif collapse:
+            if agg_type == 'MAX':       return np.nanmax(d_mag)
+            elif agg_type == 'MEAN':    return np.nanmean(d_mag)
+            else:
+                raise ValueError(f"agg_type '{agg_type}' not understood! Requires 'MAX' or 'MEAN'")
+        # Else return field
+        else:          return d_mag
+
+    
+    @staticmethod
+    def _create_vector_meshgrid(data, data_name_list):
+        '''
+        Creates a np.meshgrid containing 2D vectors from a pd.DataFrame
+        
+        Args:
+            data (pd.DataFrame): 
+                Dataframe with columns 'lat', 'long', and vector x/y components
+                lat | long | {v_x} | {v_y}
+            data_name_list (list): 
+                List of strings containing the vector component names
+        
+        Returns:
+            np.array:
+                Table containing vectors as np.arrays at each coord
+        
+        '''
+        def meshgrid_from_df(data, data_name_list):
+
+            # Manipulate into meshgrid of 2D vectors
+            x, y = data_name_list
+            # Fields of each vector component
+            vector_x_field = data.pivot(index='lat', columns='long', values=x)
+            vector_y_field = data.pivot(index='lat', columns='long', values=y)
+            # Combine into field of vectors
+            vector_field = np.stack((vector_x_field, vector_y_field), axis=-1)
+            vector_field = np.swapaxes(vector_field, 0, 1)
+            return vector_field
+        
+        def meshgrid_from_xr(data, data_name_list):
+            # Extract out each variable and combine as tuple
+            data_arrays = (data[name].values 
+                           for name in data_name_list)
+            # Zip them together to make 2D array of n-dimensional vectors
+            return np.dstack(data_arrays)
+        
+        if type(data) == pd.core.frame.DataFrame:
+            return meshgrid_from_df(data, data_name_list)
+        elif type(data) == xr.core.dataset.Dataset:
+            return meshgrid_from_xr(data, data_name_list)
+        
+        
+
+    
+    

@@ -12,88 +12,96 @@ Outlined below is an example configuration file for running PolarRoute. Using th
 Mesh Construction configuration file example.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ::
-
-   "config": {
-        "Mesh_info": {
-            "Region": {
-                "latMin": -65,
-                "latMax": -60,
-                "longMin": -70,
-                "longMax": -50,
-                "startTime": "2013-03-01",
-                "endTime": "2013-03-14",
-                "cellWidth": 5,
-                "cellHeight": 2.5
-            },
-            "Data_sources": [
-                {
-                    "loader": "GEBCO",
-                    "params": {
-                        "downsample_factors": [
-                            5,
-                            5
-                        ],
-                        "file": "../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
-                        "data_name": "elevation",
-                        "value_fill_types": "parent",
-                        "aggregate_type": "MAX",
-                        "splitting_conditions": [
-                            {
-                                "elevation": {
-                                    "threshold": -10,
-                                    "upper_bound": 1,
-                                    "lower_bound": 0
+    {
+        "config": {
+            "Mesh_info": {
+                "Region": {
+                    "latMin": -65,
+                    "latMax": -60,
+                    "longMin": -70,
+                    "longMax": -50,
+                    "startTime": "2013-03-01",
+                    "endTime": "2013-03-14",
+                    "cellWidth": 5,
+                    "cellHeight": 2.5
+                },
+                "Data_sources": [
+                    {
+                        "loader": "GEBCO",
+                        "params": {
+                            "downsample_factors": [
+                                5,
+                                5
+                            ],
+                            "file": "../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
+                            "data_name": "elevation",
+                            "value_fill_types": "parent",
+                            "aggregate_type": "MAX",
+                            "splitting_conditions": [
+                                {
+                                    "elevation": {
+                                        "threshold": -10,
+                                        "upper_bound": 1,
+                                        "lower_bound": 0
+                                    }
                                 }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "loader": "AMSR_folder",
-                    "params": {
-                        "folder": "../datastore/sic/amsr_south/",
-                        "hemisphere": "south",
-                        "value_fill_types": "parent",
-                        "data_name": "SIC",
-                        "splitting_conditions": [
-                            {
-                                "SIC": {
-                                    "threshold": 35,
-                                    "upper_bound": 0.9,
-                                    "lower_bound": 0.1
+                            ]
+                        }
+                    },
+                    {
+                        "loader": "AMSR",
+                        "params": {
+                            "folder": "../datastore/sic/amsr_south/",
+                            "hemisphere": "south",
+                            "value_fill_types": "parent",
+                            "data_name": "SIC",
+                            "splitting_conditions": [
+                                {
+                                    "SIC": {
+                                        "threshold": 35,
+                                        "upper_bound": 0.9,
+                                        "lower_bound": 0.1
+                                    }
                                 }
-                            }
-                        ]
+                            ]
+                        }
+                    },
+                    {
+                        "loader": "SOSE",
+                        "params": {
+                            "file": "../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
+                            "value_fill_types": "parent",
+                            "data_name": "uC,vC",
+                            "splitting_conditions": [
+                                {
+                                    "uC,vC": {
+                                        "curl": 0.04
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "loader": "thickness",
+                        "params": {
+                            "data_name": "thickness",
+                            "file": "",
+                            "value_fill_types": "parent"
+                        }
+                    },
+                    {
+                        "loader": "density",
+                        "params": {
+                            "data_name": "density",
+                            "file": "",
+                            "value_fill_types": "parent"
+                        }
                     }
-                },
-                {
-                    "loader": "SOSE",
-                    "params": {
-                        "file": "../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
-                        "value_fill_types": "parent",
-                        "data_name": "uC,vC"
-                    }
-                },
-                {
-                    "loader": "thickness",
-                    "params": {
-                        "data_name": "thickness",
-                        "file": "",
-                        "value_fill_types": "parent"
-                    }
-                },
-                {
-                    "loader": "density",
-                    "params": {
-                        "data_name": "density",
-                        "file": "",
-                        "value_fill_types": "parent"
-                    }
+                ],
+                "splitting": {
+                    "split_depth": 4,
+                    "minimum_datapoints": 5
                 }
-            ],
-            "splitting": {
-                "split_depth": 4,
-                "minimum_datapoints": 5
             }
         }
     }
@@ -175,7 +183,7 @@ to the mesh.
                     }
                 },
                 {
-                    "loader": "AMSR_folder",
+                    "loader": "AMSR",
                     "params": {
                         "folder": "../datastore/sic/amsr_south/",
                         "hemisphere": "south",
@@ -197,7 +205,14 @@ to the mesh.
                     "params": {
                         "file": "../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
                         "value_fill_types": "parent",
-                        "data_name": "uC,vC"
+                        "data_name": "uC,vC",
+                        "splitting_conditions": [
+                            {
+                                "uC,vC": {
+                                    "curl": 0.04
+                                }
+                            }
+                        ]
                     }
                 },
                 {
@@ -226,13 +241,14 @@ where the variables are as follows:
       see the :ref:`abstractScalarDataloader doc page<dataloaders-overview>` for further information about the available data loaders.
 * **params** *(dict)* : A dictionary containing optional parameters which may be required by the specified data loader in 'loader'. These parameters include the following:
 
-   * **splitting_conditions** *(list)* : The conditions which determine if a cellbox should be split.
+   * **value_fill_types** *(string)* : Determines the actions taken if a cellbox is generated with no data. The possible values are either parent (which implies assigning the value of the parent cellbox), zero or nan.
+   * **aggregate_type** *(string)* : Specifies how the data within a cellbox will be aggregated. By default aggregation takes place by calculating the mean of all data points within the CellBoxes bounds. *aggregate_type* allows this default to be changed to other aggregate function (e.g. MIN, MAX, COUNT).
+   * **[scalar] splitting_conditions** *(list)* : The conditions which determine if a cellbox should be split based on a scalar dataset. 
       * **threshold** *(float)* : The threshold above or below which CellBoxes will be sub-divided to separate the datapoints into homogeneous cells.
       * **upperBound** *(float)* : A percentage normalised between 0 and 1. A CellBox is deemed homogeneous if greater than this percentage of data points are above the given threshold.
       * **lowerBound** *(float)* : A percentage normalised between 0 and 1. A Cellbox is deemed homogeneous if less than this percentage of data points are below the given threshold.
-   * **value_fill_types** *(string)* : Determines the actions taken if a cellbox is generated with no data. The possible values are either parent (which implies assigning the value of the parent cellbox), zero or nan.
-   * **aggregate_type** *(string)* : Specifies how the data within a cellbox will be aggregated. By default aggregation takes place by calculating the mean of all data points within the CellBoxes bounds. *aggregate_type* allows this default to be changed to other aggregate function (e.g. MIN, MAX, COUNT).
-    
+   * **[vector] splitting_conditions** *(list)* : The conditions which determine if a cellbox should be split based on a vector dataset. 
+      * **curl** *(float)* : The threshold value above which a cellbox will split. Is calculated as the maximum value of **Curl(F)** within a cellbox (where **F** is the vector field).
 
 .. note:: 
    splitting conditions are applied in the order they are specified in the configuration file.
