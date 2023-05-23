@@ -214,9 +214,9 @@ class EnvironmentMesh:
                 path (String): The file location the mesh will be saved to.
                 format (String) (optional): The format the mesh will be saved in.
                     If not format is given, default is JSON.
-                    Supported formats are:
-                        JSON
-                        GEOJSON
+                    Supported formats are\n
+                        - JSON \n
+                        - GEOJSON
         """
         
 
