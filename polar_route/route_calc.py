@@ -129,6 +129,11 @@ def route_calc(route_file, mesh_file):
         start_point = np.array((user_track['Point'].iloc[idx].xy[0][0], user_track['Point'].iloc[idx].xy[1][0]))
         end_point = np.array((user_track['Point'].iloc[idx+1].xy[0][0], user_track['Point'].iloc[idx+1].xy[1][0]))
         cell_box = mesh.iloc[user_track['CellID'].iloc[idx]]
+        if cell_box['inaccessible']:
+            logging.info(f"This route crosses an inaccessible cell! This is located at Lat: {cell_box['cy']} "
+                         f"Long: {cell_box['cx']}. Please reroute around it.")
+            return None
+
         traveltime, distance = traveltime_distance(cell_box, start_point, end_point, Speed='speed', Vector_x='uC',
                                                    Vector_y='vC')
         traveltime = ((traveltime / 60) / 60) / 24

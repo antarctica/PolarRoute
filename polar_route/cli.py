@@ -183,14 +183,15 @@ def calculate_route_cli():
 
     calc_route = route_calc(args.waypoints.name, args.mesh.name)
 
-    max_time = round(calc_route["features"][0]["properties"]["traveltime"][-1]*24.,2)
-    max_fuel = round(calc_route["features"][0]["properties"]["fuel"][-1],2)
+    if calc_route is not None:
+        max_time = round(calc_route["features"][0]["properties"]["traveltime"][-1]*24.,2)
+        max_fuel = round(calc_route["features"][0]["properties"]["fuel"][-1],2)
 
-    logging.info(f"Calculated route has travel time: {max_time} days and fuel cost: {max_fuel} tons")
+        logging.info(f"Calculated route has travel time: {max_time} days and fuel cost: {max_fuel} tons")
 
-    logging.info(f"Saving calculated route to {args.output}")
-    with open(args.output, "w") as f:
-        json.dump(calc_route, f, indent=4)
+        logging.info(f"Saving calculated route to {args.output}")
+        with open(args.output, "w") as f:
+            json.dump(calc_route, f, indent=4)
 
 
 
