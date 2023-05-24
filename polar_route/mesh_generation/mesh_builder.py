@@ -204,6 +204,16 @@ class MeshBuilder:
                     cellbox = CellBox(cell_bounds, cell_id)
                 cellboxes.append(cellbox)
         return cellboxes
+    
+    def add_datapoints(self, Dataloader, params, bounds=None):
+        if bounds is None:
+            bounds = Boundary.from_json(self.config)
+        
+        data_loader = Dataloader(bounds, params)
+        
+        # meta_data_list
+        # cellbox.set_data_source
+        
 
     def validate_bounds(self, bounds, cell_width, cell_height):
         assert (bounds.get_long_max() - bounds.get_long_min()) % cell_width == 0, \
