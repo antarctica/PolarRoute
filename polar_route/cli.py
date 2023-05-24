@@ -17,7 +17,8 @@ def get_args(
         config_arg: bool = True,
         mesh_arg: bool = False,
         waypoints_arg: bool = False,
-        format_arg: bool = False):
+        format_arg: bool = False,
+        format_conf: bool = False):
     """
     Adds required command line arguments to all CLI entry points.
 
@@ -69,7 +70,11 @@ def get_args(
     if format_arg:
         ap.add_argument("format",
                         help = "Export format to transform a mesh into. Supported \
-                        formats are JSON, GEOJSON")
+                        formats are JSON, GEOJSON, Tif")
+        ap.add_argument( "-f", "--format_conf",
+                        default = None,
+                        help = "File location of Export to Tif configuration paramters")
+
 
 
     return ap.parse_args()
@@ -156,7 +161,6 @@ def export_mesh_cli():
     """
         CLI entry point for exporting a mesh to standard formats.
     """
-    print("test tit")
     args = get_args("export_mesh.output.json", 
                     config_arg = False, mesh_arg = True, format_arg = True)
     
@@ -171,6 +175,6 @@ def export_mesh_cli():
     env_mesh = EnvironmentMesh.load_from_json(mesh)
 
     logging.info(f"exporting mesh to {args.output} in format {args.format}")
-    env_mesh.save(args.output, args.format)
+    env_mesh.save(args.output, args.format , args.format_conf)
 
 
