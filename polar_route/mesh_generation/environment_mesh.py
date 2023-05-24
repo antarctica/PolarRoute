@@ -414,8 +414,10 @@ class EnvironmentMesh:
             Args:
                 path (String): The file location the mesh will be saved to.
                 format (String) (optional): The format the mesh will be saved in.
-                    If not format is given, default is JSON. Supported formats are: JSON, GEOJSON, TIF
-                format_params (string) (optional): a path to a file that contains a dict of format related parameters (ex. sampling_resolution, data_name, colour_conf for the tif format)\n
+                    If not format is given, default is JSON.
+                    Supported formats are\n
+                        - JSON \n
+                        - GEOJSON
         """
 
         logging.info(f"- saving the environment mesh to {path}")

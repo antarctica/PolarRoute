@@ -1,5 +1,5 @@
 Welcome to the PolarRoute Manual Pages
-=====================================
+======================================
 
 PolarRoute is a tool for the optimisation of routes for maritime vehicles travelling in polar waters.
 This software package has been developed by the **British Antarctic Survey** (BAS), primarily 

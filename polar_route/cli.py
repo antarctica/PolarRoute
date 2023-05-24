@@ -138,18 +138,22 @@ def optimise_routes_cli():
         logging.info("outputting full mesh to {}".format(args.output))
 
     rp = RoutePlanner(args.mesh.name, args.config.name, args.waypoints.name)
+    
     rp.compute_routes()
     info_dijkstra = rp.to_json()
+    
+    if args.dijkstra:
+        if args.path_only:
+            json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
+        else:
+            json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
+    
     rp.compute_smoothed_routes()
     info = rp.to_json()
 
     if args.path_only:
-        if args.dijkstra:
-             json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
         json.dump(info['paths'], open(args.output, 'w'), indent=4)
     else:
-        if args.dijkstra:
-             json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
         json.dump(info, open(args.output, "w"), indent=4)
 
 @timed_call

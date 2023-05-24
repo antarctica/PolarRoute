@@ -11,7 +11,8 @@ Outlined below is an example configuration file for running PolarRoute. Using th
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Mesh Construction configuration file example.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-::
+.. code-block:: json
+    
     {
         "config": {
             "Mesh_info": {
