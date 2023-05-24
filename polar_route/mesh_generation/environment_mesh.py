@@ -130,7 +130,9 @@ class EnvironmentMesh:
         output["cellboxes"] = self.cellboxes_to_json()
         output['neighbour_graph'] = self.neighbour_graph.get_graph()
 
-        return json.loads(json.dumps(output))
+
+        return json.loads(json.dumps(output, indent=4))
+    
 
     def to_geojson(self):
         """
@@ -434,6 +436,7 @@ class EnvironmentMesh:
             dump_path = path.replace(".json", ".dump")
             with open(dump_path, 'w') as dump_f:
                 self.dump_mesh(dump_f)
+
 
     def dump_mesh(self, file):
         """
