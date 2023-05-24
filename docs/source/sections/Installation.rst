@@ -26,6 +26,15 @@ Pip:
     pipwin install fiona
     pip install polar-route
 
+**NOTE**
+
+For GDAL (one of the required dependencies for the project), you may try the following commands to avoid any installation issues:
+::
+   
+    pipwin install GDAL
+    pip install -r requirements.txt
+    python setup.py install
+
 
 Linux/MacOS
 ###########
@@ -41,3 +50,19 @@ Pip:
 ::
 
     pip install polar-route
+
+
+**NOTE**
+
+For GDAL (one of the required dependencies for the project), you may try the following commands to avoid any installation issues:
+::
+
+   
+    sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update
+    sudo apt-get update
+    sudo apt-get install gdal-bin
+    sudo apt-get install libgdal-dev
+    export CPLUS_INCLUDE_PATH=/usr/include/gdal
+    export C_INCLUDE_PATH=/usr/include/gdal
+    pip install GDAL==$(gdal-config --version)
+
