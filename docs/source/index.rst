@@ -19,14 +19,15 @@ Contents:
    :maxdepth: 1
    :numbered:
 
-   ./sections/Code_structure
+   ./sections/Code_overview
    ./sections/Installation
-   ./sections/running
-   ./sections/Configuration
-   ./sections/Dataloaders/overview
+   ./sections/ipython_notebooks
+   ./sections/Command_line_interface
+   ./sections/Configuration/Configuration_overview
    ./sections/Outputs
-   ./sections/Examples
-   ./sections/Mesh_construction_overview
+   ./sections/Dataloaders/overview
+   ./sections/Mesh_Construction/Mesh_construction_overview
    ./sections/Vehicle_specifics
    ./sections/Route_optimisation
-   ./sections/Mesh_construction_classes
+   ./sections/Examples
+   
