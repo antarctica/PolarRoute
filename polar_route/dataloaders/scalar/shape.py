@@ -31,29 +31,25 @@ class ShapeDataLoader(ScalarDataLoader):
             params['ny'] = 101
 
         # Define default circle parameters
-        if params['shape'] == 'circle':
+        if params['dataloader_name'] == 'circle':
             if 'radius' not in params:
                 params['radius'] = 1
             if 'centre' not in params:
                 params['centre'] = (None, None)
-            params['data_generator'] = self.gen_circle
         # Define default square parameters
-        elif params['shape'] == 'square':
+        elif params['dataloader_name'] == 'square':
             if 'side_length' not in params:
                 params['side_length'] = 1
             if 'centre' not in params:
                 params['centre'] = (None, None)
-            params['data_generator'] = self.gen_square
         # Define default gradient params
-        elif params['shape'] == 'gradient':
+        elif params['dataloader_name'] == 'gradient':
             if 'vertical' not in params:
                 params['vertical'] = True
-            params['data_generator'] = self.gen_gradient
         # Define default checkerboard params
-        elif params['shape'] == 'checkerboard':
+        elif params['dataloader_name'] == 'checkerboard':
             if 'gridsize' not in params:
                 params['gridsize'] = (1,1)
-            params['data_generator'] = self.gen_checkerboard
             
         return params
         
@@ -74,14 +70,20 @@ class ShapeDataLoader(ScalarDataLoader):
                 'dummy_data' (by default)
         '''
         # TODO Move self.lat/long = np.linspace here after reg tests pass
-        
-        # Generate abstract data set
-        data = self.data_generator(bounds)
-    
-        # Fill dummy time values
-        data['time'] = bounds.get_time_min()
 
-        data_xr = data.set_index(['lat', 'long', 'time']).to_xarray()
+        # Generate abstract data set
+        if self.dataloader_name == 'circle':
+            data = self.gen_circle(bounds)
+        elif self.dataloader_name == 'checkerboard':
+            data = self.gen_checkerboard(bounds)
+        elif self.dataloader_name == 'gradient':
+            data = self.gen_gradient(bounds)
+        else:
+            raise ValueError(
+                f'Unknown abstract shape type: {self.dataloader_name}'
+                )
+
+        data_xr = data.set_index(['lat', 'long']).to_xarray()
         # No need to trim data, as was defined by bounds
 
         return data_xr

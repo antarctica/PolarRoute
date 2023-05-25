@@ -58,6 +58,10 @@ class DataLoaderFactory:
         # Translate 'file' or 'folder' into 'files' key
         params = self.translate_file_input(params)
         
+        # Add loader name to params
+        params['dataloader_name'] = name
+        params['min_dp'] = min_dp
+        
         dataloader_requirements = {
             # Scalar
             'scalar_csv':   (ScalarCSVDataLoader, ['files']),
@@ -73,10 +77,10 @@ class DataLoaderFactory:
             'thickness':    (ThicknessDataLoader, []),
             'density':      (DensityDataLoader, []),
             # Scalar - Abstract shapes
-            'circle':       (ShapeDataLoader, ['shape']),
-            'square':       (ShapeDataLoader, ['shape']),
-            'gradient':     (ShapeDataLoader, ['shape']),
-            'checkerboard': (ShapeDataLoader, ['shape']),
+            'circle':       (ShapeDataLoader, []),
+            'square':       (ShapeDataLoader, []),
+            'gradient':     (ShapeDataLoader, []),
+            'checkerboard': (ShapeDataLoader, []),
             # Vector
             'vector_csv':       (VectorCSVDataLoader, ['files']),
             'vector_grf':       (VectorGRFDataLoader, []),
