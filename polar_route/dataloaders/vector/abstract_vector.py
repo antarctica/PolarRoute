@@ -118,6 +118,7 @@ class VectorDataLoader(DataLoaderInterface):
                 Dictionary of attributes the dataloader will require, 
                 completed with default values if not provided in config.
         '''
+        # This should only pop up if using dataloader not in the factory
         if 'dataloader_name' not in params:
             params['dataloader_name'] = self.__class__.__name__
         
@@ -474,8 +475,7 @@ class VectorDataLoader(DataLoaderInterface):
 
     def get_hom_condition(self, bounds, splitting_conds, agg_type='MEAN'):
         '''
-        Not implemented yet. Retrieves homogeneity condition of data within
-        boundary.
+        Retrieves homogeneity condition of data within boundary. 
          
         Args: 
             bounds (Boundary): Boundary object with limits of datarange to analyse
@@ -484,14 +484,6 @@ class VectorDataLoader(DataLoaderInterface):
                     `(float)` The threshold at which data points of 
                     type 'value' within this CellBox are checked to be either 
                     above or below
-                'upper_bound': 
-                    `(float)` The lowerbound of acceptable percentage 
-                    of data_points of type value within this boundary that are 
-                    above 'threshold'
-                'lower_bound': 
-                    `(float)` The upperbound of acceptable percentage 
-                    of data_points of type value within this boundary that are 
-                    above 'threshold'
 
         Returns:
             str:
