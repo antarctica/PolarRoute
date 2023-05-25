@@ -157,8 +157,11 @@ def export_mesh_cli():
     """
         CLI entry point for exporting a mesh to standard formats.
     """
+
     args = get_args("export_mesh.output.json", 
                     config_arg = False, mesh_arg = True, format_arg = True)
+    if args.format.upper() == "TIF" and  args.output == "export_mesh.output.json": # check if the output file name is not provided set to a defualt name
+        args.output = "mesh.tif"
     
     print(f" Mesh arg = {args.mesh}, format arg = {args.format}")
     

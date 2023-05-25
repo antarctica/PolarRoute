@@ -156,6 +156,14 @@ supported output formats are:
   * geo.json (collection of polygons for each cell in the mesh) [GEOJSON]
   * .tif (rasterised mesh) [TIF]
 
+optional arguments:
+
+::
+
+    -v : verbose logging
+    -o : output location
+    -format_conf: configuration file for output format (required for TIF export)
+
 
 ^^^^^^^^^^^^^^^^^^
 Plotting
