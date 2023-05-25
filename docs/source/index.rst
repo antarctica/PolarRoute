@@ -26,6 +26,7 @@ Contents:
    ./sections/Dataloaders/overview
    ./sections/Outputs
    ./sections/Examples
-   ./sections/Discrete_meshing
+   ./sections/Mesh_construction_overview
    ./sections/Vehicle_specifics
    ./sections/Route_optimisation
+   ./sections/Mesh_construction_classes
