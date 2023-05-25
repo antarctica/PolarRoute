@@ -64,15 +64,35 @@ def route_calc(route_file, mesh_file):
         user_path (dict): User defined route in geojson format with calculated cost information
 
     """
-
     # Loading route from csv file
-    df = pd.read_csv(route_file)
+    if route_file[-3:] == "csv":
+        df = pd.read_csv(route_file)
+        to_wp = df['Name'].iloc[-1]
+        from_wp = df['Name'].iloc[0]
+    # Loading route from geojson file
+    elif route_file[-4:] == "json":
+        with open(route_file, "r") as f:
+            route_json = json.load(f)
+        route_coords = route_json['features'][0]['geometry']['coordinates']
+        to_wp = route_json['features'][0]['properties']['to']
+        from_wp = route_json['features'][0]['properties']['from']
+        longs = [c[0] for c in route_coords]
+        lats = [c[1] for c in route_coords]
+        df = pd.DataFrame()
+        df['Long'] = longs
+        df['Lat'] = lats
+    else:
+        logging.warning("Invalid route input! Please supply either a csv or geojson file with the route waypoints.")
+        return None
+
     df['id'] = 1
     df['order'] = np.arange(len(df))
 
     track_waypoints = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['Long'], df['Lat']))
-    tracks = track_waypoints.sort_values(by=['order']).groupby(['id'])['geometry'].apply(lambda x: LineString(x.tolist()))
+    tracks = track_waypoints.sort_values(by=['order']).groupby(['id'])['geometry'].apply(
+        lambda x: LineString(x.tolist()))
     tracks = gpd.GeoDataFrame(tracks, crs='EPSG:4326', geometry='geometry')
+
 
     # Loading mesh information
     with open(mesh_file, 'r') as fp:
@@ -173,8 +193,8 @@ def route_calc(route_file, mesh_file):
     path_geojson['traveltime'] = [path['path_traveltimes'].tolist()]
     path_geojson['distance'] = [(path['path_distances'] * 1000).tolist()]
     path_geojson['fuel'] = [path['path_fuel'].tolist()]
-    path_geojson['to'] = df['Name'].iloc[-1]
-    path_geojson['from'] = df['Name'].iloc[0]
+    path_geojson['to'] = to_wp
+    path_geojson['from'] = from_wp
     path_geojson = gpd.GeoDataFrame(path_geojson, crs='EPSG:4326', geometry='geometry')
 
     user_path = json.loads(path_geojson.to_json())

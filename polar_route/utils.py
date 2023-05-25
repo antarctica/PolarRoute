@@ -135,6 +135,7 @@ def divergence(flow):
     dFy_dy = np.gradient(Fy, axis=1)
     return dFx_dx + dFy_dy
 
+
 def curl(flow):
     flow = np.swapaxes(flow, 0, 1)
     Fx, Fy = flow[:, :, 0], flow[:, :, 1]
