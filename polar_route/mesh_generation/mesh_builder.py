@@ -94,8 +94,8 @@ class MeshBuilder:
         logging.info("Initialising mesh...")
         logging.info("Initialising cellboxes...")
      
-        cellboxes = []
-        cellboxes = self.initialize_cellboxes(bounds, cell_width, cell_height)
+        self.cellboxes = []
+        self.cellboxes = self.initialize_cellboxes(bounds, cell_width, cell_height)
 
         grid_width = (bounds.get_long_max() -
                       bounds.get_long_min()) / cell_width
@@ -105,24 +105,24 @@ class MeshBuilder:
         min_datapoints = 5
         if 'splitting' in self.config['Mesh_info']:
             min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
-        meta_data_list = self.initialize_meta_data(bounds, min_datapoints)
+        self.meta_data_list = self.initialize_meta_data(bounds, min_datapoints)
 
         # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
         logging.info("Assigning data source to cellboxes...")
-        for cellbox in cellboxes:
+        for cellbox in self.cellboxes:
             if isinstance(cellbox, CellBox):
                 cellbox.set_minimum_datapoints(min_datapoints)
                 # assign meta data to each cellbox
-                cellbox.set_data_source(meta_data_list)
+                cellbox.set_data_source(self.meta_data_list)
 
         
         logging.info("Initialise neighbours graph...")
-        self.neighbour_graph = NeighbourGraph(cellboxes, grid_width)
+        self.neighbour_graph = NeighbourGraph(self.cellboxes, grid_width)
 
         max_split_depth = 0
         if 'splitting' in self.config['Mesh_info']:
             max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
-        self.mesh = Mesh(bounds, cellboxes,
+        self.mesh = Mesh(bounds, self.cellboxes,
                          self.neighbour_graph, max_split_depth)
         self.mesh.set_config(config)
         if self.is_jgrid_mesh():
@@ -205,12 +205,32 @@ class MeshBuilder:
                 cellboxes.append(cellbox)
         return cellboxes
     
-    def add_datapoints(self, Dataloader, params, bounds=None):
+    def add_dataloader(self, Dataloader, params, bounds=None, name='myDataLoader', min_dp = 5):
         if bounds is None:
             bounds = Boundary.from_json(self.config)
         
-        data_loader = Dataloader(bounds, params)
+        logging.debug('Adding dataloader')
+        dataloader = Dataloader(bounds, params)
         
+        if 'splitting_conditions' in params:
+            splitting_conds = params['splitting_conditions']
+            updated_splitting_cond = [split_cond[dataloader.data_name] for split_cond in splitting_conds]
+
+        data_source = {'loader': name,
+                       'params': params}
+        value_fill_type = self.check_value_fill_type(data_source)
+        
+
+        meta_data_obj = Metadata(
+            dataloader, updated_splitting_cond,  value_fill_type)
+        
+        self.meta_data_list.append(meta_data_obj)
+        
+        for cellbox in self.cellboxes:
+            if isinstance(cellbox, CellBox):
+                cellbox.set_minimum_datapoints(min_dp)
+                # assign meta data to each cellbox
+                cellbox.set_data_source(self.meta_data_list)
         # meta_data_list
         # cellbox.set_data_source
         
