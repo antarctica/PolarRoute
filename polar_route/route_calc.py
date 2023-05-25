@@ -1,21 +1,22 @@
 import json
+import logging
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
 from shapely.geometry import Point
 from shapely.geometry import LineString
-import logging
 
-def traveltime_in_cell(xdist, ydist, U, V, S):
+
+def traveltime_in_cell(xdist, ydist, u, v, s):
     """
         Calculate travel time in cell.
     """
     dist = np.sqrt(xdist ** 2 + ydist ** 2)
-    cval = np.sqrt(U ** 2 + V ** 2)
+    cval = np.sqrt(u ** 2 + v ** 2)
 
-    dotprod = xdist * U + ydist * V
-    diffsqrs = S ** 2 - cval ** 2
+    dotprod = xdist * u + ydist * v
+    diffsqrs = s ** 2 - cval ** 2
 
     # if (dotprod**2 + diffsqrs*(dist**2) < 0)
     if diffsqrs == 0.0:
@@ -36,28 +37,41 @@ def traveltime_in_cell(xdist, ydist, U, V, S):
     return traveltime, dist
 
 
-def traveltime_distance(cellBox, Wp, Cp, Speed='speed', Vector_x='uC', Vector_y='vC'):
+def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y='vC'):
     """
         Calculate travel time and distance
     """
     case = 0
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
-    x = (Cp[0] - Wp[0]) * m_long * np.cos(Wp[1] * (np.pi / 180))
-    y = (Cp[1] - Wp[1]) * m_lat
-    Su = cellBox[Vector_x]
-    Sv = cellBox[Vector_y]
-    Ssp = cellBox[Speed][case] * (1000 / (60 * 60))
-    traveltime, distance = traveltime_in_cell(x, y, Su, Sv, Ssp)
+    x = (cp[0] - wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
+    y = (cp[1] - wp[1]) * m_lat
+    su = cellbox[vector_x]
+    sv = cellbox[vector_y]
+    ssp = cellbox[speed][case] * (1000 / (60 * 60))
+    traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
     return traveltime, distance
 
+
 def route_calc(route_file, mesh_file):
+    """
+    Function to calculate the fuel/time cost of a user defined route in a given mesh
+    Args:
+        route_file (str): Path to user defined route
+        mesh_file (str): Path to mesh with vehicle information
+
+    Returns:
+        user_path (dict): User defined route in geojson format with calculated cost information
+
+    """
+
+    # Loading route from csv file
     df = pd.read_csv(route_file)
     df['id'] = 1
     df['order'] = np.arange(len(df))
 
-    track_points = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['Long'], df['Lat']))
-    tracks = track_points.sort_values(by=['order']).groupby(['id'])['geometry'].apply(lambda x: LineString(x.tolist()))
+    track_waypoints = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['Long'], df['Lat']))
+    tracks = track_waypoints.sort_values(by=['order']).groupby(['id'])['geometry'].apply(lambda x: LineString(x.tolist()))
     tracks = gpd.GeoDataFrame(tracks, crs='EPSG:4326', geometry='geometry')
 
     # Loading mesh information
@@ -72,7 +86,9 @@ def route_calc(route_file, mesh_file):
     line_segs_mid_points = []
     line_segs_cell_id = []
 
+    # Find crossing points of the route and the cells in the mesh
     for idx in range(len(mesh)):
+        # Skip cells with no intersection
         if not tracks['geometry'].iloc[0].intersects(mesh['geometry'].iloc[idx]):
             continue
         tp = tracks['geometry'].iloc[0].intersection(mesh['geometry'].iloc[idx])
@@ -84,7 +100,7 @@ def route_calc(route_file, mesh_file):
         line_segs_last_points.append(pnts[-1])
         line_segs_cell_id.append(idx)
 
-    user_track = pd.DataFrame(
+    track_points = pd.DataFrame(
         {'startPoints': line_segs_first_points, 'midPoints': line_segs_mid_points, 'endPoints': line_segs_last_points,
          'cellID': line_segs_cell_id})
 
@@ -92,66 +108,67 @@ def route_calc(route_file, mesh_file):
     end_point = Point(df.iloc[-1]['Long'], df.iloc[-1]['Lat'])
 
     pathing = True
-    track_id = np.where(user_track['startPoints'] == start_point)[0][0]
+    track_id = np.where(track_points['startPoints'] == start_point)[0][0]
     path_point = []
     cell_ids = []
+
+    # Loop through crossing points to order them into a track along the route
     while pathing:
         try:
-            start_point_segment = user_track['startPoints'].iloc[track_id]
-            end_point_segment = user_track['endPoints'].iloc[track_id]
+            start_point_segment = track_points['startPoints'].iloc[track_id]
+            end_point_segment = track_points['endPoints'].iloc[track_id]
             path_point.append(start_point_segment)
-            cell_ids.append(user_track['cellID'].iloc[track_id])
+            cell_ids.append(track_points['cellID'].iloc[track_id])
 
-            if len(user_track['midPoints'].iloc[track_id]) != 0:
-                for midpnt in user_track['midPoints'].iloc[track_id]:
+            if len(track_points['midPoints'].iloc[track_id]) != 0:
+                for midpnt in track_points['midPoints'].iloc[track_id]:
                     path_point.append(midpnt)
-                    cell_ids.append(user_track['cellID'].iloc[track_id])
+                    cell_ids.append(track_points['cellID'].iloc[track_id])
 
             if end_point_segment == end_point:
                 pathing = False
-            track_id = np.where(user_track['startPoints'] == end_point_segment)[0][0]
-        except:
+            track_id = np.where(track_points['startPoints'] == end_point_segment)[0][0]
+        except IndexError:
             pathing = False
             path_point.append(end_point_segment)
             cell_ids.append('NaN')
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
-    track_line_string = LineString(user_track['Point'])
 
-    traveltimes = list()
-    distances = list()
-    cellboxes = list()
+    # Initialise segment costs with zero values at start point of path
+    traveltimes = [0.0]
+    distances = [0.0]
+    cellboxes = [mesh.iloc[user_track['CellID'].iloc[0]]]
 
-    cellboxes.append(mesh.iloc[user_track['CellID'].iloc[0]])
-    traveltimes.append(0.0)
-    distances.append(0.0)
+    # Calculate cost of each segment in the path
     for idx in range(len(user_track)-1):
         start_point = np.array((user_track['Point'].iloc[idx].xy[0][0], user_track['Point'].iloc[idx].xy[1][0]))
         end_point = np.array((user_track['Point'].iloc[idx+1].xy[0][0], user_track['Point'].iloc[idx+1].xy[1][0]))
         cell_box = mesh.iloc[user_track['CellID'].iloc[idx]]
+        # Check for inaccessible cells on user defined route
         if cell_box['inaccessible']:
-            logging.info(f"This route crosses an inaccessible cell! This is located at Lat: {cell_box['cy']} "
+            logging.warning(f"This route crosses an inaccessible cell! Cell located at Lat: {cell_box['cy']} "
                          f"Long: {cell_box['cx']}. Please reroute around it.")
             return None
 
-        traveltime, distance = traveltime_distance(cell_box, start_point, end_point, Speed='speed', Vector_x='uC',
-                                                   Vector_y='vC')
-        traveltime = ((traveltime / 60) / 60) / 24
-        distance = distance / 1000
+        traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
+                                                   vector_y='vC')
+        traveltime = ((traveltime_s / 60) / 60) / 24
+        distance = distance_m / 1000
         traveltimes.append(traveltime)
         distances.append(distance)
         cellboxes.append(cell_box)
 
+    # Find cumulative values along path
     path = pd.DataFrame(cellboxes).reset_index(drop=True)
     path['path_points'] = user_track['Point']
     path['path_traveltimes'] = np.cumsum(traveltimes)
     path['path_distances'] = np.cumsum(distances)
-    path_fuels = []
-    for idx in range(len(traveltimes)):
-        path_fuels.append(traveltimes[idx] * path['fuel'][idx][0])
+    path_fuels = [traveltimes[idx] * path['fuel'][idx][0] for idx in range(len(traveltimes))]
     path['path_fuel'] = np.cumsum(path_fuels)
 
-    path_geojson = pd.DataFrame()  # path[['path_points','path_traveltimes','path_distances','path_fuel']]
+    # Put path values into geojson format
+    path_geojson = pd.DataFrame()
     path_geojson['geometry'] = [LineString(path['path_points'])]
     path_geojson['traveltime'] = [path['path_traveltimes'].tolist()]
     path_geojson['distance'] = [(path['path_distances'] * 1000).tolist()]
@@ -159,4 +176,7 @@ def route_calc(route_file, mesh_file):
     path_geojson['to'] = df['Name'].iloc[-1]
     path_geojson['from'] = df['Name'].iloc[0]
     path_geojson = gpd.GeoDataFrame(path_geojson, crs='EPSG:4326', geometry='geometry')
-    return json.loads(path_geojson.to_json())
+
+    user_path = json.loads(path_geojson.to_json())
+
+    return user_path
