@@ -42,7 +42,7 @@ class MeshBuilder:
         """
 
             Constructs a Mesh from a given config file.\n
-
+            
             Args:
                 config (dict): config file which defines the attributes of the Mesh to be constructed. config is of the form: \n
                         "config": {\n
@@ -118,6 +118,7 @@ class MeshBuilder:
         
         logging.info("Initialise neighbours graph...")
         self.neighbour_graph = NeighbourGraph(cellboxes, grid_width)
+        self.check_global_mesh(bounds, cellboxes, int(grid_width))
 
         max_split_depth = 0
         if 'splitting' in self.config['Mesh_info']:
@@ -213,6 +214,34 @@ class MeshBuilder:
         assert (bounds.get_lat_max() - bounds.get_lat_min()) % cell_height == 0, \
             f"""The defined longitude region <{bounds.get_lat_min()} :{bounds.get_lat_max()}>
             is not divisable by the initial cell width <{cell_height}>"""
+
+    def check_global_mesh(self, bounds , cellboxes, grid_width):
+        """
+            Checks if the mesh is a global one and connects the cellboxes at the minimum longtitude and max longtitude accordingly
+
+           Args:
+            bounds (Boundary): an object represents the bounds of the mesh
+            cellboxes (list<Cellbox>): a list that contains the mesh initial cellboxes (before any splitting)
+            grid_width (int): an int represents the width of the mesh ( the number of cellboxes it contains horizontally)
+
+        """
+        if bounds.get_long_max()== abs (bounds.get_long_min()): # check if it is a global mesh
+
+            # find indeces of cellboxes at the min longtitude and max longtitude 
+            min_long_cellboxes = cellboxes [::grid_width]
+            max_long_cellboxes = cellboxes [grid_width-1::grid_width]
+            # update NG to connect cellboxes
+            for i in range (0 , len(min_long_cellboxes)): 
+                    self.neighbour_graph.add_neighbour (int (min_long_cellboxes[i].get_id()) , Direction.west, int (max_long_cellboxes[i].get_id()))
+                    self.neighbour_graph.add_neighbour (int (max_long_cellboxes[i].get_id()) , Direction.east , int (min_long_cellboxes[i].get_id()))
+                    # checks to avoid the very upper and lower cellboxes as they do not have north/south neighbours
+                    if 0<= i < len(min_long_cellboxes)-1:
+                        self.neighbour_graph.add_neighbour (int (min_long_cellboxes[i].get_id()) , Direction.north_west, int (max_long_cellboxes[i+1].get_id()))
+                        self.neighbour_graph.add_neighbour (int (max_long_cellboxes[i].get_id()) , Direction.north_east, int (min_long_cellboxes[i+1].get_id()))
+                    if 0<i<= len(min_long_cellboxes)-1: 
+                        self.neighbour_graph.add_neighbour (int (min_long_cellboxes[i].get_id()) , Direction.south_west, int (max_long_cellboxes[i-1].get_id()))
+                        self.neighbour_graph.add_neighbour (int (max_long_cellboxes[i].get_id()) , Direction.south_east, int (min_long_cellboxes[i-1].get_id()))
+                   
 
     def to_json(self):
         """

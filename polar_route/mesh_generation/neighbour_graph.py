@@ -65,6 +65,17 @@ class NeighbourGraph:
         """
         self.neighbour_graph[index][direction] = neighbours
 
+    def add_neighbour(self, index, direction, neighbour_indx):
+        """
+        adds a neighbour in a certain direction
+
+        Args:
+        index (int): the index of the cellbox to be updated
+        direction (int): the direction into which the neighbour will be added
+        neighbour_indx (int): the index of the cellbox to be added as a neighbour
+        """
+        self.neighbour_graph[index][direction].append (neighbour_indx)
+
     def remove_node_and_update_neighbours(self, cellbox_index):
         ''' 
             method that removes a node in the neighbour_graph at a given index. remove_node_from_neighbours should be called first.
@@ -288,5 +299,7 @@ class NeighbourGraph:
         if cellbox_indx - grid_width >= 0:
             neighbour_map[Direction.south].append(
                 int(cellbox_indx - grid_width))
+
+
 
         return neighbour_map
