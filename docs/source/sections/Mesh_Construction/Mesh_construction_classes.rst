@@ -1,14 +1,17 @@
+#############################
 Mesh Construction - Classes
 #############################
 
-This section describes the main classes of the Mesh Construction module in details
+This section describes the main classes of the Mesh Construction module in detail. 
+For an overview of the abstractions behind the Mesh Construction module, see the 
+:ref:`Mesh Construction - Overview` section of the documentation.
 
 MeshBuilder
 ************
 The MeshBuilder object is the main class of the Mesh Construction module. It is used to build the 
 EnvironmentalMesh object from a collection geospatial data. Features of the created EnvironmentalMesh 
 as be set using a configuration file passed to the MeshBuilder object. For more information on the format
-of the configuration file, see the :ref:`Input - Configuration` section of the documentation.
+of the configuration file, see the :ref:`configuration - mesh construction` section of the documentation.
 
 .. automodule:: polar_route.mesh_generation.mesh_builder
 
