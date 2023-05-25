@@ -85,6 +85,7 @@ def route_calc(route_file, mesh_file):
         logging.warning("Invalid route input! Please supply either a csv or geojson file with the route waypoints.")
         return None
 
+    logging.debug(f"Route has {len(df)} waypoints")
     df['id'] = 1
     df['order'] = np.arange(len(df))
 
@@ -154,6 +155,7 @@ def route_calc(route_file, mesh_file):
             cell_ids.append('NaN')
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
+    logging.debug(f"Route has {len(user_track)} crossing points")
 
     # Initialise segment costs with zero values at start point of path
     traveltimes = [0.0]
@@ -179,6 +181,7 @@ def route_calc(route_file, mesh_file):
         distances.append(distance)
         cellboxes.append(cell_box)
 
+    logging.debug(f"Route crosses {len(set([c['id'] for c in cellboxes]))} different cellboxes")
     # Find cumulative values along path
     path = pd.DataFrame(cellboxes).reset_index(drop=True)
     path['path_points'] = user_track['Point']
