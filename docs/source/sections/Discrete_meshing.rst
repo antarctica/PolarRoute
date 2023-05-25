@@ -1,3 +1,5 @@
+.. _mesh-construction:
+
 ********************************
 Methods - Mesh Construction
 ********************************
@@ -65,13 +67,13 @@ MetaData
   
 
 MeshBuilder
-************
+***********
 
 .. automodule:: polar_route.mesh_generation.mesh_builder
 
 .. autoclass:: polar_route.mesh_generation.mesh_builder.MeshBuilder
    :special-members: __init__  
-   :members: build_environmental_mesh , split_and_replace, split_to_depth
+   :members: build_environmental_mesh , split_and_replace, split_to_depth, add_dataloader
 
 AggregatedCellBox
 ******************

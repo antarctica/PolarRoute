@@ -61,7 +61,10 @@ be defined either in the dataloader factory, or within the dataloader itself.
 Below is an example of setting default parameters for reprojection of a dataset::
 
     class MyDataLoader(ScalarDataLoader):
-        def add_params(self, params):
+        def add_default_params(self, params):
+            # Add all the regular default params that scalar dataloaders have
+            params = super().add_default_params(params) # This line MUST be included
+
             # Define projection of dataset being imported
             params['in_proj'] = 'EPSG:3412'
             # Define projection required by output 

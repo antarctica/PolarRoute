@@ -22,14 +22,16 @@ a parameter the dataloader requires. The actions are:
 
 #. Import the dataloader
 #. Add an entry to the :code:`dataloader_requirements` dictionary
-#. (OPTIONAL) Add a default value to :code:`set_default_params()`
 
 ^^^^^^^
 Example
 ^^^^^^^
 In this example, a new scalar dataloader `myScalarDataloader` has been created, and
 is located at :code:`polar_route/Dataloaders/Scalar/myScalarDataloader.py`.
-The only parameter required by this dataloader is a file to read data from::
+
+The only parameter required by this dataloader is a file to read data from. 'files' 
+is passed as a mandatory parameter, as 'file' and 'folder' both get translated into 
+a list of files, and stored in params under the key 'files'::
 
    # Add new import statement for Factory to read
    from polar_route.Dataloaders.Scalar.myScalarDataloader import myScalarDataloader
@@ -42,20 +44,27 @@ The only parameter required by this dataloader is a file to read data from::
          ...
          dataloader_requirements = {
             ...
-            # Add new dataloader
-            'myscalar':    (myScalarDataloader, ['file'])
+            # Add new dataloaders
+            'myscalar':    (myScalarDataloader, ['files'])
             ...
          ...
       ...
 
 
 To call this dataloader, add an entry in the :code:`config.json` 
-file used to generate the mesh::
+file used to generate the mesh. Alternatively, add a folder, or a list of 
+individual files::
    
    {
          "loader": "myscalar",
          "params": {
-            "file": "PATH_TO_DATA_FILE",
+            "file": "PATH_TO_DATA_FILE"   # For a single file
+            "folder": "PATH_TO_FOLDER"    # For a folder, must have trailing '/'
+            "files":[                     # For a list of individual files
+               "PATH_TO_FILE_1",
+               "PATH_TO_FILE_2",
+               ...
+            ]
          }
    }
 
