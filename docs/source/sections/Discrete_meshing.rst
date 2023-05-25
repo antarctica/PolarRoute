@@ -75,9 +75,9 @@ MeshBuilder
 
 AggregatedCellBox
 ******************
-.. automodule:: polar_route.mesh_generation.aggregated_cellBox
+.. automodule:: polar_route.mesh_generation.aggregated_cellbox
 
-.. autoclass:: polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox
+.. autoclass:: polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox
    :special-members: __init__
    :members:  contains_point, to_json
 
@@ -87,7 +87,7 @@ EnvironmentMesh
 
 .. autoclass:: polar_route.mesh_generation.environment_mesh.EnvironmentMesh
    :special-members: __init__  
-   :members: load_from_json, update_cellbox , to_json, save
+   :members: load_from_json, update_cellbox , to_json, to_geojson, to_tif ,save
 
 
 NeighbourGraph

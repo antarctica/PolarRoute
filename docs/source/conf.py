@@ -34,7 +34,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
-    'rinoh.frontend.sphinx',
+    # 'rinoh.frontend.sphinx',
     'sphinx.ext.todo',
     'sphinx.ext.autosectionlabel',
     'sphinx_rtd_theme',

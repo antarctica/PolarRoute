@@ -171,8 +171,8 @@ class NeighbourGraph:
 
     def get_neighbour_case(self, cellbox_a, cellbox_b):
         """
-            Given two cellBoxes (cellbox_a, cellbox_b) returns a case number
-            representing where the two cellBoxes are touching.
+            Given two cellboxes (cellbox_a, cellbox_b) returns a case number
+            representing where the two cellboxes are touching.
 
             Args:
                 cellbox_a (CellBox): starting CellBox

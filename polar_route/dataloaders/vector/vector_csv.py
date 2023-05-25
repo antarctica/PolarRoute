@@ -1,8 +1,6 @@
 from polar_route.dataloaders.vector.abstract_vector import VectorDataLoader
 
-import logging
-
-import dask as dd
+import pandas as pd
 
 class VectorCSVDataLoader(VectorDataLoader):
     def import_data(self, bounds):
@@ -19,7 +17,11 @@ class VectorCSVDataLoader(VectorDataLoader):
                 and variable defined by column heading in csv file
         '''
         # Read in data
-        data = dd.read_csv(self.files)
+        df_list = []
+        # NOTE: All csv files must have same columns for this to work
+        for file in self.files:
+            df_list += [pd.read_csv(file)]
+        data = pd.concat(df_list)
         # Trim to initial datapoints
         data = self.trim_datapoints(bounds, data=data)
         

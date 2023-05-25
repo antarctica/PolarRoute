@@ -4,11 +4,11 @@ Runnning Codebase
 
 The codebase current can be run from either pre-defined python functions or via a command line interface. Outlined below is how to run the separate sections of the software package using either of the two methods.
 
-
+###############################
 Command Line Interface
 ###############################
 
-The PolarRoute package provides 3 CLI entry points, intended to be used in succession to plan a route through a digital enviroment.
+The PolarRoute package provides 4 CLI entry points, intended to be used in succession to plan a route through a digital enviroment.
 
 .. figure:: ./Figures/PolarRoute_CLI.png
    :align: center
@@ -128,8 +128,41 @@ optional arguments are
 
     -v (verbose logging)
     -o <output location> (set output location for mesh)
-    -p (output only the caculated path, not the entire mesh
+    -p (output only the caculated path, not the entire mesh)
     -d (output Dijkstra path as well as smoothed path)
+
+
+^^^^^^^^^^^^^^^^^^
+export_mesh
+^^^^^^^^^^^^^^^^^^
+Once a mesh has been built using the :ref:`create_mesh` command, it can be exported other file types for 
+use in other systems (such as GIS software) using the the *export_mesh* command.
+
+::
+
+    export_mesh <mesh.json> <output_location> <output_format> 
+
+positional arguments:
+
+::
+
+    mesh : A digital enviroment file.
+    output_location : The location to save the exported mesh.
+    output_format : The format to export the mesh to.
+
+
+supported output formats are:
+  * .json (default) [JSON]
+  * geo.json (collection of polygons for each cell in the mesh) [GEOJSON]
+  * .tif (rasterised mesh) [TIF]
+
+optional arguments:
+
+::
+
+    -v : verbose logging
+    -o : output location
+    -format_conf: configuration file for output format (required for TIF export)
 
 
 ^^^^^^^^^^^^^^^^^^

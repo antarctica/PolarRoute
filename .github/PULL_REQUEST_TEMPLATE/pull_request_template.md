@@ -1,12 +1,12 @@
 # PolarRoute Pull Request Template
 
 Date: <!--- Include date PR was created -->   
-Version Number: <!--- Include version number of PolarRoute the PR will be included in (e.g. 0.1.0) -->   
+Version Number: <!--- Include version number of PolarRoute the PR will be included in (e.g. 0.1.0 -> 0.1.1) -->   
  
 ## Description of change
 <!--- Describe your changes in detail -->
 
-Fixes # (issue)
+## Fixes # (issue)
 <!--- If this PR adds functionality or resolves problems associated with an issue on GitHub, please include a link to the issue -->
 
 # Testing
@@ -16,8 +16,13 @@ This includes a collection of test files which should be run according to which 
 - [ ] My changes have not altered any of the files listed in the testing strategy
 
 - [ ] My changes result in all required regression tests passing without the need to update test files.  
+  
+> *list which files have been altered and include a pytest.txt file for each of
+> the tests required to be run*
+>
+> The files which have been changed during this PR can be listed using the command
 
-> *include pytest.txt file showing all tests passing.*  
+    git diff --name-only 0.2.x
 
 - [ ] My changes require one or more test files to be updated for all regression tests to pass.   
 

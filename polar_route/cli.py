@@ -18,7 +18,8 @@ def get_args(
         config_arg: bool = True,
         mesh_arg: bool = False,
         waypoints_arg: bool = False,
-        format_arg: bool = False):
+        format_arg: bool = False,
+        format_conf: bool = False):
     """
     Adds required command line arguments to all CLI entry points.
 
@@ -70,7 +71,11 @@ def get_args(
     if format_arg:
         ap.add_argument("format",
                         help = "Export format to transform a mesh into. Supported \
-                        formats are JSON, GEOJSON")
+                        formats are JSON, GEOJSON, Tif")
+        ap.add_argument( "-f", "--format_conf",
+                        default = None,
+                        help = "File location of Export to Tif configuration paramters")
+
 
 
     return ap.parse_args()
@@ -93,7 +98,7 @@ def create_mesh_cli():
 
     logging.info("Saving mesh to {}".format(args.output))
     info = cg.to_json()
-    json.dump(info, open(args.output, "w"))
+    json.dump(info, open(args.output, "w"), indent=4)
 
 
 @timed_call
@@ -115,7 +120,7 @@ def add_vehicle_cli():
 
     logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
-    json.dump(info, open(args.output, "w"))
+    json.dump(info, open(args.output, "w"), indent=4)
 
 
 @timed_call
@@ -134,28 +139,34 @@ def optimise_routes_cli():
         logging.info("outputting full mesh to {}".format(args.output))
 
     rp = RoutePlanner(args.mesh.name, args.config.name, args.waypoints.name)
+    
     rp.compute_routes()
     info_dijkstra = rp.to_json()
+    
+    if args.dijkstra:
+        if args.path_only:
+            json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
+        else:
+            json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'), indent=4)
+    
     rp.compute_smoothed_routes()
     info = rp.to_json()
 
     if args.path_only:
-        if args.dijkstra:
-             json.dump(info_dijkstra['paths'], open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
-        json.dump(info['paths'], open(args.output, 'w'))
+        json.dump(info['paths'], open(args.output, 'w'), indent=4)
     else:
-        if args.dijkstra:
-             json.dump(info_dijkstra, open('{}_dijkstra.json'.format('.'.join(args.output.split('.')[:-1])), 'w'))
-        json.dump(info, open(args.output, "w"))
+        json.dump(info, open(args.output, "w"), indent=4)
 
 @timed_call
 def export_mesh_cli():
     """
         CLI entry point for exporting a mesh to standard formats.
     """
-    print("test tit")
+
     args = get_args("export_mesh.output.json", 
                     config_arg = False, mesh_arg = True, format_arg = True)
+    if args.format.upper() == "TIF" and  args.output == "export_mesh.output.json": # check if the output file name is not provided set to a defualt name
+        args.output = "mesh.tif"
     
     print(f" Mesh arg = {args.mesh}, format arg = {args.format}")
     
@@ -168,7 +179,7 @@ def export_mesh_cli():
     env_mesh = EnvironmentMesh.load_from_json(mesh)
 
     logging.info(f"exporting mesh to {args.output} in format {args.format}")
-    env_mesh.save(args.output, args.format)
+    env_mesh.save(args.output, args.format , args.format_conf)
 
 @timed_call
 def calculate_route_cli():

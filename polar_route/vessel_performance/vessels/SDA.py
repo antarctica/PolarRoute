@@ -1,4 +1,4 @@
-from polar_route.mesh_generation.aggregated_cellBox import AggregatedCellBox
+from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from polar_route.vessel_performance.vessels.abstract_ship import AbstractShip
 import numpy as np
 import logging
@@ -147,10 +147,10 @@ class SDA(AbstractShip):
     def invert_resistance(self, cellbox):
         """
             Method to find the vessel speed that keeps the ice resistance force below a given threshold in a given cell.
-            The input cellbox should contain the following values:
-                sic (float): The average sea ice concentration in the cell as a percentage
-                thickness (float): The average ice thickness in the cell in m
-                density (float): The average ice density in the cell in kg/m^3
+            The input cellbox should contain the following values\n
+                sic (float) - The average sea ice concentration in the cell as a percentage \n
+                thickness (float) - The average ice thickness in the cell in m \n
+                density (float) - The average ice density in the cell in kg/m^3 \n
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
