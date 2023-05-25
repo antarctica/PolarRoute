@@ -4,7 +4,7 @@ import inspect
 import logging
 
 from polar_route import __version__ as version
-from polar_route.utils import setup_logging, timed_call
+from polar_route.utils import setup_logging, timed_call, convert_decimal_days
 from polar_route.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 from polar_route.route_planner import RoutePlanner
@@ -184,10 +184,10 @@ def calculate_route_cli():
     calc_route = route_calc(args.waypoints.name, args.mesh.name)
 
     if calc_route is not None:
-        max_time = round(calc_route["features"][0]["properties"]["traveltime"][-1]*24.,2)
+        max_time = convert_decimal_days(calc_route["features"][0]["properties"]["traveltime"][-1])
         max_fuel = round(calc_route["features"][0]["properties"]["fuel"][-1],2)
 
-        logging.info(f"Calculated route has travel time: {max_time} days and fuel cost: {max_fuel} tons")
+        logging.info(f"Calculated route has travel time: {max_time} and fuel cost: {max_fuel} tons")
 
         logging.info(f"Saving calculated route to {args.output}")
         with open(args.output, "w") as f:
