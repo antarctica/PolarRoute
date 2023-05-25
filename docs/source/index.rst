@@ -16,7 +16,7 @@ and follow our [GitHub repository](https://github.com/antarctica/PolarRoute)
 Contents:
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :numbered:
 
    ./sections/Code_overview
