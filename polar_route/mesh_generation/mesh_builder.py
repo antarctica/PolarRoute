@@ -211,7 +211,7 @@ class MeshBuilder:
         
         logging.debug('Adding dataloader')
         dataloader = Dataloader(bounds, params)
-        
+        updated_splitting_cond = []
         if 'splitting_conditions' in params:
             splitting_conds = params['splitting_conditions']
             updated_splitting_cond = [split_cond[dataloader.data_name] for split_cond in splitting_conds]
@@ -233,6 +233,7 @@ class MeshBuilder:
                 cellbox.set_data_source(self.meta_data_list)
         # meta_data_list
         # cellbox.set_data_source
+        return self
         
 
     def validate_bounds(self, bounds, cell_width, cell_height):
