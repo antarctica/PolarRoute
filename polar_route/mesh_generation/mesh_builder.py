@@ -206,6 +206,23 @@ class MeshBuilder:
         return cellboxes
     
     def add_dataloader(self, Dataloader, params, bounds=None, name='myDataLoader', min_dp = 5):
+        '''
+        Adds a dataloader to a pre-existing mesh by adding to the metadata
+        
+        Args:
+            Dataloader (ScalarDataLoader or VectorDataLoader):
+                Dataloader object to add to metadata
+            params (dict):
+                Parameters to initialise dataloader with
+            bounds (Boundary):
+            name (str):
+                Name of the dataloader used in config
+                
+        Returns:
+            MeshBuilder:
+                Original MeshBuilder object (self) with added metadata for 
+                new dataloader
+        '''
         if bounds is None:
             bounds = Boundary.from_json(self.config)
         
