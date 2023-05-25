@@ -36,9 +36,9 @@ class ScalarDataLoader(DataLoaderInterface):
                 Name of scalar variable. Must be the column name if self.data
                 is pd.DataFrame. Must be variable if self.data is xr.Dataset
         '''
-        logging.info(f"Initialising {params['dataloader_name']} dataloader")
         # Translates parameters from config input to desired inputs
-        params = self.add_params(params)
+        params = self.add_default_params(params)
+        logging.info(f"Initialising {params['dataloader_name']} dataloader")
         # Creates a class attribute for all keys in params
         for key, val in params.items():
             setattr(self, key, val)
@@ -96,23 +96,52 @@ class ScalarDataLoader(DataLoaderInterface):
                 Downsampling and reprojecting happen in __init__() method
         '''
         pass
-    
-    def add_params(self, params):
+        
+    def add_default_params(self, params):
         '''
-        Provides option to add parameters before dataloader initialised,
-        useful for translating params from config to specific default 
-        parameters for dataloader. Does nothing by default, but user can
-        overload to add to specific dataloader
+        Set default values for all scalar dataloaders. This function should be
+        overloaded to include any extra params for a specific dataloader
         
         Args:
+            name (str):
+                Name of dataloader entry in dataloader_requirements. Used to
+                specify default parameters for a specific dataloader.
             params (dict): 
-                Dictionary holding keys and values that will be turned into 
-                object attributes
-        
+                Dictionary containing attributes that are required for each 
+                dataloader. 
+            
         Returns:
-            dict:
-                Params dictionary with addition of translated key/value pairs
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
         '''
+        if 'dataloader_name' not in params:
+            params['dataloader_name'] = self.__class__.__name__
+        
+        if 'data_name' not in params:
+            params['data_name'] = None
+
+        if 'downsample_factors' not in params:
+            params['downsample_factors'] = [1,1]
+
+        if 'aggregate_type' not in params: 
+            params['aggregate_type']  = 'MEAN'
+            
+        if 'min_dp' not in params:
+            params['min_dp'] = 5
+            
+        if 'in_proj' not in params:
+            params['in_proj'] = 'EPSG:4326'
+            
+        if 'out_proj' not in params:
+            params['out_proj'] = 'EPSG:4326'
+            
+        if 'x_col' not in params:
+            params['x_col'] = 'lat'
+
+        if 'y_col' not in params:
+            params['y_col'] = 'long'
+            
         return params
 
     def trim_datapoints(self, bounds, data=None):

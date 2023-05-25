@@ -5,6 +5,59 @@ import pandas as pd
 import numpy as np
 
 class ShapeDataLoader(ScalarDataLoader):
+    
+    def add_default_params(self, params):
+        '''
+        Set default values for abstract shape dataloaders, starting by
+        including defaults for scalar dataloaders.
+        
+        Args:
+            params (dict): 
+                Dictionary containing attributes that are required for the
+                shape being loaded. Must include 'shape'.
+            
+        Returns:
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
+        '''
+        # Add default scalar params
+        params = super().add_default_params(params)
+        
+        # Number of datapoints to populate per axis
+        if 'nx' not in params:
+            params['nx'] = 101
+        if 'ny' not in params:
+            params['ny'] = 101
+
+        # Define default circle parameters
+        if params['shape'] == 'circle':
+            if 'radius' not in params:
+                params['radius'] = 1
+            if 'centre' not in params:
+                params['centre'] = (None, None)
+            params['data_generator'] = self.gen_circle
+        # Define default square parameters
+        elif params['shape'] == 'square':
+            if 'side_length' not in params:
+                params['side_length'] = 1
+            if 'centre' not in params:
+                params['centre'] = (None, None)
+            params['data_generator'] = self.gen_square
+        # Define default gradient params
+        elif params['shape'] == 'gradient':
+            if 'vertical' not in params:
+                params['vertical'] = True
+            params['data_generator'] = self.gen_gradient
+        # Define default checkerboard params
+        elif params['shape'] == 'checkerboard':
+            if 'gridsize' not in params:
+                params['gridsize'] = (1,1)
+            params['data_generator'] = self.gen_checkerboard
+            
+        return params
+        
+    
     def import_data(self, bounds):
         '''
         Generates data in the form of an abstract shape, such as circle,
@@ -21,13 +74,9 @@ class ShapeDataLoader(ScalarDataLoader):
                 'dummy_data' (by default)
         '''
         # TODO Move self.lat/long = np.linspace here after reg tests pass
-        # Choose appropriate shape to generate
-        if self.shape == 'circle':
-            data = self.gen_circle(bounds)
-        elif self.shape == 'checkerboard':
-            data = self.gen_checkerboard(bounds)
-        elif self.shape == 'gradient':
-            data = self.gen_gradient(bounds)
+        
+        # Generate abstract data set
+        data = self.data_generator(bounds)
     
         # Fill dummy time values
         data['time'] = bounds.get_time_min()
