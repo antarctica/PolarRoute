@@ -49,6 +49,9 @@ method into details
 For a more in-depth explanation of the mesh construction methods, please refer to the :ref:`Mesh Construction - Classes`
 section.
 
+
+Mesh Construction - Additional
+################################
 .. toctree::
    :maxdepth: 1
 
