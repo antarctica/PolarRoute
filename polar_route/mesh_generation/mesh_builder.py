@@ -94,8 +94,8 @@ class MeshBuilder:
         logging.info("Initialising mesh...")
         logging.info("Initialising cellboxes...")
      
-        self.cellboxes = []
-        self.cellboxes = self.initialize_cellboxes(bounds, cell_width, cell_height)
+        cellboxes = []
+        cellboxes = self.initialize_cellboxes(bounds, cell_width, cell_height)
 
         grid_width = (bounds.get_long_max() -
                       bounds.get_long_min()) / cell_width
@@ -105,28 +105,29 @@ class MeshBuilder:
         min_datapoints = 5
         if 'splitting' in self.config['Mesh_info']:
             min_datapoints = self.config['Mesh_info']['splitting']['minimum_datapoints']
-        self.meta_data_list = self.initialize_meta_data(bounds, min_datapoints)
+        meta_data_list = self.initialize_meta_data(bounds, min_datapoints)
 
         # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
         logging.info("Assigning data source to cellboxes...")
-        for cellbox in self.cellboxes:
+        for cellbox in cellboxes:
             if isinstance(cellbox, CellBox):
                 cellbox.set_minimum_datapoints(min_datapoints)
                 # assign meta data to each cellbox
-                cellbox.set_data_source(self.meta_data_list)
+                cellbox.set_data_source(meta_data_list)
 
         
         logging.info("Initialise neighbours graph...")
-        self.neighbour_graph = NeighbourGraph(self.cellboxes, grid_width)
+        self.neighbour_graph = NeighbourGraph(cellboxes, grid_width)
 
         max_split_depth = 0
         if 'splitting' in self.config['Mesh_info']:
             max_split_depth = self.config['Mesh_info']['splitting']['split_depth']
-        self.mesh = Mesh(bounds, self.cellboxes,
+        self.mesh = Mesh(bounds, cellboxes,
                          self.neighbour_graph, max_split_depth)
         self.mesh.set_config(config)
         if self.is_jgrid_mesh():
             logging.warning("We're using the legacy Java style cell grid")
+
 
     def initialize_meta_data(self, bounds, min_datapoints):
         meta_data_list = []
@@ -237,20 +238,17 @@ class MeshBuilder:
                        'params': params}
         value_fill_type = self.check_value_fill_type(data_source)
         
-
         meta_data_obj = Metadata(
             dataloader, updated_splitting_cond,  value_fill_type)
         
-        self.meta_data_list.append(meta_data_obj)
-        
-        for cellbox in self.cellboxes:
+        for cellbox in self.mesh.cellboxes:
             if isinstance(cellbox, CellBox):
                 cellbox.set_minimum_datapoints(min_dp)
-                # assign meta data to each cellbox
-                cellbox.set_data_source(self.meta_data_list)
-        # meta_data_list
-        # cellbox.set_data_source
-        return self
+                # Add new meta data to list of data sources per cellbox
+                cellbox.set_data_source(
+                    cellbox.get_data_source() + [meta_data_obj]
+                )
+
         
 
     def validate_bounds(self, bounds, cell_width, cell_height):
