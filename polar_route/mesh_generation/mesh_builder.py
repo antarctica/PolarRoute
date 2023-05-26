@@ -118,7 +118,7 @@ class MeshBuilder:
         
         logging.info("Initialise neighbours graph...")
         self.neighbour_graph = NeighbourGraph(cellboxes, grid_width)
-        self.check_global_mesh(bounds, cellboxes, int(grid_width))
+        self.neighbour_graph.set_global_mesh (self.check_global_mesh(bounds, cellboxes, int(grid_width)))
 
         max_split_depth = 0
         if 'splitting' in self.config['Mesh_info']:
@@ -220,13 +220,15 @@ class MeshBuilder:
             Checks if the mesh is a global one and connects the cellboxes at the minimum longtitude and max longtitude accordingly
 
            Args:
-            bounds (Boundary): an object represents the bounds of the mesh
-            cellboxes (list<Cellbox>): a list that contains the mesh initial cellboxes (before any splitting)
-            grid_width (int): an int represents the width of the mesh ( the number of cellboxes it contains horizontally)
-
+                bounds (Boundary): an object represents the bounds of the mesh
+                cellboxes (list<Cellbox>): a list that contains the mesh initial cellboxes (before any splitting)
+                grid_width (int): an int represents the width of the mesh ( the number of cellboxes it contains horizontally)
+           Returns:
+                is_global_mesh (bool): a boolean indicates if the mesh is a global one
         """
-        if bounds.get_long_max()== abs (bounds.get_long_min()): # check if it is a global mesh
-
+        is_global_mesh = False
+        if bounds.get_long_max()== abs (bounds.get_long_min()) == 180: # check if it is a global mesh
+            is_global_mesh = True
             # find indeces of cellboxes at the min longtitude and max longtitude 
             min_long_cellboxes = cellboxes [::grid_width]
             max_long_cellboxes = cellboxes [grid_width-1::grid_width]
@@ -242,7 +244,7 @@ class MeshBuilder:
                         self.neighbour_graph.add_neighbour (int (min_long_cellboxes[i].get_id()) , Direction.south_west, int (max_long_cellboxes[i-1].get_id()))
                         self.neighbour_graph.add_neighbour (int (max_long_cellboxes[i].get_id()) , Direction.south_east, int (min_long_cellboxes[i-1].get_id()))
                    
-
+        return is_global_mesh
     def to_json(self):
         """
             Returns this Mesh converted to a JSON object.
