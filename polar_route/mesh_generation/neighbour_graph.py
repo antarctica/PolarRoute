@@ -195,7 +195,7 @@ class NeighbourGraph:
                         case 0 -> CellBoxes are not neighbours
 
                         case 1 -> cellbox_b is the North-East corner of cellbox_a\n
-                        case 2 -> cellbox_b is East of cellbadd_nodeox_a\n
+                        case 2 -> cellbox_b is East of cellbox_a\n
                         case 3 -> cellbox_b is the South-East corner of cellbox_a\n
                         case 4 -> cellbox_b is South of cellbox_a\n
                         case -1 -> cellbox_b is the South-West corner of cellbox_a\n
@@ -207,28 +207,28 @@ class NeighbourGraph:
         lat_a = cellbox_a.bounds.get_lat_min()
         long_b = cellbox_b.bounds.get_long_min()
         lat_b = cellbox_b.bounds.get_lat_min()
-        if (long_a + cellbox_a.bounds.get_width()) == long_b and (
+        if (long_a + cellbox_a.bounds.get_width()) == abs(long_b)and (
                 lat_a + cellbox_a.bounds.get_height()) == lat_b:
             return Direction.north_east
-        if (long_a + cellbox_a.bounds.get_width() == long_b) and (
+        if (long_a + cellbox_a.bounds.get_width() == abs(long_b)) and (
                 lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
                 (lat_b + cellbox_b.bounds.get_height()) > lat_a):
             return Direction.east
-        if (long_a + cellbox_a.bounds.get_width()) == long_b and (
+        if (long_a + cellbox_a.bounds.get_width()) == abs(long_b) and (
                 lat_a == lat_b + cellbox_b.bounds.get_height()):
             return Direction.south_east
         if ((lat_b + cellbox_b.bounds.get_height()) == lat_a) and (
                 (long_b + cellbox_b.bounds.get_width()) > long_a) and (
                 long_b < (long_a + cellbox_a.bounds.get_width())):
             return Direction.south
-        if long_a == (long_b + cellbox_b.bounds.get_width()) and lat_a == (
+        if abs(long_a) == (long_b + cellbox_b.bounds.get_width()) and lat_a == (
                 lat_b + cellbox_b.bounds.get_height()):
             return Direction.south_west
-        if (long_b + cellbox_b.bounds.get_width() == long_a) and (
+        if (long_b + cellbox_b.bounds.get_width() == abs(long_a)) and (
                 lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
                 (lat_b + cellbox_b.bounds.get_height()) > lat_a):
             return Direction.west
-        if long_a == (long_b + cellbox_b.bounds.get_width()) and (
+        if abs(long_a) == (long_b + cellbox_b.bounds.get_width()) and (
                 lat_a + cellbox_a.bounds.get_height() == lat_b):
             return Direction.north_west
         if (lat_b == (lat_a + cellbox_a.bounds.get_height())) and (

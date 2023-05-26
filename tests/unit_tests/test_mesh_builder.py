@@ -22,12 +22,18 @@ class TestMeshBuilder(unittest.TestCase):
 
 
    def test_check_global_mesh (self):
+      # grid_width is 72 in this mesh so checking cellboxes around grid_width multiples (cellboxes at the min and max longtitude)
       self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[0] , self.mesh_builder.mesh.cellboxes[71]) , Direction.west)
-
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[71] , self.mesh_builder.mesh.cellboxes[0]) , Direction.east)
     
-
     
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[0] , self.mesh_builder.mesh.cellboxes[143]) , Direction.north_west)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[72] , self.mesh_builder.mesh.cellboxes[71]) , Direction.south_west)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[72] , self.mesh_builder.mesh.cellboxes[143]) , Direction.west)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[72] , self.mesh_builder.mesh.cellboxes[215]) , Direction.north_west)
 
-
-
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[143] , self.mesh_builder.mesh.cellboxes[72]) , Direction.east)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[143] , self.mesh_builder.mesh.cellboxes[70]) , Direction.south_west)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[143] , self.mesh_builder.mesh.cellboxes[142]) , Direction.west)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[143] , self.mesh_builder.mesh.cellboxes[214]) , Direction.north_west)
 
