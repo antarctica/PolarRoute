@@ -359,10 +359,8 @@ class NeighbourGraph:
         if cellbox_indx - grid_width >= 0:
             neighbour_map[Direction.south].append(
                 int(cellbox_indx - grid_width))
-
-
-
         return neighbour_map
+    
     def set_global_mesh (self, is_global):
         self._is_global_mesh = is_global
     def is_global_mesh (self):
