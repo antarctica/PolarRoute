@@ -17,7 +17,7 @@ of the configuration file, see the :ref:`configuration - mesh construction` sect
 
 .. autoclass:: polar_route.mesh_generation.mesh_builder.MeshBuilder
    :special-members: __init__  
-   :members: build_environmental_mesh , split_and_replace, split_to_depth
+   :members: build_environmental_mesh , split_and_replace, split_to_depth, add_dataloader
 
 EnvironmentMesh
 *****************
@@ -55,6 +55,9 @@ when the MeshBuilder returns the EnvironmentalMesh object.
 
 MetaData
 ***********
+The Metadata object is used to store the metadata associated with a CellBox object within the MeshBuilder. This includes 
+associated DataLoaders, the depth of the CellBox within the MeshBuilder, and the parent CellBox of the CellBox among others.
+
 .. automodule:: polar_route.mesh_generation.metadata
 
 .. autoclass:: polar_route.mesh_generation.metadata.Metadata
