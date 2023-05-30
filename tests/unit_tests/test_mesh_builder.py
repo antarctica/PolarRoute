@@ -38,3 +38,9 @@ class TestMeshBuilder(unittest.TestCase):
       self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[143] , self.mesh_builder.mesh.cellboxes[142]) , Direction.west)
       self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[143] , self.mesh_builder.mesh.cellboxes[214]) , Direction.north_west)
 
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[1] , self.mesh_builder.mesh.cellboxes[0]) , Direction.west)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[0] , self.mesh_builder.mesh.cellboxes[1]) , Direction.east)
+    
+    
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[1] , self.mesh_builder.mesh.cellboxes[72]) , Direction.north_west)
+      self.assertEqual (self.mesh_builder.neighbour_graph.get_neighbour_case(self.mesh_builder.mesh.cellboxes[1] , self.mesh_builder.mesh.cellboxes[74]) , Direction.north_east)
