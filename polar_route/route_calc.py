@@ -7,10 +7,22 @@ from shapely import wkt
 from shapely.geometry import Point
 from shapely.geometry import LineString
 
+case_indices = np.array([1, 2, 3, 4, -1, -2, -3, -4])
 
 def traveltime_in_cell(xdist, ydist, u, v, s):
     """
-        Calculate travel time in cell.
+        Calculate travel time inside cell.
+
+        Args:
+            xdist (float): x distance
+            ydist (float): y distance
+            u (float): current x component
+            v (float): current y component
+            s (float): ship speed
+
+        Returns:
+            traveltime (float): the travel time
+            distance (float): the distance
     """
     dist = np.sqrt(xdist ** 2 + ydist ** 2)
     cval = np.sqrt(u ** 2 + v ** 2)
@@ -18,15 +30,12 @@ def traveltime_in_cell(xdist, ydist, u, v, s):
     dotprod = xdist * u + ydist * v
     diffsqrs = s ** 2 - cval ** 2
 
-    # if (dotprod**2 + diffsqrs*(dist**2) < 0)
     if diffsqrs == 0.0:
         if dotprod == 0.0:
             return np.inf
-            # raise Exception(' ')
         else:
             if ((dist ** 2) / (2 * dotprod)) < 0:
                 return np.inf
-                # raise Exception(' ')
             else:
                 traveltime = dist * dist / (2 * dotprod)
                 return traveltime
@@ -37,32 +46,81 @@ def traveltime_in_cell(xdist, ydist, u, v, s):
     return traveltime, dist
 
 
-def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y='vC'):
+def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y='vC', case=0):
     """
-        Calculate travel time and distance
+        Calculate travel time and distance for two points.
+
+        Args:
+            cellbox (dict): the cell containing the line segment
+            wp (ndarray): the start point
+            cp (ndarray): the end point
+            speed (str): the key for speed
+            vector_x (str): the key for the x vector component
+            vector_y (str): the key for the y vector component
+            case (int): case giving the index of the speed array
+
+        Returns:
+            traveltime (float): the time to travel the line segment
+            distance (float): the distance along the line segment
     """
-    case = 0
+    idx = np.where(case_indices==case)[0][0]
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
     x = (cp[0] - wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
     y = (cp[1] - wp[1]) * m_lat
     su = cellbox[vector_x]
     sv = cellbox[vector_y]
-    ssp = cellbox[speed][case] * (1000 / (60 * 60))
+    ssp = cellbox[speed][idx] * (1000 / (60 * 60))
     traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
     return traveltime, distance
+
+def case_from_angle(start, end):
+    """
+        Determine the direction of travel between two points and return the associated case
+
+        Args:
+            start (ndarray): the coordinates of the start point within the cell
+            end (ndarray):  the coordinates of the end point within the cell
+
+        Returns:
+            case (int): the case to use to select variable values from a list
+    """
+
+    direct_vec = [end[0]-start[0], end[1]-start[1]]
+    direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
+
+    case = None
+
+    if -22.5 <= direct_ang < 22.5:
+        case = -4
+    elif 22.5 <= direct_ang < 67.5:
+        case = 1
+    elif 67.5 <= direct_ang < 112.5:
+        case = 2
+    elif 112.5 <= direct_ang < 157.5:
+        case = 3
+    elif 157.5 <= abs(direct_ang) <= 180:
+        case = 4
+    elif -67.5 <= direct_ang < -22.5:
+        case = -3
+    elif -112.5 <= direct_ang < -67.5:
+        case = -2
+    elif -157.5 <= direct_ang < -112.5:
+        case = -1
+
+    return case
 
 
 def route_calc(route_file, mesh_file):
     """
-    Function to calculate the fuel/time cost of a user defined route in a given mesh
-    Args:
-        route_file (str): Path to user defined route
-        mesh_file (str): Path to mesh with vehicle information
+        Function to calculate the fuel/time cost of a user defined route in a given mesh
 
-    Returns:
-        user_path (dict): User defined route in geojson format with calculated cost information
+        Args:
+            route_file (str): Path to user defined route
+            mesh_file (str): Path to mesh with vehicle information
 
+        Returns:
+            user_path (dict): User defined route in geojson format with calculated cost information
     """
     # Loading route from csv file
     if route_file[-3:] == "csv":
@@ -161,12 +219,14 @@ def route_calc(route_file, mesh_file):
     traveltimes = [0.0]
     distances = [0.0]
     cellboxes = [mesh.iloc[user_track['CellID'].iloc[0]]]
+    cases = [1]
 
     # Calculate cost of each segment in the path
     for idx in range(len(user_track)-1):
         start_point = np.array((user_track['Point'].iloc[idx].xy[0][0], user_track['Point'].iloc[idx].xy[1][0]))
         end_point = np.array((user_track['Point'].iloc[idx+1].xy[0][0], user_track['Point'].iloc[idx+1].xy[1][0]))
         cell_box = mesh.iloc[user_track['CellID'].iloc[idx]]
+        case = case_from_angle(start_point, end_point)
         # Check for inaccessible cells on user defined route
         if cell_box['inaccessible']:
             logging.warning(f"This route crosses an inaccessible cell! Cell located at Lat: {cell_box['cy']} "
@@ -174,12 +234,14 @@ def route_calc(route_file, mesh_file):
             return None
 
         traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
-                                                   vector_y='vC')
+                                                   vector_y='vC', case=case)
         traveltime = ((traveltime_s / 60) / 60) / 24
         distance = distance_m / 1000
         traveltimes.append(traveltime)
         distances.append(distance)
         cellboxes.append(cell_box)
+        cases.append(case)
+
 
     logging.debug(f"Route crosses {len(set([c['id'] for c in cellboxes]))} different cellboxes")
     # Find cumulative values along path
@@ -187,7 +249,7 @@ def route_calc(route_file, mesh_file):
     path['path_points'] = user_track['Point']
     path['path_traveltimes'] = np.cumsum(traveltimes)
     path['path_distances'] = np.cumsum(distances)
-    path_fuels = [traveltimes[idx] * path['fuel'][idx][0] for idx in range(len(traveltimes))]
+    path_fuels = [traveltimes[idx] * path['fuel'][idx][np.where(case_indices==cases[idx])[0][0]] for idx in range(len(traveltimes))]
     path['path_fuel'] = np.cumsum(path_fuels)
 
     # Put path values into geojson format
