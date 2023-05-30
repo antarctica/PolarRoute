@@ -71,7 +71,7 @@ class MeshBuilder:
                             }\n
                         }\n
                    
-                    
+                    NOTE: In the case of constructing a global mesh, the longtitude range should be -180:180.
 
                     "j_grid" (bool): True if the Mesh to be constructed should be of the same format as the original Java CellGrid, to be used for regression testing.\n
                 

@@ -204,12 +204,26 @@ class NeighbourGraph:
                         case -3 -> cellbox_b is the North-West corner of cellbox_a\n
                         case -4 -> cellbox_b is North of cellbox_a\n
         """
-        if self.is_global_mesh():
-            return self.get_global_mesh_neighbour_case(cellbox_a, cellbox_b)
+   
         long_a = cellbox_a.bounds.get_long_min()
         lat_a = cellbox_a.bounds.get_lat_min()
         long_b = cellbox_b.bounds.get_long_min()
         lat_b = cellbox_b.bounds.get_lat_min()
+        def on_global_bound(cellbox_a , cellbox_b):
+            """
+            Given two cellboxes (cellbox_a, cellbox_b) returns a boolean
+            representing whether the two cellboxes are touching on the global bound (-180,180).
+
+            Args:
+                cellbox_a (CellBox): starting CellBox
+                cellbox_b (CellBox): destination CellBox
+
+            Returns:
+                bool: a boolean representing if the two cellboxes are touching on the global bound (-180,180).            
+            """
+            return long_a == -180  and cellbox_b.bounds.get_long_max() == 180 or long_b == -180 and cellbox_a.bounds.get_long_max() == 180 
+        if self.is_global_mesh() and on_global_bound (cellbox_a , cellbox_b) :
+            return self.get_global_mesh_neighbour_case(cellbox_a, cellbox_b)
         if (long_a + cellbox_a.bounds.get_width()) == long_b and (
                 lat_a + cellbox_a.bounds.get_height()) == lat_b:
             return Direction.north_east
