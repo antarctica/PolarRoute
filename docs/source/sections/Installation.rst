@@ -59,7 +59,7 @@ Ubuntu/Debian:
     pip install GDAL==$(gdal-config --version)
 
 
-Fedora/CentOS/RHEL:
+Fedora:
 
 ::
 
