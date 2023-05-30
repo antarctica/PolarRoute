@@ -14,7 +14,8 @@ class Boundary:
 
     Attributes:
         lat_range (float[]): array contains the start and end of latitude range 
-        long_range (float[]): array contains the start and end of longtitude range 
+        long_range (float[]): array contains the start and end of longtitude range.
+          In the case of constructing a global mesh, the longtitude range should be -180:180.
         time_range(string[]): array contains the start and end of time range 
         
 
@@ -130,14 +131,16 @@ class Boundary:
                 
         """
         if len(lat_range) < 2 or len (long_range)<2 :
-            raise ValueError(f'Boundary: range should contain two values')
+            raise ValueError('Boundary: range should contain two values')
         if lat_range[0] > lat_range [1]:
-             raise ValueError(f'Boundary: Latitude start range should be smaller than range end')
+             raise ValueError('Boundary: Latitude start range should be smaller than range end')
         if long_range[0] > long_range [1]:
-             raise ValueError(f'Boundary: Longtitude start range should be smaller than range end')
+             raise ValueError('Boundary: Longtitude start range should be smaller than range end')
+        if long_range[0] < -180 or long_range[1] > 180:
+            raise ValueError('Boundary: Longtitude range should be within -180:180')
         if len (time_range) > 0:
             if datetime.strptime(time_range[0], '%Y-%m-%d') >= datetime.strptime(time_range[1], '%Y-%m-%d'):
-                     raise ValueError(f'Boundary: Start time range should be smaller than range end')
+                     raise ValueError('Boundary: Start time range should be smaller than range end')
 
     # Functions used for getting data from a cellbox
     def getcx(self):
