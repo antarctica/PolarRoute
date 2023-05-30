@@ -2,7 +2,7 @@
 Command Line Interface
 ###############################
 
-The PolarRoute package provides 4 CLI entry points, intended to be used in succession to plan a route through a digital enviroment.
+The PolarRoute package provides 4 CLI entry points, intended to be used in succession to plan a route through a digital environment.
 
 .. figure:: ./Figures/PolarRoute_CLI.png
    :align: center
@@ -13,7 +13,7 @@ The PolarRoute package provides 4 CLI entry points, intended to be used in succe
 ^^^^^^^^^^^^^^^^^^
 create_mesh
 ^^^^^^^^^^^^^^^^^^
-The *create_mesh* entry point builds a digital enviroment file from a collection of source data, which can then be used 
+The *create_mesh* entry point builds a digital environment file from a collection of source data, which can then be used
 by the vessel performance modeller and route planner. 
 
 ::
@@ -24,7 +24,7 @@ positional arguments:
 
 ::
 
-    config : A configuration file detailing how to build the digital enviroment. JSON parsable
+    config : A configuration file detailing how to build the digital environment. JSON parsable
 
 The format of the required *<config.json>* file can be found in the :ref:`configuration - mesh construction` section of the documentation.
 
@@ -41,8 +41,8 @@ The format of the returned mesh.json file is explain in :ref:`the mesh.json file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 add_vehicle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The *add_vehicle* command allows vehicle specific simulations to be performed on the digital enviroment. This vehicle specific 
-information is then encoded into the digital enviroment file.
+The *add_vehicle* command allows vehicle specific simulations to be performed on the digital environment. This vehicle specific
+information is then encoded into the digital environment file.
 
 ::
 
@@ -52,8 +52,8 @@ positional arguments:
 
 ::
 
-    vessel : A configuration file detailing the vessel to be simulated in the digital enviroment.
-    mesh : A digital enviroment file.
+    vessel : A configuration file detailing the vessel to be simulated in the digital environment.
+    mesh : A digital environment file.
 
 The format for the required *<vessel.json>* file can be found in the :ref:`configuration - vessel performance modeller` section of the documentation.
 The required *<mesh.json>* file can be created using the :ref:`create_mesh` command shown above.
@@ -80,14 +80,14 @@ positional parameters:
 
 ::
 
-    vessel_mesh : A digital enviroment file with added vessel specific simulations.
+    vessel_mesh : A digital environment file with added vessel specific simulations.
     route_config : A configuration file detailing optimisation parameters to be used when route planning.
     waypoints: A .csv file containing waypoints to be travelled between.
 
 
 The format for the required *<route_config.json>* file can be found in the :ref:`configuration - route planning` section of the documentation.
 The required *<vessel_mesh.json>* file can be generated using the :ref:`add_vehicle` command shown above.
-The format for the requried *<waypoints.csv>* file is as follows:
+The format for the required *<waypoints.csv>* file is as follows:
 
 As table:
 
@@ -126,11 +126,11 @@ optional arguments are
 
     -v (verbose logging)
     -o <output location> (set output location for mesh)
-    -p (output only the caculated path, not the entire mesh)
+    -p (output only the calculated path, not the entire mesh)
     -d (output Dijkstra path as well as smoothed path)
 
 
-The format of the returned *<route.json>* file is explain in :ref:`the route.json file` section of the documentation.
+The format of the returned *<route.json>* file is explained in :ref:`the route.json file` section of the documentation.
 
 ^^^^^^^^^^^^^^^^^^
 export_mesh
@@ -146,7 +146,7 @@ positional arguments:
 
 ::
 
-    mesh : A digital enviroment file.
+    mesh : A digital environment file.
     output_location : The location to save the exported mesh.
     output_format : The format to export the mesh to.
 
@@ -199,5 +199,5 @@ Plotting
 ^^^^^^^^^^^^^^^^^^
 Meshes produced at any stage in the route planning process can be visualised using the GeoPlot 
 library found at `Link <https://github.com/antarctica/GeoPlot>`. Meshes and routes can also be plotted in 
-other GIS software such as QGIS my exporting the mesh the a common format such as .geojson or .tif using 
+other GIS software such as QGIS by exporting the mesh to a common format such as .geojson or .tif using
 the :ref:`export_mesh` command.

@@ -2,7 +2,7 @@
 GEBCO Dataloader
 ****************
 
-The General Bathymetric Chart of the Oceans (GEBCO) is a publically available
+The General Bathymetric Chart of the Oceans (GEBCO) is a publicly available
 bathymetric chart of the Earth's oceans. It is a common resource used by
 ocean scientists, amongst others. 
 

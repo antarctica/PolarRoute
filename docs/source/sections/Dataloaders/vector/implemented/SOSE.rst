@@ -2,7 +2,7 @@
 SOSE Currents Dataloader
 ************************
 
-Southern Ocean State Estimate (SOSE) is a publically available dataset that provides (amongst other products)
+Southern Ocean State Estimate (SOSE) is a publicly available dataset that provides (amongst other products)
 ocean current vectors of the southern ocean. It is a project led by Mazloff at the Scripps Institution of Oceanography.
 
 From their website:

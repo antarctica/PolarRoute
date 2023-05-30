@@ -28,7 +28,7 @@ Vector Dataloader Examples
 Creating a vector dataloader is almost identical to creating a 
 :ref:`scalar dataloader<abstract-scalar-dataloader>`. The key differences 
 are that the `VectorDataLoader` abstract base class must be used, and that
-the `data_name` is a comma seperated string of the vector component names.
+the `data_name` is a comma separated string of the vector component names.
 e.g. a dataloader storing a vector with column names :code:`uC` and 
 :code:`vC` will have an attribute :code:`self.data_name = 'uC,vC'`
 Data must be imported and saved as an xarray.Dataset, or a 

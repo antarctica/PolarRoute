@@ -3,14 +3,14 @@ Python & iPython Notebooks
 ###############################
 
 Route planning may also be done using a python terminal. This is case, the CLI is not required but the steps required for route planning 
-follow the same format - create a digital enviroment; simulated a vessel against it; optimise a route plan through the digital enviroment.
+follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
  
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Creating the digital enviroment.
+Creating the digital environment.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A configuration file is needed to initialise the **`Mesh`** object which forms the digital enviroment. This configuration file 
+A configuration file is needed to initialise the **`Mesh`** object which forms the digital environment. This configuration file
 is of the same format used in the :ref:`create_mesh` CLI entry-point, and may either be loaded from a *json* file or constructed 
 within the python terminal.
 
@@ -22,7 +22,7 @@ Loading configuration from *json* file:
         config = json.load(f)    
 
 
-The digital enviroment **`Mesh`** object can then be initialised. This mesh object will be constructed using parameters in it 
+The digital environment **`Mesh`** object can then be initialised. This mesh object will be constructed using parameters in it
 configuration file. This mesh object can be manipulated further, such as increasing its resolution through further 
 splitting, adding additional data sources or altering is configuration parameters using functions listed in 
 the :ref:`Methods - Mesh Construction` section of the documentation.
@@ -31,7 +31,7 @@ the :ref:`Methods - Mesh Construction` section of the documentation.
    from polar_route.mesh import Mesh
    cg = Mesh(config)
    
-The digital enviroment **`Mesh`** object can then be cast to a json object and saved to a file. This *mesh.json* file can then 
+The digital environment **`Mesh`** object can then be cast to a json object and saved to a file. This *mesh.json* file can then
 be used by the CLI entry-point :ref:`add_vehicle`, or the json object can be passed to the **`VesselPerformance`** object in a python 
 terminal.
 ::
@@ -42,18 +42,18 @@ terminal.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Simulating a Vessel in a Digital Enviroment
+Simulating a Vessel in a Digital Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once a digital enviroment **`Mesh`** object has been created, how a vessel interacts with it may be simulated. The **`VesselPerformance`** 
-object requires a digital enviroment in *json* format and vessel specific configuration parameters, also in *json* format. These may either 
+Once a digital environment **`Mesh`** object has been created, how a vessel interacts with it may be simulated. The **`VesselPerformance`**
+object requires a digital environment in *json* format and vessel specific configuration parameters, also in *json* format. These may either
 be loaded from a file, or created within the python terminal.
 
 Loading mesh and vessel from *json* files:
 ::
 
     import json
-    # Loading digital enviroment from file
+    # Loading digital environment from file
     with open('mesh.json', 'r') as f:
         mesh = json.load(f)  
 
@@ -62,7 +62,7 @@ Loading mesh and vessel from *json* files:
         vessel = json.load(f) 
 
 The **`VesselPerformance`** object can then be initialised. This will simulate the performance of the vessel and encodes this information 
-into the digital enviroment.
+into the digital environment.
 ::
 
    from polar_route.vessel_performance import VesselPerformance

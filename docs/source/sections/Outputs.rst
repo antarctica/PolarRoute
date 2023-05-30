@@ -291,7 +291,7 @@ where the output takes a GeoJSON standard form (more infor given at https://geoj
 * **<features>** : A list of the features representing each of the separate routes constructed
     * **geometry**  : The positioning of the route locations
         * **coordinates**  : A list of the Lat,Long position of all the route points
-    * **<properties>** : A list of metainformation about the route
+    * **<properties>** : A list of meta-information about the route
         * **from**  : Starting waypoint of route
         * **to**  : Ending waypoint of route
         * **traveltime** : A list of float values representing the cumulative travel time along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
