@@ -6,6 +6,47 @@ import pandas as pd
 import numpy as np
 
 class VectorGRFDataLoader(VectorDataLoader):
+
+    def add_default_params(self, params):
+        '''
+        Set default values for abstract GRF dataloaders, starting by
+        including defaults for scalar dataloaders.
+        
+        Args:
+            params (dict): 
+                Dictionary containing attributes that are required for the
+                shape being loaded. Must include 'shape'.
+            
+        Returns:
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
+        '''
+        # Set default vector dataloader params
+        params = super().add_default_params(params)
+        
+        # Params that all GRF dataloaders need
+        if 'seed' not in params:
+            params['seed'] = None
+        if 'size' not in params:
+            params['size'] = 512
+        if 'alpha' not in params:
+            params['alpha'] = 3
+        # Column/variable names
+        if params['data_name'] is None:
+            params['data_name'] = 'uC,vC'
+        if 'vec_x' not in params:
+            params['vec_x'] = params['data_name'].split(',')[0]
+        if 'vec_y' not in params:
+            params['vec_y'] = params['data_name'].split(',')[1]
+        # Min/Max magnitude
+        if 'min' not in params:
+            params['min'] = 0
+        if 'max' not in params:
+            params['max'] = 10
+
+        return params
+        
     def import_data(self, bounds):
         '''
         Creates data in the form of a Gaussian Random Field

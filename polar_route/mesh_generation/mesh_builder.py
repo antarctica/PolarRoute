@@ -129,6 +129,7 @@ class MeshBuilder:
         if self.is_jgrid_mesh():
             logging.warning("We're using the legacy Java style cell grid")
 
+
     def initialize_meta_data(self, bounds, min_datapoints):
         meta_data_list = []
         splitting_conds = []
@@ -205,6 +206,51 @@ class MeshBuilder:
                     cellbox = CellBox(cell_bounds, cell_id)
                 cellboxes.append(cellbox)
         return cellboxes
+    
+    def add_dataloader(self, Dataloader, params, bounds=None, name='myDataLoader', min_dp = 5):
+        '''
+        Adds a dataloader to a pre-existing mesh by adding to the metadata
+        
+        Args:
+            Dataloader (ScalarDataLoader or VectorDataLoader):
+                Dataloader object to add to metadata
+            params (dict):
+                Parameters to initialise dataloader with
+            bounds (Boundary):
+            name (str):
+                Name of the dataloader used in config
+                
+        Returns:
+            MeshBuilder:
+                Original MeshBuilder object (self) with added metadata for 
+                new dataloader
+        '''
+        if bounds is None:
+            bounds = Boundary.from_json(self.config)
+        
+        logging.debug('Adding dataloader')
+        dataloader = Dataloader(bounds, params)
+        updated_splitting_cond = []
+        if 'splitting_conditions' in params:
+            splitting_conds = params['splitting_conditions']
+            updated_splitting_cond = [split_cond[dataloader.data_name] for split_cond in splitting_conds]
+
+        data_source = {'loader': name,
+                       'params': params}
+        value_fill_type = self.check_value_fill_type(data_source)
+        
+        meta_data_obj = Metadata(
+            dataloader, updated_splitting_cond,  value_fill_type)
+        
+        for cellbox in self.mesh.cellboxes:
+            if isinstance(cellbox, CellBox):
+                cellbox.set_minimum_datapoints(min_dp)
+                # Add new meta data to list of data sources per cellbox
+                cellbox.set_data_source(
+                    cellbox.get_data_source() + [meta_data_obj]
+                )
+
+        
 
     def validate_bounds(self, bounds, cell_width, cell_height):
         assert (bounds.get_long_max() - bounds.get_long_min()) % cell_width == 0, \
