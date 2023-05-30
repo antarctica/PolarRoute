@@ -38,6 +38,7 @@ class NeighbourGraph:
         if cellboxes is None:
             cellboxes = []
         self.initialise_neighbour_graph(cellboxes, grid_width)
+        self._is_global_mesh = False
 
     @classmethod
     def from_json(cls, ng_json):
@@ -64,6 +65,17 @@ class NeighbourGraph:
         updates the neighbour in a certain direction
         """
         self.neighbour_graph[index][direction] = neighbours
+
+    def add_neighbour(self, index, direction, neighbour_indx):
+        """
+        adds a neighbour in a certain direction
+
+        Args:
+        index (int): the index of the cellbox to be updated
+        direction (int): the direction into which the neighbour will be added
+        neighbour_indx (int): the index of the cellbox to be added as a neighbour
+        """
+        self.neighbour_graph[index][direction].append (neighbour_indx)
 
     def remove_node_and_update_neighbours(self, cellbox_index):
         ''' 
@@ -168,7 +180,7 @@ class NeighbourGraph:
         south_west_corner_indx = self.neighbour_graph[cellbox_indx][Direction.south_west]
         if len(south_west_corner_indx) > 0:
             self.neighbour_graph[south_west_corner_indx[0]][Direction.north_east] = [south_west_indx]
-
+    
     def get_neighbour_case(self, cellbox_a, cellbox_b):
         """
             Given two cellboxes (cellbox_a, cellbox_b) returns a case number
@@ -184,7 +196,7 @@ class NeighbourGraph:
                         case 0 -> CellBoxes are not neighbours
 
                         case 1 -> cellbox_b is the North-East corner of cellbox_a\n
-                        case 2 -> cellbox_b is East of cellbadd_nodeox_a\n
+                        case 2 -> cellbox_b is East of cellbox_a\n
                         case 3 -> cellbox_b is the South-East corner of cellbox_a\n
                         case 4 -> cellbox_b is South of cellbox_a\n
                         case -1 -> cellbox_b is the South-West corner of cellbox_a\n
@@ -192,6 +204,8 @@ class NeighbourGraph:
                         case -3 -> cellbox_b is the North-West corner of cellbox_a\n
                         case -4 -> cellbox_b is North of cellbox_a\n
         """
+        if self.is_global_mesh():
+            return self.get_global_mesh_neighbour_case(cellbox_a, cellbox_b)
         long_a = cellbox_a.bounds.get_long_min()
         lat_a = cellbox_a.bounds.get_lat_min()
         long_b = cellbox_b.bounds.get_long_min()
@@ -218,6 +232,63 @@ class NeighbourGraph:
                 (lat_b + cellbox_b.bounds.get_height()) > lat_a):
             return Direction.west
         if long_a == (long_b + cellbox_b.bounds.get_width()) and (
+                lat_a + cellbox_a.bounds.get_height() == lat_b):
+            return Direction.north_west
+        if (lat_b == (lat_a + cellbox_a.bounds.get_height())) and (
+                (long_b + cellbox_b.bounds.get_width()) > long_a) and (
+                long_b < (long_a + cellbox_a.bounds.get_width())):
+            return Direction.north
+        return 0  # Cells are not neighbours.
+    
+    def get_global_mesh_neighbour_case(self, cellbox_a, cellbox_b):
+        """
+            Given two cellboxes in a *global mesh* (cellbox_a, cellbox_b) returns a case number
+            representing where the two cellboxes are touching.
+
+            Args:
+                cellbox_a (CellBox): starting CellBox
+                cellbox_b (CellBox): destination CellBox
+
+            Returns:
+                int: an int representing the direction of the adjacency between input cellbox_a and cellbox_b. The meaning of each case is as follows -
+
+                        case 0 -> CellBoxes are not neighbours
+
+                        case 1 -> cellbox_b is the North-East corner of cellbox_a\n
+                        case 2 -> cellbox_b is East of cellbox_a\n
+                        case 3 -> cellbox_b is the South-East corner of cellbox_a\n
+                        case 4 -> cellbox_b is South of cellbox_a\n
+                        case -1 -> cellbox_b is the South-West corner of cellbox_a\n
+                        case -2 -> cellbox_b is West of cellbox_a\n
+                        case -3 -> cellbox_b is the North-West corner of cellbox_a\n
+                        case -4 -> cellbox_b is North of cellbox_a\n
+        """
+        long_a = cellbox_a.bounds.get_long_min()
+        lat_a = cellbox_a.bounds.get_lat_min()
+        long_b = cellbox_b.bounds.get_long_min()
+        lat_b = cellbox_b.bounds.get_lat_min()
+        if (long_a + cellbox_a.bounds.get_width()) == abs(long_b)and (
+                lat_a + cellbox_a.bounds.get_height()) == lat_b:
+            return Direction.north_east
+        if (long_a + cellbox_a.bounds.get_width() == abs(long_b)) and (
+                lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
+                (lat_b + cellbox_b.bounds.get_height()) > lat_a):
+            return Direction.east
+        if (long_a + cellbox_a.bounds.get_width()) == abs(long_b) and (
+                lat_a == lat_b + cellbox_b.bounds.get_height()):
+            return Direction.south_east
+        if ((lat_b + cellbox_b.bounds.get_height()) == lat_a) and (
+                (long_b + cellbox_b.bounds.get_width()) > long_a) and (
+                long_b < (long_a + cellbox_a.bounds.get_width())):
+            return Direction.south
+        if abs(long_a) == (long_b + cellbox_b.bounds.get_width()) and lat_a == (
+                lat_b + cellbox_b.bounds.get_height()):
+            return Direction.south_west
+        if (long_b + cellbox_b.bounds.get_width() == abs(long_a)) and (
+                lat_b < (lat_a + cellbox_a.bounds.get_height())) and (
+                (lat_b + cellbox_b.bounds.get_height()) > lat_a):
+            return Direction.west
+        if abs(long_a) == (long_b + cellbox_b.bounds.get_width()) and (
                 lat_a + cellbox_a.bounds.get_height() == lat_b):
             return Direction.north_west
         if (lat_b == (lat_a + cellbox_a.bounds.get_height())) and (
@@ -288,5 +359,9 @@ class NeighbourGraph:
         if cellbox_indx - grid_width >= 0:
             neighbour_map[Direction.south].append(
                 int(cellbox_indx - grid_width))
-
         return neighbour_map
+    
+    def set_global_mesh (self, is_global):
+        self._is_global_mesh = is_global
+    def is_global_mesh (self):
+        return self._is_global_mesh
