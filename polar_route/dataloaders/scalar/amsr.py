@@ -4,7 +4,7 @@ from datetime import datetime
 import xarray as xr
 class AMSRDataLoader(ScalarDataLoader):
     
-    def add_params(self, params):
+    def add_default_params(self, params):
         '''
         Translates 'hemisphere' parameter into values of in_proj and out_proj 
         that pyProj can understand. Also defines x_col and y_col for AMSR data
@@ -19,6 +19,8 @@ class AMSRDataLoader(ScalarDataLoader):
             dict:
                 Params dictionary with addition of translated key/value pairs
         '''
+        # Set default parameters same as all other scalar dataloaders
+        params = super().add_default_params(params)
         # Translate 'hemisphere' into initial projection
         hemisphere = params['hemisphere'].lower()
         if  hemisphere == 'north':
