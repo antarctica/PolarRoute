@@ -24,7 +24,7 @@ python setup.py install
 pip install polar-route
 ```
 
-> NOTE: The installation process may vary slightly dependant on OS. Please consult the documentation for further installation guidance.
+> NOTE: The installation process may vary slightly dependent on OS. Please consult the documentation for further installation guidance.
 
 ## Required Data sources
 Polar-route has been built to work with a variety of open-source atmospheric and oceanographic data sources. 
@@ -48,7 +48,7 @@ rm -r docs/build/.doctrees/
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox, Harrison Abbot, Ayat Fekry
 
 ## Collaboration
-We are currently assessing the best pratice for collaboration on the codebase, until then please contact [marfox@bas.ac.uk](marfox@bas.ac.uk) or [jonsmi@bas.ac.uk](jonsmi@bas.ac.uk) for further info.
+We are currently assessing the best practice for collaboration on the codebase, until then please contact [marfox@bas.ac.uk](marfox@bas.ac.uk) or [jonsmi@bas.ac.uk](jonsmi@bas.ac.uk) for further info.
 
 
 ## License
