@@ -37,7 +37,9 @@ Pip:
 Linux/MacOS
 ###########
 
-The PolarRoute software can be installed on Linux/MacOS by running one of the two following commands.
+
+Installing GDAL
+***************
 
 Requirements:
 
@@ -45,15 +47,43 @@ Requirements:
     For GDAL (one of the required dependencies for the project), you may try the following 
     commands to avoid any installation issues:
 
+Ubuntu/Debian:
+
 ::
    
-    sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update
+    sudo add-apt-repository ppa:ubuntugis/ppa
     sudo apt-get update
-    sudo apt-get install gdal-bin
-    sudo apt-get install libgdal-dev
+    sudo apt-get install gdal-bin libgdal-dev
     export CPLUS_INCLUDE_PATH=/usr/include/gdal
     export C_INCLUDE_PATH=/usr/include/gdal
     pip install GDAL==$(gdal-config --version)
+
+
+Fedora/CentOS/RHEL:
+
+::
+
+    sudo dnf update
+    sudo dnf install gdal gdal-devel
+    export CPLUS_INCLUDE_PATH=/usr/include/gdal
+    export C_INCLUDE_PATH=/usr/include/gdal
+    pip install GDAL==$(gdal-config --version)
+
+
+MacOS (with HomeBrew):
+
+::
+
+    brew install gdal --HEAD
+    brew install gdal
+    pip install GDAL==$(gdal-config --version)
+
+
+
+Installing PolarRoute
+*********************
+
+The PolarRoute software can be installed on Linux/MacOS by running one of the two following commands.
 
 Github:
 ::
