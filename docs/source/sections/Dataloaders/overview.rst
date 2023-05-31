@@ -43,7 +43,7 @@ There are two main types of dataloaders that are implemented as abstract classes
 
 **Scalar dataloaders** are to be used on scalar datasets; i.e. variables with a single value
 per latitude/longitude(/time) coordinate. Examples of this are bathymetry, sea ice concentration, etc... 
-While the raw datasets may contain more than one variable (a common example being the existance of values and errors in the same file), 
+While the raw datasets may contain more than one variable (a common example being the existence of values and errors in the same file),
 these *MUST* be cut down to just coordinates, and a single variable, in order to work correctly with the :ref:`abstractScalar<abstract-scalar-dataloader>` dataloader.
 To read more on how to implement these, follow instructions in :ref:`Adding Dataloaders page<adding-dataloaders>` and the :ref:`abstract scalar dataloader page<abstract-scalar-dataloader-index>`.
 
@@ -56,7 +56,7 @@ Rigor should be taken when testing these dataloaders to ensure that the outputs 
 To read more on how to implement these, follow instructions in :ref:`Adding Dataloaders page<adding-dataloaders>` and :ref:`abstract vector dataloader page<abstract-vector-dataloader-index>`.
 
 .. **Look-up Table Dataloaders** are to be used on datasets where boundaries define a value.
-.. Real data is always prefered to this method, however in the case where there is no data, the LUT
+.. Real data is always preferred to this method, however in the case where there is no data, the LUT
 .. can provide an alternative. Examples of this include ice density, and ice thickness. For these examples,
 .. weather conditions dictate their values, and these weather conditions can be localised to specific areas.
 .. To read more on how to implement these, follow instructions in `Implementing New Dataloaders`_ and :ref:`abstract LUT dataloader page<abstract-lut-dataloader-index>`.
@@ -72,7 +72,7 @@ To look at specific abstract dataloaders, use the following links:
 - :ref:`abstract-vector-dataloader`
 
 These are the templates to be used when implementing new dataloaders into PolarRoute. 
-They have been split into two seperate categories: Scalar and Vector, detailed in `Dataloader Types`_.
+They have been split into two separate categories: Scalar and Vector, detailed in `Dataloader Types`_.
 The abstract classes generalise the methods used by each dataloader type to produce outputs
 that the Environmental Mesh can retrieve via the  :ref:`dataloader interface<dataloader-interface>`. 
 They are flexible in that they can store and process data as both :code:`xarray.Dataset`'s or 
