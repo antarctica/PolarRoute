@@ -6,6 +6,62 @@ import pandas as pd
 import numpy as np
 
 class ScalarGRFDataLoader(ScalarDataLoader):
+    
+    def add_default_params(self, params):
+        '''
+        Set default values for abstract GRF dataloaders, starting by
+        including defaults for scalar dataloaders.
+        
+        Args:
+            params (dict): 
+                Dictionary containing attributes that are required for the
+                shape being loaded. Must include 'shape'.
+            
+        Returns:
+            (dict): 
+                Dictionary of attributes the dataloader will require, 
+                completed with default values if not provided in config.
+        '''
+        params = super().add_default_params(params)
+        
+        # Params that all GRF dataloaders need
+        if 'seed' not in params:
+            params['seed'] = None
+        if 'size' not in params:
+            params['size'] = 512
+        if 'alpha' not in params:
+            params['alpha'] = 3
+        
+        # Set defaults for binary GRF
+        if params['binary'] == True:
+            if params['data_name'] is None:
+                params['data_name'] = 'binary_data'
+            if 'min' not in params:
+                params['min'] = 0
+            if 'max' not in params:
+                params['max'] = 1
+            # If threshold not set, make it average of min/max val
+            if 'threshold' not in params:
+                params['threshold'] = 0.5
+        # Set defaults for smooth scalar GRF
+        else:
+            if params['data_name'] is None:
+                params['data_name'] = 'scalar_data'
+            if 'min' not in params:
+                params['min'] = -10
+            if 'max' not in params:
+                params['max'] = 10
+            # If threshold not set, make it min/max vals
+            if 'threshold' not in params:
+                params['threshold'] = [0,1]
+            if 'multiplier' not in params:
+                params['multiplier'] = 1
+            if 'offset' not in params:
+                params['offset'] = 0
+                
+        return params
+        
+    
     def import_data(self, bounds):
         '''
         Creates data in the form of a Gaussian Random Field

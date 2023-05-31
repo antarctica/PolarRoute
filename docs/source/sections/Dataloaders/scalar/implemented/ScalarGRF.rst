@@ -23,7 +23,7 @@ For vector fields, see  the :ref:`Vector GRF page<vector-grf>`.
             "size":       512,      # - Number of datapoints per lat/long axis
             "alpha":      3,        # - Power of the power-law momentum 
                                     #   distribution used to generate GRF
-            "binary":     False,    # - Flag specifiying this GRF isn't a binary mask
+            "binary":     False,    # - Flag specifying this GRF isn't a binary mask
             "threshold":  [0, 1],   # - Caps of min/max values to ensure normalising 
                                     #   not skewed by outlier in randomised GRF
             "min":        -10,      # - Minimum value of GRF

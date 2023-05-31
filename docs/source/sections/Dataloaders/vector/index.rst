@@ -28,7 +28,7 @@ Vector Dataloader Examples
 Creating a vector dataloader is almost identical to creating a 
 :ref:`scalar dataloader<abstract-scalar-dataloader>`. The key differences 
 are that the `VectorDataLoader` abstract base class must be used, and that
-the `data_name` is a comma seperated string of the vector component names.
+the `data_name` is a comma separated string of the vector component names.
 e.g. a dataloader storing a vector with column names :code:`uC` and 
 :code:`vC` will have an attribute :code:`self.data_name = 'uC,vC'`
 Data must be imported and saved as an xarray.Dataset, or a 
@@ -61,7 +61,10 @@ be defined either in the dataloader factory, or within the dataloader itself.
 Below is an example of setting default parameters for reprojection of a dataset::
 
     class MyDataLoader(ScalarDataLoader):
-        def add_params(self, params):
+        def add_default_params(self, params):
+            # Add all the regular default params that scalar dataloaders have
+            params = super().add_default_params(params) # This line MUST be included
+
             # Define projection of dataset being imported
             params['in_proj'] = 'EPSG:3412'
             # Define projection required by output 

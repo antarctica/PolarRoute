@@ -2,7 +2,7 @@
 BSOSE Sea Ice Dataloader
 ************************
 
-B-SOSE (Biogeochemical Southern Ocean State Estimate solution) provide a publically available dataset that
+B-SOSE (Biogeochemical Southern Ocean State Estimate solution) provide a publicly available dataset that
 hosts (amongst other products) sea ice concentration of the southern ocean. It is an extension of the 
 SOSE project led by Mazloff at the Scripps Institution of Oceanography.
 
