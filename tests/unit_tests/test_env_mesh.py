@@ -31,7 +31,13 @@ class TestEnvMesh(unittest.TestCase):
       self.assertEqual (self.loaded_env_mesh.agg_cellboxes[0].get_agg_data()["x"] , "5")
 
    def test_to_tif(self):
-      self.env_mesh.save("./resources/SIC.tif" , format="tif" )
+      vessel_file = "../regression_tests/example_meshes/vessel_meshes/grf_reprojection.json"
+      vessel_mesh = None
+      with open (vessel_file , "r") as config_file:
+          vessel_file = json.load(config_file)
+      vessel_mesh = EnvironmentMesh.load_from_json(vessel_file)
+      vessel_mesh.save("./resources/fuel.tif" , format="tif" ,    format_params ="./resources/format_conf.json")
+      vessel_mesh.save("./resources/SIC.tif" , format="tif" )
 
 
 
