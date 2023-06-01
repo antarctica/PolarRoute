@@ -313,8 +313,7 @@ class EnvironmentMesh:
             _min = np.nanmin(data)
             _range = _max-_min
             inf_color = '255 0 0' # red color for inf value
-            colors = ['0 0 139', '0 0 128', '173 216 230',
-                      '255 255 255']  # default color
+            colors = ['255 255 255', '173 216 230', '0 0 128', '0 0 139']  # default color
             with open(color_file, 'w') as f:
                 for i, c in enumerate(colors[:-1]):
                     f.write(str(int(_min + (i + 1)*_range/len(colors))) +
