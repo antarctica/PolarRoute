@@ -6,8 +6,8 @@ This software package has been developed by the **British Antarctic Survey** (BA
 for the optimisation of polar routes for the BAS research vessel RRS Sir David Attenborough, 
 though it is applicable to any vessel (e.g. AUVs). The software is written in Python and is open source.
 
-For more information on the project, please visit the [PolarRoute website](https://www.bas.ac.uk/project/autonomous-marine-operations-planning/) 
-and follow our [GitHub repository](https://github.com/antarctica/PolarRoute)
+For more information on the project, please visit the `PolarRoute website <https://www.bas.ac.uk/project/autonomous-marine-operations-planning/>`_
+and follow our `GitHub repository <https://github.com/antarctica/PolarRoute>`_.
 
 
 .. note:: The development of this codebase is ongoing and not yet complete. 
