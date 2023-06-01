@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point, LineString, MultiLineString
 
 # Define ordering of cases in array data
 case_indices = np.array([1, 2, 3, 4, -1, -2, -3, -4])
@@ -176,7 +176,14 @@ def route_calc(route_file, mesh_file):
         if not tracks['geometry'].iloc[0].intersects(mesh['geometry'].iloc[idx]):
             continue
         tp = tracks['geometry'].iloc[0].intersection(mesh['geometry'].iloc[idx])
-        pnts = [Point(point) for point in tp.coords]
+        # Check for multi line strings in case of complex intersections
+        if type(tp) == MultiLineString:
+            pnts = []
+            for l in tp.geoms:
+                for c in l.coords:
+                    pnts.append(Point(c))
+        else:
+            pnts = [Point(point) for point in tp.coords]
         if len(pnts) <= 1:
             continue
         line_segs_first_points.append(pnts[0])
