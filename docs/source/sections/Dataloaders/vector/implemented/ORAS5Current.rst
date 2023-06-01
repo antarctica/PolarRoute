@@ -2,7 +2,7 @@
 ORAS5 Currents Dataloader
 *************************
 
-Ocean Reanalysis System 5 (ORAS5) is a publically available dataset providing
+Ocean Reanalysis System 5 (ORAS5) is a publicly available dataset providing
 estimated values for many different ocean parameters, including ocean currents.
 
 From their website:

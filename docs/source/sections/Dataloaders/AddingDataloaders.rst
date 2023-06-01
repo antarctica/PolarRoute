@@ -9,9 +9,9 @@ Adding to the repository
 Each dataloader is to be implemented as a separate object for the Environmental mesh to interface with. 
 The general workflow for creating a new dataloader is as follows:
 
-#. Choose an approriate dataloader type (see :ref:`Dataloader Types`).
+#. Choose an appropriate dataloader type (see :ref:`Dataloader Types`).
 #. Create a new file under :code:`polar_route/DataLoaders/{dataloader-type}` with an appropriate name.
-#. Create :code:`import_data()` and (optianally) :code:`add_default_params()` methods. Examples of how to do this are shown on the :ref:`abstractScalar<abstract-scalar-dataloader-index>` and :ref:`abstractVector<abstract-vector-dataloader-index>` pages.
+#. Create :code:`import_data()` and (optionally) :code:`add_default_params()` methods. Examples of how to do this are shown on the :ref:`abstractScalar<abstract-scalar-dataloader-index>` and :ref:`abstractVector<abstract-vector-dataloader-index>` pages.
 #. Add a new entry to the dataloader factory object, within :code:`polar_route/Dataloaders/Factory.py`. Instructions on how to do so are shown in :ref:`dataloader-factory`
 
 After performing these actions, the dataloader should be ready to go. It is useful for debugging purposes 
