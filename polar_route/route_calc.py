@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
-from shapely.geometry import Point
-from shapely.geometry import LineString
+from shapely.geometry import Point, LineString
 
+# Define ordering of cases in array data
 case_indices = np.array([1, 2, 3, 4, -1, -2, -3, -4])
 
 def traveltime_in_cell(xdist, ydist, u, v, s):
@@ -64,6 +64,7 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
             distance (float): the distance along the line segment
     """
     idx = np.where(case_indices==case)[0][0]
+    # Conversion factors from lat/long degrees to metres TODO: replace as part of route planner refactor
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
     x = (cp[0] - wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
@@ -90,6 +91,10 @@ def case_from_angle(start, end):
     direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
 
     case = None
+
+    # Angular ranges corresponding to directional cases used in the route planner
+    # Cases cover 45 degree angular segments running clockwise from 1 at NE through to -4 at N
+    # See Sec. 6.1.2 in the docs for more info
 
     if -22.5 <= direct_ang < 22.5:
         case = -4
@@ -245,19 +250,18 @@ def route_calc(route_file, mesh_file):
 
     logging.debug(f"Route crosses {len(set([c['id'] for c in cellboxes]))} different cellboxes")
     # Find cumulative values along path
-    path = pd.DataFrame(cellboxes).reset_index(drop=True)
-    path['path_points'] = user_track['Point']
-    path['path_traveltimes'] = np.cumsum(traveltimes)
-    path['path_distances'] = np.cumsum(distances)
-    path_fuels = [traveltimes[idx] * path['fuel'][idx][np.where(case_indices==cases[idx])[0][0]] for idx in range(len(traveltimes))]
-    path['path_fuel'] = np.cumsum(path_fuels)
+    path_points = user_track['Point']
+    path_traveltimes = np.cumsum(traveltimes)
+    path_distances = np.cumsum(distances)
+    path_fuels = [traveltimes[idx] * cellboxes[idx]['fuel'][np.where(case_indices==cases[idx])[0][0]] for idx in range(len(traveltimes))]
+    path_fuel = np.cumsum(path_fuels)
 
     # Put path values into geojson format
     path_geojson = pd.DataFrame()
-    path_geojson['geometry'] = [LineString(path['path_points'])]
-    path_geojson['traveltime'] = [path['path_traveltimes'].tolist()]
-    path_geojson['distance'] = [(path['path_distances'] * 1000).tolist()]
-    path_geojson['fuel'] = [path['path_fuel'].tolist()]
+    path_geojson['geometry'] = [LineString(path_points)]
+    path_geojson['traveltime'] = [path_traveltimes.tolist()]
+    path_geojson['distance'] = [(path_distances * 1000).tolist()]
+    path_geojson['fuel'] = [path_fuel.tolist()]
     path_geojson['to'] = to_wp
     path_geojson['from'] = from_wp
     path_geojson = gpd.GeoDataFrame(path_geojson, crs='EPSG:4326', geometry='geometry')
