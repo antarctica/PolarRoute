@@ -19,6 +19,7 @@ from polar_route.mesh_validation.sampler import Sampler
 from osgeo import gdal, ogr, osr
 import collections.abc
 import math
+from pathlib import Path
 
 class EnvironmentMesh:
     """
@@ -328,6 +329,14 @@ class EnvironmentMesh:
             cmd = "gdaldem color-relief " + input_file \
                 + ' ' + color_file + ' ' + input_file
             subprocess.check_call(cmd, shell=True)
+            # remove additional files created while generating the tif
+            file_path = os.path.abspath(input_file)
+            dir_path = os.path.split(file_path)[0]
+            additional_files = ["grid_data" , "grid_data.aux.xml"]
+            for file in additional_files: 
+                file_path = Path(dir_path +"/"+ file)
+                if os.path.isfile (file_path):
+                     os.remove(file_path)
 
 
         params = {}
