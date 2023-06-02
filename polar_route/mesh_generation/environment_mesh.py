@@ -239,8 +239,7 @@ class EnvironmentMesh:
         def get_geo_transform(extent, nlines, ncols):
             """
                 transforms from the image coordinate space (row, column) to the georeferenced coordinate space. \n
-                Returns:     if value == math.inf :
-                            value = sys.maxsize
+                Returns:    
                   GT : array consists of 6 items representing how GDAL would place the top left pixel on the generated Geotiff:\n
                   GT[0] x-coordinate of the upper-left corner of the upper-left pixel.\n
                   GT[1] w-e pixel resolution / pixel width.\n
