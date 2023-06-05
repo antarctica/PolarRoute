@@ -6,6 +6,7 @@ import geopandas as gpd
 from shapely import wkt
 from shapely.geometry import Point, LineString, MultiLineString
 
+
 # Define ordering of cases in array data
 case_indices = np.array([1, 2, 3, 4, -1, -2, -3, -4])
 
@@ -24,6 +25,7 @@ def traveltime_in_cell(xdist, ydist, u, v, s):
             traveltime (float): the travel time
             distance (float): the distance
     """
+
     dist = np.sqrt(xdist ** 2 + ydist ** 2)
     cval = np.sqrt(u ** 2 + v ** 2)
 
@@ -63,6 +65,7 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
             traveltime (float): the time to travel the line segment
             distance (float): the distance along the line segment
     """
+
     idx = np.where(case_indices==case)[0][0]
     # Conversion factors from lat/long degrees to metres TODO: replace as part of route planner refactor
     m_long = 111.321 * 1000
@@ -74,6 +77,7 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     ssp = cellbox[speed][idx] * (1000 / (60 * 60))
     traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
     return traveltime, distance
+
 
 def case_from_angle(start, end):
     """
@@ -116,16 +120,18 @@ def case_from_angle(start, end):
     return case
 
 
-def route_calc(route_file, mesh_file):
+def load_route(route_file):
     """
-        Function to calculate the fuel/time cost of a user defined route in a given mesh
+        Load route information from file
 
         Args:
             route_file (str): Path to user defined route
-            mesh_file (str): Path to mesh with vehicle information
 
         Returns:
-            user_path (dict): User defined route in geojson format with calculated cost information
+            df (Dataframe): Dataframe with route info
+            from_wp (str): Name of start waypoint
+            to_wp (str) Name of end waypoint
+
     """
     # Loading route from csv file
     if route_file[-3:] == "csv":
@@ -152,18 +158,43 @@ def route_calc(route_file, mesh_file):
     df['id'] = 1
     df['order'] = np.arange(len(df))
 
-    track_waypoints = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['Long'], df['Lat']))
-    tracks = track_waypoints.sort_values(by=['order']).groupby(['id'])['geometry'].apply(
-        lambda x: LineString(x.tolist()))
-    tracks = gpd.GeoDataFrame(tracks, crs='EPSG:4326', geometry='geometry')
+    return df, from_wp, to_wp
 
 
+def load_mesh(mesh_file):
+    """
+        Load mesh from file into GeoDataFrame
+        Args:
+            mesh_file (str): Path to mesh with vehicle information
+
+        Returns:
+            mesh (GeoDataFrame): Mesh in GeoDataFrame format
+    """
     # Loading mesh information
     with open(mesh_file, 'r') as fp:
         info = json.load(fp)
     mesh = pd.DataFrame(info['cellboxes'])
     mesh['geometry'] = mesh['geometry'].apply(wkt.loads)
     mesh = gpd.GeoDataFrame(mesh, crs='EPSG:4326', geometry='geometry')
+
+    return mesh
+
+
+def find_intersections(df, mesh):
+    """
+        Find crossing points of the route and the cells in the mesh
+        Args:
+            df (DataFrame): Route info in dataframe format
+            mesh (GeoDataFrame): Mesh in GeoDataFrame format
+
+        Returns:
+            track_points (dict): Dictionary of crossing points and cell ids
+    """
+
+    track_waypoints = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['Long'], df['Lat']))
+    tracks = track_waypoints.sort_values(by=['order']).groupby(['id'])['geometry'].apply(
+        lambda x: LineString(x.tolist()))
+    tracks = gpd.GeoDataFrame(tracks, crs='EPSG:4326', geometry='geometry')
 
     line_segs_first_points = []
     line_segs_last_points = []
@@ -195,6 +226,20 @@ def route_calc(route_file, mesh_file):
         {'startPoints': line_segs_first_points, 'midPoints': line_segs_mid_points, 'endPoints': line_segs_last_points,
          'cellID': line_segs_cell_id})
 
+    return track_points
+
+
+def order_track(df, track_points):
+    """
+        Order crossing points into a track along the route
+        Args:
+            df (DataFrame): Route info in dataframe format
+            track_points (dict): Dictionary of crossing points and cell ids
+
+        Returns:
+            user_track (DataFrame): DataFrame of ordered crossing points and cell ids
+    """
+
     start_point = Point(df.iloc[0]['Long'], df.iloc[0]['Lat'])
     end_point = Point(df.iloc[-1]['Long'], df.iloc[-1]['Lat'])
 
@@ -225,6 +270,32 @@ def route_calc(route_file, mesh_file):
             cell_ids.append('NaN')
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
+    return user_track
+
+
+def route_calc(route_file, mesh_file):
+    """
+        Function to calculate the fuel/time cost of a user defined route in a given mesh
+
+        Args:
+            route_file (str): Path to user defined route
+            mesh_file (str): Path to mesh with vehicle information
+
+        Returns:
+            user_path (dict): User defined route in geojson format with calculated cost information
+    """
+
+    # Load route info from file
+    df, from_wp, to_wp = load_route(route_file)
+
+    # Load mesh info from file
+    mesh = load_mesh(mesh_file)
+
+    # Find points where route crosses mesh
+    track_points = find_intersections(df, mesh)
+
+    # Loop through crossing points to order them into a track along the route
+    user_track = order_track(df, track_points)
     logging.debug(f"Route has {len(user_track)} crossing points")
 
     # Initialise segment costs with zero values at start point of path
