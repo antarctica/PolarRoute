@@ -52,5 +52,5 @@ Details of these failed tests should be submitted as part of the pull request in
 If the changes made are valid, the test files should be updated so-as the tests pass again, and evidence of the updated tests passing also submitted with the pull request. 
 
 ### Files
-`tests/regression_tests/exmaple_meshes/*` 
-`tests/regression_tests/exmaple_routes/*` 
+`tests/regression_tests/example_meshes/*` 
+`tests/regression_tests/example_routes/*` 
