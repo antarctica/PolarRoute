@@ -1,9 +1,8 @@
 {
-    "data_name": "elevation",
+    "data_name": "fuel",
     "sampling_resolution": [
-        150,
-        150
+        100,
+        100
     ],
-    "projection": "3031",
-    "color_conf": "/home/aykry/BAS/code/refactored/PolarRoute/tests/unit_tests/resources/color_conf.txt"
+    "projection": "3031"
 }
