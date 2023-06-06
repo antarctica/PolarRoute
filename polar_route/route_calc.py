@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely import wkt
-from shapely.geometry import Point, LineString, MultiLineString
+from shapely.geometry import Point, LineString, MultiLineString, Polygon
 
 
 # Define ordering of cases in array data
@@ -177,7 +177,11 @@ def load_mesh(mesh_file):
     mesh['geometry'] = mesh['geometry'].apply(wkt.loads)
     mesh = gpd.GeoDataFrame(mesh, crs='EPSG:4326', geometry='geometry')
 
-    return mesh
+    region = info['config']['Mesh_info']['Region']
+    region_poly = Polygon(((region['longMin'], region['latMin']), (region['longMin'], region['latMax']),
+                           (region['longMax'], region['latMax']), (region['longMax'], region['latMin'])))
+
+    return mesh, region_poly
 
 
 def find_intersections(df, mesh):
@@ -285,11 +289,20 @@ def route_calc(route_file, mesh_file):
             user_path (dict): User defined route in geojson format with calculated cost information
     """
 
-    # Load route info from file
+    # Load route info and waypoint names from file
     df, from_wp, to_wp = load_route(route_file)
 
     # Load mesh info from file
-    mesh = load_mesh(mesh_file)
+    mesh, region_poly = load_mesh(mesh_file)
+
+    # Check route waypoints contained in mesh bounds
+    for idx in range(len(df)):
+        if region_poly.contains(Point((df.iloc[idx]['Long'],df.iloc[idx]['Lat']))):
+            continue
+        else:
+            logging.warning(f"Mesh does not contain waypoint located at Lat: {df.iloc[idx]['Lat']} "
+                            f"Long: {df.iloc[idx]['Long']} !")
+            return None
 
     # Find points where route crosses mesh
     track_points = find_intersections(df, mesh)
