@@ -52,7 +52,8 @@ class AbstractShip(AbstractVessel):
             Returns:
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
-        logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: {self.vessel_params['VesselType']}")
+        logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: "
+                      f"{self.vessel_params['VesselType']}")
         access_values = dict()
 
         access_values['land'] = self.land(cellbox)

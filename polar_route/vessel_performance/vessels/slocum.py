@@ -13,13 +13,13 @@ class SlocumGlider(AbstractGlider):
         """
         super().__init__(params)
 
-    def model_speed(self):
+    def model_speed(self, cellbox):
         """
             Method to determine the maximum speed that the glider can traverse the given cell
         """
         pass
 
-    def model_battery(self):
+    def model_battery(self, cellbox):
         """
             Method to determine the power demand on the battery in a given cell in Ah/day
         """
