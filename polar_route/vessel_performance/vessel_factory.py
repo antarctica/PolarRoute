@@ -1,5 +1,5 @@
 from polar_route.vessel_performance.vessels.SDA import SDA
-from polar_route.vessel_performance.vessels.underwater_vessel import UnderwaterVessel
+from polar_route.vessel_performance.vessels.slocum import SlocumGlider
 
 class VesselFactory:
     """
@@ -17,7 +17,7 @@ class VesselFactory:
         """
         vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceConc", "MinDepth",
                                              "Unit"]),
-                               "Underwater": (UnderwaterVessel, ["MaxSpeed", "MaxIceConc", "MinDepth"])}
+                               "Slocum": (SlocumGlider, ["MaxSpeed", "MaxIceConc", "MinDepth"])}
 
         vessel_type = config['VesselType']
 

@@ -2,9 +2,9 @@ from polar_route.vessel_performance.abstract_vessel import AbstractVessel
 from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
 
 
-class UnderwaterVessel(AbstractVessel):
+class AbstractGlider(AbstractVessel):
     """
-        Class to model the performance of an underwater vessel
+        Class to model the performance of an underwater glider
     """
 
     def __init__(self, params):
@@ -16,7 +16,7 @@ class UnderwaterVessel(AbstractVessel):
 
     def model_performance(self, cellbox):
         """
-            Method to determine the performance characteristics for the underwater vessel
+            Method to determine the performance characteristics for the underwater glider
                 Args:
                     cellbox (AggregatedCellBox): input cell from environmental mesh
         """
@@ -24,7 +24,7 @@ class UnderwaterVessel(AbstractVessel):
 
     def model_accessibility(self, cellbox):
         """
-            Method to determine if a given cell is accessible to the underwater vessel
+            Method to determine if a given cell is accessible to the underwater glider
                  Args:
                     cellbox (AggregatedCellBox): input cell from environmental mesh
         """
