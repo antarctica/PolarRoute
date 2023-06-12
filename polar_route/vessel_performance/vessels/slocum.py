@@ -45,7 +45,7 @@ class SlocumGlider(AbstractGlider):
             fuel = 5.0
         else:
             # Estimate based on linear fit to figures from Alex's presentation
-            coefficients = np.array([0.005, 1])
+            coefficients = np.array([0.005, 10])
             polynomial = np.poly1d(coefficients)
             fuel = polynomial(cellbox.agg_data['elevation'])
 
