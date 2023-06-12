@@ -63,7 +63,10 @@ def convert_decimal_days(decimal_days, mins=False):
         frac_h, hours = np.modf(hours)
         minutes = round(frac_h * 60.0)
         if days:
-            new_time = f"{round(days)} days {round(hours)} hours {minutes} minutes"
+            if round(days) == 1:
+                new_time = f"{round(days)} day {round(hours)} hours {minutes} minutes"
+            else:
+                new_time = f"{round(days)} days {round(hours)} hours {minutes} minutes"
         elif hours:
             new_time = f"{round(hours)} hours {minutes} minutes"
         else:
@@ -71,7 +74,10 @@ def convert_decimal_days(decimal_days, mins=False):
     else:
         hours = round(hours, 2)
         if days:
-            new_time = f"{round(days)} days {hours} hours"
+            if round(days) == 1:
+                new_time = f"{round(days)} day {hours} hours"
+            else:
+                new_time = f"{round(days)} days {hours} hours"
         else:
             new_time = f"{hours} hours"
 
