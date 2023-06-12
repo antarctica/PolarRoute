@@ -15,9 +15,9 @@ class VesselFactory:
             Returns:
                 vessel: an instance of a vessel class designed for performance modelling
         """
-        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceConc", "MinDepth",
-                                             "Unit"]),
-                               "Slocum": (SlocumGlider, ["MaxSpeed", "MaxIceConc", "MinDepth"])}
+        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Unit", "Beam", "HullType", "ForceLimit", "MaxIceConc",
+                                             "MinDepth"]),
+                               "Slocum": (SlocumGlider, ["MaxSpeed", "Unit", "MaxIceConc", "MinDepth"])}
 
         vessel_type = config['VesselType']
 
