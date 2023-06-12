@@ -28,7 +28,14 @@ class AbstractGlider(AbstractVessel):
                 Args:
                     cellbox (AggregatedCellBox): input cell from environmental mesh
         """
-        pass
+        logging.debug(
+            f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['VesselType']}")
+        perf_cellbox = self.model_speed(cellbox)
+        perf_cellbox = self.model_battery(perf_cellbox)
+
+        performance_values = {k: v for k, v in perf_cellbox.agg_data.items() if k not in cellbox.agg_data}
+
+        return performance_values
 
     def model_accessibility(self, cellbox):
         """
