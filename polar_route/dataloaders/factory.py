@@ -1,5 +1,4 @@
 from polar_route.dataloaders.scalar.amsr import AMSRDataLoader
-from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
 from polar_route.dataloaders.scalar.bsose_depth import BSOSEDepthDataLoader
 from polar_route.dataloaders.scalar.bsose_sea_ice import BSOSESeaIceDataLoader
 from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
@@ -17,6 +16,7 @@ from polar_route.dataloaders.vector.oras5_current import ORAS5CurrentDataLoader
 from polar_route.dataloaders.vector.sose import SOSEDataLoader
 from polar_route.dataloaders.vector.vector_csv import VectorCSVDataLoader
 from polar_route.dataloaders.vector.vector_grf import VectorGRFDataLoader
+from polar_route.dataloaders.vector.copernicus_nrt_current import NrtCurrentDataLoader
 
 from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
@@ -87,7 +87,7 @@ class DataLoaderFactory:
             'baltic_currents':  (BalticCurrentDataLoader, ['files']),
             'era5_wind':        (ERA5WindDataLoader, ['files']),
             'northsea_currents':(NorthSeaCurrentDataLoader, ['files']),
-            # TODO make it run from 'files'
+            'nrt_currents':     (NrtCurrentDataLoader, ['files']),
             'oras5_currents':   (ORAS5CurrentDataLoader, ['files']),
             'sose':             (SOSEDataLoader, ['files'])
 
@@ -119,7 +119,7 @@ class DataLoaderFactory:
         if 'file' in params:
             params['files'] = [params['file']]
         elif 'folder' in params:
-            folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existant
+            folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existent
             params['files'] = sorted(glob(folder+'*'))
         
         return params
