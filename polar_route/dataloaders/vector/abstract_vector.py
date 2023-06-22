@@ -180,8 +180,8 @@ class VectorDataLoader(DataLoaderInterface):
                 Same as parent method
             '''
             x, y = names
-            data['magnitude'] = np.linalg.norm([data[x], data[y]], axis=0)
-            data['direction'] = np.arctan(data[y] / data[x])
+            data['_magnitude'] = np.linalg.norm([data[x], data[y]], axis=0)
+            data['_direction'] = np.arctan(data[y] / data[x])
             return data
         
         def add_mag_dir_to_xr(data, names):
@@ -195,12 +195,11 @@ class VectorDataLoader(DataLoaderInterface):
                 Same as parent method
             '''
             x, y = names
-            data = data.assign(
-                _magnitude=lambda l: (['lat', 'long'],
-                                        np.linalg.norm([l[x], l[y]], axis=0)))
-            data = data.assign(
-                _direction=lambda l:(['lat','long'],
-                                        np.arctan(l[y].data / l[x].data)))
+            data['_magnitude'] = (data.dims, 
+                                  np.linalg.norm([data[x].data, data[y].data], 
+                                                 axis=0))
+            data['_direction'] = (data.dims, 
+                                  np.arctan(data[y].data / data[x].data))
             return data
         
         # Set defaults if not passed to method
