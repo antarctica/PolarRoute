@@ -17,7 +17,7 @@ class NrtCurrentDataLoader(VectorDataLoader):
 
         Returns:
             xr.Dataset:
-                Neat real-time current dataset within limits of bounds.
+                Near real-time current dataset within limits of bounds.
                 Dataset has coordinates 'lat', 'long', and variable 'uC', 'vC'
         """
         # Open Dataset
@@ -30,6 +30,8 @@ class NrtCurrentDataLoader(VectorDataLoader):
                             'longitude': 'long',
                             'ugos': 'uC',
                             'vgos': 'vC'})
+        # Drop unnecessary variable
+        data = data.drop_vars('crs')
 
         # Trim to initial datapoints
         data = self.trim_datapoints(bounds, data=data)
