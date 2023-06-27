@@ -16,47 +16,7 @@ from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
-
-
-def _flattenCases(id,mesh):
-    neighbour_case = []
-    neighbour_indx = []
-    neighbours = mesh['neighbour_graph'][id]
-    for case in neighbours.keys():
-        for neighbour in neighbours[case]:
-            neighbour_case.append(int(case))
-            neighbour_indx.append(int(neighbour))
-    return neighbour_case, neighbour_indx
-
-
-
-
-def _json_str(input):
-    if type(input) is dict:
-        output = input
-    elif type(input) is str:
-        try:
-            with open(input, 'r') as f:
-                output = json.load(f)
-        except:
-            raise Exception("Unable to load '{}', please check path name".format(input))
-    return output
-
-def _pandas_dataframe_str(input):
-    if type(input) is dict:
-        output = input
-    elif type(input) == type(pd.DataFrame()):
-        output = input
-    elif type(input) is str:
-        try:
-            output = pd.read_csv(input)
-        except:
-            raise Exception("Unable to load '{}', please check path name".format(input))
-    return output
-
-
-
-
+from polar_route.utils import _json_str
 
 class RoutePlanner:
     """
@@ -71,79 +31,26 @@ class RoutePlanner:
         compute_smoothed_routes: smooths the compute_routes using information from the environmental mesh
                                 to determine mesh independent optimal route paths
 
-
         ---
 
         Attributes:
-            waypoints (dict): A dictionary of the waypoints supplied by the user in the region
-                of interest. The waypoints are of the form:
-
-               {\n
-                    "Name":{\n
-                        '0':"Falklands",\n
-                        '1':"Rothera",\n
-                        ...\n
-                    },\n
-                    "Lat":{\n
-                        '0':-52.6347222222,
-                        '1':-75.26722,\n
-                        ...\n
-                    },\n
-                    "Long":{\n
-                        ...\n
-                    },\n
-                    "index":{\n
-                        ...\n
-                    }\n
-               }
+         
 
 
-
-            paths (geojson): A GeoJSON of all paths constructed. The paths are in the form:
-
-                {\n
-                    'types':'FeatureCollection',\n
-                    "features":{[\n
-                        'type':'feature',\n
-                        'geometry':{\n
-                            'type': 'LineString',
-
-                            'coordinates': [[-27.21694, -75.26722],\n
-                                            [-27.5, -75.07960297382266],\n
-                                            [-27.619238882768894, -75.0],\n
-                                            ...]\n
-                        },
-                        'properties':{\n
-                            'from': 'Halley',\n
-                            'to': 'Rothera',\n
-                            'traveltime': [0.0,\n
-                                        0.03531938671648596,\n
-                                        0.050310986633880575,\n
-                                        ...],\n
-                            'fuel': [0.0,\n
-                                    0.9648858923588642,\n
-                                    1.3745886107069096,\n
-                                    ...],\n
-                            'times': ['2017-01-01 00:00:00',
-                                    '2017-01-01 00:50:51.595036800',
-                                    '2017-01-01 01:12:26.869276800',
-                                    ...]\n
-                        }\n
-                    ]}\n
-                }\n
+       
 
         ---
 
     """
 
-    def __init__(self, mesh, config, waypoints, cost_func=NewtonianDistance):
+    def __init__(self, env_mesh, config, cost_func=NewtonianDistance):
 
         """
             Constructs the routes from information given in the config file.
 
             Args:
 
-                mesh(dict or string of filepath): mesh based JSON containing the cellbox information and neighbourhood graph
+                env_mesh(EnvironmentMesh): mesh object that contains the mesh's cellboxes information and neighbourhood graph
 
                 config (dict or string of filepath): config JSON which defines the attributes required for the route construction. 
                     Sections required for the route construction are as follows\n
@@ -165,18 +72,13 @@ class RoutePlanner:
                             "minimum_difference":(float),\n
                     }\n
 
-                cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only !
+                cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only!
         """
 
         # Load in the current cell structure & Optimisation Info̦
-        self.mesh             = _json_str(mesh)
+        self.mesh             = _json_str(env_mesh)
         self.config           = _json_str(config)
-        waypoints_df          = _pandas_dataframe_str(waypoints)
-        source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
-        des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
-
-        self.source_waypoints = list(source_waypoints_df['Name'])
-        self.end_waypoints    = list(des_waypoints_df['Name'])
+     
 
         # Case indices
         self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
@@ -187,22 +89,7 @@ class RoutePlanner:
         self.dijkstra_info = {}
 
         # ====== Loading Mesh & Neighbour Graph ======
-        # Formatting the Mesh and Neighbour Graph to the right form
-        self.neighbour_graph = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
-        self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
-        self.neighbour_graph = gpd.GeoDataFrame(self.neighbour_graph, crs='EPSG:4326', geometry='geometry')
-
-        # Removing any point not in accessible positions
-        self.neighbour_graph = self.neighbour_graph.loc[list(self.mesh['neighbour_graph'].keys())]
-
-        # Using neighbour graph to determine neighbour indices and cases
-        self.neighbour_graph['case'], self.neighbour_graph['neighbourIndex'] = zip(*self.neighbour_graph.apply(lambda row: _flattenCases(row.name, self.mesh), axis=1))
-
-        self.neighbour_graph.index = self.neighbour_graph.index.astype(int)
-
-        # Renaming the vector columns
-        self.neighbour_graph = self.neighbour_graph.rename(columns={self.config['vector_names'][0]: "Vector_x", 
-                                                                    self.config['vector_names'][1]: "Vector_y"})
+     
 
         # ====== Speed Function Checking ======
         # Checking if Speed defined in file
@@ -264,28 +151,7 @@ class RoutePlanner:
             else:
                 wpts['index'].loc[idx] = int(indices[0])
 
-        self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
-        self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
-        self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
-
-        # ==== Printing Configuration and Information
-        self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
-
-        # # ===== Running the route planner for the given information
-        # if ("dijkstra_only" in self.config) and self.config['dijkstra_only']:
-        #     self.compute_routes()
-        # else:
-        #     self.compute_routes()
-        #     self.compute_smoothed_routes()
-
-
-        # # === Saving file to output or saving it to variable output
-        # output = self.to_json()
-        # if ('output' in self.config) and (type(self.config['output']) == str):
-        #     with open(self.config['output'], 'w') as f:
-        #         json.dump(output,f)
-        # else:
-        #     self.output = output
+    
 
 
 
@@ -518,154 +384,4 @@ class RoutePlanner:
         self.paths = self._dijkstra_paths(self.source_waypoints, self.end_waypoints)
         self.mesh['paths'] = self.paths
 
-    def compute_smoothed_routes(self):
-        """
-            Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
-            `paths` will be updated in the output JSON
-        """
-        if 'max_iteration_number' not in self.config['smooth_path']:
-            maxiter = 1e4
-        else:
-            maxiter     = self.config['smooth_path']['max_iteration_number']
-
-        if 'minimum_iterations' not in self.config['smooth_path']:
-            minimum_iterations = 50
-        else:
-            minimum_iterations = self.config['smooth_path']['minimum_iterations']
-
-
-        if 'minimum_difference' not in self.config['smooth_path']:
-            minimumDiff = 1e-4
-        else: 
-            minimumDiff = self.config['smooth_path']['minimum_difference']
-
-        # Minimum Difference = 1e-4
-        # Minimum Iterations = 50
-        # Max Iteration Number = 1e4
-
-
-
-        # 
-
-        # 
-        SmoothedPaths = []
-        geojson = {}
-        geojson['type'] = "FeatureCollection"
-
-        if len(self.paths['features']) == 0:
-            logging.warning('Paths not constructed as there was no dijkstra paths created')
-            return
-        Pths = copy.deepcopy(self.paths)['features']  
-
-        logging.info('========= Determining Smoothed Paths ===========\n')
-
-        for ii in range(len(Pths)):
-                Path = Pths[ii]
-                counter = 0 
-
-                logging.info('---Smoothing {}'.format(Path['properties']['name']))
-
-                nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']], self.config, maxiter=1,
-                                             zerocurrents=self.zero_currents)
-                nc.pathIter = maxiter
-
-                org_path_points = np.array(Path['geometry']['coordinates'])
-                org_cellindices = np.array(Path['properties']['CellIndices'])
-
-                # -- Generating a dataframe of the case information -- 
-                Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
-                cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
-                cellDijk    = [nc.neighbour_graph.loc[ii] for ii in cellIndices]
-                nc.CrossingDF  = pd.DataFrame({'cx':Points[:,0],'cy':Points[:,1],'cellStart':cellDijk[:-1],'cellEnd':cellDijk[1:]})
-
-                # -- Determining the cases from the cell information. If within cell then case 0 -- 
-                Cases = []
-                for idx, row in nc.CrossingDF.iterrows():
-                    try:
-                        Cases.append(row.cellStart['case'][np.where(np.array(row.cellStart['neighbourIndex']) == row.cellEnd.name)[0][0]])
-                    except:
-                        Cases.append(0)
-                nc.CrossingDF['case'] = Cases
-                nc.CrossingDF.index = np.arange(int(nc.CrossingDF.index.min()), int(nc.CrossingDF.index.max()*1e3 + 1e3), int(1e3))
-
-                nc.orgDF = copy.deepcopy(nc.CrossingDF)
-                iter = 0
-                # try:
-
-                # while iter < nc.pathIter:
-                pbar = tqdm(np.arange(nc.pathIter))
-
-                # Determining the computational time averaged across all pairs
-                self.allDist = []
-
-                self.nc = nc
-                self.all_crossing_points = []
-                for iter in pbar:
-                    self.all_crossing_points += [nc.CrossingDF]
-                    nc.previousDF = copy.deepcopy(nc.CrossingDF)
-                    id = 0
-                    while id <= (len(nc.CrossingDF) - 3):
-                        
-                        
-                        # -- Updating the crossing point
-                        nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                        nc._updateCrossingPoint(iter)
-                        self.nc = nc
-                        id += 1
-
-                    if  id <= (len(nc.CrossingDF) - 3):
-                        print('Path Smoothing Failed!')
-                        break
-
-                    self.nc = nc
-
-                    #nc._mergePoint()
-                    self.nc = nc
-                    iter+=1
-
-                    
-                        
-                    # Stop optimisation if the points are within some minimum difference
-                    if len(nc.previousDF) == len(nc.CrossingDF):
-                        Dist = np.max(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
-                        self.allDist.append(Dist)
-                        pbar.set_description("Mean Difference = {}".format(Dist))
-                        if (Dist < minimumDiff) and (iter>=minimum_iterations):
-                            logging.info('{} iterations - dDist={}'.format(iter, Dist))
-                            break
-
-                if iter == nc.pathIter:
-                    logging.info('Maximum Iteration Met - Returning Last Path'.format(iter, Dist))
-                    nc.CrossingDF = self.all_crossing_points[-1]
-
-
-
-                # ------ Smooth Path Values -----
-                # Given a smoothed route path now determine the along path parameters.
-                variables      = nc.objective_function(nc.CrossingDF)
-                TravelTimeLegs = variables['traveltime']['path_values']
-                DistanceLegs   = variables['distance']['path_values'] 
-                pathIndex      = variables['cell_index']['path_values'] 
-                FuelLegs       = variables['fuel']['path_values'] 
-                SpeedLegs      = variables['speed']['path_values'] 
-
-
-                # ------ Saving Output in a standard form to be saved ------
-                SmoothedPath ={}
-                SmoothedPath['type'] = 'Feature'
-                SmoothedPath['geometry'] = {}
-                SmoothedPath['geometry']['type'] = "LineString"
-                SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cx','cy']].to_numpy().tolist()            
-                SmoothedPath['properties'] = {}
-                SmoothedPath['properties']['from'] = Path['properties']['from']
-                SmoothedPath['properties']['to']   = Path['properties']['to']
-                SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
-                SmoothedPath['properties']['fuel']       = list(FuelLegs)
-                SmoothedPath['properties']['distance']   = list(DistanceLegs)
-                SmoothedPath['properties']['speed']      = list(SpeedLegs)
-                SmoothedPaths.append(SmoothedPath)
-                geojson['features'] = SmoothedPaths
-                self.smoothed_paths = geojson
-                self.mesh['paths'] = self.smoothed_paths
-
-                    
+   

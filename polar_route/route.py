@@ -3,13 +3,13 @@ class Route:
         class that represents a route from a start to end waypoints
         Attributes:
 
-            route (list<Segment>): a list if Segment object that constitutes the entire route
+            segments (list<Segment>): a list of Segment object that constitutes the entire route
             name (String) (optional): s tring reoresnting the route name
             
     '''
 
-    def __init__(self , route, name= None):
-        self.route = route
+    def __init__(self , segments, name= None):
+        self.segments = segments
         self.name = name
 
 

@@ -9,7 +9,7 @@ from calendar import monthrange
 import numpy as np
 from scipy.fftpack import fftshift
 from math import log10, floor
-
+import json
 """
 Utilities that might be of use
 """
@@ -257,6 +257,17 @@ def setup_logging(func,
         return parsed_args
     return wrapper
 
+
+def _json_str(input):
+    if type(input) is dict:
+        output = input
+    elif type(input) is str:
+        try:
+            with open(input, 'r') as f:
+                output = json.load(f)
+        except:
+            raise Exception("Unable to load '{}', please check path name".format(input))
+    return output
 
 if __name__ == '__main__':
     aa = str_to_datetime('2020-03-01')
