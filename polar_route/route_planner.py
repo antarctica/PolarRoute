@@ -665,4 +665,96 @@ class RoutePlanner:
                 self.smoothed_paths = geojson
                 self.mesh['paths'] = self.smoothed_paths
 
-                    
+    ############################################################################################################
+    ############################################################################################################
+    ############################################################################################################
+    ############################################################################################################
+    ############################################################################################################
+    ############################################################################################################
+
+    
+    def compute_smoothed_routes_refactor(self):
+        """
+            Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
+            `paths` will be updated in the output JSON
+        """
+        if 'max_iteration_number' not in self.config['smooth_path']:
+            maxiter = 1e4
+        else:
+            maxiter     = self.config['smooth_path']['max_iteration_number']
+
+        if 'minimum_iterations' not in self.config['smooth_path']:
+            minimum_iterations = 50
+        else:
+            minimum_iterations = self.config['smooth_path']['minimum_iterations']
+
+
+        if 'merge_separation' not in self.config['smooth_path']:
+            merge_separation = 1e-4
+        else: 
+            merge_separation = self.config['smooth_path']['minimum_difference']
+
+        if 'converged_sep' not in self.config['smooth_path']:
+            converged_sep = 1e-4
+        else: 
+            converged_sep = self.config['smooth_path']['minimum_difference']
+
+
+
+        # Minimum Difference = 1e-4
+        # Minimum Iterations = 50
+        # Max Iteration Number = 1e4
+
+        # ====== Routes into =======
+        if len(self.paths['features']) == 0:
+            raise Exception('Paths not constructed as there was no dijkstra paths created')
+        routes = copy.deepcopy(self.paths)['features']  
+
+        logging.info('========= Determining Smoothed Paths ===========\n')
+        paths = []
+        for route in routes:
+
+            logging.info('---Smoothing {}'.format(Path['properties']['name']))
+
+            # -- Initialising a smoothing object with all the origional dijkstra graph information
+            dijk_graph = self.dijkstra_info[Path['properties']['from']]
+
+            nc = Smoothing(config=self.config,
+                                 dijkstra_graph=dijk_graph,
+                                 route=route)
+
+            # Initialising the dijkstra graph
+            nc.forward()
+            
+            # Initialising by determining adjacent cell pairs and edges of path
+            paths += [nc.determine_path()]
+
+
+
+            # ------ Smooth Path Values -----
+            # Given a smoothed route path now determine the along path parameters.
+            variables      = nc.objective_function(nc.CrossingDF)
+            TravelTimeLegs = variables['traveltime']['path_values']
+            DistanceLegs   = variables['distance']['path_values'] 
+            pathIndex      = variables['cell_index']['path_values'] 
+            FuelLegs       = variables['fuel']['path_values'] 
+            SpeedLegs      = variables['speed']['path_values'] 
+
+
+            # ------ Saving Output in a standard form to be saved ------
+            SmoothedPath ={}
+            SmoothedPath['type'] = 'Feature'
+            SmoothedPath['geometry'] = {}
+            SmoothedPath['geometry']['type'] = "LineString"
+            SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cx','cy']].to_numpy().tolist()            
+            SmoothedPath['properties'] = {}
+            SmoothedPath['properties']['from'] = Path['properties']['from']
+            SmoothedPath['properties']['to']   = Path['properties']['to']
+            SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
+            SmoothedPath['properties']['fuel']       = list(FuelLegs)
+            SmoothedPath['properties']['distance']   = list(DistanceLegs)
+            SmoothedPath['properties']['speed']      = list(SpeedLegs)
+            SmoothedPaths.append(SmoothedPath)
+            geojson['features'] = SmoothedPaths
+            self.smoothed_paths = geojson
+            self.mesh['paths'] = self.smoothed_paths
