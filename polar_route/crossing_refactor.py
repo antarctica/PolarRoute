@@ -792,7 +792,7 @@ class Smoothing:
                 add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)
                 if add_indicies == None:
                     midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
-                    if self.dist(midpoint,midpoint_prime) > 10:
+                    if self.dist(midpoint,midpoint_prime) > 100:
                         converged = False
                     ap.crossing = midpoint_prime
                     ii += 1
