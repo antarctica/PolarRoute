@@ -631,7 +631,35 @@ class NewtonianCurve:
 
         return case
 
+    
+    def _traveltime_in_cell(self,xdist,ydist,U,V,S):
+        '''
+            Determine the traveltime within cell
+        '''
+        dist  = np.sqrt(xdist**2 + ydist**2)
+        cval  = np.sqrt(U**2 + V**2)
 
+        dotprod  = xdist*U + ydist*V
+        diffsqrs = S**2 - cval**2
+
+        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
+        if diffsqrs == 0.0:
+            if dotprod == 0.0:
+                return np.inf
+                #raise Exception(' ')
+            else:
+                if ((dist**2)/(2*dotprod))  <0:
+                    return np.inf
+                    #raise Exception(' ')
+                else:
+                    traveltime = dist * dist / (2 * dotprod)
+                    return traveltime
+
+        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
+        if traveltime < 0:
+            traveltime = np.inf
+        return self._unit_time(traveltime), dist
+    
     def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
         '''
             Determine within cell parameters for a source and end point on the edge
