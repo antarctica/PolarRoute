@@ -37,7 +37,252 @@ class find_edge:
 
         return crossing,case,start,end
     
+# =====================================================
+class PathValues:
+    def __init__(self):
+        # ======= Supply cellbox information =======
 
+        # ======= Specify path variables ==========
+        # Determining the important variables to return for the paths
+        required_path_variables = {'distance':{'processing':'cumsum'},
+                                   'traveltime':{'processing':'cumsum'},
+                                   'datetime':{'processing':'cumsum'},
+                                   'cell_index':{'processing':None},
+                                   'fuel':{'processing':'cumsum'}}
+        self.path_requested_variables = {} #self.config['Route_Info']['path_variables']
+        self.path_requested_variables.update(required_path_variables)
+
+
+        self.unit_shipspeed='km/hr'
+        self.unit_time='days'
+
+    
+    def _unit_speed(self,Val):
+        '''
+            Applying unit speed for an input type.
+        '''
+        if self.unit_shipspeed == 'km/hr':
+            Val = Val*(1000/(60*60))
+        if self.unit_shipspeed == 'knots':
+            Val = (Val*0.51)
+        return Val
+
+    def _unit_time(self,Val):
+        '''
+            Applying Unit time for a specific input type
+        '''
+        if self.unit_time == 'days':
+            Val = Val/(60*60*24)
+        elif self.unit_time == 'hr':
+            Val = Val/(60*60)
+        elif self.unit_time == 'min':
+            Val = Val/(60)
+        elif self.unit_time == 's':
+            Val = Val
+        return Val
+
+
+
+
+    def _case_from_angle(self,start,end):
+        """
+            Determine the direction of travel between two points in the same cell and return the associated case
+
+            Args:
+                start (list): the coordinates of the start point within the cell
+                end (list):  the coordinates of the end point within the cell
+
+            Returns:
+                case (int): the case to use to select variable values from a list
+        """
+
+        direct_vec = [end[0]-start[0], end[1]-start[1]]
+        direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
+
+        case = None
+
+        if -22.5 <= direct_ang < 22.5:
+            case = -4
+        elif 22.5 <= direct_ang < 67.5:
+            case = 1
+        elif 67.5 <= direct_ang < 112.5:
+            case = 2
+        elif 112.5 <= direct_ang < 157.5:
+            case = 3
+        elif 157.5 <= abs(direct_ang) <= 180:
+            case = 4
+        elif -67.5 <= direct_ang < -22.5:
+            case = -3
+        elif -112.5 <= direct_ang < -67.5:
+            case = -2
+        elif -157.5 <= direct_ang < -112.5:
+            case = -1
+
+        return case
+
+
+    def _case_from_angle(self,start,end):
+        """
+            Determine the direction of travel between two points in the same cell and return the associated case
+
+            Args:
+                start (list): the coordinates of the start point within the cell
+                end (list):  the coordinates of the end point within the cell
+
+            Returns:
+                case (int): the case to use to select variable values from a list
+        """
+
+        direct_vec = [end[0]-start[0], end[1]-start[1]]
+        direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
+
+        case = None
+
+        if -22.5 <= direct_ang < 22.5:
+            case = -4
+        elif 22.5 <= direct_ang < 67.5:
+            case = 1
+        elif 67.5 <= direct_ang < 112.5:
+            case = 2
+        elif 112.5 <= direct_ang < 157.5:
+            case = 3
+        elif 157.5 <= abs(direct_ang) <= 180:
+            case = 4
+        elif -67.5 <= direct_ang < -22.5:
+            case = -3
+        elif -112.5 <= direct_ang < -67.5:
+            case = -2
+        elif -157.5 <= direct_ang < -112.5:
+            case = -1
+
+        return case
+
+    
+    def _traveltime_in_cell(self,xdist,ydist,U,V,S):
+        '''
+            Determine the traveltime within cell
+        '''
+        dist  = np.sqrt(xdist**2 + ydist**2)
+        cval  = np.sqrt(U**2 + V**2)
+
+        dotprod  = xdist*U + ydist*V
+        diffsqrs = S**2 - cval**2
+
+        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
+        if diffsqrs == 0.0:
+            if dotprod == 0.0:
+                return np.inf
+                #raise Exception(' ')
+            else:
+                if ((dist**2)/(2*dotprod))  <0:
+                    return np.inf
+                    #raise Exception(' ')
+                else:
+                    traveltime = dist * dist / (2 * dotprod)
+                    return traveltime
+
+        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
+        if traveltime < 0:
+            traveltime = np.inf
+        return self._unit_time(traveltime), dist
+    
+    def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
+        '''
+            Determine within cell parameters for a source and end point on the edge
+        '''
+        m_long  = 111.321*1000
+        m_lat   = 111.386*1000
+        x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
+        y = (Cp[1]-Wp[1])*m_lat
+        case = self._case_from_angle(Cp,Wp)
+        Su  = source_graph['Vector_x']
+        Sv  = source_graph['Vector_y']
+        Ssp = self._unit_speed(source_graph['speed'][case])
+        traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+
+
+        segment_values = {}
+        for var in path_requested_variables.keys():
+            if var=='distance':
+                segment_values[var] = distance
+            elif var=='traveltime':
+                segment_values[var] = traveltime
+            elif var=='cell_index':
+                segment_values[var] = int(source_graph['id'])
+            else:
+                if var in source_graph.keys():
+                    # Determining the objective value information
+                    if type(source_graph[var]) == list:
+                        objective_rate_value = source_graph[var][case]
+                    else:
+                        objective_rate_value = source_graph[var]
+                    if path_requested_variables[var]['processing'] is None:
+                        segment_values[var] = objective_rate_value
+                    else:
+                        segment_values[var] = traveltime*objective_rate_value
+
+        return segment_values, case
+
+    def objective_function(self,adjacent_pairs,start_waypoint,end_waypoint):
+        '''
+            Given a  list of adjacent pairs determine the path related information
+        '''
+        # Initialising zero arrays for the path variables 
+        variables =  {}    
+        for var in self.path_requested_variables:
+            variables[var] ={}
+            variables[var]['path_values'] = np.zeros(len(adjacent_pairs)+1)
+
+
+        # Path point
+        path_points = [start_waypoint]
+
+        # Looping over the path and determining the variable information
+        for ii in range(len(adjacent_pairs)):
+            if ii == 0:
+                Wp = start_waypoint
+                Cp = adjacent_pairs[ii].crossing
+                cellbox = adjacent_pairs[ii].start
+            elif ii == (len(adjacent_pairs)-1):
+                Wp = adjacent_pairs[ii].crossing
+                Cp = end_waypoint
+                cellbox = adjacent_pairs[ii].end
+            else:
+                Wp = adjacent_pairs[ii-1].crossing
+                Cp = adjacent_pairs[ii].crossing
+                cellbox = adjacent_pairs[ii].start
+
+            # Adding End point
+            path_points += [Cp]
+
+            # Determining the value for the variable for the segment of the path and the corresponding case
+            segment_variable, segment_case = self._waypoint_correction(self.path_requested_variables,cellbox,Wp,Cp)
+
+            # Adding that value for the segment along the paths
+            for var in segment_variable:
+                if type(segment_variable[var]) == np.ndarray:
+                    variables[var]['path_values'][ii+1] = segment_variable[var][segment_case]
+                else:
+                    print(segment_variable[var])
+                    variables[var]['path_values'][ii+1] = segment_variable[var]
+
+
+        # Applying processing to all path values
+        for var in variables.keys():
+            processing_type = self.path_requested_variables[var]['processing']
+            if type(processing_type) == type(None):
+                continue
+            elif processing_type == 'cumsum':
+                variables[var]['path_values'] = np.cumsum(variables[var]['path_values'])
+
+
+        path_info = {}
+        path_info['path']      = np.array(path_points)
+        path_info['variables'] = variables
+
+        return path_info
+
+#======================================================
 class Smoothing:
     def __init__(self,dijkstra_graph,dijkstra_route,config=None):
         '''

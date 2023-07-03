@@ -17,6 +17,8 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
 
+from polar_route.crossing_refactor import Smoothing,PathValues
+
 
 def _flattenCases(id,mesh):
     neighbour_case = []
@@ -712,33 +714,24 @@ class RoutePlanner:
 
         logging.info('========= Determining Smoothed Paths ===========\n')
         paths = []
+        geojson = {}
+        SmoothedPaths = []
         for route in routes:
+            logging.info('---Smoothing {}'.format(route['properties']['name']))
+            dijkstra_graph = self.dijkstra_info[route['properties']['from']]
+            sf = Smoothing(dijkstra_graph,route)
+            sf.forward()
 
-            logging.info('---Smoothing {}'.format(Path['properties']['name']))
-
-            # -- Initialising a smoothing object with all the origional dijkstra graph information
-            dijk_graph = self.dijkstra_info[Path['properties']['from']]
-
-            nc = Smoothing(config=self.config,
-                                 dijkstra_graph=dijk_graph,
-                                 route=route)
-
-            # Initialising the dijkstra graph
-            nc.forward()
-            
-            # Initialising by determining adjacent cell pairs and edges of path
-            paths += [nc.determine_path()]
-
-
-
+        
             # ------ Smooth Path Values -----
             # Given a smoothed route path now determine the along path parameters.
-            variables      = nc.objective_function(nc.CrossingDF)
+            pv = PathValues()
+            path_info = pv.objective_function(sf.aps,sf.start_waypoint,sf.end_waypoint)
+            variables      = path_info['variables']
             TravelTimeLegs = variables['traveltime']['path_values']
             DistanceLegs   = variables['distance']['path_values'] 
             pathIndex      = variables['cell_index']['path_values'] 
             FuelLegs       = variables['fuel']['path_values'] 
-            SpeedLegs      = variables['speed']['path_values'] 
 
 
             # ------ Saving Output in a standard form to be saved ------
@@ -746,15 +739,15 @@ class RoutePlanner:
             SmoothedPath['type'] = 'Feature'
             SmoothedPath['geometry'] = {}
             SmoothedPath['geometry']['type'] = "LineString"
-            SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cx','cy']].to_numpy().tolist()            
+            SmoothedPath['geometry']['coordinates'] = path_info['path'].tolist()            
             SmoothedPath['properties'] = {}
-            SmoothedPath['properties']['from'] = Path['properties']['from']
-            SmoothedPath['properties']['to']   = Path['properties']['to']
+            SmoothedPath['properties']['from']      = route['properties']['from']
+            SmoothedPath['properties']['to']         = route['properties']['to']
             SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
             SmoothedPath['properties']['fuel']       = list(FuelLegs)
             SmoothedPath['properties']['distance']   = list(DistanceLegs)
-            SmoothedPath['properties']['speed']      = list(SpeedLegs)
-            SmoothedPaths.append(SmoothedPath)
-            geojson['features'] = SmoothedPaths
-            self.smoothed_paths = geojson
-            self.mesh['paths'] = self.smoothed_paths
+            SmoothedPaths += [SmoothedPath]
+        
+        geojson['features'] = SmoothedPaths
+        self.smoothed_paths = geojson
+        self.mesh['paths'] = self.smoothed_paths
