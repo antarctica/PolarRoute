@@ -16,7 +16,6 @@ from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
 
 from polar_route.mesh_validation.sampler import Sampler
-from osgeo import gdal, ogr, osr
 import collections.abc
 import math
 from pathlib import Path
@@ -337,7 +336,9 @@ class EnvironmentMesh:
                 if os.path.isfile (file_path):
                      os.remove(file_path)
 
-
+        # Only import GDAL if we want to export TIF
+        from osgeo import gdal, ogr, osr
+        
         params = {}
         params = load_params(params_file)
         data_name = params["data_name"]
