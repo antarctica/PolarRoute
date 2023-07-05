@@ -46,13 +46,13 @@ information is then encoded into the digital environment file.
 
 ::
 
-    add_vehicle <vessel.json> <mesh.json>
+    add_vehicle <vessel_config.json> <mesh.json>
 
 positional arguments:
 
 ::
 
-    vessel : A configuration file detailing the vessel to be simulated in the digital environment.
+    vessel_config : A configuration file detailing the vessel to be simulated in the digital environment.
     mesh : A digital environment file.
 
 The format for the required *<vessel.json>* file can be found in the :ref:`configuration - vessel performance modeller` section of the documentation.
@@ -74,7 +74,7 @@ Optimal routes through a mesh can be calculated using the command:
 
 ::
 
-    optimise_routes <vessel_mesh.json> <route_config.json> <waypoints.csv>
+    optimise_routes <route_config.json> <vessel_mesh.json> <waypoints.csv>
 
 positional parameters:
 
