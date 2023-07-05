@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Python Module Index &mdash; polar_route 0.0.17 documentation</title>
+  <title>Python Module Index &mdash; polar_route 0.2.11 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -42,16 +42,18 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="sections/Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Code_overview.html">1. Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/running.html">3. Runnning Codebase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Configuration.html">4. Input - Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Dataloaders/overview.html">5. Dataloader Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html">7. Examples of running code</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Dataloaders/overview.html">7. Dataloader Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Route_optimisation.html">10. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Route_calculation.html">11. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html">12. Examples of running code</a></li>
 </ul>
 
         </div>
@@ -97,7 +99,7 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/DataLoaderInterface.html#module-polar_route.dataloaders.dataLoaderInterface"><code class="xref">polar_route.dataloaders.dataLoaderInterface</code></a></td><td>
+       <a href="sections/Dataloaders/DataLoaderInterface.html#module-polar_route.dataloaders.dataloader_interface"><code class="xref">polar_route.dataloaders.dataloader_interface</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -107,7 +109,7 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/scalar/abstractScalar.html#module-polar_route.dataloaders.scalar.abstractScalar"><code class="xref">polar_route.dataloaders.scalar.abstractScalar</code></a></td><td>
+       <a href="sections/Dataloaders/scalar/abstractScalar.html#module-polar_route.dataloaders.scalar.abstract_scalar"><code class="xref">polar_route.dataloaders.scalar.abstract_scalar</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -117,17 +119,17 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/scalar/implemented/BalticSeaIce.html#module-polar_route.dataloaders.scalar.balticSeaIce"><code class="xref">polar_route.dataloaders.scalar.balticSeaIce</code></a></td><td>
+       <a href="sections/Dataloaders/scalar/implemented/BalticSeaIce.html#module-polar_route.dataloaders.scalar.baltic_sea_ice"><code class="xref">polar_route.dataloaders.scalar.baltic_sea_ice</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/scalar/implemented/BSOSEDepth.html#module-polar_route.dataloaders.scalar.bsoseDepth"><code class="xref">polar_route.dataloaders.scalar.bsoseDepth</code></a></td><td>
+       <a href="sections/Dataloaders/scalar/implemented/BSOSEDepth.html#module-polar_route.dataloaders.scalar.bsose_depth"><code class="xref">polar_route.dataloaders.scalar.bsose_depth</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/scalar/implemented/BSOSESeaIce.html#module-polar_route.dataloaders.scalar.bsoseSeaIce"><code class="xref">polar_route.dataloaders.scalar.bsoseSeaIce</code></a></td><td>
+       <a href="sections/Dataloaders/scalar/implemented/BSOSESeaIce.html#module-polar_route.dataloaders.scalar.bsose_sea_ice"><code class="xref">polar_route.dataloaders.scalar.bsose_sea_ice</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -152,12 +154,12 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/scalar/implemented/ScalarCSV.html#module-polar_route.dataloaders.scalar.scalarCSV"><code class="xref">polar_route.dataloaders.scalar.scalarCSV</code></a></td><td>
+       <a href="sections/Dataloaders/scalar/implemented/ScalarCSV.html#module-polar_route.dataloaders.scalar.scalar_csv"><code class="xref">polar_route.dataloaders.scalar.scalar_csv</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/scalar/implemented/ScalarGRF.html#module-polar_route.dataloaders.scalar.scalarGRF"><code class="xref">polar_route.dataloaders.scalar.scalarGRF</code></a></td><td>
+       <a href="sections/Dataloaders/scalar/implemented/ScalarGRF.html#module-polar_route.dataloaders.scalar.scalar_grf"><code class="xref">polar_route.dataloaders.scalar.scalar_grf</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -172,27 +174,27 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/vector/abstractVector.html#module-polar_route.dataloaders.vector.abstractVector"><code class="xref">polar_route.dataloaders.vector.abstractVector</code></a></td><td>
+       <a href="sections/Dataloaders/vector/abstractVector.html#module-polar_route.dataloaders.vector.abstract_vector"><code class="xref">polar_route.dataloaders.vector.abstract_vector</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/vector/implemented/BalticCurrent.html#module-polar_route.dataloaders.vector.balticCurrent"><code class="xref">polar_route.dataloaders.vector.balticCurrent</code></a></td><td>
+       <a href="sections/Dataloaders/vector/implemented/BalticCurrent.html#module-polar_route.dataloaders.vector.baltic_current"><code class="xref">polar_route.dataloaders.vector.baltic_current</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/vector/implemented/ERA5Wind.html#module-polar_route.dataloaders.vector.era5Wind"><code class="xref">polar_route.dataloaders.vector.era5Wind</code></a></td><td>
+       <a href="sections/Dataloaders/vector/implemented/ERA5Wind.html#module-polar_route.dataloaders.vector.era5_wind"><code class="xref">polar_route.dataloaders.vector.era5_wind</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/vector/implemented/NorthSeaCurrent.html#module-polar_route.dataloaders.vector.northSeaCurrent"><code class="xref">polar_route.dataloaders.vector.northSeaCurrent</code></a></td><td>
+       <a href="sections/Dataloaders/vector/implemented/NorthSeaCurrent.html#module-polar_route.dataloaders.vector.north_sea_current"><code class="xref">polar_route.dataloaders.vector.north_sea_current</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/vector/implemented/ORAS5Current.html#module-polar_route.dataloaders.vector.oras5Current"><code class="xref">polar_route.dataloaders.vector.oras5Current</code></a></td><td>
+       <a href="sections/Dataloaders/vector/implemented/ORAS5Current.html#module-polar_route.dataloaders.vector.oras5_current"><code class="xref">polar_route.dataloaders.vector.oras5_current</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
@@ -202,42 +204,57 @@
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/vector/implemented/VectorCSV.html#module-polar_route.dataloaders.vector.vectorCSV"><code class="xref">polar_route.dataloaders.vector.vectorCSV</code></a></td><td>
+       <a href="sections/Dataloaders/vector/implemented/VectorCSV.html#module-polar_route.dataloaders.vector.vector_csv"><code class="xref">polar_route.dataloaders.vector.vector_csv</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Dataloaders/vector/implemented/VectorGRF.html#module-polar_route.dataloaders.vector.vectorGRF"><code class="xref">polar_route.dataloaders.vector.vectorGRF</code></a></td><td>
+       <a href="sections/Dataloaders/vector/implemented/VectorGRF.html#module-polar_route.dataloaders.vector.vector_grf"><code class="xref">polar_route.dataloaders.vector.vector_grf</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Discrete_meshing.html#module-polar_route.mesh_generation.aggregated_cellBox"><code class="xref">polar_route.mesh_generation.aggregated_cellBox</code></a></td><td>
+       <a href="sections/Mesh_Construction/Mesh_construction_classes.html#module-polar_route.mesh_generation.aggregated_cellbox"><code class="xref">polar_route.mesh_generation.aggregated_cellbox</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Discrete_meshing.html#module-polar_route.mesh_generation.cellbox"><code class="xref">polar_route.mesh_generation.cellbox</code></a></td><td>
+       <a href="sections/Mesh_Construction/Mesh_construction_classes.html#module-polar_route.mesh_generation.cellbox"><code class="xref">polar_route.mesh_generation.cellbox</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Discrete_meshing.html#module-polar_route.mesh_generation.environment_mesh"><code class="xref">polar_route.mesh_generation.environment_mesh</code></a></td><td>
+       <a href="sections/Mesh_Construction/Mesh_construction_classes.html#module-polar_route.mesh_generation.environment_mesh"><code class="xref">polar_route.mesh_generation.environment_mesh</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Discrete_meshing.html#module-polar_route.mesh_generation.mesh_builder"><code class="xref">polar_route.mesh_generation.mesh_builder</code></a></td><td>
+       <a href="sections/Mesh_Construction/Mesh_construction_classes.html#module-polar_route.mesh_generation.mesh_builder"><code class="xref">polar_route.mesh_generation.mesh_builder</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Discrete_meshing.html#module-polar_route.mesh_generation.metadata"><code class="xref">polar_route.mesh_generation.metadata</code></a></td><td>
+       <a href="sections/Mesh_Construction/Mesh_construction_classes.html#module-polar_route.mesh_generation.metadata"><code class="xref">polar_route.mesh_generation.metadata</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
        <td>&#160;&#160;&#160;
-       <a href="sections/Discrete_meshing.html#module-polar_route.mesh_generation.neighbour_graph"><code class="xref">polar_route.mesh_generation.neighbour_graph</code></a></td><td>
+       <a href="sections/Mesh_Construction/Mesh_construction_classes.html#module-polar_route.mesh_generation.neighbour_graph"><code class="xref">polar_route.mesh_generation.neighbour_graph</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="sections/Mesh_Construction/Mesh_validation.html#module-polar_route.mesh_validation.mesh_validator"><code class="xref">polar_route.mesh_validation.mesh_validator</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="sections/Mesh_Construction/Mesh_validation.html#module-polar_route.mesh_validation.sampler"><code class="xref">polar_route.mesh_validation.sampler</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="sections/Route_calculation.html#module-polar_route.route_calc"><code class="xref">polar_route.route_calc</code></a></td><td>
        <em></em></td></tr>
      <tr class="cg-1">
        <td></td>
