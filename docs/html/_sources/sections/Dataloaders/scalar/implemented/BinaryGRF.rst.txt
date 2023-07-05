@@ -23,7 +23,7 @@ only True/False. It is useful for generating land masks.
                                     #   distribution used to generate GRF
             "min":        0,        # - Minimum value of GRF
             "max":        1,        # - Maximum value of GRF
-            "binary":     True,     # - Flag specifiying this GRF is a binary mask
+            "binary":     True,     # - Flag specifying this GRF is a binary mask
             "threshold":  0.5       # - Value around which mask values are set.
                                     #   Below this, values are set to False 
                                     #   Above this, values are set to True

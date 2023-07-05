@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2. Installation &mdash; polar_route 0.0.17 documentation</title>
+  <title>2. Installation &mdash; polar_route 0.2.11 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="3. Runnning Codebase" href="running.html" />
-    <link rel="prev" title="1. Background" href="Code_structure.html" /> 
+    <link rel="next" title="3. Python &amp; iPython Notebooks" href="ipython_notebooks.html" />
+    <link rel="prev" title="1. Background" href="Code_overview.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,20 +42,26 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">1. Background</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">2. Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#windows">2.1. Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#linux-macos">2.2. Linux/MacOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linux-macos">2.2. Linux/MacOS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#installing-gdal">2.2.1. Installing GDAL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-polarroute">2.2.2. Installing PolarRoute</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">3. Runnning Codebase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Configuration.html">4. Input - Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">5. Dataloader Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Examples.html">7. Examples of running code</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">7. Dataloader Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">11. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">12. Examples of running code</a></li>
 </ul>
 
         </div>
@@ -89,26 +95,69 @@
 <section id="windows">
 <h2><span class="section-number">2.1. </span>Windows<a class="headerlink" href="#windows" title="Permalink to this heading"></a></h2>
 <p>The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running one of the two following commands.</p>
-<p>Github:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pipwin</span>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We assume a version of Windows 10 or higher, with a working version of Python 3.9 including pip installed.
+We recommend installing PolarRoute into a virtual environment.</p>
+</div>
+<p>Requirements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pipwin</span> <span class="c1"># pipwin is a package that allows for easy installation of windows binaries</span>
 <span class="n">pipwin</span> <span class="n">install</span> <span class="n">gdal</span>
 <span class="n">pipwin</span> <span class="n">install</span> <span class="n">fiona</span>
+
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>Github:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">antarctica</span><span class="o">/</span><span class="n">PolarRoute</span><span class="o">.</span><span class="n">git</span>
 <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
 <p>Pip:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">pipwin</span>
-<span class="n">pipwin</span> <span class="n">install</span> <span class="n">gdal</span>
-<span class="n">pipwin</span> <span class="n">install</span> <span class="n">fiona</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">polar</span><span class="o">-</span><span class="n">route</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">polar</span><span class="o">-</span><span class="n">route</span>
 </pre></div>
 </div>
 </section>
 <section id="linux-macos">
 <h2><span class="section-number">2.2. </span>Linux/MacOS<a class="headerlink" href="#linux-macos" title="Permalink to this heading"></a></h2>
+<section id="installing-gdal">
+<h3><span class="section-number">2.2.1. </span>Installing GDAL<a class="headerlink" href="#installing-gdal" title="Permalink to this heading"></a></h3>
+<p>Requirements:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For GDAL (one of the required dependencies for the project), you may try the following
+commands to avoid any installation issues:</p>
+</div>
+<p>Ubuntu/Debian:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sudo add-apt-repository ppa:ubuntugis/ppa
+sudo apt-get update
+sudo apt-get install gdal-bin libgdal-dev
+export CPLUS_INCLUDE_PATH=/usr/include/gdal
+export C_INCLUDE_PATH=/usr/include/gdal
+pip install GDAL==$(gdal-config --version)
+</pre></div>
+</div>
+<p>Fedora:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sudo dnf update
+sudo dnf install gdal gdal-devel
+export CPLUS_INCLUDE_PATH=/usr/include/gdal
+export C_INCLUDE_PATH=/usr/include/gdal
+pip install GDAL==$(gdal-config --version)
+</pre></div>
+</div>
+<p>MacOS (with HomeBrew):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>brew install gdal --HEAD
+brew install gdal
+pip install GDAL==$(gdal-config --version)
+</pre></div>
+</div>
+</section>
+<section id="installing-polarroute">
+<h3><span class="section-number">2.2.2. </span>Installing PolarRoute<a class="headerlink" href="#installing-polarroute" title="Permalink to this heading"></a></h3>
 <p>The PolarRoute software can be installed on Linux/MacOS by running one of the two following commands.</p>
 <p>Github:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">antarctica</span><span class="o">/</span><span class="n">PolarRoute</span><span class="o">.</span><span class="n">git</span>
+<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
 <p>Pip:</p>
@@ -117,13 +166,14 @@
 </div>
 </section>
 </section>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Code_structure.html" class="btn btn-neutral float-left" title="1. Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="running.html" class="btn btn-neutral float-right" title="3. Runnning Codebase" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Code_overview.html" class="btn btn-neutral float-left" title="1. Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ipython_notebooks.html" class="btn btn-neutral float-right" title="3. Python &amp; iPython Notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

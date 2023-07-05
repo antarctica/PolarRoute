@@ -12,7 +12,7 @@ at the British Antarctic Survey. From the website:
    next 6 months of monthly-averaged sea ice concentration maps.
 
 Data for IceNet V1 is available from `here <https://ramadda.data.bas.ac.uk/repository/entry/show>`_
-Data for IceNet V2 is not publically available.
+Data for IceNet V2 is not publicly available.
 
 .. automodule:: polar_route.dataloaders.scalar.icenet
    :special-members: __init__

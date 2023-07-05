@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>9. Methods - Vessel Performance &mdash; polar_route 0.0.17 documentation</title>
+  <title>9. Methods - Vessel Performance &mdash; polar_route 0.2.11 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -19,7 +19,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="10. Methods - Route Planner" href="Route_optimisation.html" />
-    <link rel="prev" title="8. Methods - Mesh Construction" href="Discrete_meshing.html" /> 
+    <link rel="prev" title="8.4.2. Mesh Validation" href="Mesh_Construction/Mesh_validation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,14 +42,14 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">1. Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">3. Runnning Codebase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Configuration.html">4. Input - Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">5. Dataloader Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Examples.html">7. Examples of running code</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">7. Dataloader Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">9. Methods - Vessel Performance</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#vessel-overview">9.1. Vessel Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_performance_modeller">9.2. Vessel Performance Modeller</a><ul>
@@ -103,6 +103,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">11. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">12. Examples of running code</a></li>
 </ul>
 
         </div>
@@ -243,7 +245,7 @@ the mesh accordingly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_accessibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Discrete_meshing.html#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox"><span class="pre">AggregatedCellBox</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_accessibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox"><span class="pre">AggregatedCellBox</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility" title="Permalink to this definition"></a></dt>
 <dd><p>Determine accessibility of the input cell for the given vessel.
 :param cellbox: cell in which accessibility is being determined
 :type cellbox: AggregatedCellBox</p>
@@ -259,7 +261,7 @@ the mesh accordingly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Discrete_meshing.html#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox"><span class="pre">AggregatedCellBox</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox"><span class="pre">AggregatedCellBox</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate performance parameters for the given vessel.
 :param cellbox: cell in which performance is being modelled
 :type cellbox: AggregatedCellBox</p>
@@ -380,15 +382,15 @@ research and supply ship, the RRS Sir David Attenborough (SDA)</p>
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessels.SDA.SDA.invert_resistance">
 <span class="sig-name descname"><span class="pre">invert_resistance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessels.SDA.SDA.invert_resistance" title="Permalink to this definition"></a></dt>
 <dd><p>Method to find the vessel speed that keeps the ice resistance force below a given threshold in a given cell.
-The input cellbox should contain the following values:</p>
+The input cellbox should contain the following values</p>
 <blockquote>
-<div><p>sic (float): The average sea ice concentration in the cell as a percentage
-thickness (float): The average ice thickness in the cell in m
-density (float): The average ice density in the cell in kg/m^3</p>
+<div><p>sic (float) - The average sea ice concentration in the cell as a percentage</p>
+<p>thickness (float) - The average ice thickness in the cell in m</p>
+<p>density (float) - The average ice density in the cell in kg/m^3</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cellbox</strong> (<a class="reference internal" href="Discrete_meshing.html#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox"><em>AggregatedCellBox</em></a>) – input cell from environmental mesh</p>
+<dd class="field-odd"><p><strong>cellbox</strong> (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox"><em>AggregatedCellBox</em></a>) – input cell from environmental mesh</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Safe vessel speed in km/h</p>
@@ -410,7 +412,7 @@ density (float): The average ice density in the cell in kg/m^3</p>
 <dd class="field-odd"><p>updated cell with fuel consumption values</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cellbox (<a class="reference internal" href="Discrete_meshing.html#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox">AggregatedCellBox</a>)</p>
+<dd class="field-even"><p>cellbox (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox">AggregatedCellBox</a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -426,7 +428,7 @@ density (float): The average ice density in the cell in kg/m^3</p>
 <dd class="field-odd"><p>updated cell with resistance values</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cellbox (<a class="reference internal" href="Discrete_meshing.html#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox">AggregatedCellBox</a>)</p>
+<dd class="field-even"><p>cellbox (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox">AggregatedCellBox</a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -442,7 +444,7 @@ density (float): The average ice density in the cell in kg/m^3</p>
 <dd class="field-odd"><p>updated cell with speed values</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cellbox (<a class="reference internal" href="Discrete_meshing.html#polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellBox.AggregatedCellBox">AggregatedCellBox</a>)</p>
+<dd class="field-even"><p>cellbox (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox">AggregatedCellBox</a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -456,7 +458,7 @@ density (float): The average ice density in the cell in kg/m^3</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Discrete_meshing.html" class="btn btn-neutral float-left" title="8. Methods - Mesh Construction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Mesh_Construction/Mesh_validation.html" class="btn btn-neutral float-left" title="8.4.2. Mesh Validation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="Route_optimisation.html" class="btn btn-neutral float-right" title="10. Methods - Route Planner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
