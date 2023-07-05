@@ -17,6 +17,7 @@ class waypoint:
         self.lat = lat
         self.long = long 
         self.name = name
+        self.cellbox_indx = -1
 
     def get_latitude (self):
         '''
@@ -35,3 +36,9 @@ class waypoint:
             returns waypoint name
         '''
         return self.name
+    
+    def get_name (self):
+        '''
+            returns the cellbox index that contains this waypoint 
+        '''
+        return self.cellbox_indx
