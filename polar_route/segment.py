@@ -1,3 +1,5 @@
+import numpy as np
+
 class Segment:
     '''
         class that represents a portion of the route from a start to end waypoints and encapsulates metrics related to this portion(ex. distance, travel time, fuel)
@@ -15,9 +17,9 @@ class Segment:
     def __init__(self , start_wp, end_wp):
         self.start_wp = start_wp
         self.end_wp = end_wp
-        self.distance = -1
-        self.travel_time = -1
-        self.fuel = -1
+        self.distance = np.inf
+        self.travel_time = np.inf
+        self.fuel = np.inf
 
     def set_distance (self, distance):
         '''
