@@ -8,6 +8,7 @@ class waypoint:
             lat(float): the waypoint latitiude 
             long(float): the waypoint longititude 
             name(string) (optional): the waypoint name (ex. Falklands, Rothera)
+            cellbox_indx (int): the index of the cellbox that contains this waypoint
         
         Note:
         All geospatial boundaries are given in a 'EPSG:4326' projection
