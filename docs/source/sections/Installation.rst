@@ -45,8 +45,6 @@ Windows:
     pipwin install gdal
     pipwin install fiona
 
-    pip install -r requirements.txt
-
 
 Linux/MacOS
 ***********
