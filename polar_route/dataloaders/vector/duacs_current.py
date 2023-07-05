@@ -5,10 +5,10 @@ import logging
 import xarray as xr
 
 
-class NrtCurrentDataLoader(VectorDataLoader):
+class DuacsCurrentDataLoader(VectorDataLoader):
     def import_data(self, bounds):
         """
-        Reads in data from a copernicus near real-time current NetCDF file.
+        Reads in data from a DUACS altimeter derived current NetCDF file.
         Renames coordinates to 'lat' and 'long', and renames variable to
         'uC, vC'
 
