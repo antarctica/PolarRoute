@@ -16,7 +16,6 @@ from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 
 
 from polar_route.mesh_validation.sampler import Sampler
-from osgeo import gdal, ogr, osr
 import collections.abc
 import math
 from pathlib import Path
@@ -296,6 +295,7 @@ class EnvironmentMesh:
                 dest.ImportFromEPSG(int(params["projection"]))
                 # transform to target proj and save
                 gdal.Warp(str(path),  str(path), dstSRS=dest.ExportToWkt())
+        
         def set_colour(data, input_file, params):
             """
                   method that changes the color of the generated tif instead of using the default greyscale.
@@ -337,7 +337,9 @@ class EnvironmentMesh:
                 if os.path.isfile (file_path):
                      os.remove(file_path)
 
-
+        # Only import if we need GDAL, to avoid having it as a requirement
+        from osgeo import gdal, ogr, osr
+        
         params = {}
         params = load_params(params_file)
         data_name = params["data_name"]
