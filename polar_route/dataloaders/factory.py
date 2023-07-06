@@ -9,6 +9,7 @@ from polar_route.dataloaders.scalar.modis import MODISDataLoader
 from polar_route.dataloaders.scalar.scalar_csv import ScalarCSVDataLoader
 from polar_route.dataloaders.scalar.scalar_grf import ScalarGRFDataLoader
 from polar_route.dataloaders.scalar.shape import ShapeDataLoader
+from polar_route.dataloaders.scalar.visual_ice import VisualIceDataLoader
 
 from polar_route.dataloaders.vector.baltic_current import BalticCurrentDataLoader
 from polar_route.dataloaders.vector.era5_wind import ERA5WindDataLoader
@@ -76,6 +77,7 @@ class DataLoaderFactory:
             'modis':        (MODISDataLoader, ['files']),
             'thickness':    (ThicknessDataLoader, []),
             'density':      (DensityDataLoader, []),
+            'visual_ice':   (VisualIceDataLoader, ['files']),
             # Scalar - Abstract shapes
             'circle':       (ShapeDataLoader, []),
             'square':       (ShapeDataLoader, []),
