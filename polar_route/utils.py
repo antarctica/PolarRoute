@@ -266,7 +266,7 @@ def _json_str(input):
             with open(input, 'r') as f:
                 output = json.load(f)
         except:
-            raise Exception("Unable to load '{}', please check path name".format(input))
+            raise ValueError("Unable to load '{}', please check path name".format(input))
     return output
 
 if __name__ == '__main__':

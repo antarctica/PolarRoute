@@ -13,6 +13,10 @@ import geopandas as gpd
 import logging
 
 from pandas.core.common import SettingWithCopyWarning
+
+from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from polar_route.source_waypoint import SourceWaypoint
+from polar_route.waypoint import waypoint
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
@@ -34,137 +38,56 @@ class RoutePlanner:
         ---
 
         Attributes:
-         
-
-
-       
+            mesh(EnvironmentMesh): mesh object that contains the mesh's cellboxes information and neighbourhood graph
+            cost_func (func): Crossing point cost function for Dijkstra Path creation.
+            config (Json): JSON object that contains the attributes required for the route construction. 
 
         ---
 
     """
 
-    def __init__(self, env_mesh, config, cost_func=NewtonianDistance):
+    def __init__(self, mesh_file, config_file, cost_func=NewtonianDistance):
 
         """
             Constructs the routes from information given in the config file.
 
             Args:
 
-                env_mesh(EnvironmentMesh): mesh object that contains the mesh's cellboxes information and neighbourhood graph
+                mesh_file(string): the path to the mesh json file that contains the mesh's cellboxes information and neighbourhood graph
 
-                config (dict or string of filepath): config JSON which defines the attributes required for the route construction. 
+                config_file (string): the path to the config JSON file which defines the attributes required for the route construction. 
                     Sections required for the route construction are as follows\n
                     \n
                     {\n
                         "objective_function": (string) currently either 'traveltime' or 'fuel',\n
                         "path_variables": list of (string),\n
-                        "waypoints_path": (string),\n
-                        "source_waypoints": list of (string),\n
-                        "end_waypoints": list of (string),\n
                         "vector_names": (list of (string),\n
                         "zero_currents": (boolean),\n
-                        "variable_speed" (boolean),\n
                         "time_unit" (string),\n
                         "early_stopping_criterion" (boolean),\n
-                        "save_dijkstra_graphs": (boolean),\n
-                        "smooth_path":{\n
-                            "max_iteration_number":(int),\n
-                            "minimum_difference":(float),\n
                     }\n
 
                 cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only!
         """
 
         # Load in the current cell structure & Optimisation Info̦
-        self.mesh             = _json_str(env_mesh)
-        self.config           = _json_str(config)
-     
-
-        # Case indices
-        self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
-
-        # Creating a blank path construct
-        self.paths          = None
-        self.smoothed_paths = None
-        self.dijkstra_info = {}
-
-        # ====== Loading Mesh & Neighbour Graph ======
-     
-
-        # ====== Speed Function Checking ======
-        # Checking if Speed defined in file
-        if 'speed' not in self.neighbour_graph:
-            print(self.neighbour_graph.columns)
-            raise Exception('Vessel Speed not in the mesh information ! Please run vessel performance')
-
-        # ====== Objective Function Information ======
-        #  Checking if objective function is in the cellgrid            
+        self.env_mesh = EnvironmentMesh.load_from_json (_json_str(mesh_file))
+        self.config = _json_str(config_file)
+        # check that the provided mesh has current information
+        if 'uC' not in self.env_mesh.agg_cellboxes[0].agg_data or 'vC' not in self.env_mesh.agg_cellboxes[0].agg_data  :
+            raise ValueError('The env mesh cellboxes do not have current information and it is a prerequisite for the route planner!')
+        # check if speed defined in the env mesh
+        if 'speed' not in self.env_mesh.agg_cellboxes[0].agg_data:
+            raise ValueError('Vessel Speed not in the mesh information ! Please run vessel performance')
+        
+        #  check if objective function is in the env mesh (ex. speed)            
         if self.config['objective_function'] != 'traveltime':
-            if self.config['objective_function'] not in self.neighbour_graph:
-                raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['objective_function']))
-
-        # ===== Dijkstra Graph =====
-        # Adding the required columns needed for the dijkstra graph
-        self.neighbour_graph['positionLocked']          = False
-        for vrbl in self.config['path_variables']:
-            self.neighbour_graph['shortest_{}'.format(vrbl)]    = np.inf
-        self.neighbour_graph['neighbourTravelLegs']     = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['neighbourCrossingPoints'] = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathIndex']               = [list() for x in range(len(self.neighbour_graph.index))]
-        for vrbl in self.config['path_variables']:
-            self.neighbour_graph['path_{}'.format(vrbl)] = [list() for x in range(len(self.neighbour_graph.index))]
-        self.neighbour_graph['pathPoints']               = [list() for x in range(len(self.neighbour_graph.index))]
+            if self.config['objective_function'] not in self.env_mesh.agg_cellboxes[0].agg_data:
+                raise ValueError("Objective Function '{}' requires  the mesh cellboxex to have '{}' in the aggregated data".format(self.config['objective_function'], self.config['objective_function']))
 
         # ====== Defining the cost function ======
         self.cost_func       = cost_func
-
-        # ====== Outlining some constant values ======
-        self.unit_time       = self.config['time_unit']
-        self.zero_currents   = self.config['zero_currents']
-        self.variable_speed  = self.config['variable_speed']
-        if type(self.variable_speed) == float:
-            logging.info(' Defining a constant speed map = {}'.format(self.variable_speed))
-            self.neighbour_graph['speed'] = self.variable_speed
-            cbxs = pd.DataFrame(self.mesh['cellboxes'])
-            cbxs['speed'] = self.variable_speed
-            self.mesh['cellboxes'] = cbxs.to_dict('records')
-
-        # ====== Waypoints ======
-        self.mesh['waypoints'] = waypoints_df
-
-        # Initialising Waypoints positions and cell index
-        wpts = self.mesh['waypoints']
-        wpts['index'] = np.nan
-        for idx,wpt in wpts.iterrows():
-            indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long','Lat']]))].index
-            # Waypoint is not within a mesh cell, but could still be on the edge of one. So perturbing the position slightly to the north-east and checking again. 
-            #If this is not the case then the waypoint is not within the navitagatable domain and will continue
-            if len(indices) == 0:
-                try:
-                    indices = mesh[(mesh['geometry'].contains(Point(wpt[['Long','Lat']]+1e-5)))].index
-                except:
-                    continue
-            if len(indices) == 0:
-                continue
-            if len(indices) > 1:
-                raise Exception('Wapoint lies in multiple cell boxes. Please check mesh ! ')
-            else:
-                wpts['index'].loc[idx] = int(indices[0])
-
     
-
-
-
-    def to_json(self):
-        '''
-            Outputing the information in JSON format
-        '''
-        mesh = copy.copy(self.mesh)
-        mesh['waypoints'] = mesh['waypoints'].to_dict()
-        mesh['config']['route_info'] = self.config
-        output_json = json.loads(json.dumps(mesh, indent=4))
-        del mesh
-        return output_json
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
@@ -348,40 +271,40 @@ class RoutePlanner:
             # Updating Position to be locked
             self.dijkstra_info[wpt_name].loc[minimum_objective_index, 'positionLocked'] = True
 
-    def compute_routes(self):
+    def compute_routes(self, waypoints):
         """
             Computes the Dijkstra Paths between waypoints. 
-            `waypoints` and `paths` are appended to output JSON
+            Args: 
+                waypoints (List <(src_wp, dest_wp)>): a list of pair of source and dest waypoints
+            Returns:
+                routes (List<Route>): a list of the computed routes     
         """
-
-        # Subsetting the waypoints
-        if len(self.source_waypoints) == 0:
-            raise Exception('No source waypoints defined that are accessible')
-        if len(self.end_waypoints) == 0:
-            raise Exception('No destination waypoints defined that are accessible')
-
-        # Initialising the Dijkstra Info Dictionary
-        for wpt in self.source_waypoints:
-            self.dijkstra_info[wpt] = copy.copy(self.neighbour_graph)
+        source_waypoints= []
+        end_waypoints= []
+        for source, dest in waypoints:
+            if self._is_valid_wp_pair(source, dest):
+                source_waypoints.append (source)
+                end_waypoints.append (dest)
+        
+        if len(source_waypoints) == 0:
+            raise ValueError('No source waypoints defined that are accessible')
+        if len(end_waypoints) == 0:
+            raise ValueError('No destination waypoints defined that are accessible')
 
         # 
         logging.info('============= Dijkstra Path Creation ============')
         logging.info(' - Objective = {} '.format(self.config['objective_function']))
 
-        for wpt in self.source_waypoints:
+        for wpt in source_waypoints:
             logging.info('--- Processing Waypoint = {} ---'.format(wpt))
-            if len(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt]) == 0:
-                logging.warning('{} not in accessible waypoints, continuing'.format(wpt))
-                continue
-            elif (len(self.mesh['waypoints']['Name'] == wpt) > 0) and (len(self.mesh['waypoints']['Name'] != wpt) == 0):
-                logging.warning('{} is accessible but has no destination waypoints, continuing'.format(wpt))
-                continue
-            else:
-                self._dijkstra(wpt)
+            self._dijkstra(wpt)
 
 
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
-        self.paths = self._dijkstra_paths(self.source_waypoints, self.end_waypoints)
-        self.mesh['paths'] = self.paths
-
-   
+        return self._dijkstra_paths(self.source_waypoints, self.end_waypoints)  # returning the constructed routes
+    
+def _is_valid_wp_pair (self , source , dest):
+    #TODO:  find the cellbox id for this wp, if nothing found then it is invalid wp and raise warning
+#   logging.warning('{} not in accessible waypoints, continuing'.format(wpt))
+    # logging.warning('{} is accessible but has no destination waypoints, continuing'.format(wpt))
+    pass
