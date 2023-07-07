@@ -18,7 +18,7 @@ class AbstractGlider(AbstractVessel):
         logging.info(f"Initialising a vessel object of type: {self.vessel_params['VesselType']}")
         self.max_speed = self.vessel_params['MaxSpeed']
         self.speed_unit = self.vessel_params['Unit']
-        self.min_depth = self.vessel_params['MinDepth']
+        self.max_elevation = -1 * self.vessel_params['MinDepth']
         self.max_ice = self.vessel_params['MaxIceConc']
 
 
@@ -85,7 +85,7 @@ class AbstractGlider(AbstractVessel):
             logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is too shallow")
             shallow = False
         else:
-            shallow = 0.0 > cellbox.agg_data['elevation'] > self.min_depth
+            shallow = 0.0 > cellbox.agg_data['elevation'] > self.max_elevation
 
         return shallow
 

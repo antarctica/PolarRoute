@@ -38,7 +38,7 @@ class SlocumGlider(AbstractGlider):
                 cellbox (AggregatedCellBox): updated cell with battery consumption values
         """
 
-        if cellbox.agg_data['elevation'] > self.min_depth:
+        if cellbox.agg_data['elevation'] > self.max_elevation:
             battery = np.inf
         elif cellbox.agg_data['elevation'] <= -1000.0:
             # Assume yo-yo dive to 1000m
