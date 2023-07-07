@@ -20,10 +20,13 @@ class VisualIceDataLoader(ScalarDataLoader):
         # Import data from files defined in config
         if len(self.files) == 1:    visual_ice = xr.open_dataset(self.files[0])
         else:                       visual_ice = xr.open_mfdataset(self.files)
-        # Rename columns to standard format
-        # visual_ice = visual_ice.rename({'x':'lat', 'y':'long'})
+
+        # Remove unnecessary columns
         visual_ice = visual_ice.drop_vars('polar_stereographic')
+
+        # Transform columns to standard format
         visual_ice = visual_ice.rename({'Band1':'SIC'})
+        visual_ice.assign(SIC=lambda x: x.SIC * 100)
        
         
         return visual_ice
