@@ -144,18 +144,21 @@ class MeshBuilder:
 
                 logging.debug("creating data loader {}".format(
                     data_source['loader']))
-                updated_splitiing_cond = []  # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader
+                updated_splitting_cond = []  # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader
                 if 'splitting_conditions' in data_source['params']:
                     splitting_conds = data_source['params']['splitting_conditions']
                     for split_cond in splitting_conds:
                         cond = split_cond[loader.data_name]
-                        updated_splitiing_cond.append(cond)
+                        updated_splitting_cond.append(cond)
 
                 value_fill_type = self.check_value_fill_type(data_source)
-              
+
+                # Update list of files in config to match the ones read in by dataloader
+                if 'files' in data_source['params']:
+                    data_source['params']['files'] = loader.files
 
                 meta_data_obj = Metadata(
-                    loader, updated_splitiing_cond,  value_fill_type)
+                    loader, updated_splitting_cond,  value_fill_type)
                 meta_data_list.append(meta_data_obj)
 
         return meta_data_list
@@ -294,6 +297,7 @@ class MeshBuilder:
                         self.neighbour_graph.add_neighbour (int (max_long_cellboxes[i].get_id()) , Direction.south_east, int (min_long_cellboxes[i-1].get_id()))
                    
         return is_global_mesh
+    
     def to_json(self):
         """
             Returns this Mesh converted to a JSON object.

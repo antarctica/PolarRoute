@@ -41,12 +41,12 @@ class VectorDataLoader(DataLoaderInterface):
         for key, val in params.items():
             setattr(self, key, val)
             
+        self.data = self.import_data(bounds)
         # Read in and manipulate data to standard form
         if 'files' in params:
-            logging.info('\tReading in files:')
+            logging.info('Used files:')
             for file in self.files:
-                logging.info(f'\t\t{file}')
-        self.data = self.import_data(bounds)
+                logging.info(f'\t{file}')
         # If need to downsample data
         self.data = self.downsample()
         # If need to reproject data

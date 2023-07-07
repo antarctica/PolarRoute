@@ -44,11 +44,11 @@ class ScalarDataLoader(DataLoaderInterface):
             setattr(self, key, val)
             
         # Read in and manipulate data to standard form
-        if 'files' in params:
-            logging.info('\tReading in files:')
-            for file in self.files:
-                logging.info(f'\t\t{file}')
         self.data = self.import_data(bounds)
+        if 'files' in params:
+            logging.info('Used files:')
+            for file in self.files:
+                logging.info(f'\t{file}')
         # If need to downsample data
         self.data = self.downsample()
         # If need to reproject data
