@@ -42,12 +42,20 @@ class SlocumGlider(AbstractGlider):
             battery = np.inf
         elif cellbox.agg_data['elevation'] <= -1000.0:
             # Assume yo-yo dive to 1000m
-            battery = 5.0
+            # Battery consumption change with speed
+            speed_coefficients = np.array([4.44444444, -0.5555555499999991])
+            speed_polynomial = np.poly1d(speed_coefficients)
+            battery = speed_polynomial(self.max_speed)
         else:
-            # Estimate based on linear fit to figures from Alex's presentation
-            coefficients = np.array([0.005, 10])
-            polynomial = np.poly1d(coefficients)
-            battery = polynomial(cellbox.agg_data['elevation'])
+            # Battery consumption change with speed
+            speed_coefficients = np.array([4.44444444, -0.5555555499999991])
+            speed_polynomial = np.poly1d(speed_coefficients)
+            battery_speed = speed_polynomial(self.max_speed)
+
+            # Estimate depth variation based on linear fit to figures from Alex's presentation
+            depth_coefficients = np.array([0.001, 2])
+            depth_polynomial = np.poly1d(depth_coefficients)
+            battery = battery_speed * depth_polynomial(cellbox.agg_data['elevation'])
 
         cellbox.agg_data['battery'] = [battery for x in range(8)]
         return cellbox
