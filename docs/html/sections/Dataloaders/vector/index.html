@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5.4. Vector Dataloaders &mdash; polar_route 0.0.17 documentation</title>
+  <title>7.4. Vector Dataloaders &mdash; polar_route 0.2.11 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="5.4.1.1. Abstract Vector Dataloader" href="abstractVector.html" />
-    <link rel="prev" title="5.3.3.13. Thickness Dataloader" href="../scalar/implemented/Thickness.html" /> 
+    <link rel="next" title="7.4.1.1. Abstract Vector Dataloader" href="abstractVector.html" />
+    <link rel="prev" title="7.3.3.13. Thickness Dataloader" href="../scalar/implemented/Thickness.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,40 +42,43 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Code_overview.html">1. Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../running.html">3. Runnning Codebase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Configuration.html">4. Input - Configuration</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../overview.html">5. Dataloader Overview</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../DataLoaderInterface.html">5.1. Dataloader Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../Factory.html">5.2. Dataloader Factory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../scalar/index.html">5.3. Scalar Dataloaders</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">5.4. Vector Dataloaders</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#abstract-vector-base-class">5.4.1. Abstract Vector Base Class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="abstractVector.html">5.4.1.1. Abstract Vector Dataloader</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#vector-dataloader-examples">5.4.2. Vector Dataloader Examples</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#implemented-vector-dataloaders">5.4.3. Implemented Vector Dataloaders</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="implemented/BalticCurrent.html">5.4.3.1. Baltic Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="implemented/ERA5Wind.html">5.4.3.2. ERA5 Wind Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="implemented/NorthSeaCurrent.html">5.4.3.3. North Sea Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="implemented/ORAS5Current.html">5.4.3.4. ORAS5 Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="implemented/SOSE.html">5.4.3.5. SOSE Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="implemented/VectorCSV.html">5.4.3.6. Vector CSV Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="implemented/VectorGRF.html">5.4.3.7. Vector GRF Dataloader</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../overview.html#section-overview">5.5. Section Overview</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../../ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Examples.html">7. Examples of running code</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../overview.html">7. Dataloader Overview</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../DataLoaderInterface.html">7.1. Dataloader Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Factory.html">7.2. Dataloader Factory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scalar/index.html">7.3. Scalar Dataloaders</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">7.4. Vector Dataloaders</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#abstract-vector-base-class">7.4.1. Abstract Vector Base Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="abstractVector.html">7.4.1.1. Abstract Vector Dataloader</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#vector-dataloader-examples">7.4.2. Vector Dataloader Examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#implemented-vector-dataloaders">7.4.3. Implemented Vector Dataloaders</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="implemented/BalticCurrent.html">7.4.3.1. Baltic Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="implemented/ERA5Wind.html">7.4.3.2. ERA5 Wind Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="implemented/NorthSeaCurrent.html">7.4.3.3. North Sea Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="implemented/ORAS5Current.html">7.4.3.4. ORAS5 Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="implemented/SOSE.html">7.4.3.5. SOSE Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="implemented/VectorCSV.html">7.4.3.6. Vector CSV Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="implemented/VectorGRF.html">7.4.3.7. Vector GRF Dataloader</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../AddingDataloaders.html">7.5. Adding New Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../overview.html#section-overview">7.6. Section Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Route_optimisation.html">10. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Route_calculation.html">11. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Examples.html">12. Examples of running code</a></li>
 </ul>
 
         </div>
@@ -92,8 +95,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../overview.html"><span class="section-number">5. </span>Dataloader Overview</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">5.4. </span>Vector Dataloaders</li>
+          <li class="breadcrumb-item"><a href="../overview.html"><span class="section-number">7. </span>Dataloader Overview</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">7.4. </span>Vector Dataloaders</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../_sources/sections/Dataloaders/vector/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -104,12 +107,12 @@
            <div itemprop="articleBody">
              
   <section id="vector-dataloaders">
-<span id="abstract-vector-dataloader-index"></span><h1><span class="section-number">5.4. </span>Vector Dataloaders<a class="headerlink" href="#vector-dataloaders" title="Permalink to this heading"></a></h1>
+<span id="abstract-vector-dataloader-index"></span><h1><span class="section-number">7.4. </span>Vector Dataloaders<a class="headerlink" href="#vector-dataloaders" title="Permalink to this heading"></a></h1>
 <section id="abstract-vector-base-class">
-<h2><span class="section-number">5.4.1. </span>Abstract Vector Base Class<a class="headerlink" href="#abstract-vector-base-class" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">7.4.1. </span>Abstract Vector Base Class<a class="headerlink" href="#abstract-vector-base-class" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="abstractVector.html">5.4.1.1. Abstract Vector Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="abstractVector.html">7.4.1.1. Abstract Vector Dataloader</a></li>
 </ul>
 </div>
 <p>The Abstract Base Class of the vector dataloaders holds most of the
@@ -120,11 +123,11 @@ the data into a standard format. More details are provided on the
 <a class="reference internal" href="abstractVector.html#abstract-vector-dataloader"><span class="std std-ref">abstractVector doc page</span></a></p>
 </section>
 <section id="vector-dataloader-examples">
-<h2><span class="section-number">5.4.2. </span>Vector Dataloader Examples<a class="headerlink" href="#vector-dataloader-examples" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">7.4.2. </span>Vector Dataloader Examples<a class="headerlink" href="#vector-dataloader-examples" title="Permalink to this heading"></a></h2>
 <p>Creating a vector dataloader is almost identical to creating a
 <a class="reference internal" href="../scalar/abstractScalar.html#abstract-scalar-dataloader"><span class="std std-ref">scalar dataloader</span></a>. The key differences
 are that the <cite>VectorDataLoader</cite> abstract base class must be used, and that
-the <cite>data_name</cite> is a comma seperated string of the vector component names.
+the <cite>data_name</cite> is a comma separated string of the vector component names.
 e.g. a dataloader storing a vector with column names <code class="code docutils literal notranslate"><span class="pre">uC</span></code> and
 <code class="code docutils literal notranslate"><span class="pre">vC</span></code> will have an attribute <code class="code docutils literal notranslate"><span class="pre">self.data_name</span> <span class="pre">=</span> <span class="pre">'uC,vC'</span></code>
 Data must be imported and saved as an xarray.Dataset, or a
@@ -135,22 +138,6 @@ NetCDF file:</p>
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="k">class</span> <span class="nc">MyDataLoader</span><span class="p">(</span><span class="n">VectorDataLoader</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-        <span class="c1"># Creates a class attribute for all keys in params</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Reading in </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> (dtype=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">) from params&quot;</span>
-                <span class="p">)</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
-
-        <span class="c1"># Import data from file</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_data</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
-
-        <span class="c1"># Retrieve data name from variable name in NetCDF</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_col_name</span><span class="p">()</span>
-
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully loaded </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_name</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
     <span class="k">def</span> <span class="nf">import_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Importing my data...&quot;</span><span class="p">)</span>
         <span class="c1"># Open Dataset</span>
@@ -161,52 +148,33 @@ NetCDF file:</p>
         <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;lon&#39;</span><span class="p">:</span><span class="s1">&#39;long&#39;</span><span class="p">})</span>
 
         <span class="c1"># Limit to initial boundary</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">lat</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">bounds</span><span class="o">.</span><span class="n">get_lat_min</span><span class="p">(),</span><span class="n">bounds</span><span class="o">.</span><span class="n">get_lat_max</span><span class="p">()))</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">long</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">bounds</span><span class="o">.</span><span class="n">get_long_min</span><span class="p">(),</span><span class="n">bounds</span><span class="o">.</span><span class="n">get_long_max</span><span class="p">()))</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="n">bounds</span><span class="o">.</span><span class="n">get_time_min</span><span class="p">(),</span><span class="n">bounds</span><span class="o">.</span><span class="n">get_time_max</span><span class="p">()))</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trim_data</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">data</span>
 </pre></div>
 </div>
-<p>Similar to scalar data loaders, sometimes the data needs to be reprojected
-if it is not initially in mercator projection. It may also need to be downsampled
-if the dataset is very large. The following code handles both of these cases:</p>
+<p>Similar to scalar data loaders, sometimes there are parameters that are constant
+for a data source, but are not constant for all data sources. Default values may
+be defined either in the dataloader factory, or within the dataloader itself.
+Below is an example of setting default parameters for reprojection of a dataset:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyDataLoader</span><span class="p">(</span><span class="n">ScalarDataLoader</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
-        <span class="c1"># Creates a class attribute for all keys in params</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Reading in </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> (dtype=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">) from config params&quot;</span>
-                <span class="p">)</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">add_default_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="c1"># Add all the regular default params that scalar dataloaders have</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_default_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span> <span class="c1"># This line MUST be included</span>
 
-        <span class="c1"># Import data from file</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">import_data</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
-        <span class="c1"># Downsampling data by &#39;downsample_factors&#39; defined in config params</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downsample</span><span class="p">()</span>
-        <span class="c1"># Reprojecting dataset from EPSG:3412 to &#39;EPSG:4326&#39;.</span>
-        <span class="c1"># Coordinate names &#39;x&#39;, &#39;y&#39; will be replaced with &#39;long&#39;, &#39;lat&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span> <span class="n">in_proj</span>  <span class="o">=</span> <span class="s1">&#39;EPSG:3412&#39;</span><span class="p">,</span>
-                                    <span class="n">out_proj</span> <span class="o">=</span> <span class="s1">&#39;EPSG:4326&#39;</span><span class="p">,</span>
-                                    <span class="n">x_col</span>    <span class="o">=</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span>
-                                    <span class="n">y_col</span>    <span class="o">=</span> <span class="s1">&#39;y&#39;</span><span class="p">)</span>
+        <span class="c1"># Define projection of dataset being imported</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;in_proj&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;EPSG:3412&#39;</span>
+        <span class="c1"># Define projection required by output</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;out_proj&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;EPSG:4326&#39;</span> <span class="c1"># default is EPSG:4326, so strictly</span>
+                                         <span class="c1"># speaking this line is not necessary</span>
 
-        <span class="c1"># Limit to initial boundary.</span>
-        <span class="c1"># Note: Reprojection converts data to pandas dataframe</span>
-        <span class="n">idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_datapoints</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span><span class="o">.</span><span class="n">index</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-
-        <span class="c1"># Manually overwriting data names for each vector component</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data_name</span> <span class="o">=</span> <span class="s2">&quot;v_x,v_y&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_data_col_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_name</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully loaded </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">data_name</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Coordinates in dataset that will be reprojected into long/lat</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;x_col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;x&#39;</span> <span class="c1"># Becomes &#39;long&#39;</span>
+        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;y_col&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span> <span class="c1"># Becomes &#39;lat&#39;</span>
 
     <span class="k">def</span> <span class="nf">import_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Importing my data...&quot;</span><span class="p">)</span>
-
         <span class="c1"># Open Dataset</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Opening file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">open_mfdataset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
 
         <span class="c1"># Can&#39;t easily determine bounds of data in wrong projection, so skipping for now</span>
         <span class="k">return</span> <span class="n">data</span>
@@ -214,16 +182,16 @@ if the dataset is very large. The following code handles both of these cases:</p
 </div>
 </section>
 <section id="implemented-vector-dataloaders">
-<h2><span class="section-number">5.4.3. </span>Implemented Vector Dataloaders<a class="headerlink" href="#implemented-vector-dataloaders" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">7.4.3. </span>Implemented Vector Dataloaders<a class="headerlink" href="#implemented-vector-dataloaders" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="implemented/BalticCurrent.html">5.4.3.1. Baltic Currents Dataloader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implemented/ERA5Wind.html">5.4.3.2. ERA5 Wind Dataloader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implemented/NorthSeaCurrent.html">5.4.3.3. North Sea Currents Dataloader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implemented/ORAS5Current.html">5.4.3.4. ORAS5 Currents Dataloader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implemented/SOSE.html">5.4.3.5. SOSE Currents Dataloader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implemented/VectorCSV.html">5.4.3.6. Vector CSV Dataloader</a></li>
-<li class="toctree-l1"><a class="reference internal" href="implemented/VectorGRF.html">5.4.3.7. Vector GRF Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented/BalticCurrent.html">7.4.3.1. Baltic Currents Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented/ERA5Wind.html">7.4.3.2. ERA5 Wind Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented/NorthSeaCurrent.html">7.4.3.3. North Sea Currents Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented/ORAS5Current.html">7.4.3.4. ORAS5 Currents Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented/SOSE.html">7.4.3.5. SOSE Currents Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented/VectorCSV.html">7.4.3.6. Vector CSV Dataloader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implemented/VectorGRF.html">7.4.3.7. Vector GRF Dataloader</a></li>
 </ul>
 </div>
 </section>
@@ -233,8 +201,8 @@ if the dataset is very large. The following code handles both of these cases:</p
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../scalar/implemented/Thickness.html" class="btn btn-neutral float-left" title="5.3.3.13. Thickness Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="abstractVector.html" class="btn btn-neutral float-right" title="5.4.1.1. Abstract Vector Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../scalar/implemented/Thickness.html" class="btn btn-neutral float-left" title="7.3.3.13. Thickness Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="abstractVector.html" class="btn btn-neutral float-right" title="7.4.1.1. Abstract Vector Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

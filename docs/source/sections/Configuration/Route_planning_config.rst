@@ -4,26 +4,24 @@ Configuration - Route Planning
 ::
 
    {
-      "Route_Info": {
-         "Objective_Function": "traveltime",
-         "Path_Variables": [
-            "fuel",
-            "traveltime"
-         ],
-         "WayPoints": "./WayPoints_org.csv",
-         "Source_Waypoints": ["LongPathStart"],
-         "End_Waypoints": [],
-         "Vector Names": ["uC","vC"],
-         "Zero_Currents": false,
-         "Variable_Speed": true,
-         "Time_Unit": "days",
-         "Early_Stopping_Criterion": true,
-         "Save_Dijkstra_Graphs": false,
-         "Smooth Path":{
-            "Max Iteration Number":1000,
-            "Minimum Difference": 1e-3
-         }
-      }
+     "Objective_Function": "traveltime",
+     "Path_Variables": [
+        "fuel",
+        "traveltime"
+     ],
+     "WayPoints": "./WayPoints_org.csv",
+     "Source_Waypoints": ["LongPathStart"],
+     "End_Waypoints": [],
+     "Vector Names": ["uC","vC"],
+     "Zero_Currents": false,
+     "Variable_Speed": true,
+     "Time_Unit": "days",
+     "Early_Stopping_Criterion": true,
+     "Save_Dijkstra_Graphs": false,
+     "Smooth Path":{
+        "Max Iteration Number":1000,
+        "Minimum Difference": 1e-3
+     }
    }
 
 above is a typical set of configuration parameters used for route planning where the variables are as follows:

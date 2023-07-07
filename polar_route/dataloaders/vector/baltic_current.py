@@ -7,7 +7,7 @@ import xarray as xr
 class BalticCurrentDataLoader(VectorDataLoader):
     def import_data(self, bounds):
         '''
-        Reads in data from a BSOSE Depth NetCDF file. 
+        Reads in current data from a copernicus baltic sea physics reanalysis NetCDF file.
         Renames coordinates to 'lat' and 'long', and renames variable to 
         'uC, vC'
         

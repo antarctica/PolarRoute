@@ -17,7 +17,7 @@ class AbstractShip(AbstractVessel):
 
         self.max_speed = self.vessel_params['MaxSpeed']
         self.speed_unit = self.vessel_params['Unit']
-        self.min_depth = self.vessel_params['MinDepth']
+        self.max_elevation = -1 * self.vessel_params['MinDepth']
         self.max_ice = self.vessel_params['MaxIceConc']
 
     def model_performance(self, cellbox):
@@ -99,7 +99,7 @@ class AbstractShip(AbstractVessel):
             logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is land")
             land = False
         else:
-            land = cellbox.agg_data['elevation'] > self.min_depth
+            land = cellbox.agg_data['elevation'] > self.max_elevation
 
         return land
 

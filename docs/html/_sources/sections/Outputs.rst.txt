@@ -4,9 +4,9 @@
 Outputs - Data Types
 ********************
 
-#################
-Mesh construction
-#################
+######################
+The Mesh.json file
+######################
 
 The first stage in the route planning pipeline is constructing a discrete 
 mesh of the environment in which the route planner can operate. Once this
@@ -26,7 +26,7 @@ of mesh construction and json object generation are as follows:
 
 .. note:: 
     Examples and a description of the configuration files can be found in
-    the :ref:`Configuration` section of this document.
+    the :ref:`configuration - mesh construction` section of this document.
 
 
 The json object outputted by the Mesh consists of 3 sections: **config**,
@@ -137,12 +137,13 @@ where each of the values represent the following:
    :align: center
    :width: 700
 
-#################
-Vehicle specifics
-#################
+###########################
+The Vessel_mesh.json file
+###########################
 
 Once a discrete mesh environment is contracted, it is then passed to the vessel performance modeller
-which applies transformations which are specific to a given vehicle.
+which applies transformations which are specific to a given vehicle. These vehicle specific values 
+are then encoded into the mesh json object and passed down-stream to the route planner.
 
 ::
 
@@ -162,7 +163,8 @@ which applies transformations which are specific to a given vehicle.
 .. note::
     To make use of the full range of vessel performance transformations, a Mesh should be constructed with
     the following attributes:
-    
+
+    * elevation (available via data_loaders: *gebco*, *bsose_depth*)
     * SIC (available via data_loaders: *amsr*, *bsose_sic*, *baltic_sic*, *icenet*, *modis*)
     * thickness (available via data_loaders: *thickness*)
     * density (available via data_loaders: *density*)
@@ -189,17 +191,20 @@ have a set of new attributes as follows:
 * **relative wind angle** *(list)* : The angle of the apparent wind acting on the vessel.
 
 
-##############
-Route planning
-##############
+#########################
+The Route.json file
+#########################
 
-During the route planning stage of the pipline information on the routes and the waypoints used are saved as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:
+During the route planning stage of the pipline information on the routes and the waypoints used are saved 
+as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:
 
 =========
 waypoints
 =========
 
-An entry in the json including all the information of the waypoints defined by the user from the `waypoints_path` file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints are returned to this entry. The structure of the entry follows:
+An entry in the json including all the information of the waypoints defined by the user from the `waypoints_path` 
+file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints 
+are returned to this entry. The structure of the entry follows:
 
 :: 
 
@@ -287,7 +292,7 @@ where the output takes a GeoJSON standard form (more infor given at https://geoj
 * **<features>** : A list of the features representing each of the separate routes constructed
     * **geometry**  : The positioning of the route locations
         * **coordinates**  : A list of the Lat,Long position of all the route points
-    * **<properties>** : A list of metainformation about the route
+    * **<properties>** : A list of meta-information about the route
         * **from**  : Starting waypoint of route
         * **to**  : Ending waypoint of route
         * **traveltime** : A list of float values representing the cumulative travel time along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
