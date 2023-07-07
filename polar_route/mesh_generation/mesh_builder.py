@@ -18,8 +18,11 @@ Example:
 
 import logging
 import math
-import json
 import numpy as np
+
+from tqdm import tqdm
+from tqdm.auto import trange
+
 from polar_route.mesh_generation.jgrid_cellbox import JGridCellBox
 from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.cellbox import CellBox
@@ -503,13 +506,30 @@ class MeshBuilder:
         # loop over the data_sources then cellboxes to implement depth-first splitting. should be simpler and loop over cellboxes only once we switch to breadth-first splitting
         # this impl assumws all the cellboxes have the same data sources. should not be the caase once we switch to breadth-first splitting.
         data_sources = self.mesh.cellboxes[0].get_data_source()
-        for index in range(0, len(data_sources)):
+        
+        # Set up data_source progress bar
+        ds_pbar = tqdm(range(0, len(data_sources)), position=0)
+        for index in ds_pbar:
+            # Update name of data source being processed
+            ds_pbar.set_description(f'Processing {data_sources[index].get_data_loader().dataloader_name} data')
+            
             if (len(data_sources[index].get_splitting_conditions()) > 0):
-                for cellbox in self.mesh.cellboxes:
+                # Set up split depth progress bar
+                level = 0
+                sd_pbar = tqdm(range(0, split_depth), desc="Split depth", position=1, leave=False, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}{postfix}')
+                for cb_index, cellbox in enumerate(self.mesh.cellboxes):
                     if isinstance(cellbox, CellBox):
+                        if cellbox.get_split_depth() > level:
+                            level = cellbox.get_split_depth()
+                            # If we're a split level further down, iterate progress in progress bar
+                            sd_pbar.update(1)
+                        # Split the cellbox
                         should_split = cellbox.should_split(index+1)
                         if (cellbox.get_split_depth() < split_depth) & should_split:
                             self.split_and_replace(cellbox)
+                        # Update number of cellboxes processed
+                        sd_pbar.set_postfix_str(f'[Cellbox {cb_index} / {len(self.mesh.get_cellboxes())}]')
+        print('Done splitting')
 
     def build_environmental_mesh(self):
         """
