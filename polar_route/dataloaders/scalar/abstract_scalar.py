@@ -46,9 +46,9 @@ class ScalarDataLoader(DataLoaderInterface):
         # Read in and manipulate data to standard form
         self.data = self.import_data(bounds)
         if 'files' in params:
-            logging.info('Used files:')
+            logging.info('\tFiles read:')
             for file in self.files:
-                logging.info(f'\t{file}')
+                logging.info(f'\t\t{file}')
         # If need to downsample data
         self.data = self.downsample()
         # If need to reproject data
@@ -69,11 +69,11 @@ class ScalarDataLoader(DataLoaderInterface):
 
         # Get data name from column name if not set in params
         if self.data_name is None:
-            logging.debug('- Setting self.data_name from column name')
+            logging.debug('\tSetting self.data_name from column name')
             self.data_name = self.get_data_col_name()
         # or if set in params, set col name to data name
         else:
-            logging.debug(f'- Setting data column name to {self.data_name}')
+            logging.debug(f'\tSetting data column name to {self.data_name}')
             self.data = self.set_data_col_name(self.data_name)
 
     @abstractmethod
@@ -820,7 +820,7 @@ class ScalarDataLoader(DataLoaderInterface):
                                  )
             return name[0]
         
-        logging.info(f"- Retrieving data name from {type(self.data)}")
+        logging.info(f"\tRetrieving data name from {type(self.data)}")
         # Choose method of extraction based on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return get_data_name_from_df(self.data)
@@ -876,7 +876,8 @@ class ScalarDataLoader(DataLoaderInterface):
             return data.rename({old_name: new_name})
         
         old_name = self.get_data_col_name()
-        logging.info(f"- Changing data name from {old_name} to {new_name}")
+        if old_name != new_name:
+            logging.info(f"\tChanging data name from {old_name} to {new_name}")
         # Change data name depending on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return set_name_df(self.data, old_name, new_name)

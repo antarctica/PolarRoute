@@ -44,9 +44,9 @@ class VectorDataLoader(DataLoaderInterface):
         self.data = self.import_data(bounds)
         # Read in and manipulate data to standard form
         if 'files' in params:
-            logging.info('Used files:')
+            logging.info('\tFiles read:')
             for file in self.files:
-                logging.info(f'\t{file}')
+                logging.info(f'\t\t{file}')
         # If need to downsample data
         self.data = self.downsample()
         # If need to reproject data
@@ -67,11 +67,11 @@ class VectorDataLoader(DataLoaderInterface):
 
         # Get data name from column name if not set in params
         if self.data_name is None:
-            logging.debug('- Setting self.data_name from column name')
+            logging.debug('\tSetting self.data_name from column name')
             self.data_name = self.get_data_col_name()
         # or if set in params, set col name to data name
         else:
-            logging.debug(f'- Setting data column name to {self.data_name}')
+            logging.debug(f'\tSetting data column name to {self.data_name}')
             self.data = self.set_data_col_name(self.data_name.split(','))
         # Store data names in a list for easier access in future
         self.data_name_list = self.data_name.split(',')
@@ -788,7 +788,7 @@ class VectorDataLoader(DataLoaderInterface):
         new_data_name = ','.join(new_names)
         
         # Set names
-        logging.info(f'Setting data names to {new_names}')
+        logging.info(f'\tSetting data names to {new_names}')
         self.data_name_list = new_names
         return self.set_data_col_name(new_data_name)
 

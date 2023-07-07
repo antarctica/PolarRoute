@@ -91,7 +91,6 @@ class AMSRDataLoader(ScalarDataLoader):
         
         # Limit self.files to only those actually used
         self.files = relevant_files
-        print(self.files)
         
         # TODO Limit data range before reprojection
         
