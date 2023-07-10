@@ -514,6 +514,8 @@ class MeshBuilder:
         # Set up data_source progress bar
         ds_pbar = tqdm(range(0, len(data_sources)), position=0, 
                        bar_format='{desc}{n_fmt}/{total_fmt} |{bar}| {percentage:3.0f}%, [{elapsed} elapsed] ')
+        sd_pbar = tqdm(range(0, split_depth), position=1, leave=False, 
+                        bar_format=' Split depth: {n_fmt}/{total_fmt} |{bar}| {percentage:3.0f}%{postfix} ')
         for index in ds_pbar:
             # Update name of data source being processed
             ds_pbar.set_description(f' Processing {data_sources[index].get_data_loader().dataloader_name} data')
