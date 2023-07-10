@@ -657,7 +657,7 @@ class VectorDataLoader(DataLoaderInterface):
             defeating the purpose
             '''
             logging.warning(
-                '- Downsampling called on pd.DataFrame! Downsampling a df' \
+                '\tDownsampling called on pd.DataFrame! Downsampling a df' \
                 'too computationally expensive, returning original df'
                 )
             return data
@@ -669,10 +669,10 @@ class VectorDataLoader(DataLoaderInterface):
         # If no downsampling
         if self.downsample_factors == (1,1) or \
            self.downsample_factors == [1,1]:
-            logging.debug("- self.downsample() called but don't have to")
+            logging.debug("\tself.downsample() called but don't have to")
             return self.data
         else:
-            logging.info(f"- Downsampling data by {self.downsample_factors}")
+            logging.info(f"\tDownsampling data by {self.downsample_factors}")
         # Otherwise, downsample appropriately
         if type(self.data) == pd.core.frame.DataFrame:
             return downsample_df(self.data, self.downsample_factors, agg_type)
