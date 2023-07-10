@@ -8,7 +8,7 @@ class waypoint:
             lat(float): the waypoint latitiude 
             long(float): the waypoint longititude 
             name(string) (optional): the waypoint name (ex. Falklands, Rothera)
-            cellbox_indx (int): the index of the cellbox that contains this waypoint
+            cellbox_indx(int): the index of the cellbox that contains this waypoint
         
         Note:
         All geospatial boundaries are given in a 'EPSG:4326' projection
@@ -38,8 +38,14 @@ class waypoint:
         '''
         return self.name
     
-    def get_name (self):
+    def get_cellbox_indx(self):
         '''
-            returns the cellbox index that contains this waypoint 
+            returns the cellbox id that contains this waypoint 
         '''
         return self.cellbox_indx
+    
+    def set_cellbox_indx (self , id):
+        '''
+            sets the cellbox id that contains this waypoint 
+        '''
+        self.cellbox_indx = id

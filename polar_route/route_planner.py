@@ -240,29 +240,27 @@ class RoutePlanner:
 
         self.dijkstra_info[wpt_name].loc[minimum_objective_index] = source_graph
 
-    def _dijkstra(self, wpt_name):
+    def _dijkstra(self, wp , end_wps):
         """
             Runs dijkstra across the whole of the domain.
+            Args:
+                wp (Waypoint): object contains the lat, long information of the source waypoint
+                end_wps(List(Waypoint)): a list of the end waypoints
         """
-        # Including only the End Waypoints defined by the user
-        wpts = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(self.end_waypoints)]
-        
-        # Initialising zero traveltime at the source location
-        source_index = int(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt_name]['index'])
-
-        for vrbl in self.config['path_variables']:
-            self.dijkstra_info[wpt_name].loc[source_index, 'shortest_{}'.format(vrbl)] = 0.0
-        self.dijkstra_info[wpt_name].loc[source_index, 'pathIndex'].append(source_index)
         
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
-        if self.config['early_stopping_criterion']:
-            stopping_criterion_indices = wpts['index']
-        else:
-            stopping_criterion_indices = self.dijkstra_info[wpt_name].index
+        if not self.config['early_stopping_criterion']:
+          #TODO: handle
+          pass
 
-        while (self.dijkstra_info[wpt_name].loc[stopping_criterion_indices, 'positionLocked'] == False).any():
+        source_wp = SourceWaypoint (wp)
+        while not source_wp.is_all_visited (end_wps):   
 
             # Determining the index of the minimum objective function that has not been visited
+           # get the neighbours
+        #    TODO: update
+            self.env_mesh.neighbour_graph [source_wp.get_cellbox_indx()]
+            self.env_mesh.agg_cellboxes[source_wp.get_cellbox_indx()][self.config['objective_function']]  # find which of tnhme is not visited and has the minimal obj_func
             minimum_objective_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked'] == False]['shortest_{}'.format(self.config['objective_function'])].idxmin()
   
             # Finding the cost of the nearest neighbours from the source cell (Sc)
@@ -279,32 +277,51 @@ class RoutePlanner:
             Returns:
                 routes (List<Route>): a list of the computed routes     
         """
-        source_waypoints= []
-        end_waypoints= []
-        for source, dest in waypoints:
-            if self._is_valid_wp_pair(source, dest):
-                source_waypoints.append (source)
-                end_waypoints.append (dest)
+        for wp_pair in waypoints:
+            if not self._is_valid_wp_pair(wp_pair[0], wp_pair[1]):
+                waypoints.remove (wp_pair)
         
-        if len(source_waypoints) == 0:
-            raise ValueError('No source waypoints defined that are accessible')
-        if len(end_waypoints) == 0:
-            raise ValueError('No destination waypoints defined that are accessible')
+        if len(waypoints) == 0:
+            raise ValueError('No waypoint pair defined that is accessible')
+    
 
         # 
         logging.info('============= Dijkstra Path Creation ============')
         logging.info(' - Objective = {} '.format(self.config['objective_function']))
-
-        for wpt in source_waypoints:
+        end_wps =  [dest for source, dest in waypoints ]
+        for wpt_pair in waypoints:
             logging.info('--- Processing Waypoint = {} ---'.format(wpt))
-            self._dijkstra(wpt)
+            self._dijkstra(wpt_pair[0], end_wps)
 
 
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         return self._dijkstra_paths(self.source_waypoints, self.end_waypoints)  # returning the constructed routes
     
 def _is_valid_wp_pair (self , source , dest):
-    #TODO:  find the cellbox id for this wp, if nothing found then it is invalid wp and raise warning
-#   logging.warning('{} not in accessible waypoints, continuing'.format(wpt))
-    # logging.warning('{} is accessible but has no destination waypoints, continuing'.format(wpt))
-    pass
+    """
+            Determines if the provided waypoint pair is valid (both lie within the bounds of the env mesh).
+            Args:
+                source (Waypoint): waypoint object that encapsulates the source's lat and long information
+                dest (Waypoint): waypoint object that encapsulates the dest's lat and long information
+            Returns:
+                is_valid (Boolean): true if both source and dest are within the env mesh bounds and false otherwise
+     
+    """
+    #TODO: what to do if the provided source is not inside a cellbox but close from a cellbox?
+    source_id = -1
+    dest_id = -1
+    for indx in range (len(self.env_mesh.agg_cellboxes)):
+        if self.env_mesh.agg_cellboxes[indx].contains_point (source.get_latitude() , source.get_longtitude()):
+            source_indx = indx
+            source.set_cellbox_indx(source_indx)
+        if self.env_mesh.agg_cellboxes[indx].contains_point (dest.get_latitude() , dest.get_longtitude()):
+            dest_indx = indx
+            dest.set_cellbox_indx(dest_indx)
+    if source_id == -1:
+          logging.warning('{} not in accessible waypoints'.format(source.get_name()))
+          return False
+    if dest_id == -1:
+         logging.warning('{} is accessible but has no destination waypoints'.format(dest.get_name()))
+         return False
+    
+    return True

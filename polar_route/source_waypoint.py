@@ -13,20 +13,26 @@ class SourceWaypoint (waypoint):
 
     '''
 
-    def __init__(self, lat,long, name =None):
-        super().__init__(lat,long, name )
+    def __init__(self, source):
+        """
+            initializes a SourceWaypoint object from a Waypoint object
+            Args:
+                source(Waypoint): an object that encapsulates the latitude, longtitude, name and cellbox_id information
+        """
+        super().__init__(source.get_latitude(),source.get_longtitude(), source.get_name())
+        self.cellbox_id = source.get_cellbox_id()
         self.visited_nodes = []
         self.routing_table = {}
         # add routing information to itself, empty list of sepments as distance = 0
-        self.routing_table[self.cellbox_indx] = RoutingInfo (self.cellbox_indx , []) 
-        self.visited_nodes.append( self.cellbox_indx)
+        self.routing_table[self.cellbox_id] = RoutingInfo (self.cellbox_id, []) 
+        self.visited_nodes.append( self.cellbox_id)
 
 
     def update_routing_table( self, indx, routing_info):
         self.routing_table[indx] = routing_info
 
-    def visit_node( self, cellbox_indx):
-        self.visited_nodes.append (cellbox_indx)
+    def visit_node( self, cellbox_id):
+        self.visited_nodes.append (cellbox_id)
 
     def is_visited ( self , indx): 
         return indx in  self.visited_nodes
