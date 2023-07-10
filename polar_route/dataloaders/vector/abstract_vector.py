@@ -272,7 +272,7 @@ class VectorDataLoader(DataLoaderInterface):
            data.lat.max() <= bounds.get_lat_max() and \
            data.long.min() >  bounds.get_long_min() and \
            data.long.max() <= bounds.get_long_max():
-            logging.trace('\tData is already trimmed to bounds!')
+            logging.debug('\tData is already trimmed to bounds!')
             return data
         
         if type(data) == pd.core.frame.DataFrame:
@@ -372,7 +372,7 @@ class VectorDataLoader(DataLoaderInterface):
                 np.float64: Aggregated value
             '''
             data_count = len(dps)
-            logging.trace(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If no data
             if data_count == 0:
                 values = [np.nan, np.nan]
@@ -418,7 +418,7 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Info on size of array
             data_count = dps._magnitude.size 
-            logging.trace(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If no data, return np.nan for each variable
             if data_count == 0:
                 values = [np.nan, np.nan]
@@ -523,7 +523,7 @@ class VectorDataLoader(DataLoaderInterface):
                 if reynolds > splitting_conds['reynolds']:
                     hom_type = 'HET'
 
-        logging.trace(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+        logging.debug(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
         
         return hom_type
 

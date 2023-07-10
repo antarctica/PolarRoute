@@ -229,7 +229,7 @@ class ScalarDataLoader(DataLoaderInterface):
            data.lat.max() <= bounds.get_lat_max() and \
            data.long.min() >  bounds.get_long_min() and \
            data.long.max() <= bounds.get_long_max():
-            logging.trace('\tData is already trimmed to bounds!')
+            logging.debug('\tData is already trimmed to bounds!')
             return data
         
         if type(data) == pd.core.frame.DataFrame:
@@ -371,7 +371,7 @@ class ScalarDataLoader(DataLoaderInterface):
             # Skip NaN's if desired
             if skipna:  dps = dps.dropna()
 
-            logging.trace(f"\t{len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If want the number of datapoints
             if agg_type =='COUNT':
                 return len(dps)
@@ -414,7 +414,7 @@ class ScalarDataLoader(DataLoaderInterface):
             '''
             # Extract values to be worked on by numpy functions
             dps = dps.values
-            logging.trace(f"\t{len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If want the number of datapoints
             if agg_type =='COUNT':
                 return dps.size
@@ -519,7 +519,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
                 else: hom_type = "HET"
 
-            logging.trace(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+            logging.debug(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
             return hom_type
         
         def get_hom_condition_from_xr(dps, splitting_conds):
@@ -549,7 +549,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
                 else: hom_type = "HET"
                 
-            logging.trace(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+            logging.debug(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
             
             return hom_type
         
