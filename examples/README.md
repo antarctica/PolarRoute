@@ -11,7 +11,9 @@ To run PolarRoute, choose one config out of each directory and execute commands 
 {environment_config}, {vessel_config}, {route_config}, and {waypoints} can be any of the JSON's in `environment_config/`, `vessel_config/`, `route_config/`, and `./` respectively. 
 
 {create_mesh_output} is typically `create_mesh.output.json`
+
 {add_vehicle_output} is typically `add_vehicle.output.json`
+
 Both of these can be manually set by using the `-o` flag when running `create_mesh` and `add_vehicle` respectively.
 
 {any_output} can be the output after any of the 3 prior stages. `plot_mesh` will output a HTML showing the mesh after any stage, which can be useful for debugging purposes.
