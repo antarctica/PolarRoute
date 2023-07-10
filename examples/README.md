@@ -6,12 +6,15 @@ To run PolarRoute, choose one config out of each directory and execute commands 
 1. create_mesh {environment_config}
 2. add_vehicle {vessel_config} {create_mesh_output}
 3. optimise_routes {route_config} {add_vehicle_output} {waypoints}
+4. (optional) plot_mesh {any_output}
 
-{environment_config}, {vessel_config}, {route_config}, and {waypoints} can be any of the JSON's in `environment_config/`, `vessel_config/`, `route_config/`, and `./` respectively.
+{environment_config}, {vessel_config}, {route_config}, and {waypoints} can be any of the JSON's in `environment_config/`, `vessel_config/`, `route_config/`, and `./` respectively. 
 
 {create_mesh_output} is typically `create_mesh.output.json`
 {add_vehicle_output} is typically `add_vehicle.output.json`
 Both of these can be manually set by using the `-o` flag when running `create_mesh` and `add_vehicle` respectively.
+
+{any_output} can be the output after any of the 3 prior stages. `plot_mesh` will output a HTML showing the mesh after any stage, which can be useful for debugging purposes.
 
 ## Environment Config
 Contains 3 examples:
@@ -41,9 +44,11 @@ Contains 2 examples:
     - For generating travel-time optimised routes
 
 ## Waypoints
-Contains 1 example:
-1. waypoints.csv
+Contains 2 examples:
+1. waypoints_real.csv
     - Contains points of interest around the world that the SDA may travel to.
+2. waypoints_example.csv
+    - Minimal working example that will work with the GRF meshes
 
 ## Common Errors
 The most common source of errors is a malformed config. To ensure that this does not happen, here are some easy checks you can perform:

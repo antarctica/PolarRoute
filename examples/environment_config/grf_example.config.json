@@ -196,7 +196,7 @@
                 }
             ],
             "splitting": {
-                "split_depth": 4,
+                "split_depth": 6,
                 "minimum_datapoints": 5
             }
         }
