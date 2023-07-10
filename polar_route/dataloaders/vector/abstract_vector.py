@@ -272,7 +272,7 @@ class VectorDataLoader(DataLoaderInterface):
            data.lat.max() <= bounds.get_lat_max() and \
            data.long.min() >  bounds.get_long_min() and \
            data.long.max() <= bounds.get_long_max():
-            logging.debug('Data is already trimmed to bounds!')
+            logging.trace('\tData is already trimmed to bounds!')
             return data
         
         if type(data) == pd.core.frame.DataFrame:
@@ -372,7 +372,7 @@ class VectorDataLoader(DataLoaderInterface):
                 np.float64: Aggregated value
             '''
             data_count = len(dps)
-            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.trace(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If no data
             if data_count == 0:
                 values = [np.nan, np.nan]
@@ -418,7 +418,7 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Info on size of array
             data_count = dps._magnitude.size 
-            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.trace(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If no data, return np.nan for each variable
             if data_count == 0:
                 values = [np.nan, np.nan]
@@ -498,34 +498,34 @@ class VectorDataLoader(DataLoaderInterface):
         elif type(self.data) == xr.core.dataset.Dataset:
             num_dp = min(self.trim_datapoints(bounds).count().values())
 
+        # Set default homogeneity 
+        hom_type = 'CLR'
+
         # Check to see if it's above the minimum threshold
         if num_dp < self.min_dp:
-            return 'MIN'
-        
-        # To allow multiple modes of splitting, chuck them in the splitting conditions
-        # Split if magnitude of curl(data) is larger than threshold 
-        if 'curl' in splitting_conds:
-            curl = self.calc_curl(bounds)
-            if np.abs(curl) > splitting_conds['curl']:
-                return 'HET'
-        # Split if max magnitude(any_vector - ave_vector) is larger than threshold
-        if 'dmag' in splitting_conds:
-            dmag = self.calc_dmag(bounds)
-            if np.abs(dmag) > splitting_conds['dmag']:
-                return 'HET'
-            
-        # Split if Reynolds number is larger than threshold
-        if 'reynolds' in splitting_conds:        
-            reynolds = self.calc_reynolds_number(bounds)
-            if reynolds > splitting_conds['reynolds']:
-                return 'HET'
-        
-        # TODO
-        # HOM would only apply if whole cell is faster than vehicle, which wouldn't be calculated in the mesh generation stage?
-        # Non-navigable cells pruned in next step so leaving out for now
+            hom_type = 'MIN'
+        else:
+            # To allow multiple modes of splitting, chuck them in the splitting conditions
+            # Split if magnitude of curl(data) is larger than threshold 
+            if 'curl' in splitting_conds:
+                curl = self.calc_curl(bounds)
+                if np.abs(curl) > splitting_conds['curl']:
+                    hom_type =  'HET'
+            # Split if max magnitude(any_vector - ave_vector) is larger than threshold
+            if 'dmag' in splitting_conds:
+                dmag = self.calc_dmag(bounds)
+                if np.abs(dmag) > splitting_conds['dmag']:
+                    hom_type = 'HET'
                 
-        # If none of the above return conditions are triggered, cell is clear
-        return 'CLR'
+            # Split if Reynolds number is larger than threshold
+            if 'reynolds' in splitting_conds:        
+                reynolds = self.calc_reynolds_number(bounds)
+                if reynolds > splitting_conds['reynolds']:
+                    hom_type = 'HET'
+
+        logging.trace(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+        
+        return hom_type
 
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
@@ -814,6 +814,7 @@ class VectorDataLoader(DataLoaderInterface):
         # Extract the characteristic length
         length = bounds.calc_size()
         # Calculate the reynolds number and return
+        logging.warning("\tReynold number used for splitting, this function assumes properties of ocean water!")
         return 1028 * 0.00167 * speed * length
 
     def calc_divergence(self, bounds, data=None, collapse=True, agg_type='MAX'):
@@ -850,7 +851,7 @@ class VectorDataLoader(DataLoaderInterface):
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
         # If not enough datapoints to compute gradient
         if 1 in fx.shape or 1 in fy.shape:
-            logging.debug('Unable to compute gradient in cell')
+            logging.debug('\tUnable to compute gradient across cell for divergence calculation')
             div = np.nan
         else:
             # Compute partial derivatives
@@ -861,7 +862,7 @@ class VectorDataLoader(DataLoaderInterface):
         
         # If div is nan
         if np.isnan(div).all():
-            logging.debug('All NaN cellbox encountered')
+            logging.debug('\tAll NaN cellbox encountered')
             return np.nan
         # If want to collapse to max mag value, return scalar
         elif collapse:   
@@ -906,7 +907,7 @@ class VectorDataLoader(DataLoaderInterface):
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
         # If not enough datapoints to compute gradient
         if 1 in fx.shape or 1 in fy.shape:
-            logging.debug('Unable to compute gradient in cell')
+            logging.debug('\tUnable to compute gradient across cell for curl calculation')
             curl = np.nan
         else:
             # Compute partial derivatives
@@ -917,7 +918,7 @@ class VectorDataLoader(DataLoaderInterface):
 
         # If div is nan
         if np.isnan(curl).all():
-            logging.debug('All NaN cellbox encountered')
+            logging.debug('\tAll NaN cellbox encountered')
             return np.nan
         # If want to collapse to max mag value, return scalar
         elif collapse:
@@ -967,11 +968,11 @@ class VectorDataLoader(DataLoaderInterface):
         
         d_mag = np.linalg.norm(delta_vector, axis=1)
         if len(d_mag) == 0:
-            logging.debug('Empty cellbox encountered')
+            logging.debug('\tEmpty cellbox encountered')
             return np.nan
         # If div is nan
         elif np.isnan(d_mag).all():
-            logging.debug('All NaN cellbox encountered')
+            logging.debug('\tAll NaN cellbox encountered')
             return np.nan
         # If want to collapse to max mag value, return scalar
         elif collapse:
