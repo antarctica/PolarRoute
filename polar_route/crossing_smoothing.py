@@ -3,6 +3,16 @@ import pandas as pd
 import numpy as np
 import pyproj
 
+def _dist_around_globe(Sp,Cp):
+    a1 = np.sign(Cp-Sp)*(np.max([Sp,Cp])-np.min([Sp,Cp]))
+    a2 = -(360-(np.max([Sp,Cp])-np.min([Sp,Cp])))*np.sign(Cp-Sp)
+
+    dist = [a1,a2]
+    indx = np.argmin(abs(np.array(dist)))
+
+    a = dist[indx]
+    return a
+
 
 
 class find_edge:
@@ -39,6 +49,14 @@ class find_edge:
     
 # =====================================================
 class PathValues:
+    '''
+    
+        Currently this need to correct the s
+    
+    
+    '''
+
+
     def __init__(self):
         # ======= Supply cellbox information =======
 
@@ -192,7 +210,7 @@ class PathValues:
         '''
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
-        x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
+        x = _dist_around_globe(Cp[0],Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*m_lat
         case = self._case_from_angle(Cp,Wp)
         Su  = source_graph['Vector_x']
@@ -263,7 +281,6 @@ class PathValues:
                 if type(segment_variable[var]) == np.ndarray:
                     variables[var]['path_values'][ii+1] = segment_variable[var][segment_case]
                 else:
-                    print(segment_variable[var])
                     variables[var]['path_values'][ii+1] = segment_variable[var]
 
 
@@ -442,6 +459,7 @@ class Smoothing:
             return F,dF,X1,X2
 
 
+
         Sp = list(Sp)
         Cp = list(Cp)
         Np = list(Np)
@@ -464,8 +482,12 @@ class Smoothing:
         λ_s  = Sp[1]*(np.pi/180)
         φ_r  = Np[1]*(np.pi/180)
 
-        x           = sgn*(Cp[0] - Sp[0])*111.321*1000.
-        a           = sgn*(Np[0] - Cp[0])*111.321*1000.
+        # x           = sgn*(Cp[0] - Sp[0])*111.321*1000.
+        # a           = sgn*(Np[0] - Cp[0])*111.321*1000.
+
+        x = _dist_around_globe(Cp[0],Sp[0])*111.321*1000.
+        a = _dist_around_globe(Np[0],Cp[0])*111.321*1000.
+
         Y           = (Np[1]-Sp[1])*111.386*1000.
         y0          = Y/2
         u1          = sgn*cell_s_u; v1 = cell_s_v
@@ -802,7 +824,7 @@ class Smoothing:
         try:
             max_new = new_cell['SIC']
         except:
-            print(new_cell)
+            return True
         
         
         # Percentage difference
@@ -929,7 +951,7 @@ class Smoothing:
         sp_lon,sp_lat = start_point
         ep_lon,ep_lat = end_point
 
-        distance = np.sqrt(((sp_lon-ep_lon)*(111.321*1000.))**2 + ((sp_lat-ep_lat)*(111.386*1000.))**2)
+        distance = np.sqrt(((sp_lon-ep_lon)*(111.321))**2 + ((sp_lat-ep_lat)*(111.386))**2)
 
         #azimuth1, azimuth2, distance = self._g.inv(sp_lon, sp_lat, ep_lon, ep_lat)
         return distance
@@ -950,7 +972,6 @@ class Smoothing:
             lastpoint  = None
 
             jj+=1
-            print('--Iteration=',jj)
             converged = True
             ii=0
             while ii < path_length:
@@ -961,9 +982,8 @@ class Smoothing:
                     app = self.aps[ii+1]
                     lastpoint = app.crossing
                 else:
-                    app = None
+                    app = self.aps[ii]
                     lastpoint  = self.end_waypoint
-                    break
 
                 # Removing reverse edges
                 if ap.start['id'] == app.end['id']:
@@ -1017,7 +1037,6 @@ class Smoothing:
                             firstpoint=midpoint
                             continue
                         else:
-                            print('Diagonal')
                             edge_a = find_edge(ap.start,target,case_a)
                             edge_b = find_edge(target,ap.end,case_b)
                             self.remove(ii)
@@ -1037,7 +1056,7 @@ class Smoothing:
                 add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)
                 if add_indicies == None:
                     midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
-                    if self.dist(midpoint,midpoint_prime) > 100:
+                    if self.dist(midpoint,midpoint_prime) > self.converged_sep:
                         converged = False
                     ap.crossing = midpoint_prime
                     ii += 1
@@ -1056,7 +1075,6 @@ class Smoothing:
                             firstpoint = midpoint_prime
                             continue
                         else:
-                            print('V-Shaphed')
                             edge_a = find_edge(ap.start,target,case_a)
                             edge_b = find_edge(target,ap.end,case_b)
                             self.remove(ii)
@@ -1077,7 +1095,6 @@ class Smoothing:
                         case_c = add_cases[2]
 
                         if not self.blocked(target_a,ap.start,ap.end) and not self.blocked(target_b,ap.start,ap.end):
-                            print('U-Shaphed')
                             edge_a = find_edge(ap.start,target_a,case_a)
                             edge_b = find_edge(target_a,target_b,case_b)
                             edge_c = find_edge(target_b,ap.end,case_c)
@@ -1094,6 +1111,5 @@ class Smoothing:
                             ii += 1
                             firstpoint = midpoint_prime
                             continue
-            if jj == 50000:
-                print('Early termination at 5000 epochs')
+            if jj == 10000:
                 break
