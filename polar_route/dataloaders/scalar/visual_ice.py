@@ -26,7 +26,7 @@ class VisualIceDataLoader(ScalarDataLoader):
 
         # Transform columns to standard format
         visual_ice = visual_ice.rename({'Band1':'SIC'})
-        visual_ice.assign(SIC=lambda x: x.SIC * 100)
+        visual_ice = visual_ice.assign(SIC=lambda x: x.SIC * 100)
        
         
         return visual_ice
