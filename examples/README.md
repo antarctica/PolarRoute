@@ -23,7 +23,7 @@ Both of these can be manually set by using the `-o` flag when running `create_me
 Contains 3 examples:
 1. grf_example.json:
     - Generates fake data to mesh using Gaussian Random Fields (GRF)
-    - Contains example all possible config parameters for GRF dataloader
+    - Contains example of all possible config parameters for GRF dataloader
 
 2. grf_minimal_example.json
     - Generates fake data to mesh using GRF's
@@ -55,7 +55,9 @@ Contains 2 examples:
 
 ## Common Errors
 The most common source of errors is a malformed config. To ensure that this does not happen, here are some easy checks you can perform:
-- Do the files/folders in your environment_config point to the correct location?
+- If you are running an example that relies on real data:
+    - make sure you have the needed data files, if not you can get them from the SAN
+    - update the datasources inside the environment_config to point to the correct file path
 - Does the time range specified in your environment_config exclude all the data from one of the dataloaders?
 - Do all of your waypoints lay outside of your initial mesh boundary?
 - Are your waypoints inaccessible because of land/SIC?
