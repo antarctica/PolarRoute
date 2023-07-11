@@ -29,8 +29,7 @@
                 {
                     "loader": "vector_grf",
                     "params": {
-                        "data_name": "uC,vC",
-                        "dataloader_name": "vector_grf"
+                        "data_name": "uC,vC"
                     }
                 }
             ],

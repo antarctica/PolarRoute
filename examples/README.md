@@ -1,5 +1,6 @@
 # Examples
-This directory contains example configs that can be used with PolarRoute.
+This directory contains example configs that can be used with PolarRoute. Please make sure you have PolarRoute properly installed before attempting to run these examples. 
+You will also need GeoPlot installed to run the `plot_mesh` command, however it is not necessary if all you need is the ability to generate meshes. 
 
 To run PolarRoute, choose one config out of each directory and execute commands in this order:
 
