@@ -17,7 +17,7 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
 
-from polar_route.crossing_refactor import Smoothing,PathValues
+from polar_route.crossing_smoothing import Smoothing,PathValues
 
 
 def _flattenCases(id,mesh):
