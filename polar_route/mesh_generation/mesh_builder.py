@@ -18,8 +18,11 @@ Example:
 
 import logging
 import math
-import json
 import numpy as np
+
+from tqdm import tqdm
+from tqdm.auto import trange
+
 from polar_route.mesh_generation.jgrid_cellbox import JGridCellBox
 from polar_route.mesh_generation.boundary import Boundary
 from polar_route.mesh_generation.cellbox import CellBox
@@ -108,7 +111,7 @@ class MeshBuilder:
         meta_data_list = self.initialize_meta_data(bounds, min_datapoints)
 
         # checking to avoid any dummy cellboxes (the ones that was splitted and replaced)
-        logging.info("Assigning data source to cellboxes...")
+        logging.info("Assigning data sources to cellboxes...")
         for cellbox in cellboxes:
             if isinstance(cellbox, CellBox):
                 cellbox.set_minimum_datapoints(min_datapoints)
@@ -116,7 +119,7 @@ class MeshBuilder:
                 cellbox.set_data_source(meta_data_list)
 
         
-        logging.info("Initialise neighbours graph...")
+        logging.info("Initialising neighbour graph...")
         self.neighbour_graph = NeighbourGraph(cellboxes, grid_width)
         self.neighbour_graph.set_global_mesh (self.check_global_mesh(bounds, cellboxes, int(grid_width)))
 
@@ -141,18 +144,21 @@ class MeshBuilder:
 
                 logging.debug("creating data loader {}".format(
                     data_source['loader']))
-                updated_splitiing_cond = []  # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader
+                updated_splitting_cond = []  # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader
                 if 'splitting_conditions' in data_source['params']:
                     splitting_conds = data_source['params']['splitting_conditions']
                     for split_cond in splitting_conds:
                         cond = split_cond[loader.data_name]
-                        updated_splitiing_cond.append(cond)
+                        updated_splitting_cond.append(cond)
 
                 value_fill_type = self.check_value_fill_type(data_source)
-              
+
+                # Update list of files in config to match the ones read in by dataloader
+                if 'files' in data_source['params']:
+                    data_source['params']['files'] = loader.files
 
                 meta_data_obj = Metadata(
-                    loader, updated_splitiing_cond,  value_fill_type)
+                    loader, updated_splitting_cond,  value_fill_type)
                 meta_data_list.append(meta_data_obj)
 
         return meta_data_list
@@ -291,6 +297,7 @@ class MeshBuilder:
                         self.neighbour_graph.add_neighbour (int (max_long_cellboxes[i].get_id()) , Direction.south_east, int (min_long_cellboxes[i-1].get_id()))
                    
         return is_global_mesh
+    
     def to_json(self):
         """
             Returns this Mesh converted to a JSON object.
@@ -499,17 +506,42 @@ class MeshBuilder:
                 split_depth (int): The maximum split depth reached by any CellBox
                     within this Mesh after splitting.
         """
-        logging.info ("splitting cellboxes ...")
+        logging.info ("Splitting cellboxes...")
         # loop over the data_sources then cellboxes to implement depth-first splitting. should be simpler and loop over cellboxes only once we switch to breadth-first splitting
         # this impl assumws all the cellboxes have the same data sources. should not be the caase once we switch to breadth-first splitting.
         data_sources = self.mesh.cellboxes[0].get_data_source()
-        for index in range(0, len(data_sources)):
+        
+        # Set up data_source progress bar
+        ds_pbar = tqdm(range(0, len(data_sources)), position=0, 
+                       bar_format='{desc}{n_fmt}/{total_fmt} |{bar}| {percentage:3.0f}%, [{elapsed} elapsed] ')
+        sd_pbar = tqdm(range(0, split_depth), position=1, leave=False, 
+                        bar_format=' Split depth: {n_fmt}/{total_fmt} |{bar}| {percentage:3.0f}%{postfix} ')
+        for index in ds_pbar:
+            # Update name of data source being processed
+            ds_pbar.set_description(f' Processing {data_sources[index].get_data_loader().dataloader_name} data')
+            
             if (len(data_sources[index].get_splitting_conditions()) > 0):
-                for cellbox in self.mesh.cellboxes:
+                # Set up split depth progress bar
+                level = 0
+                sd_pbar = tqdm(range(0, split_depth), position=1, leave=False, 
+                               bar_format=' Split depth: {n_fmt}/{total_fmt} |{bar}| {percentage:3.0f}%{postfix} ')
+
+                for cb_index, cellbox in enumerate(self.mesh.cellboxes):
+                    ds_pbar.update(0)
                     if isinstance(cellbox, CellBox):
+                        if cellbox.get_split_depth() > level:
+                            level = cellbox.get_split_depth()
+                            # If we're a split level further down, iterate progress in progress bar
+                            sd_pbar.update()
+                        # Split the cellbox
                         should_split = cellbox.should_split(index+1)
                         if (cellbox.get_split_depth() < split_depth) & should_split:
                             self.split_and_replace(cellbox)
+                        # Update number of cellboxes processed
+                        sd_pbar.set_postfix_str(f'[Cellbox {cb_index+1} / {len(self.mesh.cellboxes)}]')
+        tqdm.write('')
+        ds_pbar.clear()
+        sd_pbar.clear()
 
     def build_environmental_mesh(self):
         """
@@ -522,7 +554,9 @@ class MeshBuilder:
         agg_cellboxes = []
 
         agg_cell_count = 0
-        for cellbox in self.mesh.cellboxes:
+        logging.info('Aggregating cellboxes...')
+        for cellbox in tqdm(self.mesh.cellboxes, 
+                            bar_format=' Aggregating cellboxes: {n_fmt}/{total_fmt} |{bar}| {percentage:3.0f}%, [{elapsed} elapsed] '):
             agg_cell_count += 1
             if isinstance(cellbox, CellBox):
                 logging.debug(f'aggregating cellbox ({agg_cell_count}/{len(self.mesh.cellboxes)})')
