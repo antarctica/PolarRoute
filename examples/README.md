@@ -1,6 +1,6 @@
 # Examples
 This directory contains example configs that can be used with PolarRoute. Please make sure you have PolarRoute properly installed before attempting to run these examples. 
-You will also need GeoPlot installed to run the `plot_mesh` command, however it is not necessary if all you need is the ability to generate meshes. 
+You will also need GeoPlot installed to run the `plot_mesh` command, however it is not necessary if all you need is the ability to generate meshes. See `https://github.com/antarctica/geoplot` for more instructions.
 
 To run PolarRoute, choose one config out of each directory and execute commands in this order:
 
@@ -33,6 +33,10 @@ Contains 3 examples:
     - Relies on real data, see documentation for sources of each dataset
     - Contains example of typical config parameters used during development
     - File / folder paths are relative
+    - Visit the following links to download files for this dataloader:
+        - GEBCO: https://download.gebco.net/
+        - AMSR: https://seaice.uni-bremen.de/data-archive/
+        - SOSE: http://sose.ucsd.edu/sose_stateestimation_data_05to10.html
 
 ## Vessel Config
 Contains 1 example:
