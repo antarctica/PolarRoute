@@ -153,6 +153,17 @@ class EnvironmentMesh:
 
         # Formatting mesh to geoJSON
         mesh_df = pd.DataFrame(mesh_json['cellboxes'])
+
+        # Average all values stored in list format
+        for column in mesh_df.columns:
+            if column in ['id', 'geometry']:
+                continue
+            elif mesh_df[column].dtype == list:
+                mesh_df[column] = [np.mean(x) for x in mesh_df[column]]
+
+        # Remove infs and replace with nan
+        mesh_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
         mesh_df['geometry'] = mesh_df['geometry'].apply(wkt.loads)
         mesh_gdf = gpd.GeoDataFrame(
             mesh_df, crs="EPSG:4326", geometry="geometry")
@@ -448,7 +459,7 @@ class EnvironmentMesh:
                     json.dump(self.to_json(), f)
                 elif format.upper() == "GEOJSON":
                     logging.info(f"Saving mesh in {format} format")
-                    json.dump(self.to_geojson(), f)
+                    json.dump(self.to_geojson(), f, indent=4)
                 else:
                     logging.warning(f"Cannot save mesh in a {format} format")
 
