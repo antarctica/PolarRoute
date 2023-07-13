@@ -2,11 +2,13 @@ from polar_route.dataloaders.dataloader_interface import DataLoaderInterface
 from abc import abstractmethod
 
 from pyproj import Transformer, CRS
+from rasterio.enums import Resampling
 
 import logging
 import numpy as np
 import xarray as xr
 import pandas as pd
+
 
 from polar_route.utils import timed_call
 
@@ -223,7 +225,6 @@ class ScalarDataLoader(DataLoaderInterface):
         # If no specific data passed in, default to entire dataset
         if data is None:
             data = self.data
-        
         # Skip trimming if data already completely within bounds
         if data.lat.min() >  bounds.get_lat_min() and \
            data.lat.max() <= bounds.get_lat_max() and \
@@ -231,7 +232,7 @@ class ScalarDataLoader(DataLoaderInterface):
            data.long.max() <= bounds.get_long_max():
             logging.debug('\tData is already trimmed to bounds!')
             return data
-        
+
         if type(data) == pd.core.frame.DataFrame:
             return trim_datapoints_from_df(data, bounds)
         elif type(data) == xr.core.dataset.Dataset:
@@ -420,6 +421,8 @@ class ScalarDataLoader(DataLoaderInterface):
                 return dps.size
             # If no data
             elif dps.size == 0:
+                return np.nan
+            elif np.isnan(dps).all():
                 return np.nan
             # Return float of aggregated value
             elif agg_type == 'MIN':
@@ -619,8 +622,8 @@ class ScalarDataLoader(DataLoaderInterface):
                     .from_crs(CRS(in_proj), CRS(out_proj), always_xy=True)\
                     .transform(data[x_col].to_numpy(), data[y_col].to_numpy())
             # Replace columns with reprojected columns called 'lat'/'long'
-            if x_col != 'lat':  data = data.drop(x_col, axis=1)
-            if y_col != 'long': data = data.drop(y_col, axis=1)
+            if x_col != 'long':  data = data.drop(x_col, axis=1)
+            if y_col != 'lat': data = data.drop(y_col, axis=1)
             data['lat']  = y
             data['long'] = x
             
@@ -635,7 +638,7 @@ class ScalarDataLoader(DataLoaderInterface):
                     Data to reproject, with coordinates x_col, y_col
                 in_proj (str): 
                     Projection the original dataset is in, as a string 
-                    understandable by PyProj (e.g. 'EPSG:3031')
+                    understandable by rioxarray (e.g. 'EPSG:3031')
                 out_proj (str):
                     Projection desired as output format. Should be always be
                     Mercator, but doesn't have to be if you desire
@@ -652,10 +655,17 @@ class ScalarDataLoader(DataLoaderInterface):
                     Reprojected dataset, with columns 'lat', 'long', 
                     ('time' if in original dataset), and data_name
             '''
-            # Cast to dataframe, then reproject using reproject_df
-            # Cannot reproject directly as memory usage skyrockets
-            df = data.to_dataframe().reset_index().dropna()
-            return reproject_df(df, in_proj, out_proj, x_col, y_col)
+            # Set data CRS
+            data = data.rio.write_crs(in_proj)
+            # Reproject
+            data = data.rio.reproject(out_proj, resampling=Resampling.bilinear, 
+                                                nodata=np.nan)
+            # Rename coordinates
+            data = data.rename({x_col: 'long', y_col: 'lat'})
+            # Reorder coords in case they are wrong
+            data = data.sortby('lat', ascending=True)
+            data = data.sortby('long', ascending=True)
+            return data
 
         # If no reprojection to do
         if in_proj == out_proj:
