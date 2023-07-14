@@ -161,20 +161,33 @@ def optimise_routes_cli():
 def export_mesh_cli():
     """
         CLI entry point for exporting a mesh to standard formats.
+        Currently supported formats are JSON, GEOJSON, TIF
     """
-
-    args = get_args("export_mesh.output.json", 
-                    config_arg = False, mesh_arg = True, format_arg = True)
-    if args.format.upper() == "TIF" and  args.output == "export_mesh.output.json": # check if the output file name is not provided set to a defualt name
-        args.output = "mesh.tif"
+    # Default, used only by the Mesh Builder and PolarRoute
+    args = get_args("mesh.json", 
+                    config_arg = False, 
+                    mesh_arg = True, 
+                    format_arg = True)
+        
+    if args.format.upper() == "GEOJSON":
+        args = get_args("mesh_geo.json", 
+                    config_arg = False, 
+                    mesh_arg = True, 
+                    format_arg = True)
+        
+    elif args.format.upper() == "TIF":
+        args = get_args("mesh.tif", 
+                    config_arg = False, 
+                    mesh_arg = True, 
+                    format_arg = True)
     
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
     mesh = json.load(args.mesh)
-
     env_mesh = EnvironmentMesh.load_from_json(mesh)
 
     logging.info(f"exporting mesh to {args.output} in format {args.format}")
+
     env_mesh.save(args.output, args.format , args.format_conf)
 
 @timed_call
