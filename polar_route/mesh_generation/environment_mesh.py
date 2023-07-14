@@ -154,15 +154,17 @@ class EnvironmentMesh:
         # Formatting mesh to geoJSON
         mesh_df = pd.DataFrame(mesh_json['cellboxes'])
 
-        # Average all values stored in list format
+        # Average all values stored in list format and drop unnecessary values
         for column in mesh_df.columns:
             if column in ['id', 'geometry']:
                 continue
+            elif column in ['cx', 'cy', 'dcx', 'dcy']:
+                mesh_df = mesh_df.drop(column, axis=1)
             elif mesh_df[column].dtype == list:
                 mesh_df[column] = [np.mean(x) for x in mesh_df[column]]
 
         # Remove infs and replace with nan
-        mesh_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+        mesh_df = mesh_df.replace([np.inf, -np.inf], np.nan)
 
         mesh_df['geometry'] = mesh_df['geometry'].apply(wkt.loads)
         mesh_gdf = gpd.GeoDataFrame(
