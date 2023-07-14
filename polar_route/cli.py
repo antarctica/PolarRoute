@@ -168,11 +168,7 @@ def export_mesh_cli():
     if args.format.upper() == "TIF" and  args.output == "export_mesh.output.json": # check if the output file name is not provided set to a defualt name
         args.output = "mesh.tif"
     
-    print(f" Mesh arg = {args.mesh}, format arg = {args.format}")
-    
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
-
-    
 
     mesh = json.load(args.mesh)
 
