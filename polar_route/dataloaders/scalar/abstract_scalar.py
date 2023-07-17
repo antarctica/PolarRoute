@@ -655,10 +655,12 @@ class ScalarDataLoader(DataLoaderInterface):
                     Reprojected dataset, with columns 'lat', 'long', 
                     ('time' if in original dataset), and data_name
             '''
+            max_size = sum(data.sizes.values())
             # Set data CRS
             data = data.rio.write_crs(in_proj)
             # Reproject
-            data = data.rio.reproject(out_proj, resampling=Resampling.bilinear, 
+            data = data.rio.reproject(out_proj, resampling=Resampling.average,
+                                                shape=((max_size,max_size)), 
                                                 nodata=np.nan)
             # Rename coordinates
             data = data.rename({x_col: 'long', y_col: 'lat'})
