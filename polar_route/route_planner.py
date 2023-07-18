@@ -15,9 +15,9 @@ import logging
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from polar_route.crossing import NewtonianDistance, NewtonianCurve
+from polar_route.crossing import NewtonianDistance
 
-from polar_route.crossing_smoothing import Smoothing,PathValues
+from polar_route.crossing_smoothing import Smoothing,PathValues,find_edge
 
 
 def _flattenCases(id,mesh):
@@ -30,8 +30,50 @@ def _flattenCases(id,mesh):
             neighbour_indx.append(int(neighbour))
     return neighbour_case, neighbour_indx
 
+def _initialise_dijkstra_graph(dijkstra_graph):
+    '''
+        Initialising dijkstra graph information into a standard form
+    '''
+
+    dijkstra_graph_dict = {}
+    for idx,cell in dijkstra_graph.iterrows():
+        dijkstra_graph_dict[cell.name] = {}
+        dijkstra_graph_dict[cell.name]['id'] = cell.name
+        for key in cell.keys():
+            entry = cell[key]
+            if type(entry) == list:
+                entry = np.array(entry)
+            dijkstra_graph_dict[cell.name][key] = entry
+    return  dijkstra_graph_dict
 
 
+def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
+    '''
+        Initialising dijkstra route into a standard path form
+    '''
+
+    org_path_points = np.array(dijkstra_route['geometry']['coordinates'])
+    org_cellindices = np.array(dijkstra_route['properties']['CellIndices'])
+    org_cellcases= np.array(dijkstra_route['properties']['cases'])
+
+    # -- Generating a dataframe of the case information -- 
+    Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
+    cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
+    cellcases = np.concatenate([[org_cellcases[0]],[org_cellcases[0]],org_cellcases[1:-1:2],[org_cellcases[-1]],[org_cellcases[-1]]])
+
+    cellDijk    = [dijkstra_graph[ii] for ii in cellIndices]
+    cells  = cellDijk[1:-1]
+    cases  = cellcases[1:-1]
+    aps = []
+    for ii in range(len(cells)-1):
+        aps += [find_edge(cells[ii],cells[ii+1],cases[ii+1])]
+
+    # #-- Setting some backend information
+    aps = aps
+    start_waypoint = Points[0,:]
+    end_waypoint   = Points[-1,:]
+
+    return aps, start_waypoint,end_waypoint
 
 def _json_str(input):
     if type(input) is dict:
@@ -433,7 +475,7 @@ class RoutePlanner:
                                           zerocurrents=self.zero_currents)
             # Updating the Dijkstra graph with the new information
             traveltime, crossing_points,cell_points,case = cost_func.value()
-
+            
             source_graph['neighbourTravelLegs'].append(traveltime)
             source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
 
@@ -517,7 +559,7 @@ class RoutePlanner:
         self.paths = self._dijkstra_paths(self.source_waypoints, self.end_waypoints)
         self.mesh['paths'] = self.paths
 
-    def compute_smoothed_routes(self):
+    def compute_smoothed_routes(self,blocked_metric='SIC'):
         """
             Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
             `paths` will be updated in the output JSON
@@ -534,8 +576,15 @@ class RoutePlanner:
         for route in routes:
             logging.info('---Smoothing {}'.format(route['properties']['name']))
             dijkstra_graph = self.dijkstra_info[route['properties']['from']]
-            sf = Smoothing(dijkstra_graph,route)
-            sf.forward()
+            self.initialise_dijkstra_graph = _initialise_dijkstra_graph(dijkstra_graph)
+            adjacent_pairs,start_waypoint,end_waypoint = _initialise_dijkstra_route(self.initialise_dijkstra_graph,route)
+
+            
+            sf = Smoothing(self.initialise_dijkstra_graph,adjacent_pairs,start_waypoint,end_waypoint,blocked_metric=blocked_metric)
+            self.sf = sf
+            self.sf.forward()
+
+            
 
         
             # ------ Smooth Path Values -----

@@ -2,6 +2,7 @@ import copy
 import pandas as pd
 import numpy as np
 import pyproj
+import logging
 
 def _dist_around_globe(Sp,Cp):
     a1 = np.sign(Cp-Sp)*(np.max([Sp,Cp])-np.min([Sp,Cp]))
@@ -13,7 +14,26 @@ def _dist_around_globe(Sp,Cp):
     a = dist[indx]
     return a
 
+def _max_distance(points_1,points_2):
 
+    if len(points_1) != len(points_2):
+        return np.nan
+    distance = np.zeros(len(points_1))*np.nan
+    for ii in range(len(points_1)):
+        sp_lon,sp_lat = points_1[ii]
+        ep_lon,ep_lat = points_2[ii]
+        distance[ii] = np.sqrt(((sp_lon-ep_lon)*(111.321))**2 + ((sp_lat-ep_lat)*(111.386))**2)
+
+    return np.max(distance)
+
+def _max_distance_group(current_points,list_previous_points,last_num=15):    
+    previous_points = list_previous_points[-last_num:]
+    distance = np.zeros(len(previous_points))*np.nan
+    for ii in range(len(distance)):
+        previous_crossing = np.array([ap.crossing for ap in previous_points[ii]]) 
+        distance[ii] = _max_distance(current_points,previous_crossing)
+
+    return np.max(distance)
 
 class find_edge:
     def __init__(self,cell_a,cell_b,case):
@@ -301,78 +321,41 @@ class PathValues:
 
 #======================================================
 class Smoothing:
-    def __init__(self,dijkstra_graph,dijkstra_route,config=None):
+    def __init__(self,dijkstra_graph,adjacent_pairs,start_waypoint,end_waypoint,blocked_metric='SIC'):
         '''
             Class construct that has all the operations requried for path smoothing. Including: Relationship of adjacent pairs,
             edge finding ..
 
         '''
-        self._initialise_config(config)
-        self._initialise_dijkstra_graph(dijkstra_graph)
-        self._initialise_dijkstra_route(dijkstra_route)
+        self._initialise_config()
+        self.dijkstra_graph = dijkstra_graph
+        self.aps = adjacent_pairs
+        self.start_waypoint = start_waypoint
+        self.end_waypoint = end_waypoint
+        self.blocked_metric = blocked_metric
 
 
+        for key in self.dijkstra_graph.keys():
+            cell = self.dijkstra_graph[key]
+            if len(cell['neighbourTravelLegs'])>0:
+                accessible_edges = np.where(np.isfinite(np.sum(cell['neighbourTravelLegs'],axis=1)))[0]
+                cell['case'] = cell['case'][accessible_edges]
+                cell['neighbourIndex'] = cell['neighbourIndex'][accessible_edges]
+                cell['neighbourCrossingPoints'] = cell['neighbourCrossingPoints'][accessible_edges]
+                cell['neighbourTravelLegs'] = cell['neighbourTravelLegs'][accessible_edges]
 
-    def _initialise_config(self,config):
+                self.dijkstra_graph[key] = cell
+
+    def _initialise_config(self):
         '''    
             Initialising configuration information. If None return a list of standards
         '''
 
-        self.merge_separation = 1e-3
-        self.converged_sep = 1e-3
+        self.merge_separation = 1e-6
+        self.converged_sep = 1e-5
 
         self._g = pyproj.Geod(ellps='WGS84')
 
-    def _initialise_dijkstra_graph(self,dijkstra_graph):
-        '''
-            Initialising dijkstra graph information into a standard form
-        '''
-
-        dijkstra_graph_dict = {}
-        for idx,cell in dijkstra_graph.iterrows():
-            dijkstra_graph_dict[cell.name] = {}
-            dijkstra_graph_dict[cell.name]['id'] = cell.name
-            for key in cell.keys():
-                entry = cell[key]
-                if type(entry) == list:
-                    entry = np.array(entry)
-                dijkstra_graph_dict[cell.name][key] = entry
-        self.dijkstra_graph = dijkstra_graph_dict
-        
-
-    def _initialise_dijkstra_route(self,dijkstra_route):
-        '''
-            Initialising dijkstra route into a standard path form
-        '''
-
-        org_path_points = np.array(dijkstra_route['geometry']['coordinates'])
-        org_cellindices = np.array(dijkstra_route['properties']['CellIndices'])
-        org_cellcases= np.array(dijkstra_route['properties']['cases'])
-
-        # -- Generating a dataframe of the case information -- 
-        Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
-        cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
-        cellcases = np.concatenate([[org_cellcases[0]],[org_cellcases[0]],org_cellcases[1:-1:2],[org_cellcases[-1]],[org_cellcases[-1]]])
-
-        cellDijk    = [self.dijkstra_graph[ii] for ii in cellIndices]
-        cells  = cellDijk[1:-1]
-        cases  = cellcases[1:-1]
-        aps = []
-        for ii in range(len(cells)-1):
-            aps += [find_edge(cells[ii],cells[ii+1],cases[ii+1])]
-
-        # #-- Setting some backend information
-        self.aps = aps
-        self.start_waypoint = Points[0,:]
-        self.end_waypoint   = Points[-1,:]
-
-
-
-        # self.aps = aps[-29:]
-        # self.start_waypoint = self.aps[1].crossing
-        # self.end_waypoint   = self.aps[-1].crossing
-
-        # self.aps = self.aps
 
     def _long_case(self,start,end,case,Sp,Cp,Np):
         '''
@@ -726,12 +709,13 @@ class Smoothing:
                 case_a = (-2)
                 case_b   = -case   
 
-            
-
-        if ('case_a' in locals()) and ('case_b' in locals()):
+        try:
             return case_a,case_b
-        else:
-            raise Exception ('Case addition {} not specified')
+        except:
+            print(case)
+            print(smin,smax,emin,emax)
+            print(vmin,vmax)
+            print(x[0],x[1])    
 
     def _neighbour_indices(self,cell_a,cell_b,case,add_case_a,add_case_b):
         '''
@@ -816,27 +800,21 @@ class Smoothing:
             Initially this is only dependent on the Sea-Ice Concentration
         
         '''
-        # if type(new_cell) == type(None):
-        #     return True
+        start = cell_a['SIC']
+        end   = cell_b['SIC']
 
-        # Sea-Ice Determinination
-        max_org = np.max([cell_a['SIC'],cell_b['SIC']])
-        try:
-            max_new = new_cell['SIC']
-        except:
-            return True
-        
-        
-        # Percentage difference
+        max_org = np.max([start,end])
+        max_new = new_cell['SIC']
+
         percentage_diff = (max_new-max_org)
-        if percentage_diff < 10:
+        if percentage_diff < 2:
             return False
         else:
             return True
-
+                
 
     def clip(self,cell_a,cell_b,case,x):
-        '''
+        '''f
             Given two cell boxes clip point to within the cell boxes
         '''
         if abs(case) == 2:
@@ -851,7 +829,7 @@ class Smoothing:
             vmax = np.min([smax,emax])
 
             x = (x[0],
-                np.clip(x[1],vmin+1e-9,vmax-1e-9))
+                np.clip(x[1],vmin,vmax))
         elif abs(case) == 4:
 
             # Defining the min and max of the start and end cells
@@ -864,7 +842,7 @@ class Smoothing:
             vmin = np.max([smin,emin])
             vmax = np.min([smax,emax])
 
-            x = (np.clip(x[0],vmin+1e-9,vmax-1e-9),
+            x = (np.clip(x[0],vmin,vmax),
                     x[1])
 
         return x
@@ -887,20 +865,15 @@ class Smoothing:
         lp_lon,lp_lat = lastpoint
 
 
-        # Approximate great-circle to 50000 point and determine point with closest misfit
-        # _lonlats     = np.array(self._g.npts(fp_lon, fp_lat, lp_lon, lp_lat,50000))
-        # mp_lat_misfit = _lonlats[:,0]-mp_lon
-        # mp_lat_diff   = _lonlats[np.argmin(abs(mp_lat_misfit)),1] - mp_lat
+        #Approximate great-circle to 50000 point and determine point with closest misfit
+        _lonlats     = np.array(self._g.npts(fp_lon, fp_lat, lp_lon, lp_lat,50000))
+        mp_lat_misfit = _lonlats[:,0]-mp_lon
+        mp_lat_diff   = _lonlats[np.argmin(abs(mp_lat_misfit)),1] - mp_lat
 
-
-        mp_line = ((lp_lat-fp_lat)/(lp_lon-fp_lon))*(mp_lon-fp_lon) + fp_lat
-        mp_lat_diff = mp_line-mp_lat
-
-        
-        # Return if difference below the coverged_sep
-        if abs(mp_lat_diff) < self.converged_sep:
-            return None,None
-        
+        # #Straight Line Connecting points
+        # mp_line = ((lp_lat-fp_lat)/(lp_lon-fp_lon))*(mp_lon-fp_lon) + fp_lat
+        # mp_lat_diff = mp_line-mp_lat
+       
         # Using the initial case identify the new cell to introduce. Return to after doing
         #nearest neighbour section
         if case == 1:
@@ -934,12 +907,8 @@ class Smoothing:
         else:
             return None,None
 
-
         # Determining the additional cell to include
         add_indicies,add_edges = self._neighbour_cells(cell_a,cell_b,case,target_a_case,target_b_case)
-
-
-
 
         return add_indicies,add_edges
 
@@ -956,16 +925,13 @@ class Smoothing:
         #azimuth1, azimuth2, distance = self._g.inv(sp_lon, sp_lat, ep_lon, ep_lat)
         return distance
 
-    def inside(self):
-        '''
-            Determining if a point is within a cell box
-        '''
-
     def forward(self):
         converged = False
         jj = 0
+        self.previous_aps = []
         while not converged:
             path_length = len(self.aps)
+            self.previous_aps += [copy.copy(self.aps)]
 
             firstpoint = self.start_waypoint
             midpoint   = None 
@@ -1001,26 +967,38 @@ class Smoothing:
 
 
 
-                if self.dist(midpoint,lastpoint) < self.merge_separation and self.dist(firstpoint,midpoint) != 0.0:
+                if self.dist(midpoint,lastpoint) < self.merge_separation:
+                    self.ap = ap
+                    self.app = app
+                    self.midpoint = midpoint
+                    self.lastpoint = lastpoint
                     start_cell  = ap.start
                     end_cell    = app.end
-                    _merge_case = start_cell['case'][np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0][0]]
-                    new_edge = find_edge(start_cell,end_cell,_merge_case)
-                    self.remove(ii) #Removing ap
-                    self.remove(ii) #Removing app
-                    self.add(ii,[new_edge])
-                    path_length -= 1
-                    converged = False
-                    continue
+
+                    common_cell = np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0]
+                    if len(common_cell) == 1:
+                        _merge_case = start_cell['case'][np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0][0]]
+                        new_edge = find_edge(start_cell,end_cell,_merge_case)
+                        self.remove(ii) #Removing ap
+                        self.remove(ii) #Removing app
+                        self.add(ii,[new_edge])
+                        path_length -= 1
+                        converged = False
+                        continue
+
 
                 # == Diagonal cases == 
                 if self.diagonal_case(ap.start,ap.end,ap.case):
                     add_indicies,add_cases = self.diagonal_select_side(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
                     if add_indicies is None:
-                        if add_cases == None:
-                            ii += 1
-                            firstpoint=midpoint
-                            continue
+                        ii += 1
+                        firstpoint=midpoint
+                        continue
+
+                        # if add_cases == None:
+                        #     ii += 1
+                        #     firstpoint=midpoint
+                        #     continue
                         # else:
                         #     edge = find_edge(ap.start,ap.end,add_cases[0])
                         #     self.remove(ii)
@@ -1035,17 +1013,14 @@ class Smoothing:
                         if self.blocked(target,ap.start,ap.end):
                             ii += 1
                             firstpoint=midpoint
-                            continue
                         else:
                             edge_a = find_edge(ap.start,target,case_a)
                             edge_b = find_edge(target,ap.end,case_b)
                             self.remove(ii)
                             self.add(ii,[edge_a,edge_b])
                             path_length += 1
-                            ii+=2
-                            firstpoint = lastpoint
-                            converged = False
-                            continue
+                        converged = False
+                        continue
                         
 
 
@@ -1053,7 +1028,10 @@ class Smoothing:
                 if type(midpoint_prime) == type(None):
                     raise Exception('Newton call failed to converge or recover')
                 
+                
                 add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)
+
+                # No additional cells to add
                 if add_indicies == None:
                     midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
                     if self.dist(midpoint,midpoint_prime) > self.converged_sep:
@@ -1065,11 +1043,14 @@ class Smoothing:
 
                 # Introduction of a v-shape
                 if len(add_indicies) == 1:
+                        logging.debug('--- Adding in V-shape ---')
                         target = add_indicies[0]
                         case_a = add_cases[0]
                         case_b = add_cases[1]
                         if self.blocked(target,ap.start,ap.end):
                             midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                            if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                                converged = False
                             ap.crossing = midpoint_prime
                             ii += 1
                             firstpoint = midpoint_prime
@@ -1088,6 +1069,7 @@ class Smoothing:
 
                 # Introduction of a U-shape
                 if len(add_indicies) == 2:
+                        logging.debug('--- Adding in U-shape ---')
                         target_a = add_indicies[0]
                         target_b = add_indicies[1]
                         case_a = add_cases[0]
@@ -1107,9 +1089,18 @@ class Smoothing:
 
                         else:
                             midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                            if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                                converged = False
                             ap.crossing = midpoint_prime
                             ii += 1
                             firstpoint = midpoint_prime
                             continue
+
+
+            if _max_distance_group(np.array([ap.crossing for ap in self.aps]),self.previous_aps) <= self.converged_sep:
+                print(jj)
+                converged=True
+
             if jj == 10000:
+                print('Max iterations of 10000 met.')
                 break
