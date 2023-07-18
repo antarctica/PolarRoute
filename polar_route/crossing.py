@@ -9,6 +9,7 @@ import copy
 import pandas as pd
 import numpy as np
 import pyproj
+import logging
 np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -84,30 +85,32 @@ class NewtonianDistance:
         self.debugging     = debugging
 
     def _newton_optimisation(self, f, x, a, Y, u1, v1, u2, v2, s1, s2):
-        '''
-            FILL
-        '''
+        """
+            Find the y value of the crossing point and travel time in each cell using the Newton method
+        """
         y0 = (Y*x)/(x+a)
         if self.debugging:
             print('---Initial y={:.2f}'.format(y0))
         improving = True
-        iterartion_num = 0
+        iteration_num = 0
         while improving:
-            F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
-            if F==np.inf:
-                return np.nan,np.inf  
+            F, dF, X1, X2, t1, t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
+            if F == np.inf:
+                return np.nan, np.inf
 
             if self.debugging:
                 print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'\
-                      .format(iterartion_num,y0,F,dF))
+                      .format(iteration_num, y0, F, dF))
             y0  = y0 - (F/dF)
             improving = abs((F/dF)/(X1*X2)) > self.optimizer_tol
-            iterartion_num+=1
-            if iterartion_num>1000:
-                raise Exception('Newton not able to converge')
-            
+            iteration_num += 1
+            if iteration_num > 1000:
+                y0 = np.nan
+                t1 = np.inf
+                t2 = np.inf
+                logging.debug("Newton not able to converge: setting travel time to infinity")
 
-        return y0,self._unit_time(np.array([t1,t2]))
+        return y0, self._unit_time(np.array([t1,t2]))
 
     def _unit_speed(self,val):
         '''
