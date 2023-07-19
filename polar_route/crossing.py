@@ -95,6 +95,7 @@ class NewtonianDistance:
         while improving:
             F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
             if F==np.inf:
+                print('F inf')
                 return np.nan,np.inf  
 
             if self.debugging:
@@ -104,7 +105,11 @@ class NewtonianDistance:
             improving = abs((F/dF)/(X1*X2)) > self.optimizer_tol
             iterartion_num+=1
             if iterartion_num>1000:
-                raise Exception('Newton not able to converge')
+
+                y0 = np.nan
+                t1 = -1
+                t2 = -1
+                logging.degbug('Newton not able to converge')
             
 
         return y0,self._unit_time(np.array([t1,t2]))
@@ -157,6 +162,7 @@ class NewtonianDistance:
             X2 = np.sqrt(X2ns)
 
         if X1 < 0 or X2 < 0:
+            print('X1 or X2 < 0')
             return np.inf,np.inf,np.inf,np.inf,np.inf,np.inf
 
         F  = X2*(y-((v1*(X1-D1))/C1)) + X1*(y-Y+((v2*(X2-D2))/C2))
@@ -192,10 +198,12 @@ class NewtonianDistance:
         # if (dotprod**2 + diffsqrs*(dist**2) < 0)
         if diffsqrs == 0.0:
             if dotprod == 0.0:
+                print('Dot Product Zero')
                 return np.inf
                 #raise Exception(' ')
             else:
                 if ((dist**2)/(2*dotprod))  <0:
+                    print('Dist**2 / 2*dotprod < Zero')
                     return np.inf
                     #raise Exception(' ')
                 else:
@@ -204,6 +212,7 @@ class NewtonianDistance:
 
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
         if traveltime < 0:
+            print('Incell traveltime < 0')
             traveltime = np.inf
             # print(traveltime,xdist,ydist,U,V,S)
             # raise Exception('Newton Corner Cases returning Zero Traveltime - ISSUE')
@@ -258,6 +267,7 @@ class NewtonianDistance:
         # Optimising to determine the y-value of the crossing point
         y,TravelTime = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
         if np.isnan(y) or TravelTime[0] < 0 or TravelTime[1] < 0:
+            print('Crossing NewtonOpt Issues')
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
@@ -278,9 +288,11 @@ class NewtonianDistance:
         vmin = np.max([smin,emin])
         vmax = np.min([smax,emax])
         if (CrossPoints [1] < vmin) or (CrossPoints[1] > vmax):
-            TravelTime  = [np.inf,np.inf]
-            CrossPoints = [np.nan,np.nan]
-            CellPoints  = [np.nan,np.nan]
+            print('Long - Crossing Point Outside Cell - {}'.format(CrossPoints))
+            CrossPoints = (CrossPoints[0],np.clip(CrossPoints[1],vmin,vmax))
+            # TravelTime  = [np.inf,np.inf]
+            # CrossPoints = [np.nan,np.nan]
+            # CellPoints  = [np.nan,np.nan]
 
 
         return TravelTime,CrossPoints,CellPoints
@@ -322,6 +334,7 @@ class NewtonianDistance:
         
         y,TravelTime   = self._newton_optimisation(self._F,x,a,Y,Su,Sv,Nu,Nv,Ssp,Nsp)
         if np.isnan(y) or TravelTime[0] < 0 or TravelTime[1] < 0:
+            print('Crossing NewtonOpt Issues')
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
@@ -344,9 +357,15 @@ class NewtonianDistance:
         vmin = np.max([smin,emin])
         vmax = np.min([smax,emax])
         if (CrossPoints [0] < vmin) or (CrossPoints[0] > vmax):
-            TravelTime  = [np.inf,np.inf]
-            CrossPoints = [np.nan,np.nan]
-            CellPoints  = [np.nan,np.nan]
+            print('Latitude - Crossing Point Outside Cell - {} - {}'.format(CrossPoints,TravelTime))
+            
+            CrossPoints = (np.clip(CrossPoints[0],vmin,vmax),CrossPoints[1])
+
+
+            #TravelTime  = #determine new transit-time.
+            # TravelTime  = [np.inf,np.inf]
+            # CrossPoints = [np.nan,np.nan]
+            # CellPoints  = [np.nan,np.nan]
 
         # if TravelTime[0] < 0 or TravelTime[1] < 0:
         #     TravelTime  = [np.inf,np.inf]
@@ -428,6 +447,7 @@ class NewtonianDistance:
         TravelTime  = self._unit_time(np.array([t1,t2]))
 
         if TravelTime[0] < 0 or TravelTime[1] < 0:
+            print(TravelTime)
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
