@@ -475,7 +475,7 @@ class RoutePlanner:
                                           zerocurrents=self.zero_currents)
             # Updating the Dijkstra graph with the new information
             traveltime, crossing_points,cell_points,case = cost_func.value()
-            
+
             source_graph['neighbourTravelLegs'].append(traveltime)
             source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
 
@@ -559,7 +559,7 @@ class RoutePlanner:
         self.paths = self._dijkstra_paths(self.source_waypoints, self.end_waypoints)
         self.mesh['paths'] = self.paths
 
-    def compute_smoothed_routes(self,blocked_metric='SIC'):
+    def compute_smoothed_routes(self,blocked_metric='SIC',debugging=False):
         """
             Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
             `paths` will be updated in the output JSON
@@ -577,11 +577,13 @@ class RoutePlanner:
             logging.info('---Smoothing {}'.format(route['properties']['name']))
             dijkstra_graph = self.dijkstra_info[route['properties']['from']]
             self.initialise_dijkstra_graph = _initialise_dijkstra_graph(dijkstra_graph)
-            adjacent_pairs,start_waypoint,end_waypoint = _initialise_dijkstra_route(self.initialise_dijkstra_graph,route)
+            self.route = route
+            self.adjacent_pairs,self.start_waypoint,self.end_waypoint = _initialise_dijkstra_route(self.initialise_dijkstra_graph,self.route)
 
-            
-            sf = Smoothing(self.initialise_dijkstra_graph,adjacent_pairs,start_waypoint,end_waypoint,blocked_metric=blocked_metric)
+            sf = Smoothing(self.initialise_dijkstra_graph,self.adjacent_pairs,self.start_waypoint,self.end_waypoint,blocked_metric=blocked_metric)
             self.sf = sf
+            # if debugging:
+            #     break
             self.sf.forward()
 
             

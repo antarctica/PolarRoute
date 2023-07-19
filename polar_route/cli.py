@@ -128,6 +128,12 @@ def optimise_routes_cli():
     rp = RoutePlanner(args.mesh.name, args.config.name, args.waypoints.name)
     rp.compute_routes()
     info_dijkstra = rp.to_json()
+
+    pathpoints_all_start_points = rp.neighbour_graph
+    for key in pathpoints_all_start_points:
+        df = pathpoints_all_start_points[key]
+        df.to_csv('This_is_sloppy_{}.csv'.format(key))
+
     rp.compute_smoothed_routes()
     info = rp.to_json()
 
