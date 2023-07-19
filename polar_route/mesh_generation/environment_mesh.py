@@ -167,7 +167,6 @@ class EnvironmentMesh:
                 continue
             # remove unnecessary columns
             if (params_file != None) and column not in [str(data_name)]:
-                logging.info("removing column : " + str(column))
                 mesh_df = mesh_df.drop(column, axis=1)
             # remove unnecessary columns
             elif column in ['cx', 'cy', 'dcx', 'dcy']:
