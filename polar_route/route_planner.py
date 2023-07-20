@@ -16,7 +16,9 @@ from pandas.core.common import SettingWithCopyWarning
 
 from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
 from polar_route.source_waypoint import SourceWaypoint
-from polar_route.waypoint import waypoint
+from polar_route.waypoint import Waypoint
+from polar_route.segment import Segment
+from polar_route.routing_info import RoutingInfo
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
@@ -75,7 +77,10 @@ class RoutePlanner:
         self.config = _json_str(config_file)
         # check that the provided mesh has current information
         if 'uC' not in self.env_mesh.agg_cellboxes[0].agg_data or 'vC' not in self.env_mesh.agg_cellboxes[0].agg_data  :
-            raise ValueError('The env mesh cellboxes do not have current information and it is a prerequisite for the route planner!')
+            raise ValueError('The env mesh cellboxes do not have current data and it is a prerequisite for the route planner!')
+        if 'SIC' not in self.env_mesh.agg_cellboxes[0].agg_data :
+            logging.warning('The env mesh does not have SIC data')
+        
         # check if speed defined in the env mesh
         if 'speed' not in self.env_mesh.agg_cellboxes[0].agg_data:
             raise ValueError('Vessel Speed not in the mesh information ! Please run vessel performance')
@@ -85,9 +90,12 @@ class RoutePlanner:
             if self.config['objective_function'] not in self.env_mesh.agg_cellboxes[0].agg_data:
                 raise ValueError("Objective Function '{}' requires  the mesh cellboxex to have '{}' in the aggregated data".format(self.config['objective_function'], self.config['objective_function']))
 
+        #TODO: index cellboxes with the id for easier access
+        self.cellboxes_lookup = {self.env_mesh.agg_cellboxes[i].get_id(): self.env_mesh.agg_cellboxes[i] for i in range (len(self.env_mesh.agg_cellboxes))}
         # ====== Defining the cost function ======
         self.cost_func       = cost_func
-    
+       # Case indices
+        self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
@@ -186,59 +194,6 @@ class RoutePlanner:
 
 
 
-    def _objective_value(self, variable, source_graph, neighbour_graph, traveltime, case):
-        """
-            Hidden variable. Returns the objective value between two cellboxes.
-        """
-        if variable == 'traveltime':
-            objs = np.array([source_graph['shortest_traveltime'] + traveltime[0],source_graph['shortest_traveltime'] + np.sum(traveltime)])
-            return objs
-        else:
-            if type(source_graph['{}'.format(variable)]) == list and len(source_graph['{}'.format(variable)]) != 1:
-                idx = np.where(self.indx_type==case)[0][0]
-                objs = np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx],source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)][idx] + traveltime[1]*neighbour_graph['{}'.format(variable)][idx]])
-                return objs
-            else:
-                objs = np.array([source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)], source_graph['shortest_{}'.format(variable)] + traveltime[0]*source_graph['{}'.format(variable)] + traveltime[1]*neighbour_graph['{}'.format(variable)]])
-                return objs
-
-    def _neighbour_cost(self, wpt_name, minimum_objective_index):
-        """
-            Determines the neighbour cost from a source cellbox to all of its neighbours.
-            These are then used to update the edge values in the dijkstra graph.
-        """
-        # Determining the nearest neighbour index for the cell
-        source_graph   = self.dijkstra_info[wpt_name].loc[minimum_objective_index]
-
-        # Looping over idx
-        for idx in range(len(source_graph['case'])):
-            indx = source_graph['neighbourIndex'][idx]
-
-            neighbour_graph = self.dijkstra_info[wpt_name].loc[indx]
-            case = source_graph['case'][idx]
-
-            # Applying Newton curve to determine crossing point
-            cost_func    = self.cost_func(source_graph=source_graph, neighbour_graph=neighbour_graph, case=case,
-                                          unit_shipspeed='km/hr', unit_time=self.unit_time,
-                                          zerocurrents=self.zero_currents)
-            # Updating the Dijkstra graph with the new information
-            traveltime, crossing_points,cell_points,case = cost_func.value()
-
-            source_graph['neighbourTravelLegs'].append(traveltime)
-            source_graph['neighbourCrossingPoints'].append(np.array(crossing_points))
-
-            # Using neighbourhood cost determine objective function value
-            value = self._objective_value(self.config['objective_function'], source_graph,neighbour_graph, traveltime, case)
-            if value[1] < neighbour_graph['shortest_{}'.format(self.config['objective_function'])]:
-                for vrbl in self.config['path_variables']:
-                    value = self._objective_value(vrbl, source_graph, neighbour_graph,traveltime, case)
-                    neighbour_graph['shortest_{}'.format(vrbl)] = value[1]
-                    neighbour_graph['path_{}'.format(vrbl)]   = source_graph['path_{}'.format(vrbl)] + list(value)
-                neighbour_graph['pathIndex']  = source_graph['pathIndex']  + [indx]
-                neighbour_graph['pathPoints'] = source_graph['pathPoints'] + [list(crossing_points)] + [list(cell_points)]
-                self.dijkstra_info[wpt_name].loc[indx] = neighbour_graph
-
-        self.dijkstra_info[wpt_name].loc[minimum_objective_index] = source_graph
 
     def _dijkstra(self, wp , end_wps):
         """
@@ -247,27 +202,58 @@ class RoutePlanner:
                 wp (Waypoint): object contains the lat, long information of the source waypoint
                 end_wps(List(Waypoint)): a list of the end waypoints
         """
-        
+        def find_min_objective (source_wp):
+            min_obj = np.inf
+            cellbox_indx = -1
+            for indx, info in source_wp.routing_info:
+                if info.get_obj (self.config['objective_function'])< min_obj:
+                    min_obj = info.get_obj (self.config['objective_function'])
+                    cellbox_indx = indx
+            return cellbox_indx
+        def consider_neighbours (source_wp , _id):
+            # get neighbours of indx
+            source_cellbox = self.env_mesh.agg_cellboxes[source_wp.get_cellbox_indx()]
+            neighbour_map = self.env_mesh.neighbour_graph [source_cellbox.get_id()]  #neighbours and cases
+            for case, neighbours in neighbour_map:
+                if len (neighbours) !=0:
+                  for neighbour in neighbours:  
+                     #TODO: use the cost function here and define the Segement (based on crossing points and the cost) accordingly
+                     edges = self._connect_nodes(_id, neighbour, case)
+                     edges_cost = sum (segment.get_obj(self.config['objective_function']) for segment in edges) 
+                     new_cost =  source_wp.get_routing_info(_id)+ edges_cost
+                     if new_cost < source_wp.get_routing_info(neighbour).get_obj(self.config['objective_function']):
+                         source_wp.update_routing_info (neighbour , RoutingInfo (_id, edges))
+            
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         if not self.config['early_stopping_criterion']:
-          #TODO: handle
-          pass
+            end_wps= [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes]
+        wp = SourceWaypoint( wp , end_wps)
+        while not wp.is_all_visited():
+            min_obj_indx = find_min_objective(wp)  # Determining the index of the minimum objective function that has not been visited
+            consider_neighbours (wp , min_obj_indx)
+            wp.visit (min_obj_indx)
 
-        source_wp = SourceWaypoint (wp)
-        while not source_wp.is_all_visited (end_wps):   
+    def _neighbour_cost (self, node_id , neighbour_id , case):
 
-            # Determining the index of the minimum objective function that has not been visited
-           # get the neighbours
-        #    TODO: update
-            self.env_mesh.neighbour_graph [source_wp.get_cellbox_indx()]
-            self.env_mesh.agg_cellboxes[source_wp.get_cellbox_indx()][self.config['objective_function']]  # find which of tnhme is not visited and has the minimal obj_func
-            minimum_objective_index = self.dijkstra_info[wpt_name][self.dijkstra_info[wpt_name]['positionLocked'] == False]['shortest_{}'.format(self.config['objective_function'])].idxmin()
-  
-            # Finding the cost of the nearest neighbours from the source cell (Sc)
-            self._neighbour_cost(wpt_name,minimum_objective_index)
+        # Applying Newton distance to determine crossing point between node and its neighbour
+        cost_func    = self.cost_func(node_id, neighbour_id, self.cellboxes_lookup , case=case, 
+                                          unit_shipspeed='km/hr', unit_time=self.unit_time,
+                                          zerocurrents=self.zero_currents)
+        # Updating the Dijkstra graph with the new information
+        traveltime, crossing_points,cell_points,case = cost_func.value()
+        # create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel), and return 
+        s1 = Segment (Waypoint(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[0], crossing_points[1]))
+        s1.set_travel_time(traveltime[0])
+        #fill segment metrics
+        case_indx = np.where(self.indx_type==case)
+        s1.set_fuel (s1.travel_time * self.cellboxes_lookup[node_id].agg_data['fuel'][case_indx])
+        s1.set_speed (s1.travel_time * self.cellboxes_lookup[node_id].agg_data['speed'][case_indx])
+        s2 = Segment( Waypoint (crossing_points[0], crossing_points[1]), Waypoint(self.cellboxes_lookup[neighbour_id]))
+        s2.set_travel_time([traveltime[1]])
+        s2.set_fuel (s1.travel_time * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][case_indx])
+        s2.set_speed (s1.travel_time * self.cellboxes_lookup[neighbour_id].agg_data['speed'][case_indx])
 
-            # Updating Position to be locked
-            self.dijkstra_info[wpt_name].loc[minimum_objective_index, 'positionLocked'] = True
+        return [s1,s2]
 
     def compute_routes(self, waypoints):
         """
@@ -282,7 +268,7 @@ class RoutePlanner:
                 waypoints.remove (wp_pair)
         
         if len(waypoints) == 0:
-            raise ValueError('No waypoint pair defined that is accessible')
+            raise ValueError('Invalid waypoints. No waypoint pair defined that is accessible')
     
 
         # 
@@ -307,21 +293,38 @@ def _is_valid_wp_pair (self , source , dest):
                 is_valid (Boolean): true if both source and dest are within the env mesh bounds and false otherwise
      
     """
-    #TODO: what to do if the provided source is not inside a cellbox but close from a cellbox?
-    source_id = -1
-    dest_id = -1
+    #TODO: what to do if a point is on the border of a 2 cellboxes
+    def select_cellbox (ids):
+        '''
+           In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes
+            Args:
+                ids([int]): listt contains the touching cellboxes ids
+            Returns:
+                selected (int): the id of the selected cellbox
+        '''
+        # self.env_mesh.neighbour_graph.get_neighbour_case(ids[0], ids[1]) # get the touching casebetween cellboxes
+        pass
+    source_id = []
+    dest_id = []
     for indx in range (len(self.env_mesh.agg_cellboxes)):
         if self.env_mesh.agg_cellboxes[indx].contains_point (source.get_latitude() , source.get_longtitude()):
-            source_indx = indx
-            source.set_cellbox_indx(source_indx)
+            source_id. append (indx)
+            source.set_cellbox_indx(source_id)
         if self.env_mesh.agg_cellboxes[indx].contains_point (dest.get_latitude() , dest.get_longtitude()):
-            dest_indx = indx
-            dest.set_cellbox_indx(dest_indx)
-    if source_id == -1:
+            dest_id.append( indx)
+            dest.set_cellbox_indx(dest_id)
+    if len (source_id) == 0:
           logging.warning('{} not in accessible waypoints'.format(source.get_name()))
           return False
-    if dest_id == -1:
+    if len(dest_id) ==0:
          logging.warning('{} is accessible but has no destination waypoints'.format(dest.get_name()))
          return False
+    
+    if len(source_id) > 1: # the source wp is on the border of 2 cellboxes
+        source_id = [select_cellbox(source_id)]
+    if len(dest_id)>1 :# the dest wp is on the border of 2 cellboxes
+        dest_id = [select_cellbox(dest_id)]
+    if source_id[0] == dest_id[0]:
+        logging.warning('The source {} and destination {} waypoints lie in the same cellbox'.format (source.get_name() , dest.get_name()))
     
     return True

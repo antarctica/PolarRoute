@@ -1,3 +1,4 @@
+import numpy as np 
 class RoutingInfo:
     '''
         class represents routing information in terms of cellbox index and what are the path (route's segments ) to follow to reach this cellbox indx
@@ -23,3 +24,17 @@ class RoutingInfo:
             returns node index
         '''
         return self.node_indx
+    
+    def get_obj (self, obj):
+        obj_value =0
+        if obj == "distance":
+            for segment in self.path:
+                obj_value += segment.get_distance()
+        elif obj =="fuel":
+            for segment in self.path:
+                obj_value += segment.get_fuel()
+        elif obj =="travel_time":
+            for segment in self.path:
+                obj_value += segment.get_travel_time()
+
+        return obj_value

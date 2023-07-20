@@ -9,6 +9,7 @@ import copy
 import pandas as pd
 import numpy as np
 import pyproj
+import logging
 np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -28,8 +29,8 @@ class NewtonianDistance:
         attr2 (:obj:`int`, optional): Description of `attr2`.
 
     """
-    def __init__(self,source_graph=None,neighbour_graph=None,
-                 case=None,unit_shipspeed='km/hr',unit_time='days',
+    def __init__(self,node_id,neighbour_id, cellboxes
+                 case=None ,unit_shipspeed='km/hr',unit_time='days',
                  zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
         """Example of docstring on the __init__ method.
 
@@ -50,18 +51,18 @@ class NewtonianDistance:
 
         """
         # Cell information
-        self.source_graph     = source_graph
-        self.neighbour_graph  = neighbour_graph
+        self.source_cellbox     = cellboxes [node_id]
+        self.neighbour_cellbox = cellboxes [neighbour_id]
 
         # Case indices
         self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
-        indx = np.where(self.indx_type==case)[0][0]
+        indx = np.where(self.indx_type==case)
         self.unit_shipspeed  = unit_shipspeed
         self.unit_time       = unit_time
-        self.source_speed    = self._unit_speed(self.source_graph['speed'][indx])
-        self.neighbour_speed = self._unit_speed(self.neighbour_graph['speed'][indx])
+        self.source_speed    = self._unit_speed(self.source_cellbox.agg_data['speed'] [indx])
+        self.neighbour_speed = self._unit_speed(self.neighbour_cellbox.agg_data['speed'] [indx])
         self.case            = case
 
         if zerocurrents:
@@ -84,30 +85,34 @@ class NewtonianDistance:
         self.debugging     = debugging
 
     def _newton_optimisation(self, f, x, a, Y, u1, v1, u2, v2, s1, s2):
-        '''
-            FILL
-        '''
+        """
+            Find the y value of the crossing point and travel time in each cell using the Newton method
+        """
         y0 = (Y*x)/(x+a)
         if self.debugging:
             print('---Initial y={:.2f}'.format(y0))
         improving = True
-        iterartion_num = 0
+        iteration_num = 0
         while improving:
-            F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
-            if F==np.inf:
-                return np.nan,np.inf  
+            F, dF, X1, X2, t1, t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
+            if F == np.inf:
+                return np.nan, np.inf
 
             if self.debugging:
                 print('---Iteration {}: y={:.2f}; F={:.5f}; dF={:.2f}'\
-                      .format(iterartion_num,y0,F,dF))
+                      .format(iteration_num, y0, F, dF))
             y0  = y0 - (F/dF)
             improving = abs((F/dF)/(X1*X2)) > self.optimizer_tol
-            iterartion_num+=1
-            if iterartion_num>1000:
-                raise Exception('Newton not able to converge')
-            
+            iteration_num += 1
+            # Assume convergence impossible after 1000 iterations and exit
+            if iteration_num > 1000:
+                # Set crossing point to nan and travel times to infinity
+                y0 = np.nan
+                t1 = np.inf
+                t2 = np.inf
+                logging.debug("Newton not able to converge: setting travel time to infinity")
 
-        return y0,self._unit_time(np.array([t1,t2]))
+        return y0, self._unit_time(np.array([t1,t2]))
 
     def _unit_speed(self,val):
         '''
@@ -215,8 +220,8 @@ class NewtonianDistance:
         '''
         x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*self.m_lat
-        Su  = self.source_graph['Vector_x']*self.zero_current_factor
-        Sv  = self.source_graph['Vector_y']*self.zero_current_factor
+        Su  = self.source_cellbox.agg_data['uc'] *self.zero_current_factor
+        Sv  = self.source_cellbox.agg_data['vc'] *self.zero_current_factor
         Ssp = self.source_speed
         traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
         return self._unit_time(traveltime)
@@ -232,20 +237,20 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        s_cx  = self.source_graph['cx']
-        s_cy  = self.source_graph['cy']
-        s_dcx = self.source_graph['dcx']
-        s_dcy = self.source_graph['dcy']
-        n_cx  = self.neighbour_graph['cx']
-        n_cy  = self.neighbour_graph['cy']
-        n_dcx = self.neighbour_graph['dcx']
-        n_dcy = self.neighbour_graph['dcy']
+        s_cx  = self.source_cellbox.get_boundary.getcx()
+        s_cy  = self.source_cellbox.get_boundary.getcy()
+        s_dcx = self.source_cellbox.get_boundary.getdcx()
+        s_dcy = self.source_cellbox.get_boundary.getdcy()
+        n_cx  = self.neighbour_cellbox.get_boundary.getcx()
+        n_cy  = self.neighbour_cellbox.get_boundary.getcy()
+        n_dcx = self.neighbour_cellbox.get_boundary.getdcx()
+        n_dcy = self.neighbour_cellbox.get_boundary.getdcy()
 
 
-        Su = ptvl*self.source_graph['Vector_x']*self.zero_current_factor
-        Sv = ptvl*self.source_graph['Vector_y']*self.zero_current_factor
-        Nu = ptvl*self.neighbour_graph['Vector_x']*self.zero_current_factor
-        Nv = ptvl*self.neighbour_graph['Vector_y']*self.zero_current_factor
+        Su = ptvl*self.source_cellbox.agg_data['uc'] *self.zero_current_factor
+        Sv = ptvl*self.source_cellbox.agg_data['vc'] *self.zero_current_factor
+        Nu = ptvl*self.neighbour_cellbox.agg_data['uc'] *self.zero_current_factor
+        Nv = ptvl*self.neighbour_cellbox.agg_data['vc'] *self.zero_current_factor
 
         Ssp = self.source_speed
         Nsp = self.neighbour_speed
@@ -296,20 +301,20 @@ class NewtonianDistance:
             ptvl = -1.0
 
 
-        s_cx  = self.source_graph['cx']
-        s_cy  = self.source_graph['cy']
-        s_dcx = self.source_graph['dcx']
-        s_dcy = self.source_graph['dcy']
-        n_cx  = self.neighbour_graph['cx']
-        n_cy  = self.neighbour_graph['cy']
-        n_dcx = self.neighbour_graph['dcx']
-        n_dcy = self.neighbour_graph['dcy']
+        s_cx  = self.source_cellbox.get_boundary().getcx()
+        s_cy  = self.source_cellbox.get_boundary().getcy()
+        s_dcx = self.source_cellbox.get_boundary().getdcx()
+        s_dcy = self.source_cellbox.get_boundary().getdcy()
+        n_cx  = self.neighbour_cellbox.get_boundary().getcx()
+        n_cy  = self.neighbour_cellbox.get_boundary().getcy()
+        n_dcx = self.neighbour_cellbox.get_boundary().getdcx()
+        n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
 
 
-        Su = -1*ptvl*self.source_graph['Vector_y']*self.zero_current_factor
-        Sv = ptvl*self.source_graph['Vector_x']*self.zero_current_factor
-        Nu = -1*ptvl*self.neighbour_graph['Vector_y']*self.zero_current_factor
-        Nv = ptvl*self.neighbour_graph['Vector_x']*self.zero_current_factor
+        Su = -1*ptvl*self.source_cellbox.agg_data['vc']*self.zero_current_factor
+        Sv = ptvl*self.source_cellbox.agg_data['uc']*self.zero_current_factor
+        Nu = -1*ptvl*self.neighbour_cellbox.agg_data['vc']*self.zero_current_factor
+        Nv = ptvl*self.neighbour_cellbox.agg_data['uc']*self.zero_current_factor
 
 
         Ssp=self.source_speed
@@ -364,14 +369,14 @@ class NewtonianDistance:
         '''
 
 
-        s_cx  = self.source_graph['cx']
-        s_cy  = self.source_graph['cy']
-        s_dcx = self.source_graph['dcx']
-        s_dcy = self.source_graph['dcy']
-        n_cx  = self.neighbour_graph['cx']
-        n_cy  = self.neighbour_graph['cy']
-        n_dcx = self.neighbour_graph['dcx']
-        n_dcy = self.neighbour_graph['dcy']
+        s_cx  = self.source_cellbox.get_boundary().getcx()
+        s_cy  = self.source_cellbox.get_boundary().getcy()
+        s_dcx = self.source_cellbox.get_boundary().getdcx()
+        s_dcy = self.source_cellbox.get_boundary().getdcy()
+        n_cx  = self.neighbour_cellbox.get_boundary().getcx()
+        n_cy  = self.neighbour_cellbox.get_boundary().getcy()
+        n_dcx = self.neighbour_cellbox.get_boundary().getdcx()
+        n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
 
 
 
@@ -395,10 +400,10 @@ class NewtonianDistance:
         # dy2 = n_dcy*self.m_lat
 
         # # Currents in Cells
-        # Su = ptvX*self.source_graph['Vector_x']*self.zero_current_factor
-        # Sv = ptvY*self.source_graph['Vector_y']*self.zero_current_factor
-        # Nu = ptvX*self.neighbour_graph['Vector_x']*self.zero_current_factor
-        # Nv = ptvY*self.neighbour_graph['Vector_y']*self.zero_current_factor
+        # Su = ptvX*self.source_cellbox.agg_data['uc']*self.zero_current_factor
+        # Sv = ptvY*self.source_cellbox.agg_data['vc']*self.zero_current_factor
+        # Nu = ptvX*self.neighbour_cellbox.agg_data['uc']*self.zero_current_factor
+        # Nv = ptvY*self.neighbour_cellbox.agg_data['vc']*self.zero_current_factor
 
 
         dx1 = ptvX*s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
@@ -407,10 +412,10 @@ class NewtonianDistance:
         dy2 = ptvY*n_dcy*self.m_lat
 
         # Currents in Cells
-        Su = self.source_graph['Vector_x']*self.zero_current_factor
-        Sv = self.source_graph['Vector_y']*self.zero_current_factor
-        Nu = self.neighbour_graph['Vector_x']*self.zero_current_factor
-        Nv = self.neighbour_graph['Vector_y']*self.zero_current_factor
+        Su = self.source_cellbox.agg_data['uc']*self.zero_current_factor
+        Sv = self.source_cellbox.agg_data['vc']*self.zero_current_factor
+        Nu = self.neighbour_cellbox.agg_data['uc']*self.zero_current_factor
+        Nv = self.neighbour_cellbox.agg_data['vc']*self.zero_current_factor
 
 
 
@@ -451,7 +456,7 @@ class NewtonianDistance:
             TravelTime,CrossPoints,CellPoints = self._corner()
         else:
             print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.\
-                format(self.source_graph['cx'],self.source_graph['cy']))
+                format(self.source_cellbox.get_boundary().getcx(),self.source_cellbox.get_boundary().getcy()))
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]

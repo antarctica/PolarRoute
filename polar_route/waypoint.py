@@ -1,5 +1,5 @@
    
-class waypoint:
+class Waypoint:
     '''
         class represents a waypoint in terms of its latitude, longtitude and name
 
@@ -13,7 +13,12 @@ class waypoint:
         Note:
         All geospatial boundaries are given in a 'EPSG:4326' projection
     '''
-
+    @classmethod
+    def load_from_cellbox (cls, cellbox):
+        obj = Waypoint (cellbox.get_boundary().getcy(), cellbox.get_boundary().getcx())
+        obj.set_cellbox_indx (cellbox.get_id())
+        return obj
+    
     def __init__(self, lat,long, name =None):
         self.lat = lat
         self.long = long 
