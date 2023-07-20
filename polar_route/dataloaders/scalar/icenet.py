@@ -65,7 +65,7 @@ class IceNetDataLoader(ScalarDataLoader):
                 break
             except:
                 # Error thrown, date not in dataset. Try previous day
-                logging.debug(f' - Unable to select start day of {start_time} for IceNet, trying previous day')
+                logging.debug(f'\tUnable to select start day of {start_time} for IceNet, trying previous day')
                 continue
         else:
             # If ran through entire dataset with no valid dates

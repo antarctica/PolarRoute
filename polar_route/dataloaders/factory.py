@@ -123,8 +123,9 @@ class DataLoaderFactory:
         """
         if 'file' in params:
             params['files'] = [params['file']]
+            del params['file']
         elif 'folder' in params:
             folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existent
             params['files'] = sorted(glob(folder+'*'))
-        
+            del params['folder']
         return params
