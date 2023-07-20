@@ -21,8 +21,12 @@ class ERA5WaveHeightDataLoader(ScalarDataLoader):
         if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
         else:                       data = xr.open_mfdataset(self.files)
         # Change column names
-        data = data.rename({'longitude': 'lat',
-                            'latitude': 'long'})
+        data = data.rename({'latitude': 'lat',
+                            'longitude': 'long'})
+        # Change domain of dataset from [0:360) to [-180:180)
+        data = data.assign_coords(long=((data.long + 180) % 360) - 180)
+        # Sort the 'long' axis so that sel() will work
+        data = data.sortby('long')
         # Limit to just swh data
         data = data['swh'].to_dataset()
         # Reverse order of lat as array goes from max to min
