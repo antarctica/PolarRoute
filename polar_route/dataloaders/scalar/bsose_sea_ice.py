@@ -22,7 +22,7 @@ class BSOSESeaIceDataLoader(ScalarDataLoader):
         Raises:
             ValueError:
                 If units specified in config,
-                and value not 'fraction' or 'percentage
+                and value not 'fraction' or 'percentage'
         """
         logging.info(f"- Opening file {self.file}")
         # Open Dataset
