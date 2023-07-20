@@ -70,6 +70,7 @@ class AMSRDataLoader(ScalarDataLoader):
             return data
 
         data_array = []
+        relevant_files = []
         # For each file found from config
         for file in self.files:
             # If date within boundary
@@ -80,12 +81,16 @@ class AMSRDataLoader(ScalarDataLoader):
                 datetime.strptime(date, '%Y-%m-%d') <= \
                 datetime.strptime(bounds.get_time_max(), '%Y-%m-%d'):
                 data_array.append(retrieve_data(file, date))
+                relevant_files += [file]
         # Concat all valid files
         data = xr.concat(data_array,'time')
 
         # Remove unnecessary column, rename data column
         data = data.drop_vars('polar_stereographic')
         data = data.rename({'z': 'SIC'})
+        
+        # Limit self.files to only those actually used
+        self.files = relevant_files
         
         # TODO Limit data range before reprojection
         
