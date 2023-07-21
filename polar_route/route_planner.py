@@ -113,17 +113,20 @@ class RoutePlanner:
         for i, s_wp in enumerate(start_waypoints):
                 route_segments = []
                 e_wp = end_waypoints[i]
+                cases = []
                 while not s_wp.equals(e_wp):
                      routing_info = s_wp.get_routing_info(e_wp.get_id())
                      route_segments.append (routing_info.get_path())
+                     cases.append(self.env_mesh.neighbour_graph.get_neighbour_case( routing_info.get_node_index() , e_wp.get_cellbox_indx()))
                      e_wp = routing_info.get_node_index()
+                   
                 # reversing segments as we moved from end to start
                 route_segments.reverse()
-                routes.append (Route (route_segments))
+                route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name())
+                route.set_cases(cases)
+                routes.append (route)
                 
-
         return routes
-
 
 
 
