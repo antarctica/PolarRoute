@@ -15,6 +15,7 @@ import logging
 from pandas.core.common import SettingWithCopyWarning
 
 from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from polar_route.route import Route
 from polar_route.source_waypoint import SourceWaypoint
 from polar_route.waypoint import Waypoint
 from polar_route.segment import Segment
@@ -100,97 +101,28 @@ class RoutePlanner:
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
             Hidden function. Given internal variables and start and end waypoints this function
-            returns a GEOJSON formated path dict object
+            returns a list of routes
 
-            INPUTS:
-                start_waypoints: Start waypoint names (list)
-                end_waypoints: End waypoint names (list)
+            Args:
+                start_waypoints (list<Waypoint>): list of the start waypoint
+                end_waypoints (list<Waypoint>): list of the end waypoint 
+            Return:
+                routes(list<Route>): list of the constructed routes
         """
+        routes = []
+        for i, s_wp in enumerate(start_waypoints):
+                route_segments = []
+                e_wp = end_waypoints[i]
+                while not s_wp.equals(e_wp):
+                     routing_info = s_wp.get_routing_info(e_wp.get_id())
+                     route_segments.append (routing_info.get_path())
+                     e_wp = routing_info.get_node_index()
+                # reversing segments as we moved from end to start
+                route_segments.reverse()
+                routes.append (Route (route_segments))
+                
 
-        geojson = dict()
-        geojson['type'] = "FeatureCollection"
-
-        paths = []
-        wpts_s = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(start_waypoints)]
-        wpts_e = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(end_waypoints)]
-
-
-        for _, wpt_a in wpts_s.iterrows():
-            wpt_a_name  = wpt_a['Name']
-            wpt_a_index = int(wpt_a['index'])
-            wpt_a_loc   = [[wpt_a['Long'],wpt_a['Lat']]]
-            for _, wpt_b in wpts_e.iterrows():
-                wpt_b_name  = wpt_b['Name']
-                wpt_b_index = int(wpt_b['index'])
-                wpt_b_loc   = [[wpt_b['Long'],wpt_b['Lat']]]
-                if not wpt_a_name == wpt_b_name:
-                    try:
-                        graph = self.dijkstra_info[wpt_a_name]
-                        path = dict()
-                        path['type'] = "Feature"
-                        path['geometry'] = {}
-                        path['geometry']['type'] = "LineString"
-                        path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1, :])+wpt_b_loc))
-                        path['geometry']['coordinates'] = path_points.tolist()
-
-                        path['properties'] = {}
-                        path['properties']['name'] = 'Route Path - {} to {}'.format(wpt_a_name, wpt_b_name)
-                        path['properties']['from'] = '{}'.format(wpt_a_name)
-                        path['properties']['to'] = '{}'.format(wpt_b_name)
-
-                        cellIndices  = np.array(graph['pathIndex'].loc[wpt_b_index])
-                        path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]])
-                        path['properties']['CellIndices'] = path_indices.tolist()
-
-                        cases = []
-
-                        # Determine cases for cell pairs along the path
-                        for idx in range(len(cellIndices) -1):
-                            cellStart = graph.loc[cellIndices[idx]]
-                            cellEnd = graph.loc[cellIndices[idx+1]]
-                            case = cellStart['case'][np.where(np.array(cellStart['neighbourIndex']) == cellEnd.name)[0][0]]
-                            cases+=[case]
-
-                        start_case = cases[0]
-                        end_case = cases[-1]
-
-                        # Full list of cases for each leg (centre to crossing point and crossing point to centre)
-                        path_cases = list(np.repeat(cases, 2))
-
-                        # Applying in-cell correction for travel-time
-                        cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents,
-                                                      case=start_case)
-                        tt_start = cost_func.waypoint_correction(path_points[0, :], path_points[1, :])
-                        cost_func    = self.cost_func(source_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[-1]],
-                                                      neighbour_graph=self.dijkstra_info[wpt_a_name].loc[path_indices[0]],
-                                                      unit_shipspeed='km/hr', unit_time=self.unit_time, zerocurrents=self.zero_currents,
-                                                      case=end_case)
-
-                        tt_end = cost_func.waypoint_correction(path_points[-1, :], path_points[-2, :])
-                        path['properties']['traveltime']     = np.array(graph['path_traveltime'].loc[wpt_b_index])
-                        path['properties']['traveltime']     = (path['properties']['traveltime'] - path['properties']['traveltime'][0]) + tt_start
-                        path['properties']['traveltime'][-1] = (path['properties']['traveltime'][-2] + tt_end)
-                        path['properties']['cases'] = [int(p) for p in path_cases]
-
-                        for vrbl in self.config['path_variables']:
-                            if vrbl == 'traveltime':
-                                continue
-                            traveltime_diff = np.r_[path['properties']['traveltime'][0], np.diff(path['properties']['traveltime'])]
-                            variable_vals = graph.loc[path_indices, '{}'.format(vrbl)]
-                            case_vals = pd.Series(data=[v[np.where(self.indx_type==path_cases[i])[0][0]] for i, v in enumerate(variable_vals)],
-                                                  index=variable_vals.index)
-                            variable_diff = traveltime_diff*case_vals
-                            path['properties'][vrbl] = np.cumsum(variable_diff.to_numpy()).tolist()
-                        path['properties']['traveltime'] = path['properties']['traveltime'].tolist()
-                        paths.append(path)
-
-                    except:
-                        logging.warning('{} to {} - Failed to construct path direct in the dijkstra information'.format(wpt_a_name,wpt_b_name))
-
-        geojson['features'] = paths
-        return geojson
+        return routes
 
 
 
@@ -218,7 +150,7 @@ class RoutePlanner:
                 if len (neighbours) !=0:
                   for neighbour in neighbours:  
                      #TODO: use the cost function here and define the Segement (based on crossing points and the cost) accordingly
-                     edges = self._connect_nodes(_id, neighbour, case)
+                     edges = self._neighbour_cost(_id, neighbour, case)
                      edges_cost = sum (segment.get_obj(self.config['objective_function']) for segment in edges) 
                      new_cost =  source_wp.get_routing_info(_id)+ edges_cost
                      if new_cost < source_wp.get_routing_info(neighbour).get_obj(self.config['objective_function']):

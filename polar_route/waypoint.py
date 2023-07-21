@@ -54,3 +54,6 @@ class Waypoint:
             sets the cellbox id that contains this waypoint 
         '''
         self.cellbox_indx = id
+
+    def equals(self, wp):
+        return self.lat == wp.get_latitude() and self.long == wp.get_longtitude()

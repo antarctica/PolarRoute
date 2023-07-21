@@ -18,22 +18,20 @@ class Route:
         '''
             goes through the route segments and calculates the entire route distance
         '''
-        distance = -1
-        return distance
+        return sum (segment.get_distance() for segment in self.segments)
     
     def get_time( self ):
         '''
             goes through the route segments and calculates the entire travel time of the route
         '''
-        time = -1
-        return time
+        return sum (segment.get_travel_time() for segment in self.segments)
+
     
     def get_fuel(self ):
         '''
             goes through the route segments and calculates the entire route's fuel usage
         '''
-        distance = -1
-        return distance
+        return  sum (segment.get_fuel() for segment in self.segments)
       
     def to_geojson(self ):
         '''
@@ -49,7 +47,7 @@ class Route:
         '''
            
         '''
-    def save (self, path ):
+    def save (self, file_path ):
         '''
            
         '''

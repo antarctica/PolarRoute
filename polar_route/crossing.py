@@ -646,8 +646,8 @@ class NewtonianCurve:
         x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*m_lat
         case = self._case_from_angle(Cp,Wp)
-        Su  = source_graph['Vector_x']*self.zc
-        Sv  = source_graph['Vector_y']*self.zc
+        Su  = self.source_cellbox.agg_data['uc'] *self.zc
+        Sv  = self.source_cellbox.agg_data['vc'] *self.zc
         Ssp = self._unit_speed(source_graph['speed'][case])
         traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
 
