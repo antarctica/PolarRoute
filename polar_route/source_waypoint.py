@@ -46,6 +46,7 @@ class SourceWaypoint (Waypoint):
         return True
     def get_routing_info(self, _id):
         if _id not in self.routing_table.keys():
-            raise ValueError ("There is no routing information ascosiated with cellbox {} ".format(_id))
+            self.routing_table[_id] = RoutingInfo(-1, None) # indicating incaccessible node and returns infinity obj
+            #raise ValueError ("There is no routing information ascosiated with cellbox {} ".format(_id))
         else: 
             return self.routing_table[_id]

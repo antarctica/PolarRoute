@@ -56,9 +56,13 @@ class Segment:
             returning the fuel
         '''
         return self.fuel 
+    
     def get_points (self):
         '''
         returns the points of the segments
         '''
         return[[self.start_wp.get_latitude(), self.start_wp.get_longtitude()] , [self.end_wp.get_latitude(), self.end_wp.get_longtitude()]]
+    
+    def get_variable (self, variable):
+        return getattr(self, variable)
         

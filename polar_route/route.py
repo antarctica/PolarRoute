@@ -42,7 +42,7 @@ class Route:
         '''
         return  sum (segment.get_fuel() for segment in self.segments)
       
-    def to_geojson(self ):
+    def to_geojson(self, path_variables ):
         '''
             puts the constructed route in geojson format
         '''
@@ -63,8 +63,9 @@ class Route:
         path['properties']['CellIndices'] = cellIndices
         path['properties']['traveltime']  = [ segment.get_travel_time() for segment in path ]
         path['properties']['cases'] = self.cases
-        path['properties']['speed'] = [ segment.get_speed() for segment in path ]
-        path['properties']['fuel'] = [ segment.get_fuel() for segment in path ]
+        for variable in path_variables: 
+             path['properties'][variable] = [ segment.get_objective(variable) for segment in path ]
+
 
         return path
 

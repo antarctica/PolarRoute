@@ -26,15 +26,12 @@ class RoutingInfo:
         return self.node_indx
     
     def get_obj (self, obj):
-        obj_value =0
-        if obj == "distance":
-            for segment in self.path:
-                obj_value += segment.get_distance()
-        elif obj =="fuel":
-            for segment in self.path:
-                obj_value += segment.get_fuel()
-        elif obj =="travel_time":
-            for segment in self.path:
-                obj_value += segment.get_travel_time()
 
+        if self.path == None and self.node_indx == -1:  # inaccessible node so the obj is infinity
+            return np.inf
+        
+        obj_value =0
+        for segment in self.path:
+            obj_value +=  getattr(segment, obj)
+ 
         return obj_value

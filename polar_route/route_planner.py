@@ -152,7 +152,6 @@ class RoutePlanner:
             for case, neighbours in neighbour_map:
                 if len (neighbours) !=0:
                   for neighbour in neighbours:  
-                     #TODO: use the cost function here and define the Segement (based on crossing points and the cost) accordingly
                      edges = self._neighbour_cost(_id, neighbour, case)
                      edges_cost = sum (segment.get_obj(self.config['objective_function']) for segment in edges) 
                      new_cost =  source_wp.get_routing_info(_id)+ edges_cost
