@@ -1,4 +1,4 @@
-
+from polar_route import Boundary
 
 ##### ---------- Utility functions ---------- #####
 
@@ -44,12 +44,21 @@ def extract_common_boundaries(mesh_a, mesh_b):
 
     return common_bounds
 
+def polygon_to_boundary(polygon_str):
+    # Remove all but coordinate strings from original string
+    polygon_str = polygon_str.strip('POLYGON ').strip('(').strip(')').strip()
+    # Separate into individual sets of coords, removing leading whitespace
+    coords_strs = [coord_str.lstrip() for coord_str in polygon_str.split(',')]
+    # Splits coord strings, converts to float, saves as list of (long, lat)
+    # Ignores last item since it's a duplicate of the first
+    coords_list = [tuple(float(coord) for coord in coords_str.split()) 
+                                      for coords_str in coords_strs[:-1]]
+    # Polygons are set of coords of box, with order being LB, LT, RT, RB
+    return Boundary([coords_list[0][0], coords_list[3][0]], # [long_min, long_max]
+                    [coords_list[0][1], coords_list[3][1]], # [lat_min, lat_max]
+                    ['2000-01-01','2000-01-02'])            # Arbitrary dates
 
 class MeshComparator:
-    
-    def __init__(self, mesh_a=None, mesh_b=None):
-        self.mesh_a = mesh_a
-        self.mesh_b = mesh_b
 
     def compare_all(self, mesh_a, mesh_b):
         self.compare_cellboxes(mesh_a, mesh_b)

@@ -281,4 +281,14 @@ class Boundary:
 
         return "{"+ lat_range + ", " + long_range + ", " + time_range + "}"
 
+    def __eq__(self, other):
+        # Asserts if comparison object is a Boundary or not
+        assert (type(other) == type(self)), f'{other} is not a Boundary!'
 
+        # True if all boundary corners are the same
+        return self.get_lat_min() == other.get_lat_min() and\
+               self.get_lat_max() == other.get_lat_max() and\
+               self.get_long_min() == other.get_long_min() and\
+               self.get_long_max() == other.get_long_max() and\
+               self.get_time_min() == other.get_time_min() and\
+               self.get_time_max() == other.get_time_max()
