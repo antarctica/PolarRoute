@@ -122,6 +122,7 @@ class RoutePlanner:
                    
                 # reversing segments as we moved from end to start
                 route_segments.reverse()
+                cases.reverse()
                 route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name())
                 route.set_cases(cases)
                 routes.append (route)

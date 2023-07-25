@@ -27,7 +27,7 @@ class RoutingInfo:
     
     def get_obj (self, obj):
 
-        if self.path == None and self.node_indx == -1:  # inaccessible node so the obj is infinity
+        if self.path == None and self.node_indx == -1:  # this info means inaccessible node so the obj is infinity
             return np.inf
         
         obj_value =0
