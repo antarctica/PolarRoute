@@ -41,12 +41,12 @@ class VectorDataLoader(DataLoaderInterface):
         for key, val in params.items():
             setattr(self, key, val)
             
+        self.data = self.import_data(bounds)
         # Read in and manipulate data to standard form
         if 'files' in params:
-            logging.info('\tReading in files:')
+            logging.info('\tFiles read:')
             for file in self.files:
                 logging.info(f'\t\t{file}')
-        self.data = self.import_data(bounds)
         # If need to downsample data
         self.data = self.downsample()
         # If need to reproject data
@@ -67,11 +67,11 @@ class VectorDataLoader(DataLoaderInterface):
 
         # Get data name from column name if not set in params
         if self.data_name is None:
-            logging.debug('- Setting self.data_name from column name')
+            logging.debug('\tSetting self.data_name from column name')
             self.data_name = self.get_data_col_name()
         # or if set in params, set col name to data name
         else:
-            logging.debug(f'- Setting data column name to {self.data_name}')
+            logging.debug(f'\tSetting data column name to {self.data_name}')
             self.data = self.set_data_col_name(self.data_name.split(','))
         # Store data names in a list for easier access in future
         self.data_name_list = self.data_name.split(',')
@@ -180,8 +180,8 @@ class VectorDataLoader(DataLoaderInterface):
                 Same as parent method
             '''
             x, y = names
-            data['magnitude'] = np.linalg.norm([data[x], data[y]], axis=0)
-            data['direction'] = np.arctan(data[y] / data[x])
+            data['_magnitude'] = np.linalg.norm([data[x], data[y]], axis=0)
+            data['_direction'] = np.arctan(data[y] / data[x])
             return data
         
         def add_mag_dir_to_xr(data, names):
@@ -195,12 +195,11 @@ class VectorDataLoader(DataLoaderInterface):
                 Same as parent method
             '''
             x, y = names
-            data = data.assign(
-                _magnitude=lambda l: (['lat', 'long'],
-                                        np.linalg.norm([l[x], l[y]], axis=0)))
-            data = data.assign(
-                _direction=lambda l:(['lat','long'],
-                                        np.arctan(l[y].data / l[x].data)))
+            data['_magnitude'] = (data.dims, 
+                                  np.linalg.norm([data[x].data, data[y].data], 
+                                                 axis=0))
+            data['_direction'] = (data.dims, 
+                                  np.arctan(data[y].data / data[x].data))
             return data
         
         # Set defaults if not passed to method
@@ -273,7 +272,7 @@ class VectorDataLoader(DataLoaderInterface):
            data.lat.max() <= bounds.get_lat_max() and \
            data.long.min() >  bounds.get_long_min() and \
            data.long.max() <= bounds.get_long_max():
-            logging.debug('Data is already trimmed to bounds!')
+            logging.debug('\tData is already trimmed to bounds!')
             return data
         
         if type(data) == pd.core.frame.DataFrame:
@@ -373,7 +372,7 @@ class VectorDataLoader(DataLoaderInterface):
                 np.float64: Aggregated value
             '''
             data_count = len(dps)
-            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If no data
             if data_count == 0:
                 values = [np.nan, np.nan]
@@ -419,7 +418,7 @@ class VectorDataLoader(DataLoaderInterface):
             '''
             # Info on size of array
             data_count = dps._magnitude.size 
-            logging.debug(f"    {data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{data_count} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If no data, return np.nan for each variable
             if data_count == 0:
                 values = [np.nan, np.nan]
@@ -499,34 +498,34 @@ class VectorDataLoader(DataLoaderInterface):
         elif type(self.data) == xr.core.dataset.Dataset:
             num_dp = min(self.trim_datapoints(bounds).count().values())
 
+        # Set default homogeneity 
+        hom_type = 'CLR'
+
         # Check to see if it's above the minimum threshold
         if num_dp < self.min_dp:
-            return 'MIN'
-        
-        # To allow multiple modes of splitting, chuck them in the splitting conditions
-        # Split if magnitude of curl(data) is larger than threshold 
-        if 'curl' in splitting_conds:
-            curl = self.calc_curl(bounds)
-            if np.abs(curl) > splitting_conds['curl']:
-                return 'HET'
-        # Split if max magnitude(any_vector - ave_vector) is larger than threshold
-        if 'dmag' in splitting_conds:
-            dmag = self.calc_dmag(bounds)
-            if np.abs(dmag) > splitting_conds['dmag']:
-                return 'HET'
-            
-        # Split if Reynolds number is larger than threshold
-        if 'reynolds' in splitting_conds:        
-            reynolds = self.calc_reynolds_number(bounds)
-            if reynolds > splitting_conds['reynolds']:
-                return 'HET'
-        
-        # TODO
-        # HOM would only apply if whole cell is faster than vehicle, which wouldn't be calculated in the mesh generation stage?
-        # Non-navigable cells pruned in next step so leaving out for now
+            hom_type = 'MIN'
+        else:
+            # To allow multiple modes of splitting, chuck them in the splitting conditions
+            # Split if magnitude of curl(data) is larger than threshold 
+            if 'curl' in splitting_conds:
+                curl = self.calc_curl(bounds)
+                if np.abs(curl) > splitting_conds['curl']:
+                    hom_type =  'HET'
+            # Split if max magnitude(any_vector - ave_vector) is larger than threshold
+            if 'dmag' in splitting_conds:
+                dmag = self.calc_dmag(bounds)
+                if np.abs(dmag) > splitting_conds['dmag']:
+                    hom_type = 'HET'
                 
-        # If none of the above return conditions are triggered, cell is clear
-        return 'CLR'
+            # Split if Reynolds number is larger than threshold
+            if 'reynolds' in splitting_conds:        
+                reynolds = self.calc_reynolds_number(bounds)
+                if reynolds > splitting_conds['reynolds']:
+                    hom_type = 'HET'
+
+        logging.debug(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+        
+        return hom_type
 
     def reproject(self, in_proj='EPSG:4326', out_proj='EPSG:4326', 
                         x_col='lat', y_col='long'):
@@ -658,7 +657,7 @@ class VectorDataLoader(DataLoaderInterface):
             defeating the purpose
             '''
             logging.warning(
-                '- Downsampling called on pd.DataFrame! Downsampling a df' \
+                '\tDownsampling called on pd.DataFrame! Downsampling a df' \
                 'too computationally expensive, returning original df'
                 )
             return data
@@ -670,10 +669,10 @@ class VectorDataLoader(DataLoaderInterface):
         # If no downsampling
         if self.downsample_factors == (1,1) or \
            self.downsample_factors == [1,1]:
-            logging.debug("- self.downsample() called but don't have to")
+            logging.debug("\tself.downsample() called but don't have to")
             return self.data
         else:
-            logging.info(f"- Downsampling data by {self.downsample_factors}")
+            logging.info(f"\tDownsampling data by {self.downsample_factors}")
         # Otherwise, downsample appropriately
         if type(self.data) == pd.core.frame.DataFrame:
             return downsample_df(self.data, self.downsample_factors, agg_type)
@@ -789,7 +788,7 @@ class VectorDataLoader(DataLoaderInterface):
         new_data_name = ','.join(new_names)
         
         # Set names
-        logging.info(f'Setting data names to {new_names}')
+        logging.info(f'\tSetting data names to {new_names}')
         self.data_name_list = new_names
         return self.set_data_col_name(new_data_name)
 
@@ -815,6 +814,7 @@ class VectorDataLoader(DataLoaderInterface):
         # Extract the characteristic length
         length = bounds.calc_size()
         # Calculate the reynolds number and return
+        logging.warning("\tReynold number used for splitting, this function assumes properties of ocean water!")
         return 1028 * 0.00167 * speed * length
 
     def calc_divergence(self, bounds, data=None, collapse=True, agg_type='MAX'):
@@ -851,7 +851,7 @@ class VectorDataLoader(DataLoaderInterface):
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
         # If not enough datapoints to compute gradient
         if 1 in fx.shape or 1 in fy.shape:
-            logging.debug('Unable to compute gradient in cell')
+            logging.debug('\tUnable to compute gradient across cell for divergence calculation')
             div = np.nan
         else:
             # Compute partial derivatives
@@ -862,7 +862,7 @@ class VectorDataLoader(DataLoaderInterface):
         
         # If div is nan
         if np.isnan(div).all():
-            logging.debug('All NaN cellbox encountered')
+            logging.debug('\tAll NaN cellbox encountered')
             return np.nan
         # If want to collapse to max mag value, return scalar
         elif collapse:   
@@ -907,7 +907,7 @@ class VectorDataLoader(DataLoaderInterface):
         fx, fy = vector_field[:, :, 0], vector_field[:, :, 1]
         # If not enough datapoints to compute gradient
         if 1 in fx.shape or 1 in fy.shape:
-            logging.debug('Unable to compute gradient in cell')
+            logging.debug('\tUnable to compute gradient across cell for curl calculation')
             curl = np.nan
         else:
             # Compute partial derivatives
@@ -918,7 +918,7 @@ class VectorDataLoader(DataLoaderInterface):
 
         # If div is nan
         if np.isnan(curl).all():
-            logging.debug('All NaN cellbox encountered')
+            logging.debug('\tAll NaN cellbox encountered')
             return np.nan
         # If want to collapse to max mag value, return scalar
         elif collapse:
@@ -968,11 +968,11 @@ class VectorDataLoader(DataLoaderInterface):
         
         d_mag = np.linalg.norm(delta_vector, axis=1)
         if len(d_mag) == 0:
-            logging.debug('Empty cellbox encountered')
+            logging.debug('\tEmpty cellbox encountered')
             return np.nan
         # If div is nan
         elif np.isnan(d_mag).all():
-            logging.debug('All NaN cellbox encountered')
+            logging.debug('\tAll NaN cellbox encountered')
             return np.nan
         # If want to collapse to max mag value, return scalar
         elif collapse:

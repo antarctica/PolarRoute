@@ -4,11 +4,12 @@ import inspect
 import logging
 
 from polar_route import __version__ as version
-from polar_route.utils import setup_logging, timed_call
+from polar_route.utils import setup_logging, timed_call, convert_decimal_days
 from polar_route.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 from polar_route.route_planner import RoutePlanner
 from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from polar_route.route_calc import route_calc
 
 
 @setup_logging
@@ -167,11 +168,7 @@ def export_mesh_cli():
     if args.format.upper() == "TIF" and  args.output == "export_mesh.output.json": # check if the output file name is not provided set to a defualt name
         args.output = "mesh.tif"
     
-    print(f" Mesh arg = {args.mesh}, format arg = {args.format}")
-    
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
-
-    
 
     mesh = json.load(args.mesh)
 
@@ -179,5 +176,29 @@ def export_mesh_cli():
 
     logging.info(f"exporting mesh to {args.output} in format {args.format}")
     env_mesh.save(args.output, args.format , args.format_conf)
+
+@timed_call
+def calculate_route_cli():
+    """
+        CLI entry point to calculate the cost of a manually defined route within an existing mesh.
+    """
+    args = get_args("calculated_route.json",
+                    config_arg = False, mesh_arg = True, waypoints_arg = True)
+    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
+
+    logging.info(f"Calculating the cost of route {args.waypoints.name} from mesh {args.mesh.name}")
+
+    calc_route = route_calc(args.waypoints.name, args.mesh.name)
+
+    if calc_route is not None:
+        max_time = convert_decimal_days(calc_route["features"][0]["properties"]["traveltime"][-1])
+        max_fuel = round(calc_route["features"][0]["properties"]["fuel"][-1],2)
+
+        logging.info(f"Calculated route has travel time: {max_time} and fuel cost: {max_fuel} tons")
+
+        logging.info(f"Saving calculated route to {args.output}")
+        with open(args.output, "w") as f:
+            json.dump(calc_route, f, indent=4)
+
 
 

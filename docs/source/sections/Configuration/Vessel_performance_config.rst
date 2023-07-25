@@ -17,7 +17,7 @@ the 'add_vehicle' entry point.
      "HullType": "slender",
      "ForceLimit": 96634.5,
      "MaxIceConc": 80,
-     "MinDepth": -10
+     "MinDepth": 10
    }
 
 Above are a typical set of configuration parameters used for a vessel where the variables are as follows:
@@ -29,4 +29,4 @@ Above are a typical set of configuration parameters used for a vessel where the 
 * **HullType** *(string)* : The hull profile of the ship (should be one of either "slender" or "blunt").
 * **ForceLimit** *(float)* : The maximum allowed resistance force, specified in Newtons.
 * **MaxIceConc** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
-* **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through in metres. Negative values correspond to a depth below sea level.
+* **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through in metres.

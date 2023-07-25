@@ -163,7 +163,8 @@ are then encoded into the mesh json object and passed down-stream to the route p
 .. note::
     To make use of the full range of vessel performance transformations, a Mesh should be constructed with
     the following attributes:
-    
+
+    * elevation (available via data_loaders: *gebco*, *bsose_depth*)
     * SIC (available via data_loaders: *amsr*, *bsose_sic*, *baltic_sic*, *icenet*, *modis*)
     * thickness (available via data_loaders: *thickness*)
     * density (available via data_loaders: *density*)

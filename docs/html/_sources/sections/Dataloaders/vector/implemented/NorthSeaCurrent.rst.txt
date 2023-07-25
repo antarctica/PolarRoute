@@ -10,6 +10,6 @@ More information on where to download the data is
 available `here <https://www.bodc.ac.uk/resources/inventories/edmed/report/6364/>`_
 
 
-.. automodule:: polar_route.dataloaders.vector.northSeaCurrent
+.. automodule:: polar_route.dataloaders.vector.north_sea_current
    :special-members: __init__
    :members:

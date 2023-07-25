@@ -17,6 +17,6 @@ Instructions for how to download their data products are
 available `here <https://confluence.ecmwf.int/display/CKB/How+to+download+ERA5>`_
 
 
-.. automodule:: polar_route.dataloaders.vector.era5Wind
+.. automodule:: polar_route.dataloaders.vector.era5_wind
    :special-members: __init__
    :members:
