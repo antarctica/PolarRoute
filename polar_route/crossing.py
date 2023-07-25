@@ -30,8 +30,7 @@ class NewtonianDistance:
 
     """
     def __init__(self,node_id,neighbour_id, cellboxes
-                 case=None ,unit_shipspeed='km/hr',unit_time='days',
-                 zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
+                 case=None ,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,optimizer_tol=1e-3):
         """Example of docstring on the __init__ method.
 
         The __init__ method may be documented in either the class level
@@ -65,10 +64,6 @@ class NewtonianDistance:
         self.neighbour_speed = self._unit_speed(self.neighbour_cellbox.agg_data['speed'] [indx])
         self.case            = case
 
-        if zerocurrents:
-            self.zero_current_factor = 0.0
-        else:
-            self.zero_current_factor = 1.0
 
         # Optimisation Information
         self.maxiter       = maxiter
@@ -220,8 +215,8 @@ class NewtonianDistance:
         '''
         x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*self.m_lat
-        Su  = self.source_cellbox.agg_data['uc'] *self.zero_current_factor
-        Sv  = self.source_cellbox.agg_data['vc'] *self.zero_current_factor
+        Su  = self.source_cellbox.agg_data['uc'] 
+        Sv  = self.source_cellbox.agg_data['vc'] 
         Ssp = self.source_speed
         traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
         return self._unit_time(traveltime)
@@ -247,10 +242,10 @@ class NewtonianDistance:
         n_dcy = self.neighbour_cellbox.get_boundary.getdcy()
 
 
-        Su = ptvl*self.source_cellbox.agg_data['uc'] *self.zero_current_factor
-        Sv = ptvl*self.source_cellbox.agg_data['vc'] *self.zero_current_factor
-        Nu = ptvl*self.neighbour_cellbox.agg_data['uc'] *self.zero_current_factor
-        Nv = ptvl*self.neighbour_cellbox.agg_data['vc'] *self.zero_current_factor
+        Su = ptvl*self.source_cellbox.agg_data['uc'] 
+        Sv = ptvl*self.source_cellbox.agg_data['vc'] 
+        Nu = ptvl*self.neighbour_cellbox.agg_data['uc'] 
+        Nv = ptvl*self.neighbour_cellbox.agg_data['vc'] 
 
         Ssp = self.source_speed
         Nsp = self.neighbour_speed
@@ -311,10 +306,10 @@ class NewtonianDistance:
         n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
 
 
-        Su = -1*ptvl*self.source_cellbox.agg_data['vc']*self.zero_current_factor
-        Sv = ptvl*self.source_cellbox.agg_data['uc']*self.zero_current_factor
-        Nu = -1*ptvl*self.neighbour_cellbox.agg_data['vc']*self.zero_current_factor
-        Nv = ptvl*self.neighbour_cellbox.agg_data['uc']*self.zero_current_factor
+        Su = -1*ptvl*self.source_cellbox.agg_data['vc']
+        Sv = ptvl*self.source_cellbox.agg_data['uc']
+        Nu = -1*ptvl*self.neighbour_cellbox.agg_data['vc']
+        Nv = ptvl*self.neighbour_cellbox.agg_data['uc']
 
 
         Ssp=self.source_speed
@@ -394,28 +389,16 @@ class NewtonianDistance:
             ptvX = -1.0
             ptvY = 1.0
 
-        # dx1 = s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
-        # dx2 = n_dcx*self.m_long*np.cos(n_cy*(np.pi/180))
-        # dy1 = s_dcy*self.m_lat
-        # dy2 = n_dcy*self.m_lat
-
-        # # Currents in Cells
-        # Su = ptvX*self.source_cellbox.agg_data['uc']*self.zero_current_factor
-        # Sv = ptvY*self.source_cellbox.agg_data['vc']*self.zero_current_factor
-        # Nu = ptvX*self.neighbour_cellbox.agg_data['uc']*self.zero_current_factor
-        # Nv = ptvY*self.neighbour_cellbox.agg_data['vc']*self.zero_current_factor
-
-
         dx1 = ptvX*s_dcx*self.m_long*np.cos(s_cy*(np.pi/180))
         dx2 = ptvX*n_dcx*self.m_long*np.cos(n_cy*(np.pi/180))
         dy1 = ptvY*s_dcy*self.m_lat
         dy2 = ptvY*n_dcy*self.m_lat
 
         # Currents in Cells
-        Su = self.source_cellbox.agg_data['uc']*self.zero_current_factor
-        Sv = self.source_cellbox.agg_data['vc']*self.zero_current_factor
-        Nu = self.neighbour_cellbox.agg_data['uc']*self.zero_current_factor
-        Nv = self.neighbour_cellbox.agg_data['vc']*self.zero_current_factor
+        Su = self.source_cellbox.agg_data['uc']
+        Sv = self.source_cellbox.agg_data['vc']
+        Nu = self.neighbour_cellbox.agg_data['uc']
+        Nv = self.neighbour_cellbox.agg_data['vc']
 
 
 

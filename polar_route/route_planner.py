@@ -65,7 +65,6 @@ class RoutePlanner:
                         "objective_function": (string) currently either 'traveltime' or 'fuel',\n
                         "path_variables": list of (string),\n
                         "vector_names": (list of (string),\n
-                        "zero_currents": (boolean),\n
                         "time_unit" (string),\n
                         "early_stopping_criterion" (boolean),\n
                     }\n
@@ -84,7 +83,7 @@ class RoutePlanner:
         
         # check if speed defined in the env mesh
         if 'speed' not in self.env_mesh.agg_cellboxes[0].agg_data:
-            raise ValueError('Vessel Speed not in the mesh information ! Please run vessel performance')
+            raise ValueError('Vessel Speed not in the mesh information! Please run vessel performance')
         
         #  check if objective function is in the env mesh (ex. speed)            
         if self.config['objective_function'] != 'traveltime':
@@ -172,8 +171,7 @@ class RoutePlanner:
 
         # Applying Newton distance to determine crossing point between node and its neighbour
         cost_func    = self.cost_func(node_id, neighbour_id, self.cellboxes_lookup , case=case, 
-                                          unit_shipspeed='km/hr', unit_time=self.unit_time,
-                                          zerocurrents=self.zero_currents)
+                                          unit_shipspeed='km/hr', unit_time=self.unit_time)
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points,cell_points,case = cost_func.value()
         # create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel), and return 
