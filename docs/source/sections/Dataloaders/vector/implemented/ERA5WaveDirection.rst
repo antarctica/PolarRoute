@@ -16,6 +16,9 @@ From their website:
 Instructions for how to download their data products are 
 available `here <https://confluence.ecmwf.int/display/CKB/How+to+download+ERA5>`_
 
+This dataloader takes the mean wave direction variable, which gives the direction the waves are coming from as an angle
+from north in degrees, and converts it to a unit vector with u and v components.
+
 
 .. automodule:: polar_route.dataloaders.vector.era5_wave_direction
    :special-members: __init__
