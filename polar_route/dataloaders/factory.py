@@ -8,6 +8,7 @@ from polar_route.dataloaders.scalar.modis import MODISDataLoader
 from polar_route.dataloaders.scalar.scalar_csv import ScalarCSVDataLoader
 from polar_route.dataloaders.scalar.scalar_grf import ScalarGRFDataLoader
 from polar_route.dataloaders.scalar.shape import ShapeDataLoader
+from polar_route.dataloaders.scalar.era5_wave_height import ERA5WaveHeightDataLoader
 
 from polar_route.dataloaders.vector.baltic_current import BalticCurrentDataLoader
 from polar_route.dataloaders.vector.era5_wind import ERA5WindDataLoader
@@ -17,6 +18,7 @@ from polar_route.dataloaders.vector.sose import SOSEDataLoader
 from polar_route.dataloaders.vector.vector_csv import VectorCSVDataLoader
 from polar_route.dataloaders.vector.vector_grf import VectorGRFDataLoader
 from polar_route.dataloaders.vector.duacs_current import DuacsCurrentDataLoader
+from polar_route.dataloaders.vector.era5_wave_direction import ERA5WaveDirectionLoader
 
 from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
@@ -41,7 +43,8 @@ class DataLoaderFactory:
                 'bsose_depth', 'baltic_sic', 'gebco', 'icenet', 'modis',
                 'thickness', 'density', 'circle', 'square', 'gradient',
                 'checkerboard', 'vector_csv', 'vector_grf', 'baltic_currents',
-                'era5_wind', 'northsea_currents', 'oras5_currents', 'sose'
+                'era5_wind', 'northsea_currents', 'oras5_currents', 'sose',
+                'duacs_currents', 'era5_wave_height', 'era5_wave_direction'
             bounds (Boundary):
                 Boundary object with initial mesh space&time limits
             params (dict):
@@ -74,6 +77,7 @@ class DataLoaderFactory:
             'gebco':        (GEBCODataLoader, ['files']),
             'icenet':       (IceNetDataLoader, ['files']),
             'modis':        (MODISDataLoader, ['files']),
+            'era5_wave_height': (ERA5WaveHeightDataLoader, ['files']),
             'thickness':    (ThicknessDataLoader, []),
             'density':      (DensityDataLoader, []),
             # Scalar - Abstract shapes
@@ -86,6 +90,7 @@ class DataLoaderFactory:
             'vector_grf':       (VectorGRFDataLoader, []),
             'baltic_currents':  (BalticCurrentDataLoader, ['files']),
             'era5_wind':        (ERA5WindDataLoader, ['files']),
+            'era5_wave_direction': (ERA5WaveDirectionLoader, ['files']),
             'northsea_currents':(NorthSeaCurrentDataLoader, ['files']),
             'duacs_currents':     (DuacsCurrentDataLoader, ['files']),
             'oras5_currents':   (ORAS5CurrentDataLoader, ['files']),
