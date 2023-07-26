@@ -48,7 +48,7 @@ rm -r docs/build/.doctrees/
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox, Harrison Abbot, Ayat Fekry
 
 ## Collaboration
-We are currently assessing the best practice for collaboration on the codebase, until then please contact [marfox@bas.ac.uk](marfox@bas.ac.uk) or [jonsmi@bas.ac.uk](jonsmi@bas.ac.uk) for further info.
+We are currently assessing the best practice for collaboration on the codebase, until then please contact [polarroute@bas.ac.uk](polarroute@bas.ac.uk) for further info.
 
 
 ## License

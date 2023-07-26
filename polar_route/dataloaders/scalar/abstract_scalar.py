@@ -44,11 +44,11 @@ class ScalarDataLoader(DataLoaderInterface):
             setattr(self, key, val)
             
         # Read in and manipulate data to standard form
+        self.data = self.import_data(bounds)
         if 'files' in params:
-            logging.info('\tReading in files:')
+            logging.info('\tFiles read:')
             for file in self.files:
                 logging.info(f'\t\t{file}')
-        self.data = self.import_data(bounds)
         # If need to downsample data
         self.data = self.downsample()
         # If need to reproject data
@@ -69,11 +69,11 @@ class ScalarDataLoader(DataLoaderInterface):
 
         # Get data name from column name if not set in params
         if self.data_name is None:
-            logging.debug('- Setting self.data_name from column name')
+            logging.debug('\tSetting self.data_name from column name')
             self.data_name = self.get_data_col_name()
         # or if set in params, set col name to data name
         else:
-            logging.debug(f'- Setting data column name to {self.data_name}')
+            logging.debug(f'\tSetting data column name to {self.data_name}')
             self.data = self.set_data_col_name(self.data_name)
 
     @abstractmethod
@@ -229,7 +229,7 @@ class ScalarDataLoader(DataLoaderInterface):
            data.lat.max() <= bounds.get_lat_max() and \
            data.long.min() >  bounds.get_long_min() and \
            data.long.max() <= bounds.get_long_max():
-            logging.debug('Data is already trimmed to bounds!')
+            logging.debug('\tData is already trimmed to bounds!')
             return data
         
         if type(data) == pd.core.frame.DataFrame:
@@ -371,7 +371,7 @@ class ScalarDataLoader(DataLoaderInterface):
             # Skip NaN's if desired
             if skipna:  dps = dps.dropna()
 
-            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If want the number of datapoints
             if agg_type =='COUNT':
                 return len(dps)
@@ -414,7 +414,7 @@ class ScalarDataLoader(DataLoaderInterface):
             '''
             # Extract values to be worked on by numpy functions
             dps = dps.values
-            logging.debug(f"    {len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
+            logging.debug(f"\t{len(dps)} datapoints found for attribute '{self.data_name}' within bounds '{bounds}'")
             # If want the number of datapoints
             if agg_type =='COUNT':
                 return dps.size
@@ -519,7 +519,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
                 else: hom_type = "HET"
 
-            logging.debug(f"hom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+            logging.debug(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
             return hom_type
         
         def get_hom_condition_from_xr(dps, splitting_conds):
@@ -549,7 +549,7 @@ class ScalarDataLoader(DataLoaderInterface):
                 elif frac_over_threshold >= splitting_conds['upper_bound']: hom_type = "HOM"
                 else: hom_type = "HET"
                 
-            logging.debug(f"hom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
+            logging.debug(f"\thom_condition for attribute: '{self.data_name}' in bounds:'{bounds}' returned '{hom_type}'")
             
             return hom_type
         
@@ -738,7 +738,7 @@ class ScalarDataLoader(DataLoaderInterface):
             defeating the purpose
             '''
             logging.warning(
-                '- Downsampling called on pd.DataFrame! Downsampling a df' \
+                '\tDownsampling called on pd.DataFrame! Downsampling a df' \
                 'too computationally expensive, returning original df'
                 )
             return data
@@ -750,10 +750,10 @@ class ScalarDataLoader(DataLoaderInterface):
         # If no downsampling
         if self.downsample_factors == (1,1) or \
            self.downsample_factors == [1,1]:
-            logging.debug("- self.downsample() called but don't have to")
+            logging.debug("\tself.downsample() called but don't have to")
             return self.data
         else:
-            logging.info(f"- Downsampling data by {self.downsample_factors}")
+            logging.info(f"\tDownsampling data by {self.downsample_factors}")
         # Otherwise, downsample appropriately
         if type(self.data) == pd.core.frame.DataFrame:
             return downsample_df(self.data, self.downsample_factors, agg_type)
@@ -820,7 +820,7 @@ class ScalarDataLoader(DataLoaderInterface):
                                  )
             return name[0]
         
-        logging.info(f"- Retrieving data name from {type(self.data)}")
+        logging.info(f"\tRetrieving data name from {type(self.data)}")
         # Choose method of extraction based on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return get_data_name_from_df(self.data)
@@ -876,7 +876,8 @@ class ScalarDataLoader(DataLoaderInterface):
             return data.rename({old_name: new_name})
         
         old_name = self.get_data_col_name()
-        logging.info(f"- Changing data name from {old_name} to {new_name}")
+        if old_name != new_name:
+            logging.info(f"\tChanging data name from {old_name} to {new_name}")
         # Change data name depending on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return set_name_df(self.data, old_name, new_name)
