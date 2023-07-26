@@ -8,8 +8,8 @@
                 "longMax": 10,
                 "startTime": "TODAY - 1",
                 "endTime": "TODAY + 1",
-                "cellWidth": 10,
-                "cellHeight": 10
+                "cellWidth": 5,
+                "cellHeight": 5
             },
             "Data_sources": [
                 {
