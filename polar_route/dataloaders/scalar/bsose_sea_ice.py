@@ -24,7 +24,6 @@ class BSOSESeaIceDataLoader(ScalarDataLoader):
                 If units specified in config,
                 and value not 'fraction' or 'percentage'
         """
-        logging.info(f"- Opening file {self.file}")
         # Open Dataset
         if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
         else:                       data = xr.open_mfdataset(self.files)
@@ -51,4 +50,8 @@ class BSOSESeaIceDataLoader(ScalarDataLoader):
                 raise ValueError("Parameter 'units' not understood."
                                  "Expected 'percentage' or 'fraction',"
                                 f"but received {self.units}")
+        else:
+            # Convert to percentage form by default (as expected by the vessel performance models)
+            data = data.assign(SIC=data['SIC'] * 100)
+
         return data
