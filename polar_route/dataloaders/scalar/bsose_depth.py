@@ -26,6 +26,14 @@ class BSOSEDepthDataLoader(ScalarDataLoader):
                             'XC': 'long'})
         # Change domain of dataset from [0:360) to [-180:180)
         data = data.assign_coords(long=((data.long + 180) % 360) - 180)
+        # Sort the 'long' axis so that sel() will work
+        data = data.sortby('long')
+        # Convert elevation from coord to variable
+        data = data.reset_coords('elevation')
+        # Convert depth to elevation by inverting sign
+        data['elevation'] = -1 * data['elevation']
+        # Limit to just elevation data
+        data = data['elevation'].to_dataset()
         # Trim to initial datapoints
         data = self.trim_datapoints(bounds, data=data)
         
