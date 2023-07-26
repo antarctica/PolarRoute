@@ -72,13 +72,18 @@ class RoutePlanner:
                 cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only!
                
         """
-
-        # Load in the current cell structure & Optimisation Info̦
         self.env_mesh = EnvironmentMesh.load_from_json (_json_str(mesh_file))
         self.config = _json_str(config_file)
-        # check that the provided mesh has current information
-        if 'uC' not in self.env_mesh.agg_cellboxes[0].agg_data or 'vC' not in self.env_mesh.agg_cellboxes[0].agg_data  :
-            raise ValueError('The env mesh cellboxes do not have current data and it is a prerequisite for the route planner!')
+        # validate conf and mesh
+        mand_conf_fields = ["objective_function", "path_variables" , "vector_names" , "time_unit"]
+        for field in mand_conf_fields: 
+            if field not in self.config:
+                 raise ValueError('missing configuration: {} should be set in the provided configuration').format (field)
+        # check that the provided mesh has vector information (ex. current)
+        self.vector_names = self.config['vector_names']
+        for name in self.vector_names: 
+             if  name not in self.env_mesh.agg_cellboxes[0].agg_data :
+                 raise ValueError('The env mesh cellboxes do not have {} data and it is a prerequisite for the route planner!').format(name)
         if 'SIC' not in self.env_mesh.agg_cellboxes[0].agg_data :
             logging.warning('The env mesh does not have SIC data')
         
