@@ -44,6 +44,7 @@ class RoutePlanner:
             mesh(EnvironmentMesh): mesh object that contains the mesh's cellboxes information and neighbourhood graph
             cost_func (func): Crossing point cost function for Dijkstra Path creation.
             config (Json): JSON object that contains the attributes required for the route construction. 
+            src_wps (list<SourceWaypoint>): a list of the source waypoints that contain all the dijkstra routing information to reuse this informatiuon for routes with the same source WP
 
         ---
 
@@ -66,10 +67,10 @@ class RoutePlanner:
                         "path_variables": list of (string),\n
                         "vector_names": (list of (string),\n
                         "time_unit" (string),\n
-                        "early_stopping_criterion" (boolean),\n
                     }\n
 
                 cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only!
+               
         """
 
         # Load in the current cell structure & Optimisation Info̦
@@ -90,12 +91,12 @@ class RoutePlanner:
             if self.config['objective_function'] not in self.env_mesh.agg_cellboxes[0].agg_data:
                 raise ValueError("Objective Function '{}' requires  the mesh cellboxex to have '{}' in the aggregated data".format(self.config['objective_function'], self.config['objective_function']))
 
-        #TODO: index cellboxes with the id for easier access
         self.cellboxes_lookup = {self.env_mesh.agg_cellboxes[i].get_id(): self.env_mesh.agg_cellboxes[i] for i in range (len(self.env_mesh.agg_cellboxes))}
         # ====== Defining the cost function ======
         self.cost_func       = cost_func
        # Case indices
         self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
+        self.src_wps = []
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
@@ -159,9 +160,10 @@ class RoutePlanner:
                          source_wp.update_routing_info (neighbour , RoutingInfo (_id, edges))
             
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
-        if not self.config['early_stopping_criterion']:
+        if end_wps is None:
             end_wps= [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes]
-        wp = SourceWaypoint( wp , end_wps)
+            
+        wp = self.get_source_wp(wp, end_wps)
         while not wp.is_all_visited():
             min_obj_indx = find_min_objective(wp)  # Determining the index of the minimum objective function that has not been visited
             consider_neighbours (wp , min_obj_indx)
@@ -209,7 +211,7 @@ class RoutePlanner:
         logging.info(' - Objective = {} '.format(self.config['objective_function']))
         end_wps =  [dest for source, dest in waypoints ]
         for wpt_pair in waypoints:
-            logging.info('--- Processing Waypoint = {} ---'.format(wpt))
+            logging.info('--- Processing Waypoint = {} --- {}'.format(wpt_pair[0].get_name() , wpt_pair[1].get_name()))
             self._dijkstra(wpt_pair[0], end_wps)
 
 
@@ -226,7 +228,7 @@ def _is_valid_wp_pair (self , source , dest):
                 is_valid (Boolean): true if both source and dest are within the env mesh bounds and false otherwise
      
     """
-    #TODO: what to do if a point is on the border of a 2 cellboxes
+    #TODO: select the NE cellbox
     def select_cellbox (ids):
         '''
            In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes
@@ -243,21 +245,35 @@ def _is_valid_wp_pair (self , source , dest):
         if self.env_mesh.agg_cellboxes[indx].contains_point (source.get_latitude() , source.get_longtitude()):
             source_id. append (indx)
             source.set_cellbox_indx(source_id)
-        if self.env_mesh.agg_cellboxes[indx].contains_point (dest.get_latitude() , dest.get_longtitude()):
-            dest_id.append( indx)
-            dest.set_cellbox_indx(dest_id)
+        if dest != None:
+            if self.env_mesh.agg_cellboxes[indx].contains_point (dest.get_latitude() , dest.get_longtitude()):
+                dest_id.append( indx)
+                dest.set_cellbox_indx(dest_id)
     if len (source_id) == 0:
           logging.warning('{} not in accessible waypoints'.format(source.get_name()))
           return False
-    if len(dest_id) ==0:
-         logging.warning('{} is accessible but has no destination waypoints'.format(dest.get_name()))
-         return False
-    
+ 
     if len(source_id) > 1: # the source wp is on the border of 2 cellboxes
         source_id = [select_cellbox(source_id)]
-    if len(dest_id)>1 :# the dest wp is on the border of 2 cellboxes
-        dest_id = [select_cellbox(dest_id)]
-    if source_id[0] == dest_id[0]:
-        logging.warning('The source {} and destination {} waypoints lie in the same cellbox'.format (source.get_name() , dest.get_name()))
-    
+
+    if dest!= None: # None dest indicates considering route for all cellboxes
+        if len(dest_id) ==0 :
+            logging.warning('{} is accessible but has no destination waypoints'.format(dest.get_name()))
+            return False
+        if len(dest_id)>1 :# the dest wp is on the border of 2 cellboxes
+            dest_id = [select_cellbox(dest_id)]
+        if source_id[0] == dest_id[0]:
+            logging.info('The source {} and destination {} waypoints lie in the same cellbox'.format (source.get_name() , dest.get_name()))
+            #TODO: address that in the correct waypoint, build a straight line between src and dest
+        
     return True
+
+
+def get_source_wp (self, src_wp, end_wps):
+    for wp in self.src_wps:
+        if wp.equals (src_wp):
+            wp.set_end_wp(end_wps)
+            return wp
+    wp = SourceWaypoint (src_wp, end_wps)
+    self.src_wps.append (wp)
+    return wp
