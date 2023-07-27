@@ -1253,7 +1253,9 @@ class Smoothing:
     def forward(self):
         '''
             Applied inplace this function conducts a forward pass over the adjacent cell pairs, updating the
-            adjacent cell pairs for the given environmental conditions and great-circle characteristics.
+            adjacent cell pairs for the given environmental conditions and great-circle characteristics. This 
+            is applied as a forward pass across the path moving out in adjacent cell pairs (tripplets of crossing 
+            points with the cell adjacency)
 
             This code should be read relative to the pseudo code outlined in the paper.
         
