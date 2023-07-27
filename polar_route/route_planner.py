@@ -251,6 +251,10 @@ class RoutePlanner:
         if 'speed' not in self.neighbour_graph:
             print(self.neighbour_graph.columns)
             raise Exception('Vessel Speed not in the mesh information ! Please run vessel performance')
+        
+        # ======= Sea-Ice Concentration ======
+        if 'SIC' not in self.neighbour_graph:
+            self.neighbour_graph['SIC'] = 0.0
 
         # ====== Objective Function Information ======
         #  Checking if objective function is in the cellgrid            
