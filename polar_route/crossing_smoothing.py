@@ -270,22 +270,22 @@ class PathValues:
         variables =  {}    
         for var in self.path_requested_variables:
             variables[var] ={}
-            variables[var]['path_values'] = np.zeros(len(adjacent_pairs)+1)
+            variables[var]['path_values'] = np.zeros(len(adjacent_pairs)+2)
 
 
         # Path point
         path_points = [start_waypoint]
 
         # Looping over the path and determining the variable information
-        for ii in range(len(adjacent_pairs)):
+        for ii in range(len(adjacent_pairs)+1):
             if ii == 0:
                 Wp = start_waypoint
                 Cp = adjacent_pairs[ii].crossing
                 cellbox = adjacent_pairs[ii].start
-            elif ii == (len(adjacent_pairs)-1):
-                Wp = adjacent_pairs[ii].crossing
+            elif ii == (len(adjacent_pairs)):
+                Wp = adjacent_pairs[ii-1].crossing
                 Cp = end_waypoint
-                cellbox = adjacent_pairs[ii].end
+                cellbox = adjacent_pairs[ii-1].end
             else:
                 Wp = adjacent_pairs[ii-1].crossing
                 Cp = adjacent_pairs[ii].crossing
@@ -352,16 +352,9 @@ class Smoothing:
             Initialising configuration information. If None return a list of standards
         '''
 
-        self.merge_separation = 1e-3
-        self.converged_sep = 1e-4
-
-        
-
+        self.merge_separation = 1e-3#1e-3
+        self.converged_sep    = 5e-3#1e-3
         self._g = pyproj.Geod(ellps='WGS84')
-
-
-
-
 
     def _long_case(self,start,end,case,Sp,Cp,Np):
         '''
@@ -378,7 +371,10 @@ class Smoothing:
                         dY = 0
                     else:
                         dY = (F/dF)
-                    improving =  (abs(dY)>_epsilon) or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
+                    if iter != 0:
+                        improving =  (abs(dY)>_epsilon) or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
+                    else:
+                        improving = True
                     y0  -= dY
                     iter+=1
 
@@ -506,7 +502,10 @@ class Smoothing:
                         dY = 0
                     else:
                         dY = (F/dF)
-                    improving =abs(dY) > 1 or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
+                    if iter != 0:             
+                        improving =abs(dY) > 1 or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
+                    else:
+                        improving = True
                     y0  -= dY
                     iter+=1
 
@@ -809,7 +808,7 @@ class Smoothing:
         max_new = new_cell['SIC']
 
         percentage_diff = (max_new-max_org)
-        if percentage_diff < 2:
+        if percentage_diff < 5:
             return False
         else:
             return True
@@ -933,12 +932,14 @@ class Smoothing:
         converged = False
         self.all_aps = []
         self.previous_vs_info = []
+        self.previous_us_info = []
+        self.previous_diagonal_info = []
         while not converged:
             path_length = len(self.aps)
             firstpoint = self.start_waypoint
             midpoint   = None 
             lastpoint  = None
-            converged = True
+            converged  = True
 
             ii=0
             self.jj+=1
@@ -959,7 +960,7 @@ class Smoothing:
                     self.remove(ii)
                     path_length -= 2
                     converged = False
-                    print('--- convergence failed - reverse case ')
+                    #print('--- convergence failed - reverse case ')
                     continue
 
                 # see figure 7
@@ -976,13 +977,19 @@ class Smoothing:
                     if len(common_cell) == 1:
                         _merge_case = start_cell['case'][np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0][0]]
                         new_edge = find_edge(start_cell,end_cell,_merge_case)
+
+                        # if self.previous_merge(firstpoint,midpoint,lastpoint):
+                        #     ii += 1
+                        #     firstpoint=midpoint
+                        #     print('--- Previous merge seen')
+                        #     continue
+
                         self.remove(ii) #Removing ap
                         self.remove(ii) #Removing app
                         self.add(ii,[new_edge])
                         path_length -= 1
                         converged = False
-                        print('--- convergence failed - Merging ')
-                        self.aps_after_merge = copy.deepcopy(self.aps)
+                        #print('--- convergence failed - Merging ')
                         continue
 
 
@@ -1008,12 +1015,18 @@ class Smoothing:
                         else:
                             edge_a = find_edge(ap.start,target,case_a)
                             edge_b = find_edge(target,ap.end,case_b)
+                            if self.previous_diagonals(edge_a,edge_b,firstpoint,lastpoint):
+                                ii += 1
+                                firstpoint=midpoint
+                                #print('--- Seen diagonal before !')
+                                continue
                             self.remove(ii)
                             self.add(ii,[edge_a,edge_b])
                             path_length += 1
                             converged = False
-                            print('--- convergence failed - diagonal case ')
-                        continue
+                            #print('--- convergence failed - diagonal case - firstpoint ={}, lastpoint={}'.format(firstpoint,lastpoint))
+                            continue
+                        
                         
 
 
@@ -1026,13 +1039,15 @@ class Smoothing:
                 add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)
                 # No additional cells to add
                 if add_indicies == None:
+                    midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
                     if self.dist(midpoint,midpoint_prime) > self.converged_sep:
                         converged = False
-                        print('--- convergence failed - normal midpoint_prime - dist = {}'.format(self.dist(midpoint,midpoint_prime)))
-                    ap.crossing = midpoint_prime
+                        #print('--- convergence failed - normal midpoint_prime - start_id={} end_id={}, dist = {}'.format(ap.start['id'],ap.end['id'],self.dist(midpoint,midpoint_prime)))
+                    self.aps[ii].crossing = midpoint_prime
                     ii += 1
                     firstpoint = midpoint_prime
                     continue
+                    
 
                 # Introduction of a v-shape
                 if len(add_indicies) == 1:
@@ -1043,11 +1058,10 @@ class Smoothing:
                             midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
                             if self.dist(midpoint,midpoint_prime) > self.converged_sep:
                                 converged = False
-                                print('--- convergence failed - v-shaped midpoint_prime ')
-                            ap.crossing = midpoint_prime
+                                #print('--- convergence failed - v-shaped midpoint_prime ')
+                            self.aps[ii].crossing = midpoint_prime
                             ii += 1
                             firstpoint = midpoint_prime
-                            continue
                         else:
                             edge_a = find_edge(ap.start,target,case_a)
                             edge_b = find_edge(target,ap.end,case_b)
@@ -1056,20 +1070,16 @@ class Smoothing:
                                 midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
                                 if self.dist(midpoint,midpoint_prime) > self.converged_sep:
                                     converged = False
-                                    print('--- convergence failed - v-shaped midpoint_prime - repeating v-shaped ')
-                                ap.crossing = midpoint_prime
+                                    #print('--- convergence failed - v-shaped midpoint_prime - repeating v-shaped ')
+                                self.aps[ii].crossing = midpoint_prime
                                 ii += 1
                                 firstpoint = midpoint_prime
-                                continue
-
-                            self.remove(ii)
-                            self.add(ii,[edge_a,edge_b])
-                            path_length += 1
-                            # ii += 2
-                            # firstpoint = lastpoint
-                            converged = False
-                            print('--- convergence failed - v-shaped case ')
-                            continue
+                            else:
+                                self.remove(ii)
+                                self.add(ii,[edge_a,edge_b])
+                                path_length += 1
+                                converged = False
+                                #print('--- convergence failed - v-shaped case ')
 
 
                 # Introduction of a U-shape
@@ -1085,28 +1095,40 @@ class Smoothing:
                             edge_a = find_edge(ap.start,target_a,case_a)
                             edge_b = find_edge(target_a,target_b,case_b)
                             edge_c = find_edge(target_b,ap.end,case_c)
-                            self.remove(ii)
-                            self.add(ii,[edge_a,edge_b,edge_c])
-                            path_length += 2
-                            # ii += 3
-                            # firstpoint = lastpoint
-                            converged = False
-                            print('--- convergence failed - u-shaped case ')
+
+                            if self.previous_us(edge_a,edge_b,edge_c,midpoint_prime):
+                                midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                                if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                                    converged = False
+                                    #print('--- convergence failed - u-shaped midpoint_prime - repeating v-shaped ')
+                                self.aps[ii].crossing = midpoint_prime
+                                ii += 1
+                                firstpoint = midpoint_prime
+                            else:
+                                self.remove(ii)
+                                self.add(ii,[edge_a,edge_b,edge_c])
+                                path_length += 2
+                                # ii += 3
+                                # firstpoint = lastpoint
+                                converged = False
+                                #print('--- convergence failed - u-shaped case ')
 
                         else:
                             midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
                             if self.dist(midpoint,midpoint_prime) > self.converged_sep:
                                 converged = False
-                                print('--- convergence failed - u-shaped midpoint_prime ')
-                            ap.crossing = midpoint_prime
+                                #print('--- convergence failed - u-shaped midpoint_prime ')
+                            self.aps[ii].crossing = midpoint_prime
                             ii += 1
                             firstpoint = midpoint_prime
-                            continue
 
-            self.all_aps += [copy.copy(self.aps)]
-            if self.jj == 10000:
-                print('Max iterations of 10000 met.')
+            # self.all_aps += [copy.deepcopy(self.aps)]
+
+
+            if self.jj == 20000:
+                #print('Max iterations of 20000 met.')
                 break
+        #print('{} iterations'.format(self.jj))
 
     def previous_vs(self,edge_a,edge_b,midpoint_prime):
         edge_a_start_index = edge_a.start['id']
@@ -1124,7 +1146,7 @@ class Smoothing:
             return False
 
 
-        if current_v[:-1] in np.array(self.previous_vs_info)[:,:-1].tolist():
+        if current_v[:-1] in np.array(self.previous_vs_info,dtype=object)[:,:-1].tolist():
             previous_vs_info_np = np.array(self.previous_vs_info,dtype=object)
             similar_midpoint_primes = previous_vs_info_np[(previous_vs_info_np[:,:-1] == current_v[:-1]).all(axis=1),-1]
 
@@ -1137,3 +1159,79 @@ class Smoothing:
         else:
             self.previous_vs_info += [current_v]
             return False
+        
+
+    def previous_us(self,edge_a,edge_b,edge_c,midpoint_prime):
+        edge_a_start_index = edge_a.start['id']
+        edge_b_start_index = edge_b.start['id']
+        edge_c_start_index = edge_c.start['id']
+        edge_a_end_index   = edge_a.end['id']
+        edge_b_end_index   = edge_b.end['id']
+        edge_c_end_index   = edge_c.end['id']
+
+        current_u = [edge_a_start_index,edge_a_end_index,
+                     edge_b_start_index,edge_b_end_index,
+                     edge_c_start_index,edge_c_end_index,
+                     midpoint_prime]
+        
+
+        if len(self.previous_us_info) == 0:
+            self.previous_us_info += [current_u]
+            return False
+
+
+        if current_u[:-1] in np.array(self.previous_us_info,dtype=object)[:,:-1].tolist():
+            previous_us_info_np = np.array(self.previous_us_info,dtype=object)
+            similar_midpoint_primes = previous_us_info_np[(previous_us_info_np[:,:-1] == current_u[:-1]).all(axis=1),-1]
+
+            if np.min([self.dist(c,current_u[-1]) for c in similar_midpoint_primes]) <= self.merge_separation:
+                return True
+            else:
+                self.previous_us_info += [current_u]
+                return False
+
+        else:
+            self.previous_us_info += [current_u]
+            return False
+        
+    def previous_diagonals(self,edge_a,edge_b,firstpoint,lastpoint):
+        edge_a_start_index = edge_a.start['id']
+        edge_b_start_index = edge_b.start['id']
+        edge_a_end_index   = edge_a.end['id']
+        edge_b_end_index   = edge_b.end['id']
+
+        current_diagonal = [edge_a_start_index,edge_a_end_index,
+                     edge_b_start_index,edge_b_end_index,
+                     firstpoint,lastpoint]
+        
+
+        if len(self.previous_diagonal_info) == 0:
+            self.previous_diagonal_info += [current_diagonal]
+            return False
+
+        if current_diagonal[:-2] in np.array(self.previous_diagonal_info,dtype=object)[:,:-2].tolist():
+            previous_diagonal_info_np = np.array(self.previous_diagonal_info,dtype=object)
+            similar_start_end = previous_diagonal_info_np[(previous_diagonal_info_np[:,:-2] == current_diagonal[:-2]).all(axis=1),-2:]
+            if np.any([self.dist(c[0],current_diagonal[-2]) <= self.merge_separation and self.dist(c[1],current_diagonal[-1]) <= self.merge_separation for c in similar_start_end]):
+                return True
+            else:
+                self.previous_diagonal_info += [current_diagonal]
+                return False
+
+        else:
+            self.previous_diagonal_info += [current_diagonal]
+            return False
+        
+    def previous_merge(self,firstpoint,midpoint,lastpoint):
+        current_merge = [firstpoint,midpoint,lastpoint]
+        if len(self.previous_merge_info) == 0:
+            self.previous_merge_info += [current_merge]
+            return False
+        if np.any([self.dist(c[0],current_merge[0]) <= self.converged_sep and 
+                   self.dist(c[1],current_merge[1]) <= self.converged_sep and 
+                   self.dist(c[2],current_merge[2]) <= self.converged_sep for c in self.previous_merge_info]):
+            return True
+        else:
+            self.previous_merge_info += [current_merge]
+            return False
+        

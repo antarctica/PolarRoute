@@ -9,6 +9,7 @@ import copy
 import pandas as pd
 import numpy as np
 import pyproj
+import logging
 np.seterr(divide='ignore', invalid='ignore')
 
 
@@ -288,7 +289,6 @@ class NewtonianDistance:
         vmin = np.max([smin,emin])
         vmax = np.min([smax,emax])
         if (CrossPoints [1] < vmin) or (CrossPoints[1] > vmax):
-            print('Long - Crossing Point Outside Cell - {}'.format(CrossPoints))
             CrossPoints = (CrossPoints[0],np.clip(CrossPoints[1],vmin,vmax))
             # TravelTime  = [np.inf,np.inf]
             # CrossPoints = [np.nan,np.nan]
@@ -357,22 +357,7 @@ class NewtonianDistance:
         vmin = np.max([smin,emin])
         vmax = np.min([smax,emax])
         if (CrossPoints [0] < vmin) or (CrossPoints[0] > vmax):
-            print('Latitude - Crossing Point Outside Cell - {} - {}'.format(CrossPoints,TravelTime))
-            
             CrossPoints = (np.clip(CrossPoints[0],vmin,vmax),CrossPoints[1])
-
-
-            #TravelTime  = #determine new transit-time.
-            # TravelTime  = [np.inf,np.inf]
-            # CrossPoints = [np.nan,np.nan]
-            # CellPoints  = [np.nan,np.nan]
-
-        # if TravelTime[0] < 0 or TravelTime[1] < 0:
-        #     TravelTime  = [np.inf,np.inf]
-        #     CrossPoints = [np.nan,np.nan]
-        #     CellPoints  = [np.nan,np.nan]
-        #     return TravelTime,CrossPoints,CellPoints
-
 
         return TravelTime,CrossPoints,CellPoints
 

@@ -607,7 +607,7 @@ class RoutePlanner:
             SmoothedPath['geometry']['type'] = "LineString"
             SmoothedPath['geometry']['coordinates'] = path_info['path'].tolist()            
             SmoothedPath['properties'] = {}
-            SmoothedPath['properties']['from']      = route['properties']['from']
+            SmoothedPath['properties']['from']       = route['properties']['from']
             SmoothedPath['properties']['to']         = route['properties']['to']
             SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
             SmoothedPath['properties']['fuel']       = list(FuelLegs)
