@@ -19,6 +19,7 @@ class AbstractShip(AbstractVessel):
         self.speed_unit = self.vessel_params['Unit']
         self.max_elevation = -1 * self.vessel_params['MinDepth']
         self.max_ice = self.vessel_params['MaxIceConc']
+        self.max_wave = self.vessel_params.get('MaxWave')
 
     def model_performance(self, cellbox):
         """
@@ -57,6 +58,9 @@ class AbstractShip(AbstractVessel):
 
         access_values['land'] = self.land(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
+
+        if self.max_wave is not None:
+            access_values['ext_waves'] = self.extreme_waves(cellbox)
 
         access_values['inaccessible'] = any(access_values.values())
 
@@ -117,6 +121,22 @@ class AbstractShip(AbstractVessel):
             ext_ice = cellbox.agg_data['SIC'] > self.max_ice
 
         return ext_ice
+
+    def extreme_waves(self, cellbox):
+        """
+            Method to determine if a cell is inaccessible based on configured max wave height.
+            Args:
+                cellbox (AggregatedCellBox): input cell from environmental mesh
+            Returns:
+                ext_wave (bool): boolean that is True if the cell is inaccessible due to waves
+        """
+        if 'swh' not in cellbox.agg_data:
+            logging.debug(f"No wave height data in cell {cellbox.id}")
+            ext_wave = False
+        else:
+            ext_wave = cellbox.agg_data['swh'] > self.max_wave
+
+        return ext_wave
 
     @abstractmethod
     def model_resistance(self, cellbox: AggregatedCellBox):
