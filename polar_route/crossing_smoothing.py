@@ -5,6 +5,15 @@ import pyproj
 import logging
 
 def _dist_around_globe(Sp,Cp):
+    """
+        Determining the longitude distance around the globe between two points
+    
+        Args:
+            Sp (tuple): Start Waypoint (long,lat)
+            Cp (tuple): End Waypoint (long,lat)
+        Returns:
+            a (float): longitude distance between the two points in degrees
+    """
     a1 = np.sign(Cp-Sp)*(np.max([Sp,Cp])-np.min([Sp,Cp]))
     a2 = -(360-(np.max([Sp,Cp])-np.min([Sp,Cp])))*np.sign(Cp-Sp)
 
@@ -14,29 +23,17 @@ def _dist_around_globe(Sp,Cp):
     a = dist[indx]
     return a
 
-def _max_distance(aps1,aps2):
-    points_1 = np.array([ap.crossing for ap in aps1]) 
-    points_2 = np.array([ap.crossing for ap in aps2]) 
-    if len(points_1) != len(points_2):
-        return np.nan
-    distance = np.zeros(len(points_1))*np.nan
-    for ii in range(len(points_1)):
-        sp_lon,sp_lat = points_1[ii]
-        ep_lon,ep_lat = points_2[ii]
-        distance[ii] = np.sqrt(((sp_lon-ep_lon)*(111.321))**2 + ((sp_lat-ep_lat)*(111.386))**2)
-
-    return np.max(distance)
-
-def _max_distance_group(current_points,list_previous_points,last_num=10): 
-    previous_crossing = list_previous_points[-last_num:]
-    if len(previous_crossing) != last_num:
-        return np.nan
-    distance = np.zeros(len(previous_crossing))*np.nan
-    for ii in range(len(distance)):
-        distance[ii] = _max_distance(current_points,previous_crossing[ii])
-    return np.max(distance)
-
 class find_edge:
+    """
+        Class to return characteristics information about the edge connecting two
+        cells. This information includes.
+
+        .crossing (tuple) - Crossing point (long,lat)
+        .case (int)       - Case type connecting the two cells
+        .start (dict)     - Dictionary containing the environmental parameters of the start cell
+        .end   (dict)     - Dictionary containing the environmental parameters of the end cell
+
+    """
     def __init__(self,cell_a,cell_b,case):
         self.crossing,self.case,self.start,self.end = self._find_edge(cell_a,cell_b,case)
 
@@ -45,9 +42,15 @@ class find_edge:
             Function that returns the edge connecting to cells, cell_a and cell_b. If there is no edge 
             connecting the two then it returns None
 
-            Input:
-                cell_a : 
-                cell_b : 
+            Args:
+                cell_a (dict): Dictionary of cell_a information
+                cell_b (dict): Dictionary of cell_b information
+
+            Returns
+                crosssing (tuple) - Crossing point (long,lat) connecting the two cells
+                case (int)       - Case type connecting the two cells
+                start (dict)     - Dictionary containing the environmental parameters of the start cell
+                end   (dict)     - Dictionary containing the environmental parameters of the end cell
         '''
 
         # Determining the crossing point between the two cells
@@ -71,17 +74,25 @@ class find_edge:
 # =====================================================
 class PathValues:
     '''
-    
-        Currently this need to correct the s
-    
+        A class that returns atributes along a given paths intersecting the environmental/vessel mesh.
+
+        Attributes:
+            .path_requested_variables (dict) - Dictionary of the required path variables and the processing method
+                                            e.g.{'distance':{'processing':'cumsum'},
+                                                'traveltime':{'processing':'cumsum'},
+                                                'datetime':{'processing':'cumsum'},
+                                                'cell_index':{'processing':None},
+                                                'fuel':{'processing':'cumsum'}}
+
+            .unit_shipspeed (string) - Unit speed type. This is a string of type: 'km/hr','knots'
+            .days (string) - Unit time format. This is a string of type: 'days','hr','min','s
+
+        Functions:
+            objective_function - For a list of ajacent cell pairs, start and end waypoints compute path attributes
     
     '''
-
-
     def __init__(self):
-        # ======= Supply cellbox information =======
 
-        # ======= Specify path variables ==========
         # Determining the important variables to return for the paths
         required_path_variables = {'distance':{'processing':'cumsum'},
                                    'traveltime':{'processing':'cumsum'},
@@ -99,6 +110,12 @@ class PathValues:
     def _unit_speed(self,Val):
         '''
             Applying unit speed for an input type.
+            
+            Input:
+                Val (float) - Input speed in m/s
+            Output:
+                Val (float) - Output speed in unit type unit_shipspeed
+
         '''
         if self.unit_shipspeed == 'km/hr':
             Val = Val*(1000/(60*60))
@@ -108,7 +125,13 @@ class PathValues:
 
     def _unit_time(self,Val):
         '''
-            Applying Unit time for a specific input type
+            Applying unit time for an input type.
+            
+            Input:
+                Val (float) - Input time in s
+            Output:
+                Val (float) - Output time in unit type unit_time
+
         '''
         if self.unit_time == 'days':
             Val = Val/(60*60*24)
@@ -200,6 +223,14 @@ class PathValues:
     def _traveltime_in_cell(self,xdist,ydist,U,V,S):
         '''
             Determine the traveltime within cell
+
+            Inputs:
+                xdist (float) - Longitude distance between two points in km
+                ydist (float) - Latitude distance between two points in km
+                U (float) - U-Component for the forcing vector
+                V (float) - V-Component for the forcing vector
+                S (float) - Speed of the vehicle
+
         '''
         dist  = np.sqrt(xdist**2 + ydist**2)
         cval  = np.sqrt(U**2 + V**2)
@@ -227,7 +258,20 @@ class PathValues:
     
     def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
         '''
-            Determine within cell parameters for a source and end point on the edge
+            For a series of path request variables determine the values for the path segment
+            between the waypoints Wp and Cp in a given cellbox source_graph
+
+            Input:
+                path_requested_variable (dict) - A dictionary of the path requested variables
+                source_graph (dict) - Dictionary of the cell in which the vessel is transiting
+                Wp (tuple) - Start Waypoint location (long,lat)
+                Cp (tuple) - End Waypoint location (long,lat)
+
+            Returns:
+                segment_values (dict) - Dictionary of the segment value information
+                case (int) - Adjacency case type connecting the two points
+
+
         '''
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
@@ -265,6 +309,13 @@ class PathValues:
     def objective_function(self,adjacent_pairs,start_waypoint,end_waypoint):
         '''
             Given a  list of adjacent pairs determine the path related information
+            apply waypoint_correction to get path related information along the path
+
+            Inputs:
+                adjacent_pairs (list of type find_edge) - A list of the adjacent cell pairs in the form of find_edge
+                start_waypoint (tuple) - Start waypoint (long,lat)
+                end_waypoint (tuple) - End waypoint (long,lat)
+
         '''
         # Initialising zero arrays for the path variables 
         variables =  {}    
@@ -325,7 +376,7 @@ class Smoothing:
     def __init__(self,dijkstra_graph,adjacent_pairs,start_waypoint,end_waypoint,blocked_metric='SIC'):
         '''
             Class construct that has all the operations requried for path smoothing. Including: Relationship of adjacent pairs,
-            edge finding ..
+            edge finding new edges to add and returns a list of the adjacent pairs for the constructed path
 
         '''
         self._initialise_config()
@@ -352,13 +403,23 @@ class Smoothing:
             Initialising configuration information. If None return a list of standards
         '''
 
-        self.merge_separation = 1e-3#1e-3
-        self.converged_sep    = 5e-3#1e-3
+        self.merge_separation = 1e-3
+        self.converged_sep    = 5e-3
         self._g = pyproj.Geod(ellps='WGS84')
 
     def _long_case(self,start,end,case,Sp,Cp,Np):
         '''
-            Longitude based smoothing
+            Longitude based smoothing updating the crossing point given the conditions 
+            of the adjacency pair
+
+            Input:
+                start (dict) - Dictionary of the start cell information
+                end (dict)   - Dictionary of the end  cell information
+                case (int)   - Adjacency case type connecting the two cells
+                Sp (tuple)   - Start Point (long,lat)
+                Cp (tuple)   - Crossing Point (long,lat)
+                Np (tuple)   - End Point (long,lat)
+ 
         '''
         def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
                 tryNum=1
@@ -488,7 +549,16 @@ class Smoothing:
 
     def _lat_case(self,start,end,case,Sp,Cp,Np):
         '''
-            Latitude based smoothing
+            Latitude based smoothing updating the crossing point given the conditions 
+            of the adjacency pair
+
+            Input:
+                start (dict) - Dictionary of the start cell information
+                end (dict)   - Dictionary of the end  cell information
+                case (int)   - Adjacency case type connecting the two cells
+                Sp (tuple)   - Start Point (long,lat)
+                Cp (tuple)   - Crossing Point (long,lat)
+                Np (tuple)   - End Point (long,lat)
         '''
         def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
                 tryNum=1
@@ -596,8 +666,20 @@ class Smoothing:
         
         return Cp
 
-    def newton_smooth(self,start,end,case,firstpoint,midpoint,lastpoint):      
-
+    def newton_smooth(self,start,end,case,firstpoint,midpoint,lastpoint):   
+        '''
+            Given an adjacent cell pair that are non-diagonal determine the
+            update to the crossing point/midpoint given the environmental 
+            conditions
+            Input:
+                start (dict) - Dictionary of the start cell information
+                end (dict)   - Dictionary of the end  cell information
+                case (int)   - Adjacency case type connecting the two cells
+                firstpoint (tuple) - First Point (long,lat)
+                midpoint (tuple)   - Midpoint Point (long,lat)
+                lastpoint (tuple)  - Last Point (long,lat)        
+        
+        '''
         if abs(case)==2:
             midpoint = self._long_case(start,end,case,firstpoint,midpoint,lastpoint)
         elif abs(case)==4:
@@ -630,7 +712,19 @@ class Smoothing:
         
     def _neighbour_case(self,cell_a,cell_b,x,case):
         '''
-            Checks to determine if the crossing point has moved outside the domain.
+            Checks to determine if the crossing point has moved outside the domain
+            connecting the two cells in the adjacency case
+
+            Input:
+                cell_a (dict) - Start cell environmental info as dictionary
+                cell_b (dict) - End cell environmental info as dictionary
+                x (tuple) - Updated crossing point that could lie outside the connection of the cell boxes (long,lat)
+                case (int) - Adjaceny case tupe connecting the two cells
+
+            Output
+                case_a (int or None) - Possible additional case edge relative to start cell to add, if None no edge to add
+                case_b (int or None) - Possible additional case edge relative to start cell to add, if None no edge to add
+            
         '''   
 
         # Returning if corner horseshoe case type
@@ -724,19 +818,24 @@ class Smoothing:
 
     def _neighbour_indices(self,cell_a,cell_b,case,add_case_a,add_case_b):
         '''
-            Apply's set theory to determine the indicies of the additional cells to add
+            For a given adjacency cell pair, and possible cases to add to start and end
+            cell, determine the index of the new cell/cells to add into the adjacency 
+            list
+            
+            Input:
+                cell_a (dict) - Start cell environmental info as dictionary
+                cell_b (dict) - End cell environmental info as dictionary
+                case (int) - Adjaceny case tupe connecting the two cells
+                case_a (int) - Possible additional case edge relative to start cell to add
+                case_b (int) - Possible additional case edge relative to start cell to add
+            
+            Returns
+                additional_indices (list) - A list of possible cell indices to add. None if no index added.
+                additional_cases (list) - A list of the cases connecting the additional cell indices. None if no index added.
         '''
 
         cell_a_neighbours = cell_a['neighbourIndex'][cell_a['case']==add_case_a]
         cell_b_neighbours = cell_b['neighbourIndex'][cell_b['case']==add_case_b]
-
-        # # Determining if the cell_a and cell_b share a new edge that should be added
-        # new_edge = set(cell_a_neighbours).intersection([cell_b['id']])
-        # if len(new_edge) == 1:
-        #     return None,[add_case_a]
-        # new_edge = set(cell_b_neighbours).intersection([cell_a['id']])
-        # if len(new_edge) == 1:
-        #     return None,[-add_case_b]
 
         # Determining possible v-connections
         v_connections = set(cell_a_neighbours).intersection(cell_b_neighbours)
@@ -758,8 +857,22 @@ class Smoothing:
 
     def _neighbour_cells(self,cell_a,cell_b,case,add_case_a,add_case_b):
         '''
-            Apply's set theory to determine the indicies of the additional cells to add
+            Adding in the neighbour cell information as a dict and case types of the neighbour cells that must be 
+            added. If the add_indicies is None then this means that the case need to change relating the adjacency
+            cell pair, but no additional cells need to be added
+
+            Input:
+                cell_a (dict) - Start cell environmental info as dictionary
+                cell_b (dict) - End cell environmental info as dictionary
+                case (int) - Adjaceny case tupe connecting the two cells
+                add_case_a (int) - Possible additional case edge relative to start cell to add
+                add_case_b (int) - Possible additional case edge relative to start cell to add
+            
+            Returns
+                additional_indices (list) - A list of possible cell dictionary info. None if no index added.
+                additional_cases (list) - A list of the cases connecting the additional cell indices. None if no index added.
         '''
+
 
         add_indices,add_cases = self._neighbour_indices(cell_a,cell_b,case,add_case_a,add_case_b)
 
@@ -774,6 +887,17 @@ class Smoothing:
             Returns the cell in the mesh that shares a boundary with cellA and has an edge on the line that extends the common 
             boundary of cellA and cellB (and on which the point x lies) in the direction of x. 
             If x lies inside cellA or there is no cell that satisfies these requirements, it returns null.
+
+            Input:
+                start (dict) - Start cell environmental info as dictionary
+                end (dict)   - End cell environmental info as dictionary
+                case (int)   - Adjaceny case tupe connecting the two cells
+                x (tuple)    - Updated crossing point (long,lat)
+            
+            Returns
+                additional_indices (list) - A list of possible cell dictionary info. None if no index added.
+                additional_cases (list) - A list of the cases connecting the additional cell indices. None if no index added.
+
         '''
 
         # Determine the neighbour cases if any
@@ -782,11 +906,17 @@ class Smoothing:
 
         return add_indicies,add_edges  
 
-        
-
     def diagonal_case(self,cell_a,cell_b,case):
         '''
             Function that determines if the adjacent cell pair is a diagonal case
+
+            Input:
+                cell_a (dict) - Start cell environmental info as dictionary
+                cell_b (dict) - End cell environmental info as dictionary
+                case (int) - Adjaceny case tupe connecting the two cells
+            Returns
+                True is diagonal case, false if not
+
         '''
         if (abs(case)==1) or (abs(case)==3):
             return True
@@ -796,10 +926,16 @@ class Smoothing:
 
     def blocked(self,new_cell,cell_a,cell_b):
         '''
-            Function that determines if the new cell being introducted is worse off that the origional two cells
+            Function that determines if the new cell being introducted is worse off that the origional two cells.
+            Currently this is hard encoded to not enter a cell 5% worse off in Sea-Ice-Concentration
 
-            Initially this is only dependent on the Sea-Ice Concentration
-        
+            Input:
+                new_cell (dict) - New cell to add environmental parameters as dict
+                cell_a (dict) - Start cell to add environmental parameters as dict
+                cell_b (dict) - End cell to add environmental parameters as dict
+
+            Return:
+                True if the cell cannot be entered, False if the cell can
         '''
         start = cell_a['SIC']
         end   = cell_b['SIC']
@@ -815,8 +951,22 @@ class Smoothing:
                 
 
     def clip(self,cell_a,cell_b,case,x):
-        '''f
+        '''
             Given two cell boxes clip point to within the cell boxes
+
+
+            Function that clips back the crossing point so that its only on the intersection 
+            between the two cell boxes in the adjacent cell pair
+
+            Input:
+                cell_a (dict) - Start cell environmental info as dictionary
+                cell_b (dict)   - End cell environmental info as dictionary
+                case (int)   - Adjaceny case tupe connecting the two cells
+                x (tuple)    - Updated crossing point (long,lat)
+            
+            Return:
+                x (tuple) - Updated crossing point clipped to cell intersection (long,lat)
+
         '''
         if abs(case) == 2:
             # Defining the min and max of the start and end cells
@@ -858,7 +1008,21 @@ class Smoothing:
             of midpoint as the shorter great circle arc (using pyproj with default projection 'WGS84') 
             passing between firstpoint and lastpoint. 
 
-            In the case that midpoint is within CONVERGESEP of the arc, then it returns null
+            If that cell is not in the neighbourhood graph then this returns None
+
+            Input:
+
+            Input:
+                cell_a (dict) - Start cell environmental info as dictionary
+                cell_b (dict)   - End cell environmental info as dictionary
+                case (int)   - Adjaceny case tupe connecting the two cells
+                firstpoint (tuple) - First Point (long,lat)
+                midpoint (tuple)   - Midpoint Point (long,lat)
+                lastpoint (tuple)  - Last Point (long,lat)      
+
+            Returns
+                additional_indices (list) - A list of possible cell dictionary info. None if no index added.
+                additional_cases (list) - A list of the cases connecting the additional cell indices. None if no index added.
         '''
 
         fp_lon,fp_lat = firstpoint
@@ -917,6 +1081,13 @@ class Smoothing:
         '''
             Determining the absolute distance between two points using pyproj and the 
             reference project (default: WGS84)
+
+            Inputs:
+                start_point (tuple) - Start Point (long,lat)
+                end_point (tuple) - End Point (long,lat)
+            Outputs:
+                distance (float) - Distance between the two points in km
+
         '''
         sp_lon,sp_lat = start_point
         ep_lon,ep_lat = end_point
@@ -926,211 +1097,22 @@ class Smoothing:
         #azimuth1, azimuth2, distance = self._g.inv(sp_lon, sp_lat, ep_lon, ep_lat)
         return distance
 
-    def forward(self):
-        self.jj = 1
-        self.previous_aps = []
-        converged = False
-        self.all_aps = []
-        self.previous_vs_info = []
-        self.previous_us_info = []
-        self.previous_diagonal_info = []
-        while not converged:
-            path_length = len(self.aps)
-            firstpoint = self.start_waypoint
-            midpoint   = None 
-            lastpoint  = None
-            converged  = True
-
-            ii=0
-            self.jj+=1
-            while ii < path_length:
-                ap       = self.aps[ii]
-                midpoint = ap.crossing
-
-                if ii+1 < path_length:
-                    app = self.aps[ii+1]
-                    lastpoint = app.crossing
-                else:
-                    app = self.aps[ii]
-                    lastpoint  = self.end_waypoint
-
-                # Removing reverse edges
-                if ap.start['id'] == app.end['id']:
-                    self.remove(ii)
-                    self.remove(ii)
-                    path_length -= 2
-                    converged = False
-                    #print('--- convergence failed - reverse case ')
-                    continue
-
-                # see figure 7
-                if self.dist(firstpoint,midpoint) < self.merge_separation:
-                    firstpoint = midpoint
-                    ii += 1
-                    continue
-
-                if self.dist(midpoint,lastpoint) < self.merge_separation:
-                    start_cell  = ap.start
-                    end_cell    = app.end
-
-                    common_cell = np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0]
-                    if len(common_cell) == 1:
-                        _merge_case = start_cell['case'][np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0][0]]
-                        new_edge = find_edge(start_cell,end_cell,_merge_case)
-
-                        # if self.previous_merge(firstpoint,midpoint,lastpoint):
-                        #     ii += 1
-                        #     firstpoint=midpoint
-                        #     print('--- Previous merge seen')
-                        #     continue
-
-                        self.remove(ii) #Removing ap
-                        self.remove(ii) #Removing app
-                        self.add(ii,[new_edge])
-                        path_length -= 1
-                        converged = False
-                        #print('--- convergence failed - Merging ')
-                        continue
-
-
-                
-
-
-                # == Diagonal cases == 
-                if self.diagonal_case(ap.start,ap.end,ap.case):
-                    add_indicies,add_cases = self.diagonal_select_side(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
-                    if add_indicies is None:
-                        ii += 1
-                        firstpoint=midpoint
-                        continue
-
-                    if len(add_indicies) == 1:
-                        target = add_indicies[0]
-                        case_a = add_cases[0]
-                        case_b = add_cases[1]
-                        if self.blocked(target,ap.start,ap.end):
-                            ii += 1
-                            firstpoint=midpoint
-                            continue
-                        else:
-                            edge_a = find_edge(ap.start,target,case_a)
-                            edge_b = find_edge(target,ap.end,case_b)
-                            if self.previous_diagonals(edge_a,edge_b,firstpoint,lastpoint):
-                                ii += 1
-                                firstpoint=midpoint
-                                #print('--- Seen diagonal before !')
-                                continue
-                            self.remove(ii)
-                            self.add(ii,[edge_a,edge_b])
-                            path_length += 1
-                            converged = False
-                            #print('--- convergence failed - diagonal case - firstpoint ={}, lastpoint={}'.format(firstpoint,lastpoint))
-                            continue
-                        
-                        
-
-
-                midpoint_prime = self.newton_smooth(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
-                if type(midpoint_prime) == type(None):
-                    raise Exception('Newton call failed to converge or recover')
-
-
-
-                add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)
-                # No additional cells to add
-                if add_indicies == None:
-                    midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
-                    if self.dist(midpoint,midpoint_prime) > self.converged_sep:
-                        converged = False
-                        #print('--- convergence failed - normal midpoint_prime - start_id={} end_id={}, dist = {}'.format(ap.start['id'],ap.end['id'],self.dist(midpoint,midpoint_prime)))
-                    self.aps[ii].crossing = midpoint_prime
-                    ii += 1
-                    firstpoint = midpoint_prime
-                    continue
-                    
-
-                # Introduction of a v-shape
-                if len(add_indicies) == 1:
-                        target = add_indicies[0]
-                        case_a = add_cases[0]
-                        case_b = add_cases[1]
-                        if self.blocked(target,ap.start,ap.end):
-                            midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
-                            if self.dist(midpoint,midpoint_prime) > self.converged_sep:
-                                converged = False
-                                #print('--- convergence failed - v-shaped midpoint_prime ')
-                            self.aps[ii].crossing = midpoint_prime
-                            ii += 1
-                            firstpoint = midpoint_prime
-                        else:
-                            edge_a = find_edge(ap.start,target,case_a)
-                            edge_b = find_edge(target,ap.end,case_b)
-
-                            if self.previous_vs(edge_a,edge_b,midpoint_prime):
-                                midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
-                                if self.dist(midpoint,midpoint_prime) > self.converged_sep:
-                                    converged = False
-                                    #print('--- convergence failed - v-shaped midpoint_prime - repeating v-shaped ')
-                                self.aps[ii].crossing = midpoint_prime
-                                ii += 1
-                                firstpoint = midpoint_prime
-                            else:
-                                self.remove(ii)
-                                self.add(ii,[edge_a,edge_b])
-                                path_length += 1
-                                converged = False
-                                #print('--- convergence failed - v-shaped case ')
-
-
-                # Introduction of a U-shape
-                if len(add_indicies) == 2:
-                        logging.debug('--- Adding in U-shape ---')
-                        target_a = add_indicies[0]
-                        target_b = add_indicies[1]
-                        case_a = add_cases[0]
-                        case_b = add_cases[1]
-                        case_c = add_cases[2]
-
-                        if not self.blocked(target_a,ap.start,ap.end) and not self.blocked(target_b,ap.start,ap.end):
-                            edge_a = find_edge(ap.start,target_a,case_a)
-                            edge_b = find_edge(target_a,target_b,case_b)
-                            edge_c = find_edge(target_b,ap.end,case_c)
-
-                            if self.previous_us(edge_a,edge_b,edge_c,midpoint_prime):
-                                midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
-                                if self.dist(midpoint,midpoint_prime) > self.converged_sep:
-                                    converged = False
-                                    #print('--- convergence failed - u-shaped midpoint_prime - repeating v-shaped ')
-                                self.aps[ii].crossing = midpoint_prime
-                                ii += 1
-                                firstpoint = midpoint_prime
-                            else:
-                                self.remove(ii)
-                                self.add(ii,[edge_a,edge_b,edge_c])
-                                path_length += 2
-                                # ii += 3
-                                # firstpoint = lastpoint
-                                converged = False
-                                #print('--- convergence failed - u-shaped case ')
-
-                        else:
-                            midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
-                            if self.dist(midpoint,midpoint_prime) > self.converged_sep:
-                                converged = False
-                                #print('--- convergence failed - u-shaped midpoint_prime ')
-                            self.aps[ii].crossing = midpoint_prime
-                            ii += 1
-                            firstpoint = midpoint_prime
-
-            # self.all_aps += [copy.deepcopy(self.aps)]
-
-
-            if self.jj == 20000:
-                #print('Max iterations of 20000 met.')
-                break
-        #print('{} iterations'.format(self.jj))
 
     def previous_vs(self,edge_a,edge_b,midpoint_prime):
+        '''
+            For a V-additional case determine if we have already seen this edge added in in the 
+            same situation. If a common past has been seen return True, otherwise add this 
+            v-additional case to a global list and return False
+
+            Input:
+                edge_a (find_edge)     - First-edge connecting start cell to new cell
+                edge_b (find_edge)     - First-edge connecting new cell to end cell
+                midpoint_prime (tuple) - midpoint that triggered the v-additional case addition (long,lat)
+
+            Return:
+                True if this v-additional case has been seen before, or false if not
+        
+        '''
         edge_a_start_index = edge_a.start['id']
         edge_b_start_index = edge_b.start['id']
         edge_a_end_index   = edge_a.end['id']
@@ -1162,6 +1144,23 @@ class Smoothing:
         
 
     def previous_us(self,edge_a,edge_b,edge_c,midpoint_prime):
+        '''
+            For a U-additional case determine if we have already seen these edges added in in the 
+            same situation and the same crossing point. If a common past has been seen return True, 
+            otherwise add this U-additional case to a global list and return False
+
+            Input:
+                edge_a (find_edge)     - First-edge connecting start cell to new cell 1
+                edge_b (find_edge)     - First-edge connecting new cell 1 to new cell 2
+                edge_c (find_edge)     - First-edge connecting new cell 2 to end cell
+                midpoint_prime (tuple) - midpoint that triggered the v-additional case addition (long,lat)
+
+            Return:
+                True if this U-additional case has been seen before, or false if not
+        
+        '''
+
+
         edge_a_start_index = edge_a.start['id']
         edge_b_start_index = edge_b.start['id']
         edge_c_start_index = edge_c.start['id']
@@ -1195,6 +1194,22 @@ class Smoothing:
             return False
         
     def previous_diagonals(self,edge_a,edge_b,firstpoint,lastpoint):
+        '''
+            For a diagonal-additional case determine if we have already seen these edges added in in the 
+            same situation and the same first and last points point. If a common past has been seen return True, 
+            otherwise add an additional case to of the diagonal to the global list and return False
+
+            Input:
+                edge_a (find_edge)     - First-edge connecting start cell to new cell 
+                edge_b (find_edge)     - First-edge connecting new cell  to end cell
+                firstpoint (tuple)     - firstpoint in the adjacent cell tripplet of points (long,lat)
+                lastpoint (tuple)      - lastpoint in the adjacent cell tripplet of points (long,lat)
+
+            Return:
+                True if this U-additional case has been seen before, or false if not
+        
+        '''
+
         edge_a_start_index = edge_a.start['id']
         edge_b_start_index = edge_b.start['id']
         edge_a_end_index   = edge_a.end['id']
@@ -1222,16 +1237,199 @@ class Smoothing:
             self.previous_diagonal_info += [current_diagonal]
             return False
         
-    def previous_merge(self,firstpoint,midpoint,lastpoint):
-        current_merge = [firstpoint,midpoint,lastpoint]
-        if len(self.previous_merge_info) == 0:
-            self.previous_merge_info += [current_merge]
-            return False
-        if np.any([self.dist(c[0],current_merge[0]) <= self.converged_sep and 
-                   self.dist(c[1],current_merge[1]) <= self.converged_sep and 
-                   self.dist(c[2],current_merge[2]) <= self.converged_sep for c in self.previous_merge_info]):
-            return True
-        else:
-            self.previous_merge_info += [current_merge]
-            return False
+    # def previous_merge(self,firstpoint,midpoint,lastpoint):
+    #     current_merge = [firstpoint,midpoint,lastpoint]
+    #     if len(self.previous_merge_info) == 0:
+    #         self.previous_merge_info += [current_merge]
+    #         return False
+    #     if np.any([self.dist(c[0],current_merge[0]) <= self.converged_sep and 
+    #                self.dist(c[1],current_merge[1]) <= self.converged_sep and 
+    #                self.dist(c[2],current_merge[2]) <= self.converged_sep for c in self.previous_merge_info]):
+    #         return True
+    #     else:
+    #         self.previous_merge_info += [current_merge]
+    #         return False
         
+    def forward(self):
+        '''
+            Applied inplace this function conducts a forward pass over the adjacent cell pairs, updating the
+            adjacent cell pairs for the given environmental conditions and great-circle characteristics.
+
+            This code should be read relative to the pseudo code outlined in the paper.
+        
+        '''
+        self.jj = 1
+        self.previous_aps = []
+        converged = False
+        self.all_aps = []
+        self.previous_vs_info = []
+        self.previous_us_info = []
+        self.previous_diagonal_info = []
+        while not converged:
+            path_length = len(self.aps)
+            firstpoint = self.start_waypoint
+            midpoint   = None 
+            lastpoint  = None
+            converged  = True
+
+            ii=0
+            self.jj+=1
+            while ii < path_length:
+                ap       = self.aps[ii]
+                midpoint = ap.crossing
+
+                # Determine the next adjacency pair and the last point
+                if ii+1 < path_length:
+                    app = self.aps[ii+1]
+                    lastpoint = app.crossing
+                else:
+                    app = self.aps[ii]
+                    lastpoint  = self.end_waypoint
+
+                # Remove the reverse edges
+                if ap.start['id'] == app.end['id']:
+                    self.remove(ii)
+                    self.remove(ii)
+                    path_length -= 2
+                    converged = False
+                    continue
+
+                # Merging the first and last point close move to next iteration
+                if self.dist(firstpoint,midpoint) < self.merge_separation:
+                    firstpoint = midpoint
+                    ii += 1
+                    continue
+
+                # Merging the mid and last point if separation close, determine new edge for adjacency
+                if self.dist(midpoint,lastpoint) < self.merge_separation:
+                    start_cell  = ap.start
+                    end_cell    = app.end
+
+                    common_cell = np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0]
+                    if len(common_cell) == 1:
+                        _merge_case = start_cell['case'][np.where(np.array(start_cell['neighbourIndex']) == end_cell['id'])[0][0]]
+                        new_edge = find_edge(start_cell,end_cell,_merge_case)
+                        self.remove(ii) #Removing ap
+                        self.remove(ii) #Removing app
+                        self.add(ii,[new_edge])
+                        path_length -= 1
+                        converged = False
+                        continue
+
+
+                # Relationship is a diagonal case
+                if self.diagonal_case(ap.start,ap.end,ap.case):
+                    add_indicies,add_cases = self.diagonal_select_side(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
+                    if add_indicies is None:
+                        ii += 1
+                        firstpoint=midpoint
+                        continue
+
+                    if len(add_indicies) == 1:
+                        target = add_indicies[0]
+                        case_a = add_cases[0]
+                        case_b = add_cases[1]
+                        if self.blocked(target,ap.start,ap.end):
+                            ii += 1
+                            firstpoint=midpoint
+                            continue
+                        else:
+                            edge_a = find_edge(ap.start,target,case_a)
+                            edge_b = find_edge(target,ap.end,case_b)
+                            if self.previous_diagonals(edge_a,edge_b,firstpoint,lastpoint):
+                                ii += 1
+                                firstpoint=midpoint
+                                continue
+                            self.remove(ii)
+                            self.add(ii,[edge_a,edge_b])
+                            path_length += 1
+                            converged = False
+                            continue
+                        
+                # Updating crossing point
+                midpoint_prime = self.newton_smooth(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
+                if type(midpoint_prime) == type(None):
+                    raise Exception('Newton call failed to converge or recover')
+
+                #Determining if additional cases need to be added
+                add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)
+
+                # No additional cells to add
+                if add_indicies == None:
+                    midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                    if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                        converged = False
+                    self.aps[ii].crossing = midpoint_prime
+                    ii += 1
+                    firstpoint = midpoint_prime
+                    continue
+                    
+
+                # Introduction of a v-shape
+                if len(add_indicies) == 1:
+                        target = add_indicies[0]
+                        case_a = add_cases[0]
+                        case_b = add_cases[1]
+                        if self.blocked(target,ap.start,ap.end):
+                            midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                            if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                                converged = False
+                            self.aps[ii].crossing = midpoint_prime
+                            ii += 1
+                            firstpoint = midpoint_prime
+                        else:
+                            edge_a = find_edge(ap.start,target,case_a)
+                            edge_b = find_edge(target,ap.end,case_b)
+
+                            if self.previous_vs(edge_a,edge_b,midpoint_prime):
+                                midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                                if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                                    converged = False
+                                self.aps[ii].crossing = midpoint_prime
+                                ii += 1
+                                firstpoint = midpoint_prime
+                            else:
+                                self.remove(ii)
+                                self.add(ii,[edge_a,edge_b])
+                                path_length += 1
+                                converged = False
+
+                # Introduction of a U-shape
+                if len(add_indicies) == 2:
+                        logging.debug('--- Adding in U-shape ---')
+                        target_a = add_indicies[0]
+                        target_b = add_indicies[1]
+                        case_a = add_cases[0]
+                        case_b = add_cases[1]
+                        case_c = add_cases[2]
+
+                        if not self.blocked(target_a,ap.start,ap.end) and not self.blocked(target_b,ap.start,ap.end):
+                            edge_a = find_edge(ap.start,target_a,case_a)
+                            edge_b = find_edge(target_a,target_b,case_b)
+                            edge_c = find_edge(target_b,ap.end,case_c)
+
+                            if self.previous_us(edge_a,edge_b,edge_c,midpoint_prime):
+                                midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                                if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                                    converged = False
+                                self.aps[ii].crossing = midpoint_prime
+                                ii += 1
+                                firstpoint = midpoint_prime
+                            else:
+                                self.remove(ii)
+                                self.add(ii,[edge_a,edge_b,edge_c])
+                                path_length += 2
+                                converged = False
+
+                        else:
+                            midpoint_prime = self.clip(ap.start,ap.end,ap.case,midpoint_prime)
+                            if self.dist(midpoint,midpoint_prime) > self.converged_sep:
+                                converged = False
+                            self.aps[ii].crossing = midpoint_prime
+                            ii += 1
+                            firstpoint = midpoint_prime
+
+            # Early stopping criterion
+            if self.jj == 20000:
+                break
+
