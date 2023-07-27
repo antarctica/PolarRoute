@@ -15,7 +15,9 @@ import logging
 from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from polar_route.crossing import NewtonianDistance, NewtonianCurve
+from polar_route.crossing import NewtonianDistance
+
+from polar_route.crossing_smoothing import Smoothing,PathValues,find_edge
 
 
 def _flattenCases(id,mesh):
@@ -28,8 +30,50 @@ def _flattenCases(id,mesh):
             neighbour_indx.append(int(neighbour))
     return neighbour_case, neighbour_indx
 
+def _initialise_dijkstra_graph(dijkstra_graph):
+    '''
+        Initialising dijkstra graph information into a standard form
+    '''
+
+    dijkstra_graph_dict = {}
+    for idx,cell in dijkstra_graph.iterrows():
+        dijkstra_graph_dict[cell.name] = {}
+        dijkstra_graph_dict[cell.name]['id'] = cell.name
+        for key in cell.keys():
+            entry = cell[key]
+            if type(entry) == list:
+                entry = np.array(entry)
+            dijkstra_graph_dict[cell.name][key] = entry
+    return  dijkstra_graph_dict
 
 
+def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
+    '''
+        Initialising dijkstra route into a standard path form
+    '''
+
+    org_path_points = np.array(dijkstra_route['geometry']['coordinates'])
+    org_cellindices = np.array(dijkstra_route['properties']['CellIndices'])
+    org_cellcases= np.array(dijkstra_route['properties']['cases'])
+
+    # -- Generating a dataframe of the case information -- 
+    Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
+    cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
+    cellcases = np.concatenate([[org_cellcases[0]],[org_cellcases[0]],org_cellcases[1:-1:2],[org_cellcases[-1]],[org_cellcases[-1]]])
+
+    cellDijk    = [dijkstra_graph[ii] for ii in cellIndices]
+    cells  = cellDijk[1:-1]
+    cases  = cellcases[1:-1]
+    aps = []
+    for ii in range(len(cells)-1):
+        aps += [find_edge(cells[ii],cells[ii+1],cases[ii+1])]
+
+    # #-- Setting some backend information
+    aps = aps
+    start_waypoint = Points[0,:]
+    end_waypoint   = Points[-1,:]
+
+    return aps, start_waypoint,end_waypoint
 
 def _json_str(input):
     if type(input) is dict:
@@ -43,9 +87,7 @@ def _json_str(input):
     return output
 
 def _pandas_dataframe_str(input):
-    if type(input) is dict:
-        output = input
-    elif type(input) == type(pd.DataFrame()):
+    if (type(input) is dict) or (type(input) is pd.core.frame.DataFrame):
         output = input
     elif type(input) is str:
         try:
@@ -295,8 +337,7 @@ class RoutePlanner:
         '''
         mesh = copy.copy(self.mesh)
         mesh['waypoints'] = mesh['waypoints'].to_dict()
-        mesh['config']['route_info'] = self.config
-        output_json = json.loads(json.dumps(mesh, indent=4))
+        output_json = json.loads(json.dumps(mesh))
         del mesh
         return output_json
 
@@ -518,154 +559,219 @@ class RoutePlanner:
         self.paths = self._dijkstra_paths(self.source_waypoints, self.end_waypoints)
         self.mesh['paths'] = self.paths
 
-    def compute_smoothed_routes(self):
+    def compute_smoothed_routes(self,blocked_metric='SIC',debugging=False):
         """
             Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
             `paths` will be updated in the output JSON
         """
-        if 'max_iteration_number' not in self.config['smooth_path']:
-            maxiter = 1e4
-        else:
-            maxiter     = self.config['smooth_path']['max_iteration_number']
-
-        if 'minimum_iterations' not in self.config['smooth_path']:
-            minimum_iterations = 50
-        else:
-            minimum_iterations = self.config['smooth_path']['minimum_iterations']
-
-
-        if 'minimum_difference' not in self.config['smooth_path']:
-            minimumDiff = 1e-4
-        else: 
-            minimumDiff = self.config['smooth_path']['minimum_difference']
-
-        # Minimum Difference = 1e-4
-        # Minimum Iterations = 50
-        # Max Iteration Number = 1e4
-
-
-
-        # 
-
-        # 
-        SmoothedPaths = []
-        geojson = {}
-        geojson['type'] = "FeatureCollection"
-
+        # ====== Routes into =======
         if len(self.paths['features']) == 0:
-            logging.warning('Paths not constructed as there was no dijkstra paths created')
-            return
-        Pths = copy.deepcopy(self.paths)['features']  
+            raise Exception('Paths not constructed as there was no dijkstra paths created')
+        routes = copy.deepcopy(self.paths)['features']  
 
         logging.info('========= Determining Smoothed Paths ===========\n')
+        paths = []
+        geojson = {}
+        SmoothedPaths = []
+        for route in routes:
+            logging.info('---Smoothing {}'.format(route['properties']['name']))
+            dijkstra_graph = self.dijkstra_info[route['properties']['from']]
+            self.initialise_dijkstra_graph = _initialise_dijkstra_graph(dijkstra_graph)
+            self.route = route
+            self.adjacent_pairs,self.start_waypoint,self.end_waypoint = _initialise_dijkstra_route(self.initialise_dijkstra_graph,self.route)
 
-        for ii in range(len(Pths)):
-                Path = Pths[ii]
-                counter = 0 
+            sf = Smoothing(self.initialise_dijkstra_graph,self.adjacent_pairs,self.start_waypoint,self.end_waypoint,blocked_metric=blocked_metric)
+            self.sf = sf
+            # if debugging:
+            #     break
+            self.sf.forward()
 
-                logging.info('---Smoothing {}'.format(Path['properties']['name']))
+            
 
-                nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']], self.config, maxiter=1,
-                                             zerocurrents=self.zero_currents)
-                nc.pathIter = maxiter
+        
+            # ------ Smooth Path Values -----
+            # Given a smoothed route path now determine the along path parameters.
+            pv             = PathValues()
+            path_info      = pv.objective_function(sf.aps,sf.start_waypoint,sf.end_waypoint)
+            variables      = path_info['variables']
+            TravelTimeLegs = variables['traveltime']['path_values']
+            DistanceLegs   = variables['distance']['path_values'] 
+            pathIndex      = variables['cell_index']['path_values'] 
+            FuelLegs       = variables['fuel']['path_values'] 
 
-                org_path_points = np.array(Path['geometry']['coordinates'])
-                org_cellindices = np.array(Path['properties']['CellIndices'])
 
-                # -- Generating a dataframe of the case information -- 
-                Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
-                cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
-                cellDijk    = [nc.neighbour_graph.loc[ii] for ii in cellIndices]
-                nc.CrossingDF  = pd.DataFrame({'cx':Points[:,0],'cy':Points[:,1],'cellStart':cellDijk[:-1],'cellEnd':cellDijk[1:]})
+            # ------ Saving Output in a standard form to be saved ------
+            SmoothedPath ={}
+            SmoothedPath['type'] = 'Feature'
+            SmoothedPath['geometry'] = {}
+            SmoothedPath['geometry']['type'] = "LineString"
+            SmoothedPath['geometry']['coordinates'] = path_info['path'].tolist()            
+            SmoothedPath['properties'] = {}
+            SmoothedPath['properties']['from']       = route['properties']['from']
+            SmoothedPath['properties']['to']         = route['properties']['to']
+            SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
+            SmoothedPath['properties']['fuel']       = list(FuelLegs)
+            SmoothedPath['properties']['distance']   = list(DistanceLegs)
+            SmoothedPaths += [SmoothedPath]
+        
+        geojson['features'] = SmoothedPaths
+        self.smoothed_paths = geojson
+        self.mesh['paths'] = self.smoothed_paths
 
-                # -- Determining the cases from the cell information. If within cell then case 0 -- 
-                Cases = []
-                for idx, row in nc.CrossingDF.iterrows():
-                    try:
-                        Cases.append(row.cellStart['case'][np.where(np.array(row.cellStart['neighbourIndex']) == row.cellEnd.name)[0][0]])
-                    except:
-                        Cases.append(0)
-                nc.CrossingDF['case'] = Cases
-                nc.CrossingDF.index = np.arange(int(nc.CrossingDF.index.min()), int(nc.CrossingDF.index.max()*1e3 + 1e3), int(1e3))
 
-                nc.orgDF = copy.deepcopy(nc.CrossingDF)
-                iter = 0
-                # try:
+    # def compute_smoothed_routes(self):
+    #     """
+    #         Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
+    #         `paths` will be updated in the output JSON
+    #     """
+    #     if 'max_iteration_number' not in self.config['smooth_path']:
+    #         maxiter = 1e4
+    #     else:
+    #         maxiter     = self.config['smooth_path']['max_iteration_number']
 
-                # while iter < nc.pathIter:
-                pbar = tqdm(np.arange(nc.pathIter))
+    #     if 'minimum_iterations' not in self.config['smooth_path']:
+    #         minimum_iterations = 50
+    #     else:
+    #         minimum_iterations = self.config['smooth_path']['minimum_iterations']
 
-                # Determining the computational time averaged across all pairs
-                self.allDist = []
 
-                self.nc = nc
-                self.all_crossing_points = []
-                for iter in pbar:
-                    self.all_crossing_points += [nc.CrossingDF]
-                    nc.previousDF = copy.deepcopy(nc.CrossingDF)
-                    id = 0
-                    while id <= (len(nc.CrossingDF) - 3):
+    #     if 'minimum_difference' not in self.config['smooth_path']:
+    #         minimumDiff = 1e-4
+    #     else: 
+    #         minimumDiff = self.config['smooth_path']['minimum_difference']
+
+    #     # Minimum Difference = 1e-4
+    #     # Minimum Iterations = 50
+    #     # Max Iteration Number = 1e4
+
+
+
+    #     # 
+
+    #     # 
+    #     SmoothedPaths = []
+    #     geojson = {}
+    #     geojson['type'] = "FeatureCollection"
+
+    #     if len(self.paths['features']) == 0:
+    #         logging.warning('Paths not constructed as there was no dijkstra paths created')
+    #         return
+    #     Pths = copy.deepcopy(self.paths)['features']  
+
+    #     logging.info('========= Determining Smoothed Paths ===========\n')
+
+    #     for ii in range(len(Pths)):
+    #             Path = Pths[ii]
+    #             counter = 0 
+
+    #             logging.info('---Smoothing {}'.format(Path['properties']['name']))
+
+    #             nc          = NewtonianCurve(self.dijkstra_info[Path['properties']['from']], self.config, maxiter=1,
+    #                                          zerocurrents=self.zero_currents)
+    #             nc.pathIter = maxiter
+
+    #             org_path_points = np.array(Path['geometry']['coordinates'])
+    #             org_cellindices = np.array(Path['properties']['CellIndices'])
+
+    #             # -- Generating a dataframe of the case information -- 
+    #             Points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
+    #             cellIndices = np.concatenate([[org_cellindices[0]],[org_cellindices[0]],org_cellindices[1:-1:2],[org_cellindices[-1]],[org_cellindices[-1]]])
+    #             cellDijk    = [nc.neighbour_graph.loc[ii] for ii in cellIndices]
+    #             nc.CrossingDF  = pd.DataFrame({'cx':Points[:,0],'cy':Points[:,1],'cellStart':cellDijk[:-1],'cellEnd':cellDijk[1:]})
+
+    #             # -- Determining the cases from the cell information. If within cell then case 0 -- 
+    #             Cases = []
+    #             for idx, row in nc.CrossingDF.iterrows():
+    #                 try:
+    #                     Cases.append(row.cellStart['case'][np.where(np.array(row.cellStart['neighbourIndex']) == row.cellEnd.name)[0][0]])
+    #                 except:
+    #                     Cases.append(0)
+    #             nc.CrossingDF['case'] = Cases
+    #             nc.CrossingDF.index = np.arange(int(nc.CrossingDF.index.min()), int(nc.CrossingDF.index.max()*1e3 + 1e3), int(1e3))
+
+    #             nc.orgDF = copy.deepcopy(nc.CrossingDF)
+    #             iter = 0
+    #             # try:
+
+    #             # while iter < nc.pathIter:
+    #             pbar = tqdm(np.arange(nc.pathIter))
+
+    #             # Determining the computational time averaged across all pairs
+    #             self.allDist = []
+
+    #             self.nc = nc
+    #             self.all_crossing_points = []
+    #             for iter in pbar:
+    #                 self.all_crossing_points += [nc.CrossingDF]
+    #                 nc.previousDF = copy.deepcopy(nc.CrossingDF)
+    #                 id = 0
+    #                 while id <= (len(nc.CrossingDF) - 3):
                         
                         
-                        # -- Updating the crossing point
-                        nc.triplet = nc.CrossingDF.iloc[id:id+3]
-                        nc._updateCrossingPoint(iter)
-                        self.nc = nc
-                        id += 1
+    #                     # -- Updating the crossing point
+    #                     nc.triplet = nc.CrossingDF.iloc[id:id+3]
+    #                     nc._updateCrossingPoint(iter)
+    #                     self.nc = nc
+    #                     id += 1
 
-                    if  id <= (len(nc.CrossingDF) - 3):
-                        print('Path Smoothing Failed!')
-                        break
+    #                 if  id <= (len(nc.CrossingDF) - 3):
+    #                     print('Path Smoothing Failed!')
+    #                     break
 
-                    self.nc = nc
+    #                 self.nc = nc
 
-                    #nc._mergePoint()
-                    self.nc = nc
-                    iter+=1
+    #                 #nc._mergePoint()
+    #                 self.nc = nc
+    #                 iter+=1
 
                     
                         
-                    # Stop optimisation if the points are within some minimum difference
-                    if len(nc.previousDF) == len(nc.CrossingDF):
-                        Dist = np.max(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
-                        self.allDist.append(Dist)
-                        pbar.set_description("Mean Difference = {}".format(Dist))
-                        if (Dist < minimumDiff) and (iter>=minimum_iterations):
-                            logging.info('{} iterations - dDist={}'.format(iter, Dist))
-                            break
+    #                 # Stop optimisation if the points are within some minimum difference
+    #                 if len(nc.previousDF) == len(nc.CrossingDF):
+    #                     Dist = np.max(np.sqrt((nc.previousDF['cx'].astype(float) - nc.CrossingDF['cx'].astype(float))**2 + (nc.previousDF['cy'].astype(float) - nc.CrossingDF['cy'].astype(float))**2))
+    #                     self.allDist.append(Dist)
+    #                     pbar.set_description("Mean Difference = {}".format(Dist))
+    #                     if (Dist < minimumDiff) and (iter>=minimum_iterations):
+    #                         logging.info('{} iterations - dDist={}'.format(iter, Dist))
+    #                         break
 
-                if iter == nc.pathIter:
-                    logging.info('Maximum Iteration Met - Returning Last Path'.format(iter, Dist))
-                    nc.CrossingDF = self.all_crossing_points[-1]
-
-
-
-                # ------ Smooth Path Values -----
-                # Given a smoothed route path now determine the along path parameters.
-                variables      = nc.objective_function(nc.CrossingDF)
-                TravelTimeLegs = variables['traveltime']['path_values']
-                DistanceLegs   = variables['distance']['path_values'] 
-                pathIndex      = variables['cell_index']['path_values'] 
-                FuelLegs       = variables['fuel']['path_values'] 
-                SpeedLegs      = variables['speed']['path_values'] 
+    #             if iter == nc.pathIter:
+    #                 logging.info('Maximum Iteration Met - Returning Last Path'.format(iter, Dist))
+    #                 nc.CrossingDF = self.all_crossing_points[-1]
 
 
-                # ------ Saving Output in a standard form to be saved ------
-                SmoothedPath ={}
-                SmoothedPath['type'] = 'Feature'
-                SmoothedPath['geometry'] = {}
-                SmoothedPath['geometry']['type'] = "LineString"
-                SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cx','cy']].to_numpy().tolist()            
-                SmoothedPath['properties'] = {}
-                SmoothedPath['properties']['from'] = Path['properties']['from']
-                SmoothedPath['properties']['to']   = Path['properties']['to']
-                SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
-                SmoothedPath['properties']['fuel']       = list(FuelLegs)
-                SmoothedPath['properties']['distance']   = list(DistanceLegs)
-                SmoothedPath['properties']['speed']      = list(SpeedLegs)
-                SmoothedPaths.append(SmoothedPath)
-                geojson['features'] = SmoothedPaths
-                self.smoothed_paths = geojson
-                self.mesh['paths'] = self.smoothed_paths
 
-                    
+    #             # ------ Smooth Path Values -----
+    #             # Given a smoothed route path now determine the along path parameters.
+    #             variables      = nc.objective_function(nc.CrossingDF)
+    #             TravelTimeLegs = variables['traveltime']['path_values']
+    #             DistanceLegs   = variables['distance']['path_values'] 
+    #             pathIndex      = variables['cell_index']['path_values'] 
+    #             FuelLegs       = variables['fuel']['path_values'] 
+    #             SpeedLegs      = variables['speed']['path_values'] 
+
+
+    #             # ------ Saving Output in a standard form to be saved ------
+    #             SmoothedPath ={}
+    #             SmoothedPath['type'] = 'Feature'
+    #             SmoothedPath['geometry'] = {}
+    #             SmoothedPath['geometry']['type'] = "LineString"
+    #             SmoothedPath['geometry']['coordinates'] = nc.CrossingDF[['cx','cy']].to_numpy().tolist()            
+    #             SmoothedPath['properties'] = {}
+    #             SmoothedPath['properties']['from'] = Path['properties']['from']
+    #             SmoothedPath['properties']['to']   = Path['properties']['to']
+    #             SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
+    #             SmoothedPath['properties']['fuel']       = list(FuelLegs)
+    #             SmoothedPath['properties']['distance']   = list(DistanceLegs)
+    #             SmoothedPath['properties']['speed']      = list(SpeedLegs)
+    #             SmoothedPaths.append(SmoothedPath)
+    #             geojson['features'] = SmoothedPaths
+    #             self.smoothed_paths = geojson
+    #             self.mesh['paths'] = self.smoothed_paths
+
+    # ############################################################################################################
+    # ############################################################################################################
+    # ############################################################################################################
+    # ############################################################################################################
+    # ############################################################################################################
+    # ############################################################################################################
