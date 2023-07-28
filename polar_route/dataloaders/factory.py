@@ -1,5 +1,4 @@
 from polar_route.dataloaders.scalar.amsr import AMSRDataLoader
-from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
 from polar_route.dataloaders.scalar.bsose_depth import BSOSEDepthDataLoader
 from polar_route.dataloaders.scalar.bsose_sea_ice import BSOSESeaIceDataLoader
 from polar_route.dataloaders.scalar.baltic_sea_ice import BalticSeaIceDataLoader
@@ -9,6 +8,7 @@ from polar_route.dataloaders.scalar.modis import MODISDataLoader
 from polar_route.dataloaders.scalar.scalar_csv import ScalarCSVDataLoader
 from polar_route.dataloaders.scalar.scalar_grf import ScalarGRFDataLoader
 from polar_route.dataloaders.scalar.shape import ShapeDataLoader
+from polar_route.dataloaders.scalar.era5_wave_height import ERA5WaveHeightDataLoader
 
 from polar_route.dataloaders.vector.baltic_current import BalticCurrentDataLoader
 from polar_route.dataloaders.vector.era5_wind import ERA5WindDataLoader
@@ -17,6 +17,8 @@ from polar_route.dataloaders.vector.oras5_current import ORAS5CurrentDataLoader
 from polar_route.dataloaders.vector.sose import SOSEDataLoader
 from polar_route.dataloaders.vector.vector_csv import VectorCSVDataLoader
 from polar_route.dataloaders.vector.vector_grf import VectorGRFDataLoader
+from polar_route.dataloaders.vector.duacs_current import DuacsCurrentDataLoader
+from polar_route.dataloaders.vector.era5_wave_direction import ERA5WaveDirectionLoader
 
 from polar_route.dataloaders.scalar.density import DensityDataLoader
 from polar_route.dataloaders.scalar.thickness import ThicknessDataLoader
@@ -26,33 +28,34 @@ import os
 
 
 class DataLoaderFactory:
-    '''
-    Produces initialised DataLoader objects that can be used by the mesh to 
+    """
+    Produces initialised DataLoader objects that can be used by the mesh to
     quickly retrieve values within a boundary.
-    '''    
+    """
     def get_dataloader(self, name, bounds, params, min_dp=5):
-        '''
+        """
         Creates appropriate dataloader object based on name
-        
+
         Args:
-            name (str): 
-                Name of data source/type. Must be one of following - 
+            name (str):
+                Name of data source/type. Must be one of following -
                 'scalar_csv', 'scalar_grf', 'binary_grf', 'amsr', 'bsose_sic',
-                'bsose_depth', 'baltic_sic', 'gebco', 'icenet', 'modis', 
+                'bsose_depth', 'baltic_sic', 'gebco', 'icenet', 'modis',
                 'thickness', 'density', 'circle', 'square', 'gradient',
                 'checkerboard', 'vector_csv', 'vector_grf', 'baltic_currents',
-                'era5_wind', 'northsea_currents', 'oras5_currents', 'sose'
-            bounds (Boundary): 
+                'era5_wind', 'northsea_currents', 'oras5_currents', 'sose',
+                'duacs_currents', 'era5_wave_height', 'era5_wave_direction'
+            bounds (Boundary):
                 Boundary object with initial mesh space&time limits
-            params (dict): 
+            params (dict):
                 Dictionary of parameters required by each dataloader
-            min_dp (int):  
+            min_dp (int):
                 Minimum datapoints required to get homogeneity condition
 
         Returns:
-            (Scalar/Vector/LUT DataLoader): 
-                DataLoader object of correct type, with required params set 
-        '''
+            (Scalar/Vector/LUT DataLoader):
+                DataLoader object of correct type, with required params set
+        """
         # Cast name to lowercase to make case insensitive
         name = name.lower()
         # Translate 'file' or 'folder' into 'files' key
@@ -74,6 +77,7 @@ class DataLoaderFactory:
             'gebco':        (GEBCODataLoader, ['files']),
             'icenet':       (IceNetDataLoader, ['files']),
             'modis':        (MODISDataLoader, ['files']),
+            'era5_wave_height': (ERA5WaveHeightDataLoader, ['files']),
             'thickness':    (ThicknessDataLoader, []),
             'density':      (DensityDataLoader, []),
             # Scalar - Abstract shapes
@@ -86,8 +90,9 @@ class DataLoaderFactory:
             'vector_grf':       (VectorGRFDataLoader, []),
             'baltic_currents':  (BalticCurrentDataLoader, ['files']),
             'era5_wind':        (ERA5WindDataLoader, ['files']),
+            'era5_wave_direction': (ERA5WaveDirectionLoader, ['files']),
             'northsea_currents':(NorthSeaCurrentDataLoader, ['files']),
-            # TODO make it run from 'files'
+            'duacs_currents':     (DuacsCurrentDataLoader, ['files']),
             'oras5_currents':   (ORAS5CurrentDataLoader, ['files']),
             'sose':             (SOSEDataLoader, ['files'])
 
@@ -108,19 +113,19 @@ class DataLoaderFactory:
         return data_loader(bounds, params)
     
     def translate_file_input(self, params):
-        '''
-        Allows flexible file specification in params. Translates 'file' or 
+        """
+        Allows flexible file specification in params. Translates 'file' or
         'folder' into 'files'
-        
+
         Args:
-            params (dict): 
+            params (dict):
                 Dictionary of parameters written in config
-        '''
+        """
         if 'file' in params:
             params['files'] = [params['file']]
             del params['file']
         elif 'folder' in params:
-            folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existant
+            folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existent
             params['files'] = sorted(glob(folder+'*'))
             del params['folder']
         return params
