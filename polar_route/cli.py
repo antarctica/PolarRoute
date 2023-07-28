@@ -80,6 +80,35 @@ def get_args(
 
     return ap.parse_args()
 
+@timed_call
+def rebuild_mesh_cli():
+    """
+        CLI entry point for rebuilding the mesh based its encoded config files. 
+    """
+
+    default_output = "rebuild_mesh.output.json"
+    args = get_args(default_output, mesh_arg=True, config_arg=False)
+    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
+
+    mesh_json = json.load(args.mesh)
+    config = mesh_json['config']
+
+    # rebuilding mesh...
+    rebuilt_mesh = MeshBuilder(config).build_environmental_mesh()
+    rebuilt_mesh_json = rebuilt_mesh.to_json()
+
+    if 'vessel_info' in config.keys():
+        vessel_config = config['vessel_info']
+        vp = VesselPerformanceModeller(rebuilt_mesh_json, vessel_config)
+        vp.model_accessibility()
+        vp.model_performance()
+        rebuilt_mesh_json = vp.to_json()
+
+    logging.info("Saving mesh to {}".format(args.output))
+    
+    json.dump(rebuilt_mesh_json, open(args.output, "w"), indent=4)
+
+
 
 @timed_call
 def create_mesh_cli():
