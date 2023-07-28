@@ -57,3 +57,6 @@ class Waypoint:
 
     def equals(self, wp):
         return self.lat == wp.get_latitude() and self.long == wp.get_longtitude()
+    
+    def to_list (self):
+        return [self.lat , self.long]

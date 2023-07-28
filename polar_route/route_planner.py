@@ -130,6 +130,9 @@ class RoutePlanner:
                 cases.reverse()
                 route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name())
                 route.set_cases(cases)
+                # correct the first and last segment
+                route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_id()] , s_wp, 0)
+                route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_start_wp().get_id()] , s_wp, -1)
                 routes.append (route)
                 
         return routes
@@ -282,3 +285,4 @@ def get_source_wp (self, src_wp, end_wps):
     wp = SourceWaypoint (src_wp, end_wps)
     self.src_wps.append (wp)
     return wp
+
