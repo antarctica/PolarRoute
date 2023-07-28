@@ -279,8 +279,7 @@ def _is_valid_wp_pair (self , source , dest):
             dest_id = [select_cellbox(dest_id)]
         if source_id[0] == dest_id[0]:
             logging.info('The source {} and destination {} waypoints lie in the same cellbox'.format (source.get_name() , dest.get_name()))
-            #TODO: address that in the correct waypoint, build a straight line between src and dest
-            # TODO: creat unit test for this
+            # TODO: create unit test for this
     return True
 
 
