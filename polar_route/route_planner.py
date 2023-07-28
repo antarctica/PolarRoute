@@ -24,6 +24,7 @@ warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
 from polar_route.utils import _json_str
+from polar_route.mesh_generation.direction import Direction
 
 class RoutePlanner:
     """
@@ -239,14 +240,16 @@ def _is_valid_wp_pair (self , source , dest):
     #TODO: select the NE cellbox
     def select_cellbox (ids):
         '''
-           In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes
+           In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes(the current cirteria is to select the north east cellbox)
             Args:
                 ids([int]): listt contains the touching cellboxes ids
             Returns:
                 selected (int): the id of the selected cellbox
         '''
-        # self.env_mesh.neighbour_graph.get_neighbour_case(ids[0], ids[1]) # get the touching casebetween cellboxes
-        pass
+        if self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]], self.cellboxes_lookup [ids[1]]) in [Direction.east , Direction.north_east, Direction.north]:
+            return ids[0]
+        return ids[1]
+        
     source_id = []
     dest_id = []
     for indx in range (len(self.env_mesh.agg_cellboxes)):
