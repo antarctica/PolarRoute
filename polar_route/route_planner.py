@@ -120,20 +120,25 @@ class RoutePlanner:
                 route_segments = []
                 e_wp = end_waypoints[i]
                 cases = []
-                while not s_wp.equals(e_wp):
-                     routing_info = s_wp.get_routing_info(e_wp.get_id())
-                     route_segments.append (routing_info.get_path())
-                     cases.append(self.env_mesh.neighbour_graph.get_neighbour_case( routing_info.get_node_index() , e_wp.get_cellbox_indx()))
-                     e_wp = routing_info.get_node_index()
+                route = None
+                if s_wp.get_cellbox_indx() == e_wp.get_cellbox_indx(): # path should be a straight line within the same cellbox
+                   route = Route ([Segment (s_wp, e_wp)],s_wp.get_name(), e_wp.get_name() , self.conf)
+                else:
+                    while not s_wp.equals(e_wp):
+                        routing_info = s_wp.get_routing_info(e_wp.get_id())
+                        route_segments.append (routing_info.get_path())
+                        cases.append(self.env_mesh.neighbour_graph.get_neighbour_case( routing_info.get_node_index() , e_wp.get_cellbox_indx()))
+                        e_wp = routing_info.get_node_index()
                    
                 # reversing segments as we moved from end to start
-                route_segments.reverse()
-                cases.reverse()
-                route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name())
-                route.set_cases(cases)
+                    route_segments.reverse()
+                    cases.reverse()
+                    route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name(), self.conf)
+                    route.set_cases(cases)
                 # correct the first and last segment
                 route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_id()] , s_wp, 0)
-                route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_start_wp().get_id()] , s_wp, -1)
+                if len (route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and dest are within the same cellbox
+                    route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_start_wp().get_id()] , s_wp, -1)
                 routes.append (route)
                 
         return routes
@@ -171,7 +176,7 @@ class RoutePlanner:
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         if end_wps is None:
             end_wps= [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes]
-            
+        
         wp = self.get_source_wp(wp, end_wps)
         while not wp.is_all_visited():
             min_obj_indx = find_min_objective(wp)  # Determining the index of the minimum objective function that has not been visited
@@ -237,7 +242,6 @@ def _is_valid_wp_pair (self , source , dest):
                 is_valid (Boolean): true if both source and dest are within the env mesh bounds and false otherwise
      
     """
-    #TODO: select the NE cellbox
     def select_cellbox (ids):
         '''
            In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes(the current cirteria is to select the north east cellbox)
@@ -276,7 +280,7 @@ def _is_valid_wp_pair (self , source , dest):
         if source_id[0] == dest_id[0]:
             logging.info('The source {} and destination {} waypoints lie in the same cellbox'.format (source.get_name() , dest.get_name()))
             #TODO: address that in the correct waypoint, build a straight line between src and dest
-        
+            # TODO: creat unit test for this
     return True
 
 
