@@ -29,7 +29,7 @@ class NewtonianDistance:
         attr2 (:obj:`int`, optional): Description of `attr2`.
 
     """
-    def __init__(self,node_id,neighbour_id, cellboxes
+    def __init__(self,node_id,neighbour_id, cellboxes,
                  case=None ,unit_shipspeed='km/hr',unit_time='days',debugging=False,maxiter=1000,optimizer_tol=1e-3):
         """Example of docstring on the __init__ method.
 
@@ -54,14 +54,15 @@ class NewtonianDistance:
         self.neighbour_cellbox = cellboxes [neighbour_id]
 
         # Case indices
-        self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
+       
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
-        indx = np.where(self.indx_type==case)
+        direction = [1, 2, 3, 4, -1, -2, -3, -4]
+
         self.unit_shipspeed  = unit_shipspeed
         self.unit_time       = unit_time
-        self.source_speed    = self._unit_speed(self.source_cellbox.agg_data['speed'] [indx])
-        self.neighbour_speed = self._unit_speed(self.neighbour_cellbox.agg_data['speed'] [indx])
+        self.source_speed    = self._unit_speed(self.source_cellbox.agg_data['speed'] [direction.index(case)])
+        self.neighbour_speed = self._unit_speed(self.neighbour_cellbox.agg_data['speed'] [direction.index(case)])
         self.case            = case
 
 
@@ -215,8 +216,8 @@ class NewtonianDistance:
         '''
         x = (Cp[0]-Wp[0])*self.m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*self.m_lat
-        Su  = self.source_cellbox.agg_data['uc'] 
-        Sv  = self.source_cellbox.agg_data['vc'] 
+        Su  = self.source_cellbox.agg_data['uC'] 
+        Sv  = self.source_cellbox.agg_data['vC'] 
         Ssp = self.source_speed
         traveltime = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
         return self._unit_time(traveltime)
@@ -232,20 +233,20 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
-        s_cx  = self.source_cellbox.get_boundary.getcx()
-        s_cy  = self.source_cellbox.get_boundary.getcy()
-        s_dcx = self.source_cellbox.get_boundary.getdcx()
-        s_dcy = self.source_cellbox.get_boundary.getdcy()
-        n_cx  = self.neighbour_cellbox.get_boundary.getcx()
-        n_cy  = self.neighbour_cellbox.get_boundary.getcy()
-        n_dcx = self.neighbour_cellbox.get_boundary.getdcx()
-        n_dcy = self.neighbour_cellbox.get_boundary.getdcy()
+        s_cx  = self.source_cellbox.get_boundary().getcx()
+        s_cy  = self.source_cellbox.get_boundary().getcy()
+        s_dcx = self.source_cellbox.get_boundary().getdcx()
+        s_dcy = self.source_cellbox.get_boundary().getdcy()
+        n_cx  = self.neighbour_cellbox.get_boundary().getcx()
+        n_cy  = self.neighbour_cellbox.get_boundary().getcy()
+        n_dcx = self.neighbour_cellbox.get_boundary().getdcx()
+        n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
 
 
-        Su = ptvl*self.source_cellbox.agg_data['uc'] 
-        Sv = ptvl*self.source_cellbox.agg_data['vc'] 
-        Nu = ptvl*self.neighbour_cellbox.agg_data['uc'] 
-        Nv = ptvl*self.neighbour_cellbox.agg_data['vc'] 
+        Su = ptvl*self.source_cellbox.agg_data['uC'] 
+        Sv = ptvl*self.source_cellbox.agg_data['vC'] 
+        Nu = ptvl*self.neighbour_cellbox.agg_data['uC'] 
+        Nv = ptvl*self.neighbour_cellbox.agg_data['vC'] 
 
         Ssp = self.source_speed
         Nsp = self.neighbour_speed
@@ -306,10 +307,10 @@ class NewtonianDistance:
         n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
 
 
-        Su = -1*ptvl*self.source_cellbox.agg_data['vc']
-        Sv = ptvl*self.source_cellbox.agg_data['uc']
-        Nu = -1*ptvl*self.neighbour_cellbox.agg_data['vc']
-        Nv = ptvl*self.neighbour_cellbox.agg_data['uc']
+        Su = -1*ptvl*self.source_cellbox.agg_data['vC']
+        Sv = ptvl*self.source_cellbox.agg_data['uC']
+        Nu = -1*ptvl*self.neighbour_cellbox.agg_data['vC']
+        Nv = ptvl*self.neighbour_cellbox.agg_data['uC']
 
 
         Ssp=self.source_speed
@@ -395,10 +396,10 @@ class NewtonianDistance:
         dy2 = ptvY*n_dcy*self.m_lat
 
         # Currents in Cells
-        Su = self.source_cellbox.agg_data['uc']
-        Sv = self.source_cellbox.agg_data['vc']
-        Nu = self.neighbour_cellbox.agg_data['uc']
-        Nv = self.neighbour_cellbox.agg_data['vc']
+        Su = self.source_cellbox.agg_data['uC']
+        Sv = self.source_cellbox.agg_data['vC']
+        Nu = self.neighbour_cellbox.agg_data['uC']
+        Nv = self.neighbour_cellbox.agg_data['vC']
 
 
 
@@ -629,8 +630,8 @@ class NewtonianCurve:
         x = (Cp[0]-Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
         y = (Cp[1]-Wp[1])*m_lat
         case = self._case_from_angle(Cp,Wp)
-        Su  = self.source_cellbox.agg_data['uc'] *self.zc
-        Sv  = self.source_cellbox.agg_data['vc'] *self.zc
+        Su  = self.source_cellbox.agg_data['uC'] *self.zc
+        Sv  = self.source_cellbox.agg_data['vC'] *self.zc
         Ssp = self._unit_speed(source_graph['speed'][case])
         traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
 

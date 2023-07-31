@@ -18,7 +18,7 @@ class Segment:
         self.start_wp = start_wp
         self.end_wp = end_wp
         self.distance = np.inf
-        self.travel_time = np.inf
+        self.traveltime = np.inf
         self.fuel = np.inf
 
     def set_distance (self, distance):
@@ -31,7 +31,7 @@ class Segment:
         '''
             setting the travel time
         '''
-        self.travel_time = tt
+        self.traveltime = tt
 
     def set_fuel (self, fuel):
         '''
@@ -49,7 +49,7 @@ class Segment:
         '''
             returning the travel_time
         '''
-        return self.travel_time  
+        return self.traveltime  
         
     def get_fuel(self):
         '''

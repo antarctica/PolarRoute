@@ -76,8 +76,8 @@ class RoutePlanner:
         self.env_mesh = EnvironmentMesh.load_from_json (_json_str(mesh_file))
         self.config = _json_str(config_file)
         # validate conf and mesh
-        mand_conf_fields = ["objective_function", "path_variables" , "vector_names" , "time_unit"]
-        for field in mand_conf_fields: 
+        mandatory_fields = ["objective_function", "path_variables" , "vector_names" , "time_unit"]
+        for field in mandatory_fields: 
             if field not in self.config:
                  raise ValueError('missing configuration: {} should be set in the provided configuration').format (field)
         # check that the provided mesh has vector information (ex. current)
@@ -101,7 +101,6 @@ class RoutePlanner:
         # ====== Defining the cost function ======
         self.cost_func       = cost_func
        # Case indices
-        self.indx_type = np.array([1, 2, 3, 4, -1, -2, -3, -4])
         self.src_wps = []
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
@@ -155,23 +154,23 @@ class RoutePlanner:
         def find_min_objective (source_wp):
             min_obj = np.inf
             cellbox_indx = -1
-            for indx, info in source_wp.routing_info:
-                if info.get_obj (self.config['objective_function'])< min_obj:
-                    min_obj = info.get_obj (self.config['objective_function'])
-                    cellbox_indx = indx
+            for node_id in source_wp.routing_table.keys():
+                if source_wp.routing_table[node_id].get_obj (self.config['objective_function'])< min_obj:
+                    min_obj = source_wp.routing_table[node_id].get_obj (self.config['objective_function'])
+                    cellbox_indx = node_id
             return cellbox_indx
         def consider_neighbours (source_wp , _id):
             # get neighbours of indx
-            source_cellbox = self.env_mesh.agg_cellboxes[source_wp.get_cellbox_indx()]
-            neighbour_map = self.env_mesh.neighbour_graph [source_cellbox.get_id()]  #neighbours and cases
-            for case, neighbours in neighbour_map:
+            source_cellbox = self.env_mesh.agg_cellboxes[int(source_wp.get_cellbox_indx())]
+            neighbour_map = self.env_mesh.neighbour_graph.get_neighbour_map( source_cellbox.get_id())  #neighbours and cases
+            for case, neighbours in neighbour_map.items():
                 if len (neighbours) !=0:
                   for neighbour in neighbours:  
-                     edges = self._neighbour_cost(_id, neighbour, case)
-                     edges_cost = sum (segment.get_obj(self.config['objective_function']) for segment in edges) 
-                     new_cost =  source_wp.get_routing_info(_id)+ edges_cost
+                     edges = self._neighbour_cost(_id, str(neighbour), int (case))
+                     edges_cost = sum (segment.get_variable(self.config['objective_function']) for segment in edges) 
+                     new_cost =  source_wp.get_routing_info(_id).get_obj(self.config['objective_function'])+ edges_cost
                      if new_cost < source_wp.get_routing_info(neighbour).get_obj(self.config['objective_function']):
-                         source_wp.update_routing_info (neighbour , RoutingInfo (_id, edges))
+                         source_wp.update_routing_table (neighbour , RoutingInfo (_id, edges))
             
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         
@@ -182,23 +181,23 @@ class RoutePlanner:
             wp.visit (min_obj_indx)
 
     def _neighbour_cost (self, node_id , neighbour_id , case):
+        direction = [1, 2, 3, 4, -1, -2, -3, -4]
 
         # Applying Newton distance to determine crossing point between node and its neighbour
         cost_func    = self.cost_func(node_id, neighbour_id, self.cellboxes_lookup , case=case, 
-                                          unit_shipspeed='km/hr', unit_time=self.unit_time)
+                                          unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points,cell_points,case = cost_func.value()
         # create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel), and return 
-        s1 = Segment (Waypoint(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[0], crossing_points[1]))
+        s1 = Segment (Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[0], crossing_points[1]))
         s1.set_travel_time(traveltime[0])
         #fill segment metrics
-        case_indx = np.where(self.indx_type==case)
-        s1.set_fuel (s1.travel_time * self.cellboxes_lookup[node_id].agg_data['fuel'][case_indx])
-        s1.set_speed (s1.travel_time * self.cellboxes_lookup[node_id].agg_data['speed'][case_indx])
-        s2 = Segment( Waypoint (crossing_points[0], crossing_points[1]), Waypoint(self.cellboxes_lookup[neighbour_id]))
-        s2.set_travel_time([traveltime[1]])
-        s2.set_fuel (s1.travel_time * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][case_indx])
-        s2.set_speed (s1.travel_time * self.cellboxes_lookup[neighbour_id].agg_data['speed'][case_indx])
+        s1.set_fuel (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
+        s1.set_distance (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)])
+        s2 = Segment( Waypoint (crossing_points[0], crossing_points[1]), Waypoint.load_from_cellbox(self.cellboxes_lookup[neighbour_id]))
+        s2.set_travel_time(traveltime[1])
+        s2.set_fuel ( s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
+        s2.set_distance (s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)])
 
         return [s1,s2]
 
@@ -212,6 +211,7 @@ class RoutePlanner:
         """
         src_wps, end_wps =  self._load_waypoints(waypoints_path)
         src_wps = self._validate_wps(src_wps)
+        end_wps =  self._validate_wps(end_wps)
         if len(src_wps) == 0:
             raise ValueError('Invalid waypoints. Inaccessible source waypoints')
 
@@ -227,62 +227,80 @@ class RoutePlanner:
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         return self._dijkstra_paths(self.source_waypoints, self.end_waypoints)  # returning the constructed routes
     
-def _validate_wps (self , wps):
-    """
-            Determines if the provided waypoint pair is valid (both lie within the bounds of the env mesh).
-            Args:
-                source (Waypoint): waypoint object that encapsulates the source's lat and long information
-                dest (Waypoint): waypoint object that encapsulates the dest's lat and long information
-            Returns:
-                is_valid (Boolean): true if both source and dest are within the env mesh bounds and false otherwise
-     
-    """
-    def select_cellbox (ids):
-        '''
-           In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes(the current cirteria is to select the north east cellbox)
-            Args:
-                ids([int]): listt contains the touching cellboxes ids
-            Returns:
-                selected (int): the id of the selected cellbox
-        '''
-        if self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]], self.cellboxes_lookup [ids[1]]) in [Direction.east , Direction.north_east, Direction.north]:
-            return ids[0]
-        return ids[1]
+    def _validate_wps (self , wps):
+        """
+                Determines if the provided waypoint list contains valid (both lie within the bounds of the env mesh).
+                Args:
+                    Wps (list<Waypoint>): list of waypoint object that encapsulates lat and long information
+                Returns:
+                   Wps (list<Waypoint>): list of waypoint object that encapsulates lat and long information after removing the invalid waypoints
         
-   
-    for wp in wps: 
-        wp_id = []
-        for indx in range (len(self.env_mesh.agg_cellboxes)):
-            if self.env_mesh.agg_cellboxes[indx].contains_point (wp.get_latitude() , wp.get_longtitude()):
-                wp_id. append (indx)
-                wp.set_cellbox_indx(indx)
-        if len (wp_id) == 0:
-            logging.warning('{} not an accessible waypoint'.format(wp.get_name()))
-            wps.remove (wp)
+        """
+        def select_cellbox (ids):
+            '''
+            In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes (the current cirteria is to select the north east cellbox)
+                Args:
+                    ids([int]): listt contains the touching cellboxes ids
+                Returns:
+                    selected (int): the id of the selected cellbox
+            '''
+            if self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]], self.cellboxes_lookup [ids[1]]) in [Direction.east , Direction.north_east, Direction.north]:
+                return ids[0]
+            return ids[1]
+        
+        valid_wps = wps
+        for wp in wps: 
+            wp_id = []
+            for indx in range (len(self.env_mesh.agg_cellboxes)):
+                if self.env_mesh.agg_cellboxes[indx].contains_point (wp.get_latitude() , wp.get_longtitude()) and not self.env_mesh.agg_cellboxes[indx].agg_data ['inaccessible']:
+                    wp_id. append (indx)
+                    wp.set_cellbox_indx(str(indx))
+            if len (wp_id) == 0:
+                logging.warning('{} is not an accessible waypoint'.format(wp.get_name()))
+                valid_wps.remove (wp)
+        
+            if len(wp_id) > 1: # the source wp is on the border of 2 cellboxes
+                _id = [select_cellbox(wp_id)]
+                wp.set_cellbox_indx(str(_id))
+
+            print ("valid wps >>> "  , valid_wps)
+
+        return valid_wps
+
+
+    def get_source_wp (self, src_wp, end_wps):
+        for wp in self.src_wps:
+            if wp.equals (src_wp):
+                wp.set_end_wp(end_wps)
+                return wp
+        wp = SourceWaypoint (src_wp, end_wps)
+        self.src_wps.append (wp)
+        return wp
     
-        if len(wp_id) > 1: # the source wp is on the border of 2 cellboxes
-            _id = [select_cellbox(wp_id)]
-            wp.set_cellbox_indx(_id)
+    def _load_waypoints (self, waypoint_path):
+            try:
+                waypoints_df = pd.read_csv(waypoint_path)
+                source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
+                dest_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
+                src_wps = [ Waypoint (source ['Lat'] , source['Long'] , source ['Name'] ) for index, source in source_waypoints_df.iterrows()] 
+                dest_wps = [ Waypoint (dest ['Lat'] , dest['Long'] , dest ['Name'] ) for index, dest in dest_waypoints_df.iterrows()] 
+                return src_wps , dest_wps
+            except FileNotFoundError:
+                raise ValueError("Unable to load '{}', please check path name".format(waypoint_path))
 
-    return wps
 
 
-def get_source_wp (self, src_wp, end_wps):
-    for wp in self.src_wps:
-        if wp.equals (src_wp):
-            wp.set_end_wp(end_wps)
-            return wp
-    wp = SourceWaypoint (src_wp, end_wps)
-    self.src_wps.append (wp)
-    return wp
-def _load_waypoints (self, waypoint_path):
-        try:
-            waypoints_df = pd.read_csv(waypoint_path)
-            source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
-            dest_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
+if __name__ == '__main__':
 
-            src_wps = [ Waypoint (source ['Lat'] , source['Long'] , source ['Name'] ) for index, source in source_waypoints_df.iterrows()] 
-            dest_wps = [ Waypoint (dest ['Lat'] , dest['Long'] , dest ['Name'] ) for index, dest in dest_waypoints_df.iterrows()] 
-            return src_wps , dest_wps
-        except FileNotFoundError:
-            raise ValueError("Unable to load '{}', please check path name".format(waypoint_path))
+      config = None
+      mesh_file = "../tests/regression_tests/example_meshes/vessel_meshes/grf_reprojection.json"
+      wp_file = "../tests/unit_tests/resources/waypoint/waypoints_2.csv"
+      route_conf = "../tests/unit_tests/resources/waypoint/route_config.json"
+      route_planner= None
+      with open (route_conf , "r") as config_file:
+          config = json.load(config_file)
+      route_planner= RoutePlanner (mesh_file, route_conf)
+    #   src, dest = route_planner._load_waypoints (wp_file)
+    #   route_planner._validate_wps (src)
+    #   route_planner._validate_wps (dest)
+      route_planner.compute_routes (wp_file)

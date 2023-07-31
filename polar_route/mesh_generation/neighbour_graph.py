@@ -377,5 +377,9 @@ class NeighbourGraph:
     
     def set_global_mesh (self, is_global):
         self._is_global_mesh = is_global
+
     def is_global_mesh (self):
         return self._is_global_mesh
+    
+    def get_neighbour_map (self, _id):
+        return self.neighbour_graph [_id]

@@ -33,7 +33,7 @@ class SourceWaypoint (Waypoint):
     def update_routing_table( self, indx, routing_info):
         self.routing_table[indx] = routing_info
 
-    def visit_node( self, cellbox_indx):
+    def visit( self, cellbox_indx):
         self.visited_nodes.append (cellbox_indx)
 
     def is_visited (self , indx): 
@@ -46,6 +46,7 @@ class SourceWaypoint (Waypoint):
         return True
     def get_routing_info(self, _id):
         if _id not in self.routing_table.keys():
+            print ("id not fount in the routing table... ")
             self.routing_table[_id] = RoutingInfo(-1, None) # indicating incaccessible node and returns infinity obj
-        else: 
-            return self.routing_table[_id]
+         
+        return self.routing_table[_id]

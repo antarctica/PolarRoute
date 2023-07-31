@@ -59,9 +59,12 @@ class Route:
         path['properties']['from'] = self._from
         path['properties']['to'] = self._to
 
-        cellIndices  = [ segment.start_wp.get_cellbox_indx(), segment.end_wp.get_cellbox_indx()  for segment in path ]
+        cell_indices  = []
+        for segment in path:
+            cell_indices.append (segment.start_wp.get_cellbox_indx())
+            cell_indices.append (segment.end_wp.get_cellbox_indx())
         # path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]]) ???
-        path['properties']['CellIndices'] = cellIndices
+        path['properties']['CellIndices'] = cell_indices
         path['properties']['traveltime']  = [ segment.get_travel_time() for segment in path ]
         path['properties']['cases'] = self.cases
         for variable in path_variables: 
