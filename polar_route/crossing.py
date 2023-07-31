@@ -109,15 +109,17 @@ class NewtonianDistance:
        '''
         y0 = (Y*x)/(x+a)
         improving = True
-        iterartion_num = 0
+        iteration_num = 0
         while improving:
             F,dF,X1,X2,t1,t2  = f(y0,x,a,Y,u1,v1,u2,v2,s1,s2)
             if F==np.inf:
                 return np.nan,np.inf  
             y0  = y0 - (F/dF)
             improving = abs((F/dF)/(X1*X2)) > self.optimizer_tol
-            iterartion_num+=1
-            if iterartion_num>1000:
+            iteration_num+=1
+            # Assume convergence impossible after 1000 iterations and exit
+            if iteration_num>1000:
+                # Set crossing point to nan and travel times to infinity
                 y0 = np.nan
                 t1 = -1
                 t2 = -1
