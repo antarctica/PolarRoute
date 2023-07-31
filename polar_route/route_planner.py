@@ -174,8 +174,6 @@ class RoutePlanner:
                          source_wp.update_routing_info (neighbour , RoutingInfo (_id, edges))
             
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
-        if end_wps is None:
-            end_wps= [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes]
         
         wp = self.get_source_wp(wp, end_wps)
         while not wp.is_all_visited():
@@ -204,35 +202,32 @@ class RoutePlanner:
 
         return [s1,s2]
 
-    def compute_routes(self, waypoints):
+    def compute_routes(self, waypoints_path):
         """
             Computes the Dijkstra Paths between waypoints. 
             Args: 
-                waypoints (List <(src_wp, dest_wp)>): a list of pair of source and dest waypoints
+                waypoints (String: path to csv file that contains a list of pair of source and dest waypoints
             Returns:
                 routes (List<Route>): a list of the computed routes     
         """
-        for wp_pair in waypoints:
-            if not self._is_valid_wp_pair(wp_pair[0], wp_pair[1]):
-                waypoints.remove (wp_pair)
-        
-        if len(waypoints) == 0:
-            raise ValueError('Invalid waypoints. No waypoint pair defined that is accessible')
-    
+        src_wps, end_wps =  self._load_waypoints(waypoints_path)
+        src_wps = self._validate_wps(src_wps)
+        if len(src_wps) == 0:
+            raise ValueError('Invalid waypoints. Inaccessible source waypoints')
 
-        # 
         logging.info('============= Dijkstra Path Creation ============')
         logging.info(' - Objective = {} '.format(self.config['objective_function']))
-        end_wps =  [dest for source, dest in waypoints ]
-        for wpt_pair in waypoints:
-            logging.info('--- Processing Waypoint = {} --- {}'.format(wpt_pair[0].get_name() , wpt_pair[1].get_name()))
-            self._dijkstra(wpt_pair[0], end_wps)
+        if len (end_wps) == 0:
+            end_wps= [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes] # full graph, use all the cellboxes ids as destination
+        for wp in src_wps:
+            logging.info('--- Processing Waypoint = {}'.format(wp.get_name()))
+            self._dijkstra(wp, end_wps)
 
 
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         return self._dijkstra_paths(self.source_waypoints, self.end_waypoints)  # returning the constructed routes
     
-def _is_valid_wp_pair (self , source , dest):
+def _validate_wps (self , wps):
     """
             Determines if the provided waypoint pair is valid (both lie within the bounds of the env mesh).
             Args:
@@ -254,33 +249,22 @@ def _is_valid_wp_pair (self , source , dest):
             return ids[0]
         return ids[1]
         
-    source_id = []
-    dest_id = []
-    for indx in range (len(self.env_mesh.agg_cellboxes)):
-        if self.env_mesh.agg_cellboxes[indx].contains_point (source.get_latitude() , source.get_longtitude()):
-            source_id. append (indx)
-            source.set_cellbox_indx(source_id)
-        if dest != None:
-            if self.env_mesh.agg_cellboxes[indx].contains_point (dest.get_latitude() , dest.get_longtitude()):
-                dest_id.append( indx)
-                dest.set_cellbox_indx(dest_id)
-    if len (source_id) == 0:
-          logging.warning('{} not in accessible waypoints'.format(source.get_name()))
-          return False
- 
-    if len(source_id) > 1: # the source wp is on the border of 2 cellboxes
-        source_id = [select_cellbox(source_id)]
+   
+    for wp in wps: 
+        wp_id = []
+        for indx in range (len(self.env_mesh.agg_cellboxes)):
+            if self.env_mesh.agg_cellboxes[indx].contains_point (wp.get_latitude() , wp.get_longtitude()):
+                wp_id. append (indx)
+                wp.set_cellbox_indx(indx)
+        if len (wp_id) == 0:
+            logging.warning('{} not an accessible waypoint'.format(wp.get_name()))
+            wps.remove (wp)
+    
+        if len(wp_id) > 1: # the source wp is on the border of 2 cellboxes
+            _id = [select_cellbox(wp_id)]
+            wp.set_cellbox_indx(_id)
 
-    if dest!= None: # None dest indicates considering route for all cellboxes
-        if len(dest_id) ==0 :
-            logging.warning('{} is accessible but has no destination waypoints'.format(dest.get_name()))
-            return False
-        if len(dest_id)>1 :# the dest wp is on the border of 2 cellboxes
-            dest_id = [select_cellbox(dest_id)]
-        if source_id[0] == dest_id[0]:
-            logging.info('The source {} and destination {} waypoints lie in the same cellbox'.format (source.get_name() , dest.get_name()))
-            # TODO: create unit test for this
-    return True
+    return wps
 
 
 def get_source_wp (self, src_wp, end_wps):
@@ -291,4 +275,14 @@ def get_source_wp (self, src_wp, end_wps):
     wp = SourceWaypoint (src_wp, end_wps)
     self.src_wps.append (wp)
     return wp
+def _load_waypoints (self, waypoint_path):
+        try:
+            waypoints_df = pd.read_csv(waypoint_path)
+            source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
+            dest_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
 
+            src_wps = [ Waypoint (source ['Lat'] , source['Long'] , source ['Name'] ) for index, source in source_waypoints_df.iterrows()] 
+            dest_wps = [ Waypoint (dest ['Lat'] , dest['Long'] , dest ['Name'] ) for index, dest in dest_waypoints_df.iterrows()] 
+            return src_wps , dest_wps
+        except FileNotFoundError:
+            raise ValueError("Unable to load '{}', please check path name".format(waypoint_path))
