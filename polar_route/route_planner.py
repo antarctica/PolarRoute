@@ -33,6 +33,15 @@ def _flattenCases(id,mesh):
 def _initialise_dijkstra_graph(dijkstra_graph):
     '''
         Initialising dijkstra graph information into a standard form
+
+        Args:
+            dijkstra_graph (pd.dataframe) - Pandas dataframe of the dijlstra graph construction
+
+        Outputs:
+            dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id. 
+                                         Each entry is a dictionary of the cellbox environmental and dijkstra information. 
+
+
     '''
 
     dijkstra_graph_dict = {}
@@ -50,6 +59,16 @@ def _initialise_dijkstra_graph(dijkstra_graph):
 def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
     '''
         Initialising dijkstra route into a standard path form
+
+        Args:
+            dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id. 
+                                         Each entry is a dictionary of the cellbox environmental and dijkstra information. 
+
+            dijkstra_route (dict)      - Dictionary of a GeoJSON entry for the dijkstra route
+
+        Outputs:
+            aps (list, [find_edge,..]) - A list of adjacent cell pairs where each entry is of type find_edge including information on
+                                        .crossing, .case, .start, and .end see 'find_edge' for more information
     '''
 
     org_path_points = np.array(dijkstra_route['geometry']['coordinates'])
@@ -69,13 +88,21 @@ def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
         aps += [find_edge(cells[ii],cells[ii+1],cases[ii+1])]
 
     # #-- Setting some backend information
-    aps = aps
     start_waypoint = Points[0,:]
     end_waypoint   = Points[-1,:]
 
     return aps, start_waypoint,end_waypoint
 
 def _json_str(input):
+    '''
+        Load JSON object either from dict or from file
+
+        Input:
+            input (dict or string) - JSON file/dict 
+    
+        Output:
+            output (dict) - Dictionary from JSON object
+    '''
     if type(input) is dict:
         output = input
     elif type(input) is str:
@@ -574,7 +601,6 @@ class RoutePlanner:
         routes = copy.deepcopy(self.paths)['features']  
 
         logging.info('========= Determining Smoothed Paths ===========\n')
-        paths = []
         geojson = {}
         SmoothedPaths = []
         for route in routes:
