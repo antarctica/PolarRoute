@@ -4,18 +4,18 @@ import numpy as np
 import pyproj
 import logging
 
-def _dist_around_globe(Sp,Cp):
+def _dist_around_globe(start_point,crossing_point):
     """
         Determining the longitude distance around the globe between two points
     
         Args:
-            Sp (tuple): Start Waypoint (long,lat)
-            Cp (tuple): End Waypoint (long,lat)
+            start_point    (tuple): Start Waypoint (long,lat)
+            crossing_point (tuple): End Waypoint (long,lat)
         Returns:
             a (float): longitude distance between the two points in degrees
     """
-    a1 = np.sign(Cp-Sp)*(np.max([Sp,Cp])-np.min([Sp,Cp]))
-    a2 = -(360-(np.max([Sp,Cp])-np.min([Sp,Cp])))*np.sign(Cp-Sp)
+    a1 = np.sign(crossing_point-start_point)*(np.max([start_point,crossing_point])-np.min([start_point,crossing_point]))
+    a2 = -(360-(np.max([start_point,crossing_point])-np.min([start_point,crossing_point])))*np.sign(crossing_point-start_point)
 
     dist = [a1,a2]
     indx = np.argmin(abs(np.array(dist)))
@@ -181,44 +181,6 @@ class PathValues:
             case = -1
 
         return case
-
-
-    def _case_from_angle(self,start,end):
-        """
-            Determine the direction of travel between two points in the same cell and return the associated case
-
-            Args:
-                start (list): the coordinates of the start point within the cell
-                end (list):  the coordinates of the end point within the cell
-
-            Returns:
-                case (int): the case to use to select variable values from a list
-        """
-
-        direct_vec = [end[0]-start[0], end[1]-start[1]]
-        direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
-
-        case = None
-
-        if -22.5 <= direct_ang < 22.5:
-            case = -4
-        elif 22.5 <= direct_ang < 67.5:
-            case = 1
-        elif 67.5 <= direct_ang < 112.5:
-            case = 2
-        elif 112.5 <= direct_ang < 157.5:
-            case = 3
-        elif 157.5 <= abs(direct_ang) <= 180:
-            case = 4
-        elif -67.5 <= direct_ang < -22.5:
-            case = -3
-        elif -112.5 <= direct_ang < -67.5:
-            case = -2
-        elif -157.5 <= direct_ang < -112.5:
-            case = -1
-
-        return case
-
     
     def _traveltime_in_cell(self,xdist,ydist,U,V,S):
         '''
@@ -258,9 +220,9 @@ class PathValues:
     
     def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
         '''
-            For a series of path request variables determine the values for the path segment
-            between the waypoints Wp and Cp in a given cellbox source_graph
-
+            Applys an in-cell correction to a path segments to determine 'path_requested_varibles'
+            defined by the use (e.g. total distance, total traveltime, total fuel usage)
+        
             Input:
                 path_requested_variable (dict) - A dictionary of the path requested variables
                 source_graph (dict) - Dictionary of the cell in which the vessel is transiting
@@ -273,6 +235,9 @@ class PathValues:
 
 
         '''
+
+        # Determin the travel-time and distance between start and end waypoint given
+        #environmental forcing variables
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
         x = _dist_around_globe(Cp[0],Wp[0])*m_long*np.cos(Wp[1]*(np.pi/180))
@@ -283,7 +248,8 @@ class PathValues:
         Ssp = self._unit_speed(source_graph['speed'][case])
         traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
 
-
+        # Given the traveltime and distance between the two waypoints
+        #determine the path related variables (e.g fuel usage, taveltime)
         segment_values = {}
         for var in path_requested_variables.keys():
             if var=='distance':
@@ -294,7 +260,8 @@ class PathValues:
                 segment_values[var] = int(source_graph['id'])
             else:
                 if var in source_graph.keys():
-                    # Determining the objective value information
+                    # Determining the objective value information. Apply and inplace
+                    #metric along path e.g. cumulative sum of values
                     if type(source_graph[var]) == list:
                         objective_rate_value = source_graph[var][case]
                     else:
@@ -419,11 +386,40 @@ class Smoothing:
                 Sp (tuple)   - Start Point (long,lat)
                 Cp (tuple)   - Crossing Point (long,lat)
                 Np (tuple)   - End Point (long,lat)
+
+            Returns:
+                Cp (tuple)   - Updated Crossing Point (long,lat)
  
         '''
         def NewtonOptimisationLong(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
+                '''
+                    Apply newton optimisation to determine an update to the crossing point.
+                    
+                    All information must be considered in tandem to scientific publication.
+
+                    Args:
+                        y0  (float)      - Current Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
+                        x  (float)       - Perpendicular distance from first-point to crossing boundary
+                        a  (float)       - Perpendicular distance from crossing boundary to end-point
+                        Y  (float)       - Parallel distance, along crossing bounary, between start-point and end-point
+                        u1 (float)       - Start Cell perpendicular to crossing boundary forcing component 
+                        v1 (float)       - Start Cell parallel to crossing boundary forcing component 
+                        u2 (float)       - End Cell perpendicular to crossing boundary forcing component 
+                        v2 (float)       - End Cell parallel to crossing boundary forcing component  
+                        speed_s (float)  - Start Cell max speed 
+                        speed_e (float)  - End Cell max speed
+                        R (float)        - Radius of the Earth
+                        λ_s (float)      - Start point latitude in radians
+                        φ_r (float)      - End point latitude in radians
+
+
+                    Outputs:
+                        y0  (float)      - Updated Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
+
+                '''    
+
                 tryNum=1
-                iter=0
+                iter_number=0
                 improving=True
                 _epsilon = 1e-4
                 while improving:  
@@ -432,19 +428,19 @@ class Smoothing:
                         dY = 0
                     else:
                         dY = (F/dF)
-                    if iter != 0:
+                    if iter_number != 0:
                         improving =  (abs(dY)>_epsilon) or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
                     else:
                         improving = True
                     y0  -= dY
-                    iter+=1
+                    iter_number+=1
 
-                    if (iter>100 and tryNum == 1):
+                    if (iter_number>100 and tryNum == 1):
                         y0 = Y*x/(x+a)
                         tryNum+=1
-                    if (iter > 200) and tryNum>= 2 and tryNum < 10:
+                    if (iter_number > 200) and tryNum>= 2 and tryNum < 10:
                         tryNum+=1
-                        iter-=100
+                        iter_number-=100
                         if(Y < 0):
                             if v2>v1:
                                 y0 = (tryNum-2)*Y
@@ -455,11 +451,38 @@ class Smoothing:
                                 y0 = (tryNum-2)*Y
                             else:
                                 y0 = (tryNum-3)*-Y
-                    if iter > 1000:
+                    if iter_number > 1000:
                         raise Exception('Newton Curve Issue - Longitude Case')
                 return y0
 
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
+            '''
+                Determining Newton Function and differentiable of newton function from the longitude crossing point optimisation
+
+                Args:
+                    y  (float)      - Current Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
+                    x  (float)       - Perpendicular distance from first-point to crossing boundary
+                    a  (float)       - Perpendicular distance from crossing boundary to end-point
+                    Y  (float)       - Parallel distance, along crossing bounary, between start-point and end-point
+                    u1 (float)       - Start Cell perpendicular to crossing boundary forcing component 
+                    v1 (float)       - Start Cell parallel to crossing boundary forcing component 
+                    u2 (float)       - End Cell perpendicular to crossing boundary forcing component 
+                    v2 (float)       - End Cell parallel to crossing boundary forcing component  
+                    speed_s (float)  - Start Cell max speed 
+                    speed_e (float)  - End Cell max speed
+                    R (float)        - Radius of the Earth
+                    λ_s (float)      - Start point latitude in radians
+                    φ_r (float)      - End point latitude in radians
+
+                Outputs:
+                    F (float)  - Newton function value
+                    dF (float) - Differential of Newton function value
+                    X1 (float) - Characteristic X distance in start cell
+                    X2 (float) - Characteristic X distance in end cell
+
+            '''
+
+
             ρ = (λ_s+φ_r)/2.0
             ϕ_min = min(λ_s,φ_r) 
             if λ_s > φ_r:
@@ -528,9 +551,6 @@ class Smoothing:
         λ_s  = Sp[1]*(np.pi/180)
         φ_r  = Np[1]*(np.pi/180)
 
-        # x           = sgn*(Cp[0] - Sp[0])*111.321*1000.
-        # a           = sgn*(Np[0] - Cp[0])*111.321*1000.
-
         x = _dist_around_globe(Cp[0],Sp[0])*111.321*1000.
         a = _dist_around_globe(Np[0],Cp[0])*111.321*1000.
 
@@ -559,10 +579,42 @@ class Smoothing:
                 Sp (tuple)   - Start Point (long,lat)
                 Cp (tuple)   - Crossing Point (long,lat)
                 Np (tuple)   - End Point (long,lat)
+
+            Returns:
+                Cp (tuple)   - Updated crossing Point (long,lat)
+
         '''
         def NewtonOptimisationLat(f,y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
+                '''
+                    Apply newton optimisation to determine an update to the crossing point in a latitude.
+                    
+                    All information must be considered in tandem to scientific publication.
+
+                    Args:
+                        y0  (float)      - Current Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
+                        x  (float)       - Perpendicular distance from first-point to crossing boundary
+                        a  (float)       - Perpendicular distance from crossing boundary to end-point
+                        Y  (float)       - Parallel distance, along crossing bounary, between start-point and end-point
+                        u1 (float)       - Start Cell perpendicular to crossing boundary forcing component 
+                        v1 (float)       - Start Cell parallel to crossing boundary forcing component 
+                        u2 (float)       - End Cell perpendicular to crossing boundary forcing component 
+                        v2 (float)       - End Cell parallel to crossing boundary forcing component  
+                        speed_s (float)  - Start Cell max speed 
+                        speed_e (float)  - End Cell max speed
+                        R (float)        - Radius of the Earth
+                        λ (float)        - Start point latitude in radians
+                        θ (float)        - Crossing point latitude in radians
+                        φ (float)        - End point latitude in radians
+
+
+                    Outputs:
+                        y0  (float)      - Updated Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
+
+                '''    
+
+
                 tryNum=1
-                iter=0
+                iter_number=0
                 improving=True
                 _epsilon      = 1e-4
                 
@@ -572,17 +624,17 @@ class Smoothing:
                         dY = 0
                     else:
                         dY = (F/dF)
-                    if iter != 0:             
+                    if iter_number != 0:             
                         improving =abs(dY) > 1 or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
                     else:
                         improving = True
                     y0  -= dY
-                    iter+=1
+                    iter_number+=1
 
-                    if (iter>100 and tryNum == 1):
+                    if (iter_number>100 and tryNum == 1):
                         y0 = Y*x/(x+a)
                         tryNum+=1
-                    if (iter > 200) and tryNum== 2:
+                    if (iter_number > 200) and tryNum== 2:
                         tryNum+=1
                         if(Y < 0):
                             if v2>v1:
@@ -594,11 +646,40 @@ class Smoothing:
                                 y0 = Y
                             else:
                                 y0 = 0
-                    if iter > 1000:
+                    if iter_number > 1000:
                         raise Exception('Newton Curve Issue - Latitude Case')
                 return y0
 
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
+
+            '''
+                Determining Newton Function and differentiable of newton function from the longitude crossing point optimisation
+
+                Args:
+                    y  (float)      - Current Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
+                    x  (float)       - Perpendicular distance from first-point to crossing boundary
+                    a  (float)       - Perpendicular distance from crossing boundary to end-point
+                    Y  (float)       - Parallel distance, along crossing bounary, between start-point and end-point
+                    u1 (float)       - Start Cell perpendicular to crossing boundary forcing component 
+                    v1 (float)       - Start Cell parallel to crossing boundary forcing component 
+                    u2 (float)       - End Cell perpendicular to crossing boundary forcing component 
+                    v2 (float)       - End Cell parallel to crossing boundary forcing component  
+                    speed_s (float)  - Start Cell max speed 
+                    speed_e (float)  - End Cell max speed
+                    R (float)        - Radius of the Earth
+                    λ (float)        - Start point latitude in degrees
+                    θ (float)        - Crossing point latitude in degrees
+                    φ (float)        - End point latitude in degrees
+
+                Outputs:
+                    F (float)  - Newton function value
+                    dF (float) - Differential of Newton function value
+                    X1 (float) - Characteristic X distance in start cell
+                    X2 (float) - Characteristic X distance in end cell
+
+            '''
+
+
             λ   = λ*(np.pi/180)
             ψ   = ψ*(np.pi/180)
             θ   = θ*(np.pi/180)
@@ -671,6 +752,7 @@ class Smoothing:
             Given an adjacent cell pair that are non-diagonal determine the
             update to the crossing point/midpoint given the environmental 
             conditions
+
             Input:
                 start (dict) - Dictionary of the start cell information
                 end (dict)   - Dictionary of the end  cell information
@@ -678,6 +760,8 @@ class Smoothing:
                 firstpoint (tuple) - First Point (long,lat)
                 midpoint (tuple)   - Midpoint Point (long,lat)
                 lastpoint (tuple)  - Last Point (long,lat)        
+            Return:
+                midpoint (tuple)   - Updated midpoint (long,lat)
         
         '''
         if abs(case)==2:
@@ -692,7 +776,7 @@ class Smoothing:
         '''
             Removing a adjacent cell pair
 
-            INPUT:
+            Args:
                 index - index in the adjacent cell pair list (.ap) to romove the index for
         '''
 
@@ -702,7 +786,7 @@ class Smoothing:
         '''
             Adding in a new adjacent cell pair
 
-            INPUT
+            Args:
                 index   - the index to add the adjacent cell pair
                 ap_list - a list of adjacent cell pair objects to add 
         '''
@@ -715,7 +799,7 @@ class Smoothing:
             Checks to determine if the crossing point has moved outside the domain
             connecting the two cells in the adjacency case
 
-            Input:
+            Args:
                 cell_a (dict) - Start cell environmental info as dictionary
                 cell_b (dict) - End cell environmental info as dictionary
                 x (tuple) - Updated crossing point that could lie outside the connection of the cell boxes (long,lat)
@@ -811,10 +895,7 @@ class Smoothing:
         try:
             return case_a,case_b
         except:
-            print(case)
-            print(smin,smax,emin,emax)
-            print(vmin,vmax)
-            print(x[0],x[1])    
+            return None,None
 
     def _neighbour_indices(self,cell_a,cell_b,case,add_case_a,add_case_b):
         '''
@@ -822,7 +903,7 @@ class Smoothing:
             cell, determine the index of the new cell/cells to add into the adjacency 
             list
             
-            Input:
+            Args:
                 cell_a (dict) - Start cell environmental info as dictionary
                 cell_b (dict) - End cell environmental info as dictionary
                 case (int) - Adjaceny case tupe connecting the two cells
@@ -861,7 +942,7 @@ class Smoothing:
             added. If the add_indicies is None then this means that the case need to change relating the adjacency
             cell pair, but no additional cells need to be added
 
-            Input:
+            Args:
                 cell_a (dict) - Start cell environmental info as dictionary
                 cell_b (dict) - End cell environmental info as dictionary
                 case (int) - Adjaceny case tupe connecting the two cells
@@ -888,7 +969,7 @@ class Smoothing:
             boundary of cellA and cellB (and on which the point x lies) in the direction of x. 
             If x lies inside cellA or there is no cell that satisfies these requirements, it returns null.
 
-            Input:
+            Args:
                 start (dict) - Start cell environmental info as dictionary
                 end (dict)   - End cell environmental info as dictionary
                 case (int)   - Adjaceny case tupe connecting the two cells
@@ -906,13 +987,11 @@ class Smoothing:
 
         return add_indicies,add_edges  
 
-    def diagonal_case(self,cell_a,cell_b,case):
+    def diagonal_case(self,case):
         '''
             Function that determines if the adjacent cell pair is a diagonal case
 
-            Input:
-                cell_a (dict) - Start cell environmental info as dictionary
-                cell_b (dict) - End cell environmental info as dictionary
+            Args:
                 case (int) - Adjaceny case tupe connecting the two cells
             Returns
                 True is diagonal case, false if not
@@ -929,7 +1008,7 @@ class Smoothing:
             Function that determines if the new cell being introducted is worse off that the origional two cells.
             Currently this is hard encoded to not enter a cell 5% worse off in Sea-Ice-Concentration
 
-            Input:
+            Args:
                 new_cell (dict) - New cell to add environmental parameters as dict
                 cell_a (dict) - Start cell to add environmental parameters as dict
                 cell_b (dict) - End cell to add environmental parameters as dict
@@ -958,7 +1037,7 @@ class Smoothing:
             Function that clips back the crossing point so that its only on the intersection 
             between the two cell boxes in the adjacent cell pair
 
-            Input:
+            Args:
                 cell_a (dict) - Start cell environmental info as dictionary
                 cell_b (dict)   - End cell environmental info as dictionary
                 case (int)   - Adjaceny case tupe connecting the two cells
@@ -1010,9 +1089,7 @@ class Smoothing:
 
             If that cell is not in the neighbourhood graph then this returns None
 
-            Input:
-
-            Input:
+            Args:
                 cell_a (dict) - Start cell environmental info as dictionary
                 cell_b (dict)   - End cell environmental info as dictionary
                 case (int)   - Adjaceny case tupe connecting the two cells
@@ -1104,7 +1181,7 @@ class Smoothing:
             same situation. If a common past has been seen return True, otherwise add this 
             v-additional case to a global list and return False
 
-            Input:
+            Args:
                 edge_a (find_edge)     - First-edge connecting start cell to new cell
                 edge_b (find_edge)     - First-edge connecting new cell to end cell
                 midpoint_prime (tuple) - midpoint that triggered the v-additional case addition (long,lat)
@@ -1320,7 +1397,7 @@ class Smoothing:
 
 
                 # Relationship is a diagonal case
-                if self.diagonal_case(ap.start,ap.end,ap.case):
+                if self.diagonal_case(ap.case):
                     add_indicies,add_cases = self.diagonal_select_side(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
                     if add_indicies is None:
                         ii += 1
@@ -1350,8 +1427,9 @@ class Smoothing:
                         
                 # Updating crossing point
                 midpoint_prime = self.newton_smooth(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
-                if type(midpoint_prime) == type(None):
-                    raise Exception('Newton call failed to converge or recover')
+                if type(midpoint_prime) == type(None) or np.isnan(midpoint_prime[0]) or np.isnan(midpoint_prime[1]):
+                    midpoint_prime = midpoint
+                    #raise Exception('Newton call failed to converge or recover')
 
                 #Determining if additional cases need to be added
                 add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)
@@ -1432,6 +1510,6 @@ class Smoothing:
                             firstpoint = midpoint_prime
 
             # Early stopping criterion
-            if self.jj == 20000:
+            if self.jj == 2000:
                 break
 
