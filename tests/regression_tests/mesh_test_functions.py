@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 from polar_route.utils import round_to_sigfig
 
@@ -119,11 +118,8 @@ def compare_cellbox_values(mesh_a, mesh_b):
         for col in list_cols:
             round_col = list()
             for val in df[col]:
-                if type(val) == list:
-                    if all([type(x) == float for x in val]):
-                        round_col.append(round_to_sigfig(val, sigfig=SIG_FIG_TOLERANCE))
-                    else:
-                        round_col.append(val)
+                if type(val) == list and all([type(x) == float for x in val]):
+                    round_col.append(round_to_sigfig(val, sigfig=SIG_FIG_TOLERANCE))
                 else:
                     round_col.append(val)
 
