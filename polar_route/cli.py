@@ -74,7 +74,7 @@ def get_args(
                         formats are JSON, GEOJSON, Tif")
         ap.add_argument( "-f", "--format_conf",
                         default = None,
-                        help = "File location of Export to Tif configuration paramters")
+                        help = "File location of Export to Tif configuration parameters")
 
 
 
@@ -83,7 +83,7 @@ def get_args(
 @timed_call
 def rebuild_mesh_cli():
     """
-        CLI entry point for rebuilding the mesh based its encoded config files. 
+        CLI entry point for rebuilding the mesh based on its encoded config files.
     """
 
     default_output = "rebuild_mesh.output.json"
