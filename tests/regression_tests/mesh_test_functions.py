@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from polar_route.utils import round_to_sigfig
 
@@ -114,9 +115,19 @@ def compare_cellbox_values(mesh_a, mesh_b):
                                       sigfig=SIG_FIG_TOLERANCE)
         # Round to sig figs if column contains list, which may contain floats
         list_cols = df.select_dtypes(include=list).columns
+        # Loop through columns and round any values within lists of floats
         for col in list_cols:
-            df[col] = [round_to_sigfig(x, sigfig=SIG_FIG_TOLERANCE)
-                       if type(x[0]) == float else x for x in df[col]]
+            round_col = list()
+            for val in df[col]:
+                if type(val) == list:
+                    if all([type(x) == float for x in val]):
+                        round_col.append(round_to_sigfig(val, sigfig=SIG_FIG_TOLERANCE))
+                    else:
+                        round_col.append(val)
+                else:
+                    round_col.append(val)
+
+            df[col] = round_col
 
         
     # Find difference between the two
