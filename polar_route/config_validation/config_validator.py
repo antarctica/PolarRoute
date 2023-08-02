@@ -5,11 +5,12 @@ import datetime
 import re
 
 from .mesh_schema import mesh_schema
+from .vessel_schema import vessel_schema
 
 
 def validate_mesh_config(config):
     """
-    Validates a config 
+    Validates a mesh config
 
     Args:
         config (str or dict): 
@@ -94,8 +95,35 @@ def validate_mesh_config(config):
                           config['Mesh_info']['Region']['cellHeight'])
     
     
-def validate_vessel_config():
-    pass
+def validate_vessel_config(config):
+    """
+    Validates a vessel config
+
+    Args:
+        config (str or dict):
+            Vessel config to be validated.
+            If type 'str', tries to read in as a filename and open file as json
+            If type 'dict', assumes it's already read in from a json file
+
+    Raises:
+        TypeError: Incorrect config parsed in. Must be 'str' or 'dict'
+        FileNotFoundError: Could not read in file if 'str' parsed
+        ValidationError: Malformed mesh config
+
+    """
+    # Deals with flexible input
+    if type(config) is str:
+        # If str, assume filename
+        with open(config, 'r') as fp:
+            config_json = json.load(fp)
+    elif type(config) is dict:
+        # If dict, assume it's the config
+        config_json = config
+    else:
+        # Otherwise, can't deal with it
+        raise TypeError(f"Expected 'str' or 'dict', instead got '{type(config)}'")
+
+    jsonschema.validate(instance=config_json, schema=vessel_schema)
 
 def validate_route_config():
     pass
