@@ -6,25 +6,24 @@ import xarray as xr
 
 class BSOSESeaIceDataLoader(ScalarDataLoader):
     def import_data(self, bounds):
-        '''
-        Reads in data from a BSOSE Sea Ice NetCDF file. 
-        Renames coordinates to 'lat' and 'long', and renames variable to 
+        """
+        Reads in data from a BSOSE Sea Ice NetCDF file.
+        Renames coordinates to 'lat' and 'long', and renames variable to
         'SIC'
-        
+
         Args:
             bounds (Boundary): Initial boundary to limit the dataset to
-            
+
         Returns:
-            xr.Dataset: 
-                BSOSE Sea Ice dataset within limits of bounds. 
+            xr.Dataset:
+                BSOSE Sea Ice dataset within limits of bounds.
                 Dataset has coordinates 'lat', 'long', and variable 'SIC'
-                
+
         Raises:
-            ValueError: 
-                If units specified in config, 
-                and value not 'fraction' or 'percentage
-        '''
-        logging.info(f"- Opening file {self.file}")
+            ValueError:
+                If units specified in config,
+                and value not 'fraction' or 'percentage'
+        """
         # Open Dataset
         if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
         else:                       data = xr.open_mfdataset(self.files)
@@ -48,7 +47,11 @@ class BSOSESeaIceDataLoader(ScalarDataLoader):
             elif self.units == 'fraction':
                 pass # BSOSE data already in fraction form
             else:
-                raise ValueError("Parameter 'units' not understood."\
-                                 "Expected 'percentage' or 'fraction',"\
-                                f"but recieved {self.units}")
+                raise ValueError("Parameter 'units' not understood."
+                                 "Expected 'percentage' or 'fraction',"
+                                f"but received {self.units}")
+        else:
+            # Convert to percentage form by default (as expected by the vessel performance models)
+            data = data.assign(SIC=data['SIC'] * 100)
+
         return data
