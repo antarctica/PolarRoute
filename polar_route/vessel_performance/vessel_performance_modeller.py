@@ -50,6 +50,8 @@ class VesselPerformanceModeller:
 
         """
         for i, cellbox in enumerate(self.env_mesh.agg_cellboxes):
+            if cellbox.agg_data.get('inaccessible'):
+                continue
             performance_values = self.vessel.model_performance(cellbox)
             self.env_mesh.update_cellbox(i, performance_values)
 

@@ -162,7 +162,7 @@ optional arguments:
 
     -v : verbose logging
     -o : output location
-    -format_conf: configuration file for output format (required for TIF export)
+    -format_conf: configuration file for output format (required for TIF export, optional for GEOJSON)
 
 the format of the *<format_conf.json>* file required for .tif export is as follows:
 
@@ -178,11 +178,11 @@ the format of the *<format_conf.json>* file required for .tif export is as follo
         "color_conf": "path to/color_conf.txt"
     }
 
-where the variable are as follows:
-* **data_name** : The name of the data to be exported. This is the name of the data layer in the mesh.
-* **sampling_resolution** : The resolution of the exported mesh. This is a list of two values, the first being the x resolution and the second being the y resolution.
-* **projection** : The projection of the exported mesh. This is a string of the EPSG code of the projection.
-* **color_conf** : The path to the color configuration file. This is a text file containing the color scheme to be used when exporting the mesh. The format of this file is as follows:
+where the variables are as follows:
+  * **data_name** : The name of the data to be exported. This is the name of the data layer in the mesh.
+  * **sampling_resolution** : The resolution of the exported mesh. This is a list of two values, the first being the x resolution and the second being the y resolution.
+  * **projection** : The projection of the exported mesh. This is a string of the EPSG code of the projection.
+  * **color_conf** : The path to the color configuration file. This is a text file containing the color scheme to be used when exporting the mesh. The format of this file is as follows:
                                     
 ::
 
@@ -193,6 +193,27 @@ where the variable are as follows:
 
 The color_conf.txt contains 4 columns per line: the data_name value and the 
 corresponding red, green, blue value between 0 and 255.
+
+When using the *-format_conf* option for GEOJSON output the only variable required is the **data_name**. This specifies which of the data layers you want to export as a single GEOJSON file.
+
+^^^^^^^^^^^^^^^^^^
+rebuild_mesh
+^^^^^^^^^^^^^^^^^^
+
+Once a mesh has been built using the :ref:`create_mesh` command the *rebuild_mesh* command allows a user to rebuild it based on the
+original configs stored within the mesh file. This is primarily useful for debugging or to update old meshes produced with an older version
+of the package. Running this command will also reapply any vessel performance simulations, if these were run on the original mesh.
+
+::
+
+    rebuild_mesh <mesh.json>
+
+optional arguments:
+
+::
+
+    -v : verbose logging
+    -o : output location
 
 ^^^^^^^^^^^^^^^^^^
 calculate_route
