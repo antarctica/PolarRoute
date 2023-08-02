@@ -140,11 +140,11 @@ where the variables are as follows:
 
     "startTime": "TODAY - 3",  "endTime": "TODAY"
 
-#################
-Data_sources
-#################
+############
+Data Sources
+############
 
-The 'Data_sources' section of the configuration file dictates which information will be added to the
+The 'Data Sources' section of the configuration file dictates which information will be added to the
 mesh when constructed. Each item in the list of data sources represents a single data set to be added
 to the mesh.
 
@@ -242,23 +242,56 @@ where the variables are as follows:
       * **curl** *(float)* : The threshold value above which a cellbox will split. Is calculated as the maximum value of **Curl(F)** within a cellbox (where **F** is the vector field).
 
 .. note:: 
-   splitting conditions are applied in the order they are specified in the configuration file.
+   Splitting conditions are applied in the order they are specified in the configuration file.
 
 
-##############
-splitting
-##############
+#########
+Splitting
+#########
 
-Non-uniform mesh refinement is done by selectively sub-dividing cells. Cell sub-division is performed 
-whenever a cell (of any size) is determined to be inhomogeneous with respect to a specific characteristic 
-of interest such as SIC or ocean depth (this characteristic is defined as a splitting condition inside the data source's params as illustrated above). For example, considering SIC, we define a range, from a lower bound 
-*lb* to an upper bound *ub*, and a threshold, *t*. Then, a cell is considered inhomogeneous if between *lb* and *ub* 
-of the ice measurements in that cell are at *t%* or higher.  If the proportion of ice in the cell above the 
-*t%* concentration is below *lb%*, we consider the cell to be homogeneous open water: such a cell can be navigated 
-through so does not require splitting based on this homogeneity condition (though may still be split based on others).
-At the other end of the range, if the proportion is greater than *ub%*, then the cell is considered 
-homogeneous ice: such a cell cannot be navigated through and will not be split on this or any subsequent splitting conditions. 
-If the proportion is between these bounds, then the cell is inhomogeneous and must be split so that the homogeneous sub-cells can be found.
+Non-uniform mesh refinement is done by selectively sub-dividing cells. Cell 
+sub-division is performed whenever a cell (of any size) is determined to be 
+inhomogeneous with respect to a specific characteristic of interest such as 
+SIC or ocean depth (this characteristic is defined as a splitting condition 
+inside the data source's params as illustrated above). 
+
+In the figure below, a graphical representation of the splitting 
+decision making process is shown. In this, the blue histogram represents an 
+arbitrary dataset, the orange histogram represents the values in the dataset 
+that are greater than the threshold (and denoted 'A' in the formulae), the 
+black line is the threshold value, 'UB' is the upper bound, and 'LB' is the 
+lower bound. To be specific, this is a probability distribution, and hence the 
+area under the orange curve 'A' is a decimal fraction of the total dataset 
+(which would have an area of 1).
+
+.. _splitting_fig:
+.. figure:: ../Figures/splitting_conditions.png
+   :align: center
+   :width: 700
+
+   *Plot showing how cellbox homogeneity is decided*
+
+* If the orange area :code:`A <= LB`, then the homogeneity condition is :code:`CLR`.
+* If the orange area :code:`A >= LB`, then the homogeneity condition is :code:`HOM`.
+* If the orange area :code:`LB < A < UB`, then the homogeneity condition is :code:`HET`.
+
+:code:`CLR`, :code:`HOM`, and :code:`HET` are used to determine if a cellbox 
+should be split or not. There is also a fourth homogeneity condition :code:`MIN` 
+which is only triggered when the number of datapoints within the cellbox is lower 
+than the minimum_datapoints specified in the config. The values are checked in this order:
+
+#. :code:`MIN` - Do not split the cellbox
+#. :code:`CLR` - Do not split the cellbox, but allow splitting if other datasets return :code:`HET`
+#. :code:`HOM` - Do not split the cellbox
+#. :code:`HET` - Split the cellbox
+
+In the extreme case where :code:`UB = 1` and :code:`LB = 0`, the cellbox will 
+always split if there are any datapoints above or below the UB/LB respectively. 
+Imagining a plot similar to the figure above,
+
+* If the histogram is entirely blue, :code:`return 'CLR'`
+* If the histogram is entirely orange, :code:`return 'HOM'`
+* If there's both colours, :code:`return 'HET'`
 
 The splitting section of the Configuration file defines the splitting parameters that are *common* across all the data sources and determines how the CellBoxes that form the
 Mesh will be sub-divided based on the homogeneity of the data points contained within to form a mesh
