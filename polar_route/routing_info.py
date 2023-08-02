@@ -26,10 +26,9 @@ class RoutingInfo:
         return self.node_indx
     
     def get_obj (self, obj):
-        print (self.node_indx)
-        print (self.path)
+        # print (self.node_indx)
+        # print (self.path)
         if self.node_indx == -1:  # this info means inaccessible node so the obj is infinity
-            print ("returning inf") 
             return np.inf
         
         obj_value =0

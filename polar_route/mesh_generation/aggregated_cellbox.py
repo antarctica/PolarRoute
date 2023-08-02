@@ -149,3 +149,6 @@ class AggregatedCellBox:
             if (long >= self.boundary.get_long_min()) & (long <= self.boundary.get_long_max()):
                 return True
         return False
+
+    def get_bounds (self):  # adding this method to be compatabile with the Cellbox get_bounds method and use the NeighbourGraph.get_neighbour_case method
+        return self.get_boundary()
