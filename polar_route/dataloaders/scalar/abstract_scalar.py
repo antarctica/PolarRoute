@@ -62,12 +62,24 @@ class ScalarDataLoader(DataLoaderInterface):
                                 x_col    = self.x_col,
                                 y_col    = self.y_col
                                 )
-        
-        if self.get_value(bounds, agg_type='COUNT') == 0:
-            # Throw a warning if dataloader has no data within starting region
-            logging.error('Dataloader has no data in initial region!')
-            raise ValueError(f"Dataloader {params['dataloader_name']} contains"+\
-                              "no data within initial region!")
+        # Get data name from column name if not set in params
+        if self.data_name is None:
+            logging.debug('\tSetting self.data_name from column name')
+            self.data_name = self.get_data_col_name()
+        # or if set in params, set col name to data name
+        else:
+            logging.debug(f'\tSetting data column name to {self.data_name}')
+            self.data = self.set_data_col_name(self.data_name)
+
+        # If there's 0 datapoints in the initial boundary, raise ValueError
+        if (type(self.data) == pd.core.frame.DataFrame and \
+            len(self.data[self.data_name]) == 0) or \
+           (type(self.data) == xr.core.dataset.Dataset and \
+            self.data[self.data_name].values.size == 0):
+
+            logging.error('\tDataloader has no data in initial region!')
+            raise ValueError(f"Dataloader {params['dataloader_name']}"+\
+                              " contains no data within initial region!")
         else:
             # Cut dataset down to initial boundary
             logging.info(
@@ -77,15 +89,6 @@ class ScalarDataLoader(DataLoaderInterface):
                 ))
             
             self.data = self.trim_datapoints(bounds)
-
-        # Get data name from column name if not set in params
-        if self.data_name is None:
-            logging.debug('\tSetting self.data_name from column name')
-            self.data_name = self.get_data_col_name()
-        # or if set in params, set col name to data name
-        else:
-            logging.debug(f'\tSetting data column name to {self.data_name}')
-            self.data = self.set_data_col_name(self.data_name)
 
     @abstractmethod
     def import_data(self, bounds):

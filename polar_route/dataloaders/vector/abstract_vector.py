@@ -57,13 +57,6 @@ class VectorDataLoader(DataLoaderInterface):
                                 x_col    = self.x_col,
                                 y_col    = self.y_col
                                 )
-        # Cut dataset down to initial boundary
-        logging.info(
-            "\tTrimming data to initial boundary: {min} to {max}".format(
-                min=(bounds.get_lat_min(), bounds.get_long_min()),
-                max=(bounds.get_lat_max(), bounds.get_long_max())
-            ))
-        self.data = self.trim_datapoints(bounds)
 
         # Get data name from column name if not set in params
         if self.data_name is None:
@@ -78,6 +71,25 @@ class VectorDataLoader(DataLoaderInterface):
         
         # Add magnitude and direction to dataset
         self.data = self.add_mag_dir()
+        
+        # If there's 0 datapoints in the initial boundary, raise ValueError
+        if (type(self.data) == pd.core.frame.DataFrame and \
+            len(self.data['_magnitude']) == 0) or \
+           (type(self.data) == xr.core.dataset.Dataset and \
+            self.data['_magnitude'].values.size == 0):
+
+            logging.error('\tDataloader has no data in initial region!')
+            raise ValueError(f"Dataloader {params['dataloader_name']}"+\
+                              " contains no data within initial region!")
+        else:
+            # Cut dataset down to initial boundary
+            logging.info(
+                "\tTrimming data to initial boundary: {min} to {max}".format(
+                    min=(bounds.get_lat_min(), bounds.get_long_min()),
+                    max=(bounds.get_lat_max(), bounds.get_long_max())
+                ))
+            
+            self.data = self.trim_datapoints(bounds)
 
     @abstractmethod
     def import_data(self, bounds):
