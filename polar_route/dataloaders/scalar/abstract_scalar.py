@@ -35,6 +35,9 @@ class ScalarDataLoader(DataLoaderInterface):
             self.data_name (str): 
                 Name of scalar variable. Must be the column name if self.data
                 is pd.DataFrame. Must be variable if self.data is xr.Dataset
+                
+        Raises:
+            ValueError: If no data lies within the parsed boundary
         '''
         # Translates parameters from config input to desired inputs
         params = self.add_default_params(params)
@@ -59,13 +62,21 @@ class ScalarDataLoader(DataLoaderInterface):
                                 x_col    = self.x_col,
                                 y_col    = self.y_col
                                 )
-        # Cut dataset down to initial boundary
-        logging.info(
-            "\tTrimming data to initial boundary: {min} to {max}".format(
-                min=(bounds.get_lat_min(), bounds.get_long_min()),
-                max=(bounds.get_lat_max(), bounds.get_long_max())
-            ))
-        self.data = self.trim_datapoints(bounds)
+        
+        if self.get_value(bounds, agg_type='COUNT') == 0:
+            # Throw a warning if dataloader has no data within starting region
+            logging.error('Dataloader has no data in initial region!')
+            raise ValueError(f"Dataloader {params['dataloader_name']} contains"+\
+                              "no data within initial region!")
+        else:
+            # Cut dataset down to initial boundary
+            logging.info(
+                "\tTrimming data to initial boundary: {min} to {max}".format(
+                    min=(bounds.get_lat_min(), bounds.get_long_min()),
+                    max=(bounds.get_lat_max(), bounds.get_long_max())
+                ))
+            
+            self.data = self.trim_datapoints(bounds)
 
         # Get data name from column name if not set in params
         if self.data_name is None:
