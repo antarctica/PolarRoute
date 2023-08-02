@@ -135,7 +135,7 @@ class EnvironmentMesh:
         return json.loads(json.dumps(output, indent=4))
     
 
-    def to_geojson(self):
+    def to_geojson(self, params_file = None):
         """
             Returns the cellboxes of this mesh converted to a geoJSON format.\n
 
@@ -151,18 +151,34 @@ class EnvironmentMesh:
         geojson = ""
         mesh_json = self.to_json()
 
+        if (params_file != None):
+            with open(params_file) as f:
+                data = f.read()
+                format_params = json.loads(data)
+            data_name = format_params['data_name']
+            logging.info("exporting layer : " + str(data_name))
+
         # Formatting mesh to geoJSON
         mesh_df = pd.DataFrame(mesh_json['cellboxes'])
 
-        # Average all values stored in list format and drop unnecessary values
         for column in mesh_df.columns:
+
             if column in ['id', 'geometry']:
                 continue
+            # remove unnecessary columns
+            if (params_file != None) and column not in [str(data_name)]:
+                mesh_df = mesh_df.drop(column, axis=1)
+            # remove unnecessary columns
             elif column in ['cx', 'cy', 'dcx', 'dcy']:
                 mesh_df = mesh_df.drop(column, axis=1)
+            # convert lists to mean
             elif mesh_df[column].dtype == list:
                 mesh_df[column] = [np.mean(x) for x in mesh_df[column]]
-
+            # convert bools to ints
+            elif mesh_df[column].dtype == bool:
+                mesh_df[column] = mesh_df[column].astype(int)
+                mesh_df[column] = mesh_df[column].replace(0, np.nan)
+            
         # Remove infs and replace with nan
         mesh_df = mesh_df.replace([np.inf, -np.inf], np.nan)
 
@@ -451,19 +467,20 @@ class EnvironmentMesh:
                         - GEOJSON
         """
 
-        logging.info(f"- saving the environment mesh to {path}")
+        logging.info(f"Saving mesh in {format} format to {path}")
         if format.upper() == "TIF":
             self.to_tif(format_params, path)
+
+        elif format.upper() == "JSON":
+            with open(path, 'w') as path:
+                json.dump(self.to_json(), path, indent=4)
+           
+        elif format.upper() == "GEOJSON":
+            with open(path, 'w') as path:
+                json.dump(self.to_geojson(format_params), path, indent=4)
+
         else:
-            with open(path, 'w') as f:
-                if format.upper() == "JSON":
-                    logging.info(f"Saving mesh in {format} format")
-                    json.dump(self.to_json(), f)
-                elif format.upper() == "GEOJSON":
-                    logging.info(f"Saving mesh in {format} format")
-                    json.dump(self.to_geojson(), f, indent=4)
-                else:
-                    logging.warning(f"Cannot save mesh in a {format} format")
+            logging.warning(f"Cannot save mesh in a {format} format")
 
         if isinstance(self.agg_cellboxes[0], JGridAggregatedCellBox):
             dump_path = path.replace(".json", ".dump")
