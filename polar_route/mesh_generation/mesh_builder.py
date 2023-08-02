@@ -139,10 +139,10 @@ class MeshBuilder:
         if 'Data_sources' in self.config['Mesh_info'].keys():
             for data_source in self.config['Mesh_info']['Data_sources']:
                 loader_name = data_source['loader']
-                loader = DataLoaderFactory().get_dataloader(
+                loader = DataLoaderFactory.get_dataloader(
                     loader_name, bounds, data_source['params'], min_datapoints)
 
-                logging.debug("creating data loader {}".format(
+                logging.debug("Creating data loader {}".format(
                     data_source['loader']))
                 updated_splitting_cond = []  # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader
                 if 'splitting_conditions' in data_source['params']:

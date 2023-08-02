@@ -29,8 +29,9 @@ class DataLoaderFactory:
     '''
     Produces initialised DataLoader objects that can be used by the mesh to 
     quickly retrieve values within a boundary.
-    '''    
-    def get_dataloader(self, name, bounds, params, min_dp=5):
+    '''
+    @staticmethod
+    def get_dataloader(name, bounds, params, min_dp=5):
         '''
         Creates appropriate dataloader object based on name
         
@@ -56,7 +57,7 @@ class DataLoaderFactory:
         # Cast name to lowercase to make case insensitive
         name = name.lower()
         # Translate 'file' or 'folder' into 'files' key
-        params = self.translate_file_input(params)
+        params = DataLoaderFactory.translate_file_input(params)
         
         # Add loader name to params
         params['dataloader_name'] = name
@@ -107,7 +108,8 @@ class DataLoaderFactory:
         # Create instance of dataloader
         return data_loader(bounds, params)
     
-    def translate_file_input(self, params):
+    @staticmethod
+    def translate_file_input(params):
         '''
         Allows flexible file specification in params. Translates 'file' or 
         'folder' into 'files'
