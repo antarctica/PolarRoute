@@ -19,11 +19,11 @@ class Waypoint:
         obj.set_cellbox_indx (str(cellbox.get_id()))
         return obj
     
-    def __init__(self, lat,long, name =None):
+    def __init__(self, lat,long, cellbox_indx = -1 , name =None):
         self.lat = lat
         self.long = long 
         self.name = name
-        self.cellbox_indx = -1
+        self.cellbox_indx = cellbox_indx
 
     def get_latitude (self):
         '''

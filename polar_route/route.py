@@ -125,23 +125,23 @@ class Route:
         wp = self.segments[indx].get_start_wp()
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
-        x = self._dist_around_globe(cp.get_longtitude(),wp.get_longtitude(),)*m_long*np.cos(wp.get_latitude()*(np.pi/180))
-        y = (cp.get_latitude(),-wp.get_latitude())*m_lat
+        x = self._dist_around_globe(cp.get_longtitude(),wp.get_longtitude())*m_long*np.cos(wp.get_latitude()*(np.pi/180))
+        y = (cp.get_latitude()-wp.get_latitude())*m_lat
         case = self._case_from_angle(cp.to_list(),wp.to_list())
-        Su  = cellbox.agg_data['uc']
-        Sv  =  cellbox.agg_data['vc']
-        Ssp = self._unit_speed(cellbox.agg_data['speed'][case])
+        Su  = cellbox.agg_data['uC']
+        Sv  =  cellbox.agg_data['vC']
+        # Ssp = self._unit_speed(cellbox.agg_data['speed'][case])#TODO: check unit_speed
+        Ssp = cellbox.agg_data['speed'][case]
         traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
 
         # update segment and its metrics
         self.segments[indx].set_start_wp (cp)
         self.segments[indx].set_travel_time (traveltime)
         self.segments[indx].set_distance (distance)
-        self.segments[indx].set_speed (cellbox.agg_data['speed'] [case] * traveltime)
         self.segments[indx].set_fuel (cellbox.agg_data['fuel'] [case] * traveltime)
         
 
-    def _dist_around_globe(Sp,Cp):
+    def _dist_around_globe(self, Sp,Cp):
         a1 = np.sign(Cp-Sp)*(np.max([Sp,Cp])-np.min([Sp,Cp]))
         a2 = -(360-(np.max([Sp,Cp])-np.min([Sp,Cp])))*np.sign(Cp-Sp)
 
@@ -191,12 +191,12 @@ class Route:
         '''
             Applying Unit time for a specific input type
         '''
-        if self.conf.unit_time == 'days':
+        if self.conf['time_unit'] == 'days':
             return val/(60*60*24)
-        elif self.conf.unit_time == 'hr':
+        elif self.conf['time_unit'] == 'hr':
             return val/(60*60)
-        elif self.conf.unit_time == 'min':
+        elif self.conf['time_unit'] == 'min':
             return val/(60)
-        elif self.conf.unit_time == 's':
+        elif self.conf['time_unit'] == 's':
             return val
     

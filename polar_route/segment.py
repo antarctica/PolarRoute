@@ -65,4 +65,14 @@ class Segment:
     
     def get_variable (self, variable):
         return getattr(self, variable)
+    def get_start_wp (self):
+        return self.start_wp
+    def get_end_wp (self):
+        return self.end_wp
+    
+    def set_start_wp (self , wp):
+         self.start_wp = wp
+
+    def set_end_wp (self , wp):
+         self.end_wp = wp
         

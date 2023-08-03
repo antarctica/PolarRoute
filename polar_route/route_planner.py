@@ -11,12 +11,14 @@ from shapely import wkt
 from shapely.geometry.polygon import Point
 import geopandas as gpd
 import logging
-
+import itertools
 from pandas.core.common import SettingWithCopyWarning
 
 from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from polar_route.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.route import Route
 from polar_route.source_waypoint import SourceWaypoint
+from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 from polar_route.waypoint import Waypoint
 from polar_route.segment import Segment
 from polar_route.routing_info import RoutingInfo
@@ -132,14 +134,16 @@ class RoutePlanner:
                         e_wp_indx = routing_info.get_node_index()
                    
                 # reversing segments as we moved from end to start
+                    route_segments = list (itertools.chain.from_iterable (route_segments))
                     route_segments.reverse()
                     cases.reverse()
-                    route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name(), self.conf)
+                    route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name(), self.config)
                     route.set_cases(cases)
                 # correct the first and last segment
-                route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_id()] , s_wp, 0)
+                print (route.segments[0].get_start_wp ().get_cellbox_indx())
+                route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()] , s_wp, 0)
                 if len (route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and dest are within the same cellbox
-                    route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_start_wp().get_id()] , s_wp, -1)
+                    route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_start_wp().get_cellbox_indx()] , s_wp, -1)
                 routes.append (route)
                 
         return routes
@@ -193,12 +197,12 @@ class RoutePlanner:
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points,cell_points,case = cost_func.value()
         # create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel), and return 
-        s1 = Segment (Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[0], crossing_points[1]))
+        s1 = Segment (Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[0], crossing_points[1], cellbox_indx=node_id))
         s1.set_travel_time(traveltime[0])
         #fill segment metrics
         s1.set_fuel (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
         s1.set_distance (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)])
-        s2 = Segment( Waypoint (crossing_points[0], crossing_points[1]), Waypoint.load_from_cellbox(self.cellboxes_lookup[neighbour_id]))
+        s2 = Segment( Waypoint (crossing_points[0], crossing_points[1], cellbox_indx=neighbour_id), Waypoint.load_from_cellbox(self.cellboxes_lookup[neighbour_id]))
         s2.set_travel_time(traveltime[1])
         s2.set_fuel ( s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
         s2.set_distance (s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)])
@@ -297,13 +301,25 @@ if __name__ == '__main__':
 
       config = None
       mesh_file = "../tests/regression_tests/example_routes/dijkstra/fuel/gaussian_random_field.json"
+      mesh_file = "grf_reprojection.json"
       wp_file = "../tests/unit_tests/resources/waypoint/waypoints_2.csv"
       route_conf = "../tests/unit_tests/resources/waypoint/route_config.json"
       route_planner= None
-      with open (route_conf , "r") as config_file:
-          config = json.load(config_file)
-      route_planner= RoutePlanner (mesh_file, route_conf)
-    #   src, dest = route_planner._load_waypoints (wp_file)
-    #   route_planner._validate_wps (src)
-    #   route_planner._validate_wps (dest)
+      with open (mesh_file , "r") as mesh_json:
+          config = json.load(mesh_json)['config']
+      mesh_json = MeshBuilder(config).build_environmental_mesh().to_json()
+    #   mesh_json = json.load(mesh_json)
+      
+
+      vp = VesselPerformanceModeller(mesh_json, config['vessel_info'])
+      vp.model_accessibility()
+      vp.model_performance()
+      info = vp.to_json()
+      json.dump(info, open('vessel_mesh.json', "w"), indent=4)
+    #   with open (route_conf , "r") as config_file:
+    #       config = json.load(config_file)
+      route_planner= RoutePlanner ("vessel_mesh.json", route_conf)
+    # #   src, dest = route_planner._load_waypoints (wp_file)
+    # #   route_planner._validate_wps (src)
+    # #   route_planner._validate_wps (dest)
       route_planner.compute_routes (wp_file)

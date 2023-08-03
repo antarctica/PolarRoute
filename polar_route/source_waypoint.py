@@ -27,7 +27,6 @@ class SourceWaypoint (Waypoint):
         self.routing_table = {}
         # add routing information to itself, empty list of sepments as distance = 0
         self.routing_table[self.cellbox_indx] = RoutingInfo (self.cellbox_indx, []) 
-        self.visited_nodes.append( self.cellbox_indx)
 
 
     def update_routing_table( self, indx, routing_info):
@@ -46,7 +45,6 @@ class SourceWaypoint (Waypoint):
         return True
     def get_routing_info(self, _id):
         if _id not in self.routing_table.keys():
-            print ("id not fount in the routing table... ")
             self.routing_table[_id] = RoutingInfo(-1, None) # indicating incaccessible node and returns infinity obj
          
         return self.routing_table[_id]
