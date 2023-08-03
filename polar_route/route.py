@@ -43,32 +43,33 @@ class Route:
         '''
         return  sum (segment.get_fuel() for segment in self.segments)
       
-    def to_geojson(self, path_variables ):
+    def to_geojson(self ):
         '''
             puts the constructed route in geojson format
         '''
         paths = []
+        path_variables = self.conf['path_variables']
         path = dict()
         path['type'] = "Feature"
         path['geometry'] = {}
         path['geometry']['type'] = "LineString"
         path_points= []      
-        path['geometry']['coordinates'] =  [segment.get_points()  for segment in path ]
+        path['geometry']['coordinates'] =  [segment.get_points()  for segment in self.segments ]
         path['properties'] = {}
         path['properties']['name'] = self.name
         path['properties']['from'] = self._from
         path['properties']['to'] = self._to
 
         cell_indices  = []
-        for segment in path:
+        for segment in self.segments:
             cell_indices.append (segment.start_wp.get_cellbox_indx())
             cell_indices.append (segment.end_wp.get_cellbox_indx())
         # path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]]) ???
         path['properties']['CellIndices'] = cell_indices
-        path['properties']['traveltime']  = [ segment.get_travel_time() for segment in path ]
+        path['properties']['traveltime']  = [ segment.get_travel_time() for segment in self.segments ]
         path['properties']['cases'] = self.cases
         for variable in path_variables: 
-             path['properties'][variable] = [ segment.get_objective(variable) for segment in path ]
+             path['properties'][variable] = [ segment.get_variable(variable) for segment in self.segments ]
 
 
         return path

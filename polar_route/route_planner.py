@@ -322,4 +322,5 @@ if __name__ == '__main__':
     # #   src, dest = route_planner._load_waypoints (wp_file)
     # #   route_planner._validate_wps (src)
     # #   route_planner._validate_wps (dest)
-      route_planner.compute_routes (wp_file)
+      routes = route_planner.compute_routes (wp_file)
+      print (routes[0].to_geojson())
