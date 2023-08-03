@@ -1329,11 +1329,42 @@ class Smoothing:
         
     def forward(self):
         '''
-            Applied inplace this function conducts a forward pass over the adjacent cell pairs, updating the
-            adjacent cell pairs for the given environmental conditions and great-circle characteristics. This 
-            is applied as a forward pass across the path moving out in adjacent cell pairs (tripplets of crossing 
-            points with the cell adjacency)
+            Applied inplace this function conducts a forward pass over the adjacent cell pairs, updating the crossing 
+            points between adjacent cell pairs for the given environmental conditions and great-circle characteristics. 
+            This is applied as a forward pass across the path moving out in adjacent cell pairs (tripplets of crossing 
+            points with the cell adjacency).
 
+            Key features of forward pass include
+                reverse edges - Removal of adjacent cell edges that enter and exit a cell on subsequent
+                                iterations. e.g. routes going back on themeselves
+                mergering     - When two crossing points are close, merge points and determine new
+                                common edge between start and end point
+                diagonal case - If the middle point is a diagonal edge between cells, introduce a new cell box
+                                dependent on start and end crossing points. If cell is inaccessible 'blocked' then
+                                remain on corner for a later iteration.
+
+                                If exact diagonal, with same start and end crossing point, has beeseen before then
+                                then skip. 
+
+                newton smooth - If adjacency is not diagonal then smooth the midpoint crossing point on the boundary given a 
+                                horizontal or vertical smoothing. Returns a new midpoint that can either lie on the boundary
+                                between the two cells or outside the boundary
+
+                                If lies on the boundary then check if similar to previous seen case of this crossing point 
+                                else continue and not convereged
+
+                v shaped add  - If the crossing point lied outside the boundary in the newton smoothing stage the a addition
+                                cell/cells must be included. 
+                                
+                                Determine the new edges that need to be included if only a single cell (two edges) then do
+                                a v-shaped addition. If blocked then trim back. If exact v-shaped seen before, with same
+                                midpoint prime and possible edge additions, then skip. If blocked or seen before and crossing
+                                point hasn't changed within converge_sep then the crossing point has convered
+
+                u shaped add - Identical to v-shaped add but now with the addition of 2 cells (3 edges). If blocked then trim back. If exact v-shaped seen before, with same
+                                midpoint prime and possible edge additions, then skip. If blocked or seen before and crossing
+                                point hasn't changed within converge_sep then the crossing point has convered.
+                
             This code should be read relative to the pseudo code outlined in the paper.
         
         '''
