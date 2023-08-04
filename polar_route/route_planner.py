@@ -624,6 +624,8 @@ class RoutePlanner:
             DistanceLegs   = variables['distance']['path_values'] 
             pathIndex      = variables['cell_index']['path_values'] 
             FuelLegs       = variables['fuel']['path_values'] 
+            SpeedLegs      = variables['speed']['path_values'] 
+
 
 
             # ------ Saving Output in a standard form to be saved ------
@@ -638,6 +640,7 @@ class RoutePlanner:
             SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
             SmoothedPath['properties']['fuel']       = list(FuelLegs)
             SmoothedPath['properties']['distance']   = list(DistanceLegs)
+            SmoothedPath['properties']['speed']      = list(SpeedLegs)
             SmoothedPaths += [SmoothedPath]
         
         geojson['features'] = SmoothedPaths
