@@ -32,10 +32,10 @@ def _flattenCases(id,mesh):
 
 def _initialise_dijkstra_graph(dijkstra_graph):
     '''
-        Initialising dijkstra graph information into a standard form
+        Initialising dijkstra graph information info a standard form
 
         Args:
-            dijkstra_graph (pd.dataframe) - Pandas dataframe of the dijlstra graph construction
+            dijkstra_graph (pd.dataframe) - Pandas dataframe of the dijkstra graph construction
 
         Outputs:
             dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id. 
@@ -58,7 +58,7 @@ def _initialise_dijkstra_graph(dijkstra_graph):
 
 def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
     '''
-        Initialising dijkstra route into a standard path form
+        Initialising dijkstra route info a standard path form
 
         Args:
             dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id. 
@@ -284,7 +284,7 @@ class RoutePlanner:
             self.neighbour_graph['SIC'] = 0.0
 
         # ====== Objective Function Information ======
-        #  Checking if objective function is in the cellgrid            
+        #  Checking if objective function is in the dijkstra            
         if self.config['objective_function'] != 'traveltime':
             if self.config['objective_function'] not in self.neighbour_graph:
                 raise Exception("Objective Function require '{}' column in mesh dataframe".format(self.config['objective_function']))
@@ -595,9 +595,9 @@ class RoutePlanner:
             Using the previously constructed Dijkstra paths smooth the paths to remove mesh features 
             `paths` will be updated in the output JSON
         """
-        # ====== Routes into =======
+        # ====== Routes info =======
         if len(self.paths['features']) == 0:
-            raise Exception('Paths not constructed as there was no dijkstra paths created')
+            raise Exception('Paths not constructed as there were no dijkstra paths created')
         routes = copy.deepcopy(self.paths)['features']  
 
         logging.info('========= Determining Smoothed Paths ===========\n')

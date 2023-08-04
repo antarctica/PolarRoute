@@ -236,7 +236,7 @@ class PathValues:
 
         '''
 
-        # Determin the travel-time and distance between start and end waypoint given
+        # Determine the travel-time and distance between start and end waypoint given
         #environmental forcing variables
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
@@ -345,6 +345,19 @@ class Smoothing:
             Class construct that has all the operations requried for path smoothing. Including: Relationship of adjacent pairs,
             edge finding new edges to add and returns a list of the adjacent pairs for the constructed path
 
+            
+            Args:
+                dijkstra_graph (dict)           - Dictionary comprising all the environmental mesh information and dijkstra graph information.
+                                                  This includes but is not limited to: path crossing points to cell centre, neighbour crossing
+
+                                        
+                adjacent_pairs (list,find_edge) - An initial list of adjacent cell pairs as 'find_edge' objects comprising: .start, the start cell environmental mesh dictionary;
+                                                  .end, the end environmental cell information; .crossing, a tuple of the crossing point on the edge (long,lat); and,
+                                                  .case, the adjacent cell case between the two cell boxes.
+
+                start_waypoint (tuple)          - Start Waypoint (long,lat)
+                end_waypoint (tuple)            - End Waypoint (long,lat)
+
         '''
         self._initialise_config()
         self.dijkstra_graph = dijkstra_graph
@@ -395,7 +408,8 @@ class Smoothing:
                 '''
                     Apply newton optimisation to determine an update to the crossing point.
                     
-                    All information must be considered in tandem to scientific publication.
+                    All information must be considered in tandem to scientific publication
+                    https://arxiv.org/pdf/2209.02389
 
                     Args:
                         y0  (float)      - Current Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
@@ -457,7 +471,7 @@ class Smoothing:
 
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ_s,φ_r):
             '''
-                Determining Newton Function and differentiable of newton function from the longitude crossing point optimisation
+                Determining Newton Function and differential of newton function from the longitude crossing point optimisation
 
                 Args:
                     y  (float)      - Current Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
@@ -653,7 +667,7 @@ class Smoothing:
         def _F(y,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ):
 
             '''
-                Determining Newton Function and differentiable of newton function from the longitude crossing point optimisation
+                Determining Newton Function and differential of newton function from the longitude crossing point optimisation
 
                 Args:
                     y  (float)      - Current Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
@@ -698,8 +712,6 @@ class Smoothing:
             X2  = np.sqrt(D2**2 + C2*(d2**2)) 
 
             dX1 = (r1*(D1*v1 + r1*C1*y))/X1
-
-            # Cassing Warning message - FIX !!
             dX2 = (-r2*(D2*v2 + r2*C2*(Y-y)))/X2
 
             F = ((r2**2)*X1+(r1**2)*X2)*y - r1*v1*(X1-D1)*X2/C1 - r2*(r2*Y-v2*(X2-D2)/C2)*X1
@@ -777,8 +789,8 @@ class Smoothing:
             Removing a adjacent cell pair
 
             Args:
-                index - index in the adjacent cell pair list (.ap) to romove the index for
-        '''
+                index - index in the adjacent cell pair list (.ap) to remove the index for
+        '''# Point crossingpoint on boundary between the two origional cells
 
         self.aps.pop(index)
 
@@ -825,33 +837,40 @@ class Smoothing:
             vmin = np.max([smin,emin])
             vmax = np.min([smax,emax])
 
-            # Point crossingpoint on boundary between the two origional cells
+            # Point lies on the boundary connecting up the
+            #two adjacent cell pairs, the start and end cell.
             if (x[1] >= vmin) and (x[1] <= vmax):
                 return None,None
 
-            # If Start and end cells share a edge for the horesshoe 
+            # If Start and end cells share a edge for the horseshoe 
             if (x[1]<smin) and (smin==emin):
                 case_a = 4
                 case_b   = 4
+                return case_a,case_b
             if (x[1]>smax) and (smax==emax):
                 case_a = -4
                 case_b   = -4
+                return case_a,case_b
 
             # --- Cases where StartCell is Larger than end Cell ---
             if (x[1]>emax) and (smax>emax):
                 case_a = case
-                case_b   = (-4)                
+                case_b   = (-4)
+                return case_a,case_b                
             if (x[1]<emin) and (smin<emin):
                 case_a = case
-                case_b   = (4)                   
+                case_b   = (4)
+                return case_a,case_b                   
 
             # --- Cases where StartCell is smaller than end Cell ---
             if (x[1]>smax) and (smax<emax):
                 case_a = -4
                 case_b   = -case
+                return case_a,case_b
             if (x[1]<smin) and (emin<smin):
                 case_a = 4
-                case_b   = -case      
+                case_b   = -case
+                return case_a,case_b      
 
         elif abs(case) == 4:
             # Defining the min and max of the start and end cells
@@ -864,38 +883,41 @@ class Smoothing:
             vmin = np.max([smin,emin])
             vmax = np.min([smax,emax])
 
-            # Point crossingpoint on boundary between the two origional cells
+            # Point lies on the boundary connecting up the
+            #two adjacent cell pairs, the start and end cell.
             if (x[0] >= vmin) and (x[0] <= vmax):
                 return None,None
 
-            # If Start and end cells share a edge for the horesshoe 
+            # If Start and end cells share a edge for the horseshoe 
             if (x[0]<smin) and (smin==emin):
                 case_a = -2
                 case_b   = -2
+                return case_a,case_b
             if (x[0]>smax) and (smax==emax):
                 case_a = 2
                 case_b   = 2
+                return case_a,case_b
 
             # --- Cases where StartCell is Larger than end Cell ---
             if (x[0]>emax) and (smax>emax):
                 case_a = case
-                case_b   = (2)                
+                case_b   = (2)  
+                return case_a,case_b              
             if (x[0]<emin) and (smin<emin):
                 case_a = case
-                case_b   = (-2)                   
-
+                case_b   = (-2)     
+                return case_a,case_b              
             # --- Cases where StartCell is smaller than end Cell ---
             if (x[0]>smax) and (smax<emax):
                 case_a = (2)
                 case_b   = -case
+                return case_a,case_b
             if (x[0]<smin) and (emin<smin):
                 case_a = (-2)
-                case_b   = -case   
+                case_b   = -case
+                return case_a,case_b   
 
-        try:
-            return case_a,case_b
-        except:
-            return None,None
+        raise Exception('Path Smoothing - Failure - Adding additional cases unknown in neighbour_case')
 
     def _neighbour_indices(self,cell_a,cell_b,case,add_case_a,add_case_b):
         '''
@@ -1005,7 +1027,7 @@ class Smoothing:
 
     def blocked(self,new_cell,cell_a,cell_b):
         '''
-            Function that determines if the new cell being introducted is worse off that the origional two cells.
+            Function that determines if the new cell being introducted is worse off than the original two cells.
             Currently this is hard encoded to not enter a cell 5% worse off in Sea-Ice-Concentration
 
             Args:
@@ -1040,7 +1062,7 @@ class Smoothing:
             Args:
                 cell_a (dict) - Start cell environmental info as dictionary
                 cell_b (dict)   - End cell environmental info as dictionary
-                case (int)   - Adjaceny case tupe connecting the two cells
+                case (int)   - Adjaceny case type connecting the two cells
                 x (tuple)    - Updated crossing point (long,lat)
             
             Return:
@@ -1230,7 +1252,7 @@ class Smoothing:
                 edge_a (find_edge)     - First-edge connecting start cell to new cell 1
                 edge_b (find_edge)     - First-edge connecting new cell 1 to new cell 2
                 edge_c (find_edge)     - First-edge connecting new cell 2 to end cell
-                midpoint_prime (tuple) - midpoint that triggered the v-additional case addition (long,lat)
+                midpoint_prime (tuple) - midpoint that triggered the u-additional case addition (long,lat)
 
             Return:
                 True if this U-additional case has been seen before, or false if not
@@ -1283,7 +1305,7 @@ class Smoothing:
                 lastpoint (tuple)      - lastpoint in the adjacent cell tripplet of points (long,lat)
 
             Return:
-                True if this U-additional case has been seen before, or false if not
+                True if this diagonal case has been seen before, or false if not
         
         '''
 
@@ -1313,37 +1335,24 @@ class Smoothing:
         else:
             self.previous_diagonal_info += [current_diagonal]
             return False
-        
-    # def previous_merge(self,firstpoint,midpoint,lastpoint):
-    #     current_merge = [firstpoint,midpoint,lastpoint]
-    #     if len(self.previous_merge_info) == 0:
-    #         self.previous_merge_info += [current_merge]
-    #         return False
-    #     if np.any([self.dist(c[0],current_merge[0]) <= self.converged_sep and 
-    #                self.dist(c[1],current_merge[1]) <= self.converged_sep and 
-    #                self.dist(c[2],current_merge[2]) <= self.converged_sep for c in self.previous_merge_info]):
-    #         return True
-    #     else:
-    #         self.previous_merge_info += [current_merge]
-    #         return False
-        
+                
     def forward(self):
         '''
-            Applied inplace this function conducts a forward pass over the adjacent cell pairs, updating the crossing 
+            Applies inplace this function conducts a forward pass over the adjacent cell pairs, updating the crossing 
             points between adjacent cell pairs for the given environmental conditions and great-circle characteristics. 
-            This is applied as a forward pass across the path moving out in adjacent cell pairs (tripplets of crossing 
+            This is applies as a forward pass across the path moving out in adjacent cell pairs (triplets of crossing 
             points with the cell adjacency).
 
             Key features of forward pass include
                 reverse edges - Removal of adjacent cell edges that enter and exit a cell on subsequent
-                                iterations. e.g. routes going back on themeselves
+                                iterations. e.g. routes going back on themselves
                 mergering     - When two crossing points are close, merge points and determine new
                                 common edge between start and end point
                 diagonal case - If the middle point is a diagonal edge between cells, introduce a new cell box
                                 dependent on start and end crossing points. If cell is inaccessible 'blocked' then
                                 remain on corner for a later iteration.
 
-                                If exact diagonal, with same start and end crossing point, has beeseen before then
+                                If exact diagonal, with same start and end crossing point, has be seen before then
                                 then skip. 
 
                 newton smooth - If adjacency is not diagonal then smooth the midpoint crossing point on the boundary given a 
@@ -1353,19 +1362,20 @@ class Smoothing:
                                 If lies on the boundary then check if similar to previous seen case of this crossing point 
                                 else continue and not convereged
 
-                v shaped add  - If the crossing point lied outside the boundary in the newton smoothing stage the a addition
+                v shaped add  - If the crossing point lies outside the boundary in the newton smoothing stage the addition
                                 cell/cells must be included. 
                                 
                                 Determine the new edges that need to be included if only a single cell (two edges) then do
                                 a v-shaped addition. If blocked then trim back. If exact v-shaped seen before, with same
                                 midpoint prime and possible edge additions, then skip. If blocked or seen before and crossing
-                                point hasn't changed within converge_sep then the crossing point has convered
+                                point hasn't changed within converge_sep then the crossing point has converged
 
                 u shaped add - Identical to v-shaped add but now with the addition of 2 cells (3 edges). If blocked then trim back. If exact v-shaped seen before, with same
                                 midpoint prime and possible edge additions, then skip. If blocked or seen before and crossing
-                                point hasn't changed within converge_sep then the crossing point has convered.
+                                point hasn't changed within converge_sep then the crossing point has converged.
                 
             This code should be read relative to the pseudo code outlined in the paper.
+            https://arxiv.org/pdf/2209.02389
         
         '''
         self.jj = 1
@@ -1459,8 +1469,7 @@ class Smoothing:
                 # Updating crossing point
                 midpoint_prime = self.newton_smooth(ap.start,ap.end,ap.case,firstpoint,midpoint,lastpoint)
                 if type(midpoint_prime) == type(None) or np.isnan(midpoint_prime[0]) or np.isnan(midpoint_prime[1]):
-                    midpoint_prime = midpoint
-                    #raise Exception('Newton call failed to converge or recover')
+                    raise Exception('Newton call failed to converge or recover')
 
                 #Determining if additional cases need to be added
                 add_indicies,add_cases = self.nearest_neighbour(ap.start,ap.end,ap.case,midpoint_prime)

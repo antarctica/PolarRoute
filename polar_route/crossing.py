@@ -94,12 +94,12 @@ class NewtonianDistance:
             Inputs:
                 f  (func) - 
                 x  (float) - Start cell perpendicular distance from cell centre to crossing boundary
-                a  (float) - End cell perpendicular distancr from cell centre to crossing boundary
+                a  (float) - End cell perpendicular distance from cell centre to crossing boundary
                 Y  (float) - Parallel distance, to crossing bounary, between start cell and end cell centres
                 u1 (float) - Start Cell perpendicular to crossing boundary forcing component 
-                v1 (float) - Start Cell parall to crossing boundary forcing component 
+                v1 (float) - Start Cell parallel to crossing boundary forcing component 
                 u2 (float) - End Cell perpendicular to crossing boundary forcing component 
-                v2 (float) - End Cell parall to crossing boundary forcing component  
+                v2 (float) - End Cell parallel to crossing boundary forcing component  
                 s1 (float) - Start Cell max speed 
                 s1 (float) - End Cell max speed
 
@@ -167,17 +167,17 @@ class NewtonianDistance:
 
     def _F(self,y,x,a,Y,u1,v1,u2,v2,s1,s2):
         '''
-            Determining Newton Function and differentiable of newton function from adjacent cell pair information
+            Determining Newton Function and differential of newton function from adjacent cell pair information
 
             Args:
                 y  (float) - Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
                 x  (float) - Start cell perpendicular distance from cell centre to crossing boundary
-                a  (float) - End cell perpendicular distancr from cell centre to crossing boundary
+                a  (float) - End cell perpendicular distance from cell centre to crossing boundary
                 Y  (float) - Parallel distance, to crossing bounary, between start cell and end cell centres
                 u1 (float) - Start Cell perpendicular to crossing boundary forcing component 
-                v1 (float) - Start Cell parall to crossing boundary forcing component 
+                v1 (float) - Start Cell parallel to crossing boundary forcing component 
                 u2 (float) - End Cell perpendicular to crossing boundary forcing component 
-                v2 (float) - End Cell parall to crossing boundary forcing component  
+                v2 (float) - End Cell parallel to crossing boundary forcing component  
                 s1 (float) - Start Cell max speed 
                 s1 (float) - End Cell max speed
 
