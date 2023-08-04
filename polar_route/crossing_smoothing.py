@@ -96,6 +96,7 @@ class PathValues:
         # Determining the important variables to return for the paths
         required_path_variables = {'distance':{'processing':'cumsum'},
                                    'traveltime':{'processing':'cumsum'},
+                                   'speed':{'processing':None},
                                    'datetime':{'processing':'cumsum'},
                                    'cell_index':{'processing':None},
                                    'fuel':{'processing':'cumsum'}}
