@@ -8,7 +8,7 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 
-from polar_route.utils import timed_call
+from polar_route.utils import round_to_sigfig
 
 class ScalarDataLoader(DataLoaderInterface):
     '''
@@ -71,12 +71,13 @@ class ScalarDataLoader(DataLoaderInterface):
             logging.debug(f'\tSetting data column name to {self.data_name}')
             self.data = self.set_data_col_name(self.data_name)
 
+        # Calculate fraction of boundary that data covers
+        data_coverage = self.calculate_coverage(bounds)
+        logging.info("\tMercator data range (roughly) covers "+\
+                    f"{np.round(data_coverage*100,0).astype(int)}% "+\
+                     "of initial boundary")
         # If there's 0 datapoints in the initial boundary, raise ValueError
-        if (type(self.data) == pd.core.frame.DataFrame and \
-            len(self.data[self.data_name]) == 0) or \
-           (type(self.data) == xr.core.dataset.Dataset and \
-            self.data[self.data_name].values.size == 0):
-
+        if data_coverage == 0:
             logging.error('\tDataloader has no data in initial region!')
             raise ValueError(f"Dataloader {params['dataloader_name']}"+\
                               " contains no data within initial region!")
@@ -157,6 +158,89 @@ class ScalarDataLoader(DataLoaderInterface):
             params['y_col'] = 'long'
             
         return params
+
+    def calculate_coverage(self, bounds, data=None):
+        """
+        Calculates percentage of boundary covered by dataset
+
+        Args:
+            bounds (Boundary): 
+                Boundary being compared against
+            data (pd.DataFrame or xr.Dataset): 
+                Dataset with 'lat' and 'long' coordinates. 
+                Extent calculated from min/max of these coordinates. 
+                Defaults to objects internal dataset.
+        
+        Returns:
+            float:
+                Decimal fraction of boundary covered by the dataset
+        """
+        def calculate_coverage_from_df(bounds, data):
+            data = data.reset_index()
+            # If empty dataframe, 0% coverage
+            if data.empty:
+                return 0
+            # If no valid coordinates within data range, 0% coverage
+            elif data.lat.size == 0 or data.long.size == 0:
+                return 0
+            # Otherwise, calculate coverage, assuming rectangular region 
+            # in mercator projection
+            else:
+                # Get range of latitude values
+                data_lat_range = data.lat.max() - data.lat.min()
+                bounds_lat_range = bounds.get_lat_max() - bounds.get_lat_min()
+                # Get range of longitude values
+                data_long_range = data.long.max() - data.long.min()
+                bounds_long_range = bounds.get_long_max() - bounds.get_long_min()
+                # Calcualte area of each region
+                data_area = data_lat_range * data_long_range
+                bounds_area = bounds_lat_range * bounds_long_range
+                # If data area completely covers bounds, 100% coverage
+                
+                logging.info(data_area)
+                logging.info(bounds_area)
+                
+                if data_area >= bounds_area:
+                    return 1
+                # Otherwise return decimal fraction
+                else:
+                    return data_area / bounds_area
+                
+                
+        def calculate_coverage_from_xr(bounds, data):
+            # If no valid coordinates within data range, 0% coverage
+            if data.lat.size == 0 or data.long.size == 0:
+                return 0
+            # Otherwise, calculate coverage, assuming rectangular region 
+            # in mercator projection
+            else:
+                # Get range of latitude values
+                data_lat_range = data.lat.max().item() - data.lat.min().item()
+                bounds_lat_range = bounds.get_lat_max() - bounds.get_lat_min()
+                # Get range of longitude values
+                data_long_range = data.long.max().item() - data.long.min().item()
+                bounds_long_range = bounds.get_long_max() - bounds.get_long_min()
+                # Calcualte area of each region
+                data_area = data_lat_range * data_long_range
+                bounds_area = bounds_lat_range * bounds_long_range
+                # If data area completely covers bounds, 100% coverage
+                
+                logging.info(data_area)
+                logging.info(bounds_area)
+                
+                if data_area >= bounds_area:
+                    return 1
+                # Otherwise return decimal fraction
+                else:
+                    return data_area / bounds_area
+        # Use self.data if not no explicit dataset specified
+        if data is None:
+            data = self.data
+        # Calculate data coverage fraction
+        if type(self.data) == pd.core.frame.DataFrame:
+            return calculate_coverage_from_df(bounds, data)
+        elif type(self.data) == xr.core.dataset.Dataset:
+            return calculate_coverage_from_xr(bounds, data)
 
     def trim_datapoints(self, bounds, data=None):
         '''
@@ -834,7 +918,7 @@ class ScalarDataLoader(DataLoaderInterface):
                                  )
             return name[0]
         
-        logging.info(f"\tRetrieving data name from {type(self.data)}")
+        logging.debug(f"\tRetrieving data name from {type(self.data)}")
         # Choose method of extraction based on data type
         if type(self.data) == pd.core.frame.DataFrame:
             return get_data_name_from_df(self.data)

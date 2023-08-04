@@ -108,7 +108,7 @@ def validate_vessel_config(config):
     Raises:
         TypeError: Incorrect config parsed in. Must be 'str' or 'dict'
         FileNotFoundError: Could not read in file if 'str' parsed
-        ValidationError: Malformed mesh config
+        ValidationError: Malformed vessel config
 
     """
     # Deals with flexible input
