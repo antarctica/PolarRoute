@@ -135,11 +135,14 @@ class RoutePlanner:
                    
                 # reversing segments as we moved from end to start
                     route_segments = list (itertools.chain.from_iterable (route_segments))
-                    route_segments.reverse()
-                    cases.reverse()
+                    if len(cases)>1:
+                        route_segments.reverse()
+                        cases.reverse()
                     route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name(), self.config)
                     route.set_cases(cases)
                 # correct the first and last segment
+                    for s in route_segments:
+                        print (s.to_str())
                 print (route.segments[0].get_start_wp ().get_cellbox_indx())
                 route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()] , s_wp, 0)
                 if len (route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and dest are within the same cellbox
