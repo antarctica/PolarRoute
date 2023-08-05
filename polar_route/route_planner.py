@@ -124,7 +124,7 @@ class RoutePlanner:
                 cases = []
                 route = None
                 if s_wp.get_cellbox_indx() == e_wp_indx: # path should be a straight line within the same cellbox
-                   route = Route ([Segment (s_wp, e_wp)],s_wp.get_name(), e_wp.get_name() , self.conf)
+                   route = Route ([Segment (s_wp, e_wp)],s_wp.get_name(), e_wp.get_name() , self.config)
                 else:
                     while s_wp.get_cellbox_indx() != e_wp_indx:
                         # print (">>> e_wp_indx >>>" , e_wp_indx)
@@ -143,7 +143,7 @@ class RoutePlanner:
                 print (route.segments[0].get_start_wp ().get_cellbox_indx())
                 route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()] , s_wp, 0)
                 if len (route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and dest are within the same cellbox
-                    route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_start_wp().get_cellbox_indx()] , s_wp, -1)
+                    route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_end_wp().get_cellbox_indx()] , e_wp, -1)
                 routes.append (route)
                 
         return routes
@@ -254,8 +254,8 @@ class RoutePlanner:
                     selected (int): the id of the selected cellbox
             '''
             if self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]], self.cellboxes_lookup [ids[1]]) in [Direction.east , Direction.north_east, Direction.north]:
-                return ids[0]
-            return ids[1]
+                return ids[1]
+            return ids[0]
         
         valid_wps = wps
         for wp in wps: 
