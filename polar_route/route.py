@@ -123,7 +123,8 @@ class Route:
         '''
             Determine within cell parameters for a source and end point on the edge
         '''
-        wp = self.segments[indx].get_start_wp()
+        
+        wp = self.segments[indx].get_waypoint(indx)
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
         x = self._dist_around_globe(cp.get_longtitude(),wp.get_longtitude())*m_long*np.cos(wp.get_latitude()*(np.pi/180))
@@ -136,7 +137,8 @@ class Route:
         traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
 
         # update segment and its metrics
-        self.segments[indx].set_start_wp (cp)
+     
+        self.segments[indx].set_waypoint (indx , cp)
         self.segments[indx].set_travel_time (traveltime)
         self.segments[indx].set_distance (distance)
         self.segments[indx].set_fuel (cellbox.agg_data['fuel'] [case] * traveltime)

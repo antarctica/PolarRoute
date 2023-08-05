@@ -75,4 +75,14 @@ class Segment:
 
     def set_end_wp (self , wp):
          self.end_wp = wp
-        
+    def set_waypoint (self, indx , wp):
+        if indx ==0: #set the start waypoint
+            self.set_start_wp(wp)
+        elif indx == -1:
+            self.set_end_wp(wp)  #set the end waypoint
+
+    def get_waypoint (self, indx ):
+        if indx ==0: #get the start waypoint
+            return self.start_wp
+        elif indx == -1:
+            return self.end_wp #get the end waypoint
