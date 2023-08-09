@@ -157,6 +157,16 @@ def validate_route_config(config):
     jsonschema.validate(instance=config_json, schema=route_schema)
 
 def validate_waypoints(waypoints):
+    """_summary_
+
+    Args:
+        waypoints (str or pd.DataFrame): _description_
+
+    Raises:
+        TypeError: Incorrect config parsed in. Must be 'str' or 'pd.DataFrame' 
+        FileNotFoundError: Could not read in file if 'str' parsed
+        AssertionError: Malformed waypoints config
+    """
 
     if type(waypoints) is str:
         # If str, assume filename
