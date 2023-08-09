@@ -3,12 +3,14 @@ import jsonschema
 import logging
 import datetime
 import re
+import pandas as pd
 
 from .mesh_schema import mesh_schema
 from .vessel_schema import vessel_schema
 from .route_schema import route_schema
+from .waypoints_schema import waypoints_columns
 
-def flexi_config_input(config):
+def flexi_json_input(config):
     """
     Allows flexible inputs. If a string is parsed, then assume it's a file path
     and read in as a json. If a dict is parsed, then assume it's already a 
@@ -35,7 +37,6 @@ def flexi_config_input(config):
         raise TypeError(f"Expected 'str' or 'dict', instead got '{type(config)}'")
     
     return config_json
-
 
 def validate_mesh_config(config):
     """
@@ -97,7 +98,7 @@ def validate_mesh_config(config):
         
         
     # Deals with flexible input
-    config_json = flexi_config_input(config)
+    config_json = flexi_json_input(config)
     # Validate against the schema to check syntax is correct
     jsonschema.validate(instance=config_json, schema=mesh_schema)
     
@@ -112,7 +113,6 @@ def validate_mesh_config(config):
     assert_valid_cellsize(config['Mesh_info']['Region']['longMin'],
                           config['Mesh_info']['Region']['longMax'],
                           config['Mesh_info']['Region']['cellHeight'])
-    
     
 def validate_vessel_config(config):
     """
@@ -131,11 +131,11 @@ def validate_vessel_config(config):
 
     """
     # Deals with flexible input
-    config_json = flexi_config_input(config)
+    config_json = flexi_json_input(config)
     # Validate against schema
     jsonschema.validate(instance=config_json, schema=vessel_schema)
 
-def validate_route_config():
+def validate_route_config(config):
     """
     Validates a route config
 
@@ -152,12 +152,29 @@ def validate_route_config():
 
     """
     # Deals with flexible input
-    config_json = flexi_config_input(config)
+    config_json = flexi_json_input(config)
     # Validate against schema
     jsonschema.validate(instance=config_json, schema=route_schema)
 
-def validate_waypoints():
-    pass
+def validate_waypoints(waypoints):
 
-if __name__ == '__main__':
-    print('lol')
+    if type(waypoints) is str:
+        # If str, assume filename
+        waypoints_df = pd.read_csv(waypoints).reset_index()
+    elif type(waypoints) is pd.core.frame.DataFrame:
+        # If dataframe, assume it's the loaded waypoints
+        waypoints_df = waypoints.reset_index()
+    else:
+        # Otherwise, can't deal with it
+        raise TypeError(
+            f"Expected 'str' or 'dict', instead got '{type(waypoints)}'"
+            )
+    # Assert that all the required columns exist
+    assert(all(col in waypoints_df.columns for col in waypoints_columns)), \
+        f'Expected the following columns to exist: {waypoints_columns}'
+    
+    # Assert that at least one source and destination waypoint selected
+    assert('X' in set(waypoints_df['Source'])), \
+        'No source waypoint defined!'
+    assert('X' in set(waypoints_df['Destination'])), \
+        'No destination waypoint defined!'
