@@ -60,6 +60,7 @@ class AbstractShip(AbstractVessel):
         access_values['ext_ice'] = self.extreme_ice(cellbox)
 
         if self.max_wave is not None:
+            logging.debug(f"Excluding areas with wave height above {self.max_wave}m")
             access_values['ext_waves'] = self.extreme_waves(cellbox)
 
         access_values['inaccessible'] = any(access_values.values())
