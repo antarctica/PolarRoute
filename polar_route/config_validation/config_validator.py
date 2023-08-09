@@ -6,6 +6,35 @@ import re
 
 from .mesh_schema import mesh_schema
 from .vessel_schema import vessel_schema
+from .route_schema import route_schema
+
+def flexi_config_input(config):
+    """
+    Allows flexible inputs. If a string is parsed, then assume it's a file path
+    and read in as a json. If a dict is parsed, then assume it's already a 
+    valid loaded json, and return it as is
+
+    Args:
+        config (str or dict): Input to translate into a dict.
+
+    Raises:
+        TypeError: If input is neither a str nor a dict, then wrong input type
+
+    Returns:
+        dict: Dictionary read from JSON
+    """
+    if type(config) is str:
+        # If str, assume filename
+        with open(config, 'r') as fp:
+            config_json = json.load(fp)
+    elif type(config) is dict:
+        # If dict, assume it's the config
+        config_json = config
+    else:
+        # Otherwise, can't deal with it
+        raise TypeError(f"Expected 'str' or 'dict', instead got '{type(config)}'")
+    
+    return config_json
 
 
 def validate_mesh_config(config):
@@ -68,17 +97,7 @@ def validate_mesh_config(config):
         
         
     # Deals with flexible input
-    if type(config) is str:
-        # If str, assume filename
-        with open(config, 'r') as fp:
-            config_json = json.load(fp)
-    elif type(config) is dict:
-        # If dict, assume it's the config
-        config_json = config
-    else:
-        # Otherwise, can't deal with it
-        raise TypeError(f"Expected 'str' or 'dict', instead got '{type(config)}'")
-    
+    config_json = flexi_config_input(config)
     # Validate against the schema to check syntax is correct
     jsonschema.validate(instance=config_json, schema=mesh_schema)
     
@@ -112,21 +131,30 @@ def validate_vessel_config(config):
 
     """
     # Deals with flexible input
-    if type(config) is str:
-        # If str, assume filename
-        with open(config, 'r') as fp:
-            config_json = json.load(fp)
-    elif type(config) is dict:
-        # If dict, assume it's the config
-        config_json = config
-    else:
-        # Otherwise, can't deal with it
-        raise TypeError(f"Expected 'str' or 'dict', instead got '{type(config)}'")
-
+    config_json = flexi_config_input(config)
+    # Validate against schema
     jsonschema.validate(instance=config_json, schema=vessel_schema)
 
 def validate_route_config():
-    pass
+    """
+    Validates a route config
+
+    Args:
+        config (str or dict):
+            route config to be validated.
+            If type 'str', tries to read in as a filename and open file as json
+            If type 'dict', assumes it's already read in from a json file
+
+    Raises:
+        TypeError: Incorrect config parsed in. Must be 'str' or 'dict'
+        FileNotFoundError: Could not read in file if 'str' parsed
+        ValidationError: Malformed vessel config
+
+    """
+    # Deals with flexible input
+    config_json = flexi_config_input(config)
+    # Validate against schema
+    jsonschema.validate(instance=config_json, schema=route_schema)
 
 def validate_waypoints():
     pass
