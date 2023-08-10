@@ -16,6 +16,8 @@ from pandas.core.common import SettingWithCopyWarning
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
+from polar_route.config_validation.config_validator import validate_route_config
+from polar_route.config_validation.config_validator import validate_waypoints
 
 
 def _flattenCases(id,mesh):
@@ -167,7 +169,8 @@ class RoutePlanner:
 
                 cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only !
         """
-
+        validate_route_config(config)
+        validate_waypoints(waypoints)
         # Load in the current cell structure & Optimisation Info̦
         self.mesh             = _json_str(mesh)
         self.config           = _json_str(config)
