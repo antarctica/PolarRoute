@@ -148,7 +148,7 @@ def validate_route_config(config):
     Raises:
         TypeError: Incorrect config parsed in. Must be 'str' or 'dict'
         FileNotFoundError: Could not read in file if 'str' parsed
-        ValidationError: Malformed vessel config
+        ValidationError: Malformed route config
 
     """
     # Deals with flexible input
