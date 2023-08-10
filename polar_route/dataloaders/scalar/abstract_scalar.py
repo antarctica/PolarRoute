@@ -204,11 +204,11 @@ class ScalarDataLoader(DataLoaderInterface):
                 
                 
         def calculate_coverage_from_xr(bounds, data):
-            
-            if data.notnull().sum() == 0:
-                return 0
+            # Remove all NaN columns/rows
+            data = data.dropna(dim="lat", how="all")
+            data = data.dropna(dim="long", how="all")
             # If no valid coordinates within data range, 0% coverage
-            elif data.lat.size == 0 or data.long.size == 0:
+            if data.lat.size == 0 or data.long.size == 0:
                 return 0
             # Otherwise, calculate coverage, assuming rectangular region 
             # in mercator projection
