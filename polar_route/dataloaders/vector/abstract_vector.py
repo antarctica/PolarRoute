@@ -245,7 +245,7 @@ class VectorDataLoader(DataLoaderInterface):
                 Decimal fraction of boundary covered by the dataset
         """
         def calculate_coverage_from_df(bounds, data):
-            data = data.reset_index()
+            data = data.dropna().reset_index()
             # If empty dataframe, 0% coverage
             if data.empty:
                 return 0
@@ -265,10 +265,6 @@ class VectorDataLoader(DataLoaderInterface):
                 data_area = data_lat_range * data_long_range
                 bounds_area = bounds_lat_range * bounds_long_range
                 # If data area completely covers bounds, 100% coverage
-                
-                logging.info(data_area)
-                logging.info(bounds_area)
-                
                 if data_area >= bounds_area:
                     return 1
                 # Otherwise return decimal fraction
@@ -277,8 +273,11 @@ class VectorDataLoader(DataLoaderInterface):
                 
                 
         def calculate_coverage_from_xr(bounds, data):
+            # If there are 0 values that are not NaN, 0% coverage
+            if data.notnull().sum() == 0:
+                return 0
             # If no valid coordinates within data range, 0% coverage
-            if data.lat.size == 0 or data.long.size == 0:
+            elif data.lat.size == 0 or data.long.size == 0:
                 return 0
             # Otherwise, calculate coverage, assuming rectangular region 
             # in mercator projection
@@ -293,10 +292,6 @@ class VectorDataLoader(DataLoaderInterface):
                 data_area = data_lat_range * data_long_range
                 bounds_area = bounds_lat_range * bounds_long_range
                 # If data area completely covers bounds, 100% coverage
-                
-                logging.info(data_area)
-                logging.info(bounds_area)
-                
                 if data_area >= bounds_area:
                     return 1
                 # Otherwise return decimal fraction
