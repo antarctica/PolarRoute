@@ -1,8 +1,8 @@
 """
     The python package `crossing` implement the optimisation for the crossing point for the unsmoothed and smoothed path
-     construction. The package is separated into two classes `NewtonianDistance` and `NewtonianCurve`.
-     In the section below we will go through, stage by stage, how the crossing point is determined and the methods
-     used within the classes.
+    construction. The package is separated into two classes `NewtonianDistance` and `NewtonianCurve`.
+    In the section below we will go through, stage by stage, how the crossing point is determined and the methods
+    used within the classes.
 
 """
 import copy
@@ -14,21 +14,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 class NewtonianDistance:
-    """The summary line for a class docstring should fit on one line.
 
-    If the class has public attributes, they may be documented here
-    in an ``Attributes`` section and follow the same formatting as a
-    function's ``Args`` section. Alternatively, attributes may be documented
-    inline with the attribute's declaration (see __init__ method below).
-
-    Properties created with the ``@property`` decorator should be documented
-    in the property's getter method.
-
-    Attributes:
-        attr1 (str): Description of `attr1`.
-        attr2 (:obj:`int`, optional): Description of `attr2`.
-
-    """
     def __init__(self,source_graph=None,neighbour_graph=None,
                  case=None,unit_shipspeed='km/hr',unit_time='days',
                  zerocurrents=True,debugging=False,maxiter=1000,optimizer_tol=1e-3):
@@ -266,9 +252,9 @@ class NewtonianDistance:
     def waypoint_correction(self,Wp,Cp):
         '''
             Determines the traveltime between two points within a given cell
-            Input:
-                Wp (tuple) - Start Waypoint location (long,lat)
-                Cp (tuple) - End Waypoint location (long,lat)
+            Args:
+                Wp (tuple): Start Waypoint location (long,lat)
+                Cp (tuple): End Waypoint location (long,lat)
             Returns:
                 traveltime (float) - Traveltime between the two points within cell in unit_time
         '''

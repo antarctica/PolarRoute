@@ -28,10 +28,10 @@ class find_edge:
         Class to return characteristics information about the edge connecting two
         cells. This information includes.
 
-        .crossing (tuple) - Crossing point (long,lat)
-        .case (int)       - Case type connecting the two cells
-        .start (dict)     - Dictionary containing the environmental parameters of the start cell
-        .end   (dict)     - Dictionary containing the environmental parameters of the end cell
+        crossing (tuple) - Crossing point (long,lat)
+        case (int)       - Case type connecting the two cells
+        start (dict)     - Dictionary containing the environmental parameters of the start cell
+        end   (dict)     - Dictionary containing the environmental parameters of the end cell
 
     """
     def __init__(self,cell_a,cell_b,case):
@@ -77,15 +77,15 @@ class PathValues:
         A class that returns atributes along a given paths intersecting the environmental/vessel mesh.
 
         Attributes:
-            .path_requested_variables (dict) - Dictionary of the required path variables and the processing method
+            path_requested_variables (dict) - Dictionary of the required path variables and the processing method
                                             e.g.{'distance':{'processing':'cumsum'},
                                                 'traveltime':{'processing':'cumsum'},
                                                 'datetime':{'processing':'cumsum'},
                                                 'cell_index':{'processing':None},
                                                 'fuel':{'processing':'cumsum'}}
 
-            .unit_shipspeed (string) - Unit speed type. This is a string of type: 'km/hr','knots'
-            .days (string) - Unit time format. This is a string of type: 'days','hr','min','s
+            unit_shipspeed (string) - Unit speed type. This is a string of type: 'km/hr','knots'
+            days (string) - Unit time format. This is a string of type: 'days','hr','min','s
 
         Functions:
             objective_function - For a list of ajacent cell pairs, start and end waypoints compute path attributes
