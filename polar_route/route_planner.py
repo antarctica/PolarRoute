@@ -600,6 +600,25 @@ class RoutePlanner:
             raise Exception('Paths not constructed as there were no dijkstra paths created')
         routes = copy.deepcopy(self.paths)['features']  
 
+
+        # ====== Determining route info ======
+        if 'smoothing_max_iterations' in self.config:
+            max_iterations = self.config['smoothing_max_iterations']
+        else:
+            max_iterations = 2000
+        if 'smoothing_blocked_sic' in self.config:
+            blocked_sic = self.config['smoothing_blocked_sic']
+        else:
+            blocked_sic = 10.0
+        if 'smoothing_merge_separation' in self.config:
+            merge_separation = self.config['smoothing_merge_separation']
+        else:
+            merge_separation = 1e-3
+        if 'smoothing_converged_sep' in self.config:
+            converged_sep = self.config['smoothing_converged_sep']
+        else:
+            converged_sep = 1e-3
+
         logging.info('========= Determining Smoothed Paths ===========\n')
         geojson = {}
         SmoothedPaths = []
@@ -610,7 +629,14 @@ class RoutePlanner:
             self.route = route
             self.adjacent_pairs,self.start_waypoint,self.end_waypoint = _initialise_dijkstra_route(self.initialise_dijkstra_graph,self.route)
 
-            sf = Smoothing(self.initialise_dijkstra_graph,self.adjacent_pairs,self.start_waypoint,self.end_waypoint,blocked_metric=blocked_metric)
+            sf = Smoothing(self.initialise_dijkstra_graph,
+                           self.adjacent_pairs,
+                           self.start_waypoint,self.end_waypoint,
+                           blocked_metric=blocked_metric,
+                           max_iterations=max_iterations,
+                           blocked_sic = blocked_sic,
+                           merge_separation=merge_separation,
+                           converged_sep=converged_sep)
             self.sf = sf
             self.sf.forward()
 

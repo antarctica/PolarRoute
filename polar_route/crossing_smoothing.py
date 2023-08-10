@@ -341,7 +341,7 @@ class PathValues:
 
 #======================================================
 class Smoothing:
-    def __init__(self,dijkstra_graph,adjacent_pairs,start_waypoint,end_waypoint,blocked_metric='SIC'):
+    def __init__(self,dijkstra_graph,adjacent_pairs,start_waypoint,end_waypoint,blocked_metric='SIC',max_iterations=2000,blocked_sic=10.0,merge_separation=1e-3,converged_sep=1e-3):
         '''
             Class construct that has all the operations requried for path smoothing. Including: Relationship of adjacent pairs,
             edge finding new edges to add and returns a list of the adjacent pairs for the constructed path
@@ -366,6 +366,12 @@ class Smoothing:
         self.start_waypoint = start_waypoint
         self.end_waypoint = end_waypoint
         self.blocked_metric = blocked_metric
+        self.max_iterations = max_iterations
+        self.blocked_sic    = blocked_sic
+        self.merge_separation = merge_separation
+        self.converged_sep    = converged_sep
+        self._g = pyproj.Geod(ellps='WGS84')
+
 
 
         for key in self.dijkstra_graph.keys():
@@ -384,9 +390,7 @@ class Smoothing:
             Initialising configuration information. If None return a list of standards
         '''
 
-        self.merge_separation = 1e-3
-        self.converged_sep    = 5e-3
-        self._g = pyproj.Geod(ellps='WGS84')
+
 
     def _long_case(self,start,end,case,Sp,Cp,Np):
         '''
@@ -1041,12 +1045,10 @@ class Smoothing:
         '''
         start = cell_a['SIC']
         end   = cell_b['SIC']
-
-        max_org = np.max([start,end])
         max_new = new_cell['SIC']
 
-        percentage_diff = (max_new-max_org)
-        if percentage_diff < 5:
+        percentage_diff = (max_new-start)
+        if percentage_diff < self.blocked_sic:
             return False
         else:
             return True
@@ -1551,6 +1553,6 @@ class Smoothing:
                             firstpoint = midpoint_prime
 
             # Early stopping criterion
-            if self.jj == 2000:
+            if self.jj == self.max_iterations:
                 break
 
