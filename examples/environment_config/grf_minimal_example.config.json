@@ -1,42 +1,40 @@
 {
-    "config": {
-        "Mesh_info": {
-            "Region": {
-                "latMin": 0,
-                "latMax": 10,
-                "longMin": 0,
-                "longMax": 10,
-                "startTime": "TODAY - 1",
-                "endTime": "TODAY + 1",
-                "cellWidth": 5,
-                "cellHeight": 5
-            },
-            "Data_sources": [
-                {
-                    "loader": "scalar_grf",
-                    "params": {
-                        "data_name": "elevation",
-                        "binary": false
-                    }
-                },
-                {
-                    "loader": "scalar_grf",
-                    "params": {
-                        "data_name": "SIC",
-                        "binary": false
-                    }
-                },
-                {
-                    "loader": "vector_grf",
-                    "params": {
-                        "data_name": "uC,vC"
-                    }
+    "Mesh_info": {
+        "Region": {
+            "latMin": 0,
+            "latMax": 10,
+            "longMin": 0,
+            "longMax": 10,
+            "startTime": "TODAY - 1",
+            "endTime": "TODAY + 1",
+            "cellWidth": 5,
+            "cellHeight": 5
+        },
+        "Data_sources": [
+            {
+                "loader": "scalar_grf",
+                "params": {
+                    "data_name": "elevation",
+                    "binary": false
                 }
-            ],
-            "splitting": {
-                "split_depth": 4,
-                "minimum_datapoints": 5
+            },
+            {
+                "loader": "scalar_grf",
+                "params": {
+                    "data_name": "SIC",
+                    "binary": false
+                }
+            },
+            {
+                "loader": "vector_grf",
+                "params": {
+                    "data_name": "uC,vC"
+                }
             }
+        ],
+        "splitting": {
+            "split_depth": 4,
+            "minimum_datapoints": 5
         }
     }
 }

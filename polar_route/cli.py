@@ -91,7 +91,7 @@ def create_mesh_cli():
     args = get_args(default_output)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    config = json.load(args.config)['config']
+    config = json.load(args.config)
 
     # Discrete Meshing
     cg = MeshBuilder(config).build_environmental_mesh()

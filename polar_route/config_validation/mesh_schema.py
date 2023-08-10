@@ -40,32 +40,25 @@ splitting_schema = {
 
 mesh_schema = {
     "type": "object",
-    "required":["config"],
+    "required": ["Mesh_info"],
     "additionalProperties": False,
-    "properties": {
-        "config": {
+    "properties":{
+        "Mesh_info": {
             "type": "object",
-            "required": ["Mesh_info"],
+            "required": ["Region", "Data_sources", "splitting"],
             "additionalProperties": False,
             "properties":{
-                "Mesh_info": {
-                    "type": "object",
-                    "required": ["Region", "Data_sources", "splitting"],
-                    "additionalProperties": False,
-                    "properties":{
-                        "Region": {
-                            "$ref": "#/region_schema"
-                        },
-                        "Data_sources": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/dataloader_schema"
-                            },
-                        },
-                        "splitting": {
-                            "$ref": "#/splitting_schema"
-                        }
-                    }
+                "Region": {
+                    "$ref": "#/region_schema"
+                },
+                "Data_sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/dataloader_schema"
+                    },
+                },
+                "splitting": {
+                    "$ref": "#/splitting_schema"
                 }
             }
         }
@@ -74,16 +67,3 @@ mesh_schema = {
     "dataloader_schema": dataloader_schema,
     "splitting_schema": splitting_schema
 }
-
-if __name__ == "__main__":
-    import jsonschema
-    import json
-    
-    with open("/home/habbot/Documents/Work/PolarRoute/examples/environment_config/bad.config.json", "r") as fp:    
-        config = json.load(fp)
-    try:    
-        jsonschema.validate(instance=config, schema=mesh_schema)
-        print("correct")
-    except jsonschema.exceptions.ValidationError as e:
-        print(e)
-    
