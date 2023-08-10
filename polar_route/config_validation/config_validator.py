@@ -188,3 +188,10 @@ def validate_waypoints(waypoints):
         'No source waypoint defined!'
     assert('X' in set(waypoints_df['Destination'])), \
         'No destination waypoint defined!'
+        
+    # Assert only numeric values given as coordinates
+    assert(pd.to_numeric(waypoints_df['Lat'], errors='coerce').notnull().all()), \
+        'Non-numeric value in "Lat" column of waypoints'
+    assert(pd.to_numeric(waypoints_df['Long'], errors='coerce').notnull().all()), \
+        'Non-numeric value in "Long" column of waypoints'
+
