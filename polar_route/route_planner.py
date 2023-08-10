@@ -32,7 +32,7 @@ def _flattenCases(id,mesh):
 
 def _initialise_dijkstra_graph(dijkstra_graph):
     '''
-        Initialising dijkstra graph information info a standard form
+        Initialising dijkstra graph information in a standard form
 
         Args:
             dijkstra_graph (pd.dataframe) - Pandas dataframe of the dijkstra graph construction
@@ -61,13 +61,13 @@ def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
         Initialising dijkstra route info a standard path form
 
         Args:
-            dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id. 
-                                         Each entry is a dictionary of the cellbox environmental and dijkstra information. 
+            dijkstra_graph (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
+                                    Each entry is a dictionary of the cellbox environmental and dijkstra information.
 
-            dijkstra_route (dict)      - Dictionary of a GeoJSON entry for the dijkstra route
+            dijkstra_route (dict) - Dictionary of a GeoJSON entry for the dijkstra route
 
         Outputs:
-            aps (list, [find_edge,..]) - A list of adjacent cell pairs where each entry is of type find_edge including information on
+            aps (list, [find_edge, ...]) - A list of adjacent cell pairs where each entry is of type find_edge including information on
                                         .crossing, .case, .start, and .end see 'find_edge' for more information
     '''
 
@@ -212,7 +212,7 @@ class RoutePlanner:
 
             Args:
 
-                mesh(dict or string of filepath): mesh based JSON containing the cellbox information and neighbourhood graph
+                mesh (dict or string of filepath): mesh based JSON containing the cellbox information and neighbourhood graph
 
                 config (dict or string of filepath): config JSON which defines the attributes required for the route construction. 
                     Sections required for the route construction are as follows\n
@@ -223,7 +223,7 @@ class RoutePlanner:
                         "waypoints_path": (string),\n
                         "source_waypoints": list of (string),\n
                         "end_waypoints": list of (string),\n
-                        "vector_names": (list of (string),\n
+                        "vector_names": list of (string),\n
                         "zero_currents": (boolean),\n
                         "variable_speed" (boolean),\n
                         "time_unit" (string),\n
@@ -232,9 +232,10 @@ class RoutePlanner:
                         "smooth_path":{\n
                             "max_iteration_number":(int),\n
                             "minimum_difference":(float),\n
+                         }\n
                     }\n
 
-                cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only !
+                cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only!
         """
 
         # Load in the current cell structure & Optimisation Info̦
@@ -324,7 +325,7 @@ class RoutePlanner:
         for idx,wpt in wpts.iterrows():
             indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long','Lat']]))].index
             # Waypoint is not within a mesh cell, but could still be on the edge of one. So perturbing the position slightly to the north-east and checking again. 
-            #If this is not the case then the waypoint is not within the navitagatable domain and will continue
+            #If this is not the case then the waypoint is not within the navigable domain and will continue
             if len(indices) == 0:
                 try:
                     indices = mesh[(mesh['geometry'].contains(Point(wpt[['Long','Lat']]+1e-5)))].index
@@ -333,7 +334,7 @@ class RoutePlanner:
             if len(indices) == 0:
                 continue
             if len(indices) > 1:
-                raise Exception('Wapoint lies in multiple cell boxes. Please check mesh ! ')
+                raise Exception('Waypoint lies in multiple cell boxes. Please check mesh ! ')
             else:
                 wpts['index'].loc[idx] = int(indices[0])
 
@@ -364,7 +365,7 @@ class RoutePlanner:
 
     def to_json(self):
         '''
-            Outputing the information in JSON format
+            Outputting the information in JSON format
         '''
         mesh = copy.copy(self.mesh)
         mesh['waypoints'] = mesh['waypoints'].to_dict()
@@ -375,7 +376,7 @@ class RoutePlanner:
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
             Hidden function. Given internal variables and start and end waypoints this function
-            returns a GEOJSON formated path dict object
+            returns a GEOJSON formatted path dict object
 
             INPUTS:
                 start_waypoints: Start waypoint names (list)

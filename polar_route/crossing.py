@@ -81,7 +81,7 @@ class NewtonianDistance:
                 f  (func) - 
                 x  (float) - Start cell perpendicular distance from cell centre to crossing boundary
                 a  (float) - End cell perpendicular distance from cell centre to crossing boundary
-                Y  (float) - Parallel distance, to crossing bounary, between start cell and end cell centres
+                Y  (float) - Parallel distance, to crossing boundary, between start cell and end cell centres
                 u1 (float) - Start Cell perpendicular to crossing boundary forcing component 
                 v1 (float) - Start Cell parallel to crossing boundary forcing component 
                 u2 (float) - End Cell perpendicular to crossing boundary forcing component 
@@ -91,7 +91,7 @@ class NewtonianDistance:
 
             Returns:
                 y0 (float) - updated crossing point represent as parallel distance along crossing boundary from start cell centre to crossing point
-                t  (tupl, (float,float)) - Traveltime of the two segments segments from start cell centre to crossing to end cell centre.
+                t  (tuple, (float,float)) - Traveltime of the two segments from start cell centre to crossing to end cell centre.
        '''
         y0 = (Y*x)/(x+a)
         improving = True
@@ -159,7 +159,7 @@ class NewtonianDistance:
                 y  (float) - Crossing point as a parallel distance along crossing boundary from start cell centre to crossing point
                 x  (float) - Start cell perpendicular distance from cell centre to crossing boundary
                 a  (float) - End cell perpendicular distance from cell centre to crossing boundary
-                Y  (float) - Parallel distance, to crossing bounary, between start cell and end cell centres
+                Y  (float) - Parallel distance, to crossing boundary, between start cell and end cell centres
                 u1 (float) - Start Cell perpendicular to crossing boundary forcing component 
                 v1 (float) - Start Cell parallel to crossing boundary forcing component 
                 u2 (float) - End Cell perpendicular to crossing boundary forcing component 
@@ -322,7 +322,7 @@ class NewtonianDistance:
         CellPoints  = [n_cx,n_cy]
 
 
-        # Checking Crossing Ponint possible
+        # Checking Crossing Point possible
         # Defining the min and max of the start and end cells
         smin = s_cy-s_dcy 
         smax = s_cy+s_dcy 
@@ -394,7 +394,7 @@ class NewtonianDistance:
         CellPoints  = [n_cx,n_cy]
 
 
-        # Checking Crossing Ponint possible
+        # Checking Crossing Point possible
         # Defining the min and max of the start and end cells
         smin = s_cx-s_dcx 
         smax = s_cx+s_dcx 
@@ -433,7 +433,7 @@ class NewtonianDistance:
 
 
 
-        # Given the case determine the postive and negative position relative to centre
+        # Given the case determine the positive and negative position relative to centre
         if self.case==1:
             ptvX = 1.0
             ptvY = 1.0
