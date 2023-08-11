@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7.3.1.1. Abstract Scalar Dataloader &mdash; polar_route 0.2.11 documentation</title>
+  <title>7.3.1.1. Abstract Scalar Dataloader &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -144,6 +144,11 @@ is pd.DataFrame. Must be variable if self.data is xr.Dataset</p>
 </dl>
 </dd></dl>
 
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If no data lies within the parsed boundary</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -166,6 +171,28 @@ completed with default values if not provided in config.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>(dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.dataloaders.scalar.abstract_scalar.ScalarDataLoader.calculate_coverage">
+<span class="sig-name descname"><span class="pre">calculate_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.scalar.abstract_scalar.ScalarDataLoader.calculate_coverage" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates percentage of boundary covered by dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bounds</strong> (<em>Boundary</em>) – Boundary being compared against</p></li>
+<li><p><strong>data</strong> (<em>pd.DataFrame</em><em> or </em><em>xr.Dataset</em>) – Dataset with ‘lat’ and ‘long’ coordinates.
+Extent calculated from min/max of these coordinates.
+Defaults to objects internal dataset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decimal fraction of boundary covered by the dataset</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -417,7 +444,7 @@ self.data can be pd.DataFrame or xr.Dataset</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

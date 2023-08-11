@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7.4.3.2. ERA5 Wind Dataloader &mdash; polar_route 0.2.11 documentation</title>
+  <title>7.4.3.4. ERA5 Wind Dataloader &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="7.4.3.3. North Sea Currents Dataloader" href="NorthSeaCurrent.html" />
-    <link rel="prev" title="7.4.3.1. Baltic Currents Dataloader" href="BalticCurrent.html" /> 
+    <link rel="next" title="7.4.3.5. North Sea Currents Dataloader" href="NorthSeaCurrent.html" />
+    <link rel="prev" title="7.4.3.3. ERA5 Wave Direction Dataloader" href="ERA5WaveDirection.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -57,12 +57,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../index.html#vector-dataloader-examples">7.4.2. Vector Dataloader Examples</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../index.html#implemented-vector-dataloaders">7.4.3. Implemented Vector Dataloaders</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="BalticCurrent.html">7.4.3.1. Baltic Currents Dataloader</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">7.4.3.2. ERA5 Wind Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="NorthSeaCurrent.html">7.4.3.3. North Sea Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ORAS5Current.html">7.4.3.4. ORAS5 Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SOSE.html">7.4.3.5. SOSE Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="VectorCSV.html">7.4.3.6. Vector CSV Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="VectorGRF.html">7.4.3.7. Vector GRF Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DUACS.html">7.4.3.2. DUACS Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ERA5WaveDirection.html">7.4.3.3. ERA5 Wave Direction Dataloader</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">7.4.3.4. ERA5 Wind Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="NorthSeaCurrent.html">7.4.3.5. North Sea Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ORAS5Current.html">7.4.3.6. ORAS5 Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SOSE.html">7.4.3.7. SOSE Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="VectorCSV.html">7.4.3.8. Vector CSV Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="VectorGRF.html">7.4.3.9. Vector GRF Dataloader</a></li>
 </ul>
 </li>
 </ul>
@@ -94,7 +96,7 @@
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../overview.html"><span class="section-number">7. </span>Dataloader Overview</a></li>
           <li class="breadcrumb-item"><a href="../index.html"><span class="section-number">7.4. </span>Vector Dataloaders</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">7.4.3.2. </span>ERA5 Wind Dataloader</li>
+      <li class="breadcrumb-item active"><span class="section-number">7.4.3.4. </span>ERA5 Wind Dataloader</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../_sources/sections/Dataloaders/vector/implemented/ERA5Wind.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -105,7 +107,7 @@
            <div itemprop="articleBody">
              
   <section id="era5-wind-dataloader">
-<h1><span class="section-number">7.4.3.2. </span>ERA5 Wind Dataloader<a class="headerlink" href="#era5-wind-dataloader" title="Permalink to this heading"></a></h1>
+<h1><span class="section-number">7.4.3.4. </span>ERA5 Wind Dataloader<a class="headerlink" href="#era5-wind-dataloader" title="Permalink to this heading"></a></h1>
 <p>ERA5 is a family of data products produced by the European Centre for Medium-Range Weather Forecasts (ECMWF).
 It is the fifth generation ECMWF atmospheric reanalysis of the global climate covering the period from January 1950 to present.</p>
 <p>From their website:</p>
@@ -124,7 +126,7 @@ available <a class="reference external" href="https://confluence.ecmwf.int/displ
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="polar_route.dataloaders.vector.era5_wind.ERA5WindDataLoader.import_data">
 <span class="sig-name descname"><span class="pre">import_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.vector.era5_wind.ERA5WindDataLoader.import_data" title="Permalink to this definition"></a></dt>
-<dd><p>Reads in data from a ERA5 NetCDF file.
+<dd><p>Reads in wind data from a ERA5 NetCDF file.
 Renames coordinates to ‘lat’ and ‘long’</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -132,7 +134,7 @@ Renames coordinates to ‘lat’ and ‘long’</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>ERA5 wind dataset within limits of bounds.
-Dataset has coordinates ‘lat’, ‘long’, and variable ‘elevation’</p>
+Dataset has coordinates ‘lat’, ‘long’, and variables ‘u10’, ‘v10’</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>xr.Dataset</p>
@@ -148,14 +150,14 @@ Dataset has coordinates ‘lat’, ‘long’, and variable ‘elevation’</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="BalticCurrent.html" class="btn btn-neutral float-left" title="7.4.3.1. Baltic Currents Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="NorthSeaCurrent.html" class="btn btn-neutral float-right" title="7.4.3.3. North Sea Currents Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ERA5WaveDirection.html" class="btn btn-neutral float-left" title="7.4.3.3. ERA5 Wave Direction Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="NorthSeaCurrent.html" class="btn btn-neutral float-right" title="7.4.3.5. North Sea Currents Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

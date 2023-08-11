@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7.2. Dataloader Factory &mdash; polar_route 0.2.11 documentation</title>
+  <title>7.2. Dataloader Factory &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -166,7 +166,7 @@ individual files:</p>
 quickly retrieve values within a boundary.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.dataloaders.factory.DataLoaderFactory.get_dataloader">
-<span class="sig-name descname"><span class="pre">get_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory.get_dataloader" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory.get_dataloader" title="Permalink to this definition"></a></dt>
 <dd><p>Creates appropriate dataloader object based on name</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -176,7 +176,8 @@ quickly retrieve values within a boundary.</p>
 ‘bsose_depth’, ‘baltic_sic’, ‘gebco’, ‘icenet’, ‘modis’,
 ‘thickness’, ‘density’, ‘circle’, ‘square’, ‘gradient’,
 ‘checkerboard’, ‘vector_csv’, ‘vector_grf’, ‘baltic_currents’,
-‘era5_wind’, ‘northsea_currents’, ‘oras5_currents’, ‘sose’</p></li>
+‘era5_wind’, ‘northsea_currents’, ‘oras5_currents’, ‘sose’,
+‘duacs_currents’, ‘era5_wave_height’, ‘era5_wave_direction’</p></li>
 <li><p><strong>bounds</strong> (<em>Boundary</em>) – Boundary object with initial mesh space&amp;time limits</p></li>
 <li><p><strong>params</strong> (<em>dict</em>) – Dictionary of parameters required by each dataloader</p></li>
 <li><p><strong>min_dp</strong> (<em>int</em>) – Minimum datapoints required to get homogeneity condition</p></li>
@@ -193,7 +194,7 @@ quickly retrieve values within a boundary.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.dataloaders.factory.DataLoaderFactory.translate_file_input">
-<span class="sig-name descname"><span class="pre">translate_file_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory.translate_file_input" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">translate_file_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.factory.DataLoaderFactory.translate_file_input" title="Permalink to this definition"></a></dt>
 <dd><p>Allows flexible file specification in params. Translates ‘file’ or
 ‘folder’ into ‘files’</p>
 <dl class="field-list simple">
@@ -219,7 +220,7 @@ quickly retrieve values within a boundary.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

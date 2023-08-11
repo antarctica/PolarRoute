@@ -27,3 +27,16 @@ Descriptions of the configuration options for Route Planning can be found in the
    ./Mesh_construction_config
    ./Vessel_performance_config
    ./Route_planning_config
+
+
+Config Validation
+^^^^^^^^^^^^^^^^^
+
+At each major stage of the code (mesh construction, vessel performance modelling, 
+and route planning), the configs supplied are validated using a template JSON Schema.
+These schema check that the correct keywords and datatypes are provided in the config 
+JSON's, as well as the waypoints CSV file. They also perform rudimentary checks on the
+values to ensure that they make sense (e.g. startTime is before endTime).
+
+.. automodule:: polar_route.config_validation.config_validator
+   :members:
