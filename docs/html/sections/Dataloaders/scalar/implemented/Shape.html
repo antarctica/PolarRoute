@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7.3.3.12. Shape Dataloader &mdash; polar_route 0.2.11 documentation</title>
+  <title>7.3.3.13. Shape Dataloader &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="7.3.3.13. Thickness Dataloader" href="Thickness.html" />
-    <link rel="prev" title="7.3.3.11. Scalar GRF Dataloader" href="ScalarGRF.html" /> 
+    <link rel="next" title="7.3.3.14. Thickness Dataloader" href="Thickness.html" />
+    <link rel="prev" title="7.3.3.12. Scalar GRF Dataloader" href="ScalarGRF.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -61,13 +61,14 @@
 <li class="toctree-l4"><a class="reference internal" href="BalticSeaIce.html">7.3.3.4. Baltic Sea Ice Dataloader</a></li>
 <li class="toctree-l4"><a class="reference internal" href="BinaryGRF.html">7.3.3.5. Binary GRF Dataloader</a></li>
 <li class="toctree-l4"><a class="reference internal" href="Density.html">7.3.3.6. Density Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="GEBCO.html">7.3.3.7. GEBCO Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="IceNet.html">7.3.3.8. IceNet Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="MODIS.html">7.3.3.9. MODIS Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ScalarCSV.html">7.3.3.10. Scalar CSV Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ScalarGRF.html">7.3.3.11. Scalar GRF Dataloader</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">7.3.3.12. Shape Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="Thickness.html">7.3.3.13. Thickness Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ERA5WaveHeight.html">7.3.3.7. ERA5 Wave Height Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GEBCO.html">7.3.3.8. GEBCO Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="IceNet.html">7.3.3.9. IceNet Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="MODIS.html">7.3.3.10. MODIS Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ScalarCSV.html">7.3.3.11. Scalar CSV Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ScalarGRF.html">7.3.3.12. Scalar GRF Dataloader</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">7.3.3.13. Shape Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Thickness.html">7.3.3.14. Thickness Dataloader</a></li>
 </ul>
 </li>
 </ul>
@@ -100,7 +101,7 @@
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../overview.html"><span class="section-number">7. </span>Dataloader Overview</a></li>
           <li class="breadcrumb-item"><a href="../index.html"><span class="section-number">7.3. </span>Scalar Dataloaders</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">7.3.3.12. </span>Shape Dataloader</li>
+      <li class="breadcrumb-item active"><span class="section-number">7.3.3.13. </span>Shape Dataloader</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../_sources/sections/Dataloaders/scalar/implemented/Shape.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -111,7 +112,7 @@
            <div itemprop="articleBody">
              
   <section id="shape-dataloader">
-<h1><span class="section-number">7.3.3.12. </span>Shape Dataloader<a class="headerlink" href="#shape-dataloader" title="Permalink to this heading"></a></h1>
+<h1><span class="section-number">7.3.3.13. </span>Shape Dataloader<a class="headerlink" href="#shape-dataloader" title="Permalink to this heading"></a></h1>
 <p>The shape dataloader is designed to create abstract shapes with well known
 boundaries, and cast it into a data source for mesh construction. It was primarily
 used in testing to debug cellbox generation. As such, there is no data source
@@ -198,14 +199,14 @@ it simply selects the correct shape method to enact</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="ScalarGRF.html" class="btn btn-neutral float-left" title="7.3.3.11. Scalar GRF Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Thickness.html" class="btn btn-neutral float-right" title="7.3.3.13. Thickness Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ScalarGRF.html" class="btn btn-neutral float-left" title="7.3.3.12. Scalar GRF Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Thickness.html" class="btn btn-neutral float-right" title="7.3.3.14. Thickness Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

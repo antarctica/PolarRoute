@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>10. Methods - Route Planner &mdash; polar_route 0.2.11 documentation</title>
+  <title>10. Methods - Route Planner &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="11. Methods - Route Calculation" href="Route_calculation.html" />
-    <link rel="prev" title="9. Methods - Vessel Performance" href="Vehicle_specifics.html" /> 
+    <link rel="next" title="12. Examples of running code" href="Examples.html" />
+    <link rel="prev" title="11. Methods - Route Calculation" href="Route_calculation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,13 +53,19 @@
 <li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">10. Methods - Route Planner</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#route-optimisation-overview">10.1. Route Optimisation Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.route_planner">10.2. Route Planner</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner"><code class="docutils literal notranslate"><span class="pre">RoutePlanner</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner.waypoints"><code class="docutils literal notranslate"><span class="pre">RoutePlanner.waypoints</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner.paths"><code class="docutils literal notranslate"><span class="pre">RoutePlanner.paths</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner.compute_routes"><code class="docutils literal notranslate"><span class="pre">RoutePlanner.compute_routes()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner.compute_smoothed_routes"><code class="docutils literal notranslate"><span class="pre">RoutePlanner.compute_smoothed_routes()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner.to_json"><code class="docutils literal notranslate"><span class="pre">RoutePlanner.to_json()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#route-optimisation-modules">10.2. Route Optimisation Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.route_planner">10.2.1. Route Planner</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner"><code class="docutils literal notranslate"><span class="pre">RoutePlanner</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner._initialise_dijkstra_graph"><code class="docutils literal notranslate"><span class="pre">_initialise_dijkstra_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner._initialise_dijkstra_route"><code class="docutils literal notranslate"><span class="pre">_initialise_dijkstra_route()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner._json_str"><code class="docutils literal notranslate"><span class="pre">_json_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.crossing">10.2.2. Crossing Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.crossing_smoothing">10.2.3. Crossing Point Smoothing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.crossing_smoothing.PathValues"><code class="docutils literal notranslate"><span class="pre">PathValues</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.crossing_smoothing._dist_around_globe"><code class="docutils literal notranslate"><span class="pre">_dist_around_globe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.crossing_smoothing.find_edge"><code class="docutils literal notranslate"><span class="pre">find_edge</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -102,8 +108,10 @@
 in previous sections. This mesh should include the vessel performance parameters with respect to which objective
 functions can be defined for optimisation.</p>
 </section>
+<section id="route-optimisation-modules">
+<h2><span class="section-number">10.2. </span>Route Optimisation Modules<a class="headerlink" href="#route-optimisation-modules" title="Permalink to this heading"></a></h2>
 <section id="module-polar_route.route_planner">
-<span id="route-planner"></span><h2><span class="section-number">10.2. </span>Route Planner<a class="headerlink" href="#module-polar_route.route_planner" title="Permalink to this heading"></a></h2>
+<span id="route-planner"></span><h3><span class="section-number">10.2.1. </span>Route Planner<a class="headerlink" href="#module-polar_route.route_planner" title="Permalink to this heading"></a></h3>
 <p>This section of the codebase is used for construction of route paths using the
 environmental mesh between a series of user defined waypoints</p>
 <dl class="py class">
@@ -219,6 +227,37 @@ The routes are constructed in a two stage process:</p>
 
 <p>—</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner._dijkstra">
+<span class="sig-name descname"><span class="pre">_dijkstra</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wpt_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner._dijkstra" title="Permalink to this definition"></a></dt>
+<dd><p>Runs dijkstra across the whole of the domain.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner._dijkstra_paths">
+<span class="sig-name descname"><span class="pre">_dijkstra_paths</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_waypoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_waypoints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner._dijkstra_paths" title="Permalink to this definition"></a></dt>
+<dd><p>Hidden function. Given internal variables and start and end waypoints this function
+returns a GEOJSON formatted path dict object</p>
+<dl class="simple">
+<dt>INPUTS:</dt><dd><p>start_waypoints: Start waypoint names (list)
+end_waypoints: End waypoint names (list)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner._neighbour_cost">
+<span class="sig-name descname"><span class="pre">_neighbour_cost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wpt_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_objective_index</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner._neighbour_cost" title="Permalink to this definition"></a></dt>
+<dd><p>Determines the neighbour cost from a source cellbox to all of its neighbours.
+These are then used to update the edge values in the dijkstra graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner._objective_value">
+<span class="sig-name descname"><span class="pre">_objective_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traveltime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner._objective_value" title="Permalink to this definition"></a></dt>
+<dd><p>Hidden variable. Returns the objective value between two cellboxes.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner.compute_routes">
 <span class="sig-name descname"><span class="pre">compute_routes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner.compute_routes" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the Dijkstra Paths between waypoints.
@@ -227,7 +266,7 @@ The routes are constructed in a two stage process:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner.compute_smoothed_routes">
-<span class="sig-name descname"><span class="pre">compute_smoothed_routes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner.compute_smoothed_routes" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">compute_smoothed_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocked_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SIC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debugging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner.compute_smoothed_routes" title="Permalink to this definition"></a></dt>
 <dd><p>Using the previously constructed Dijkstra paths smooth the paths to remove mesh features
 <cite>paths</cite> will be updated in the output JSON</p>
 </dd></dl>
@@ -235,11 +274,266 @@ The routes are constructed in a two stage process:</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.route_planner.RoutePlanner.to_json">
 <span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.RoutePlanner.to_json" title="Permalink to this definition"></a></dt>
-<dd><p>Outputing the information in JSON format</p>
+<dd><p>Outputting the information in JSON format</p>
 </dd></dl>
 
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_planner._initialise_dijkstra_graph">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.</span></span><span class="sig-name descname"><span class="pre">_initialise_dijkstra_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dijkstra_graph</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner._initialise_dijkstra_graph" title="Permalink to this definition"></a></dt>
+<dd><p>Initialising dijkstra graph information in a standard form</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dijkstra_graph</strong> (<em>pd.dataframe</em>) – </p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Outputs:</dt><dd><dl class="simple">
+<dt>dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.</dt><dd><p>Each entry is a dictionary of the cellbox environmental and dijkstra information.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_planner._initialise_dijkstra_route">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.</span></span><span class="sig-name descname"><span class="pre">_initialise_dijkstra_route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dijkstra_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dijkstra_route</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner._initialise_dijkstra_route" title="Permalink to this definition"></a></dt>
+<dd><p>Initialising dijkstra route info a standard path form</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dijkstra_graph</strong> (<em>dict</em>) – Each entry is a dictionary of the cellbox environmental and dijkstra information.</p></li>
+<li><p><strong>dijkstra_route</strong> (<em>dict</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Outputs:</dt><dd><dl class="simple">
+<dt>aps (list, [find_edge, …]) - A list of adjacent cell pairs where each entry is of type find_edge including information on</dt><dd><p>.crossing, .case, .start, and .end see ‘find_edge’ for more information</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_planner._json_str">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.</span></span><span class="sig-name descname"><span class="pre">_json_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner._json_str" title="Permalink to this definition"></a></dt>
+<dd><p>Load JSON object either from dict or from file</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>input (dict or string) - JSON file/dict</p>
+</dd>
+<dt>Output:</dt><dd><p>output (dict) - Dictionary from JSON object</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-polar_route.crossing">
+<span id="crossing-points"></span><h3><span class="section-number">10.2.2. </span>Crossing Points<a class="headerlink" href="#module-polar_route.crossing" title="Permalink to this heading"></a></h3>
+<p>The python package <cite>crossing</cite> implement the optimisation for the crossing point for the unsmoothed and smoothed path
+construction. The package is separated into two classes <cite>NewtonianDistance</cite> and <cite>NewtonianCurve</cite>.
+In the section below we will go through, stage by stage, how the crossing point is determined and the methods
+used within the classes.</p>
+</section>
+<section id="module-polar_route.crossing_smoothing">
+<span id="crossing-point-smoothing"></span><h3><span class="section-number">10.2.3. </span>Crossing Point Smoothing<a class="headerlink" href="#module-polar_route.crossing_smoothing" title="Permalink to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">PathValues</span></span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues" title="Permalink to this definition"></a></dt>
+<dd><p>A class that returns attributes along a given paths intersecting the environmental/vessel mesh.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues.path_requested_variables">
+<span class="sig-name descname"><span class="pre">path_requested_variables</span></span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues.path_requested_variables" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>e.g.{‘distance’:{‘processing’:’cumsum’},</dt><dd><p>‘traveltime’:{‘processing’:’cumsum’},
+‘datetime’:{‘processing’:’cumsum’},
+‘cell_index’:{‘processing’:None},
+‘fuel’:{‘processing’:’cumsum’}}</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues.unit_shipspeed">
+<span class="sig-name descname"><span class="pre">unit_shipspeed</span></span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues.unit_shipspeed" title="Permalink to this definition"></a></dt>
+<dd><p>‘km/hr’,’knots’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues.unit_time">
+<span class="sig-name descname"><span class="pre">unit_time</span></span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues.unit_time" title="Permalink to this definition"></a></dt>
+<dd><p>‘days’,’hr’,’min’,’s</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="simple">
+<dt>Functions:</dt><dd><p>objective_function - For a list of adjacent cell pairs, start and end waypoints compute path attributes</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues._case_from_angle">
+<span class="sig-name descname"><span class="pre">_case_from_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues._case_from_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Determine the direction of travel between two points in the same cell and return the associated case</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>list</em>) – the coordinates of the start point within the cell</p></li>
+<li><p><strong>end</strong> (<em>list</em>) – the coordinates of the end point within the cell</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the case to use to select variable values from a list</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>case (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues._traveltime_in_cell">
+<span class="sig-name descname"><span class="pre">_traveltime_in_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xdist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ydist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">S</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues._traveltime_in_cell" title="Permalink to this definition"></a></dt>
+<dd><p>Determine the traveltime within cell</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>xdist (float) - Longitude distance between two points in km
+ydist (float) - Latitude distance between two points in km
+U (float) - U-Component for the forcing vector
+V (float) - V-Component for the forcing vector
+S (float) - Speed of the vehicle</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues._unit_speed">
+<span class="sig-name descname"><span class="pre">_unit_speed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues._unit_speed" title="Permalink to this definition"></a></dt>
+<dd><p>Applying unit speed for an input type.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>Val (float) - Input speed in m/s</p>
+</dd>
+<dt>Output:</dt><dd><p>Val (float) - Output speed in unit type unit_shipspeed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues._unit_time">
+<span class="sig-name descname"><span class="pre">_unit_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues._unit_time" title="Permalink to this definition"></a></dt>
+<dd><p>Applying unit time for an input type.</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>Val (float) - Input time in s</p>
+</dd>
+<dt>Output:</dt><dd><p>Val (float) - Output time in unit type unit_time</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues._waypoint_correction">
+<span class="sig-name descname"><span class="pre">_waypoint_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_requested_variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues._waypoint_correction" title="Permalink to this definition"></a></dt>
+<dd><p>Applies an in-cell correction to a path segments to determine ‘path_requested_variables’
+defined by the use (e.g. total distance, total traveltime, total fuel usage)</p>
+<dl class="simple">
+<dt>Input:</dt><dd><p>path_requested_variable (dict) - A dictionary of the path requested variables
+source_graph (dict) - Dictionary of the cell in which the vessel is transiting
+Wp (tuple) - Start Waypoint location (long,lat)
+Cp (tuple) - End Waypoint location (long,lat)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>segment_values (dict) - Dictionary of the segment value information
+case (int) - Adjacency case type connecting the two points</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues.objective_function">
+<span class="sig-name descname"><span class="pre">objective_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adjacent_pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_waypoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_waypoint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues.objective_function" title="Permalink to this definition"></a></dt>
+<dd><p>Given a  list of adjacent pairs determine the path related information
+apply waypoint_correction to get path related information along the path</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>adjacent_pairs (list of type find_edge) - A list of the adjacent cell pairs in the form of find_edge
+start_waypoint (tuple) - Start waypoint (long,lat)
+end_waypoint (tuple) - End waypoint (long,lat)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing._dist_around_globe">
+<span class="sig-prename descclassname"><span class="pre">polar_route.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">_dist_around_globe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crossing_point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing._dist_around_globe" title="Permalink to this definition"></a></dt>
+<dd><p>Determining the longitude distance around the globe between two points</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_point</strong> (<em>tuple</em>) – Start Waypoint (long,lat)</p></li>
+<li><p><strong>crossing_point</strong> (<em>tuple</em>) – End Waypoint (long,lat)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>longitude distance between the two points in degrees</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.find_edge">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">find_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.find_edge" title="Permalink to this definition"></a></dt>
+<dd><p>Class to return characteristics information about the edge connecting two
+cells. This information includes.</p>
+<p>crossing (tuple) - Crossing point (long,lat)
+case (int)       - Case type connecting the two cells
+start (dict)     - Dictionary containing the environmental parameters of the start cell
+end   (dict)     - Dictionary containing the environmental parameters of the end cell</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="polar_route.crossing_smoothing.find_edge._find_edge">
+<span class="sig-name descname"><span class="pre">_find_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.crossing_smoothing.find_edge._find_edge" title="Permalink to this definition"></a></dt>
+<dd><p>Function that returns the edge connecting to cells, cell_a and cell_b. If there is no edge
+connecting the two then it returns None</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cell_a</strong> (<em>dict</em>) – Dictionary of cell_a information</p></li>
+<li><p><strong>cell_b</strong> (<em>dict</em>) – Dictionary of cell_b information</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns</dt><dd><p>crossing (tuple) - Crossing point (long,lat) connecting the two cells
+case (int)       - Case type connecting the two cells
+start (dict)     - Dictionary containing the environmental parameters of the start cell
+end   (dict)     - Dictionary containing the environmental parameters of the end cell</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 </section>
 
@@ -247,14 +541,14 @@ The routes are constructed in a two stage process:</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Vehicle_specifics.html" class="btn btn-neutral float-left" title="9. Methods - Vessel Performance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Route_calculation.html" class="btn btn-neutral float-right" title="11. Methods - Route Calculation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Route_calculation.html" class="btn btn-neutral float-left" title="11. Methods - Route Calculation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Examples.html" class="btn btn-neutral float-right" title="12. Examples of running code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

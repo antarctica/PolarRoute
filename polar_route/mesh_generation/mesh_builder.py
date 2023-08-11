@@ -21,7 +21,6 @@ import math
 import numpy as np
 
 from tqdm import tqdm
-from tqdm.auto import trange
 
 from polar_route.mesh_generation.jgrid_cellbox import JGridCellBox
 from polar_route.mesh_generation.boundary import Boundary
@@ -32,6 +31,7 @@ from polar_route.mesh_generation.metadata import Metadata
 from polar_route.mesh_generation.neighbour_graph import NeighbourGraph
 from polar_route.mesh_generation.mesh import Mesh
 from polar_route.dataloaders.factory import DataLoaderFactory
+from polar_route.config_validation.config_validator import validate_mesh_config
 
 
 class MeshBuilder:
@@ -78,7 +78,9 @@ class MeshBuilder:
 
                     "j_grid" (bool): True if the Mesh to be constructed should be of the same format as the original Java CellGrid, to be used for regression testing.\n
                 
-         """
+        """
+        logging.info("Initialising Mesh Builder")
+        validate_mesh_config(config)
         self.config = config
         bounds = Boundary.from_json(config)
 
@@ -139,10 +141,10 @@ class MeshBuilder:
         if 'Data_sources' in self.config['Mesh_info'].keys():
             for data_source in self.config['Mesh_info']['Data_sources']:
                 loader_name = data_source['loader']
-                loader = DataLoaderFactory().get_dataloader(
+                loader = DataLoaderFactory.get_dataloader(
                     loader_name, bounds, data_source['params'], min_datapoints)
 
-                logging.debug("creating data loader {}".format(
+                logging.debug("Creating data loader {}".format(
                     data_source['loader']))
                 updated_splitting_cond = []  # create this list to get rid of the data_name in the conditions as it is not handeled by the DataLoader, remove after talking to Harry to address this in the loader
                 if 'splitting_conditions' in data_source['params']:
