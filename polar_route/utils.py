@@ -92,11 +92,11 @@ def round_to_sigfig(x, sigfig=5):
     """
     # Save original type of data so can be returned as input
     orig_type = type(x)
-    if orig_type not in [list, float, int, np.ndarray]:
+    if orig_type not in [list, float, int, np.ndarray, np.float64]:
         raise ValueError(f'Cannot round {type(x)} to sig figs!')
     
     # Cast as array if not initially, so that later processes all act as expected
-    if orig_type in [int, float]:
+    if orig_type in [int, float, np.float64]:
         x = [x]
     x = np.array(x)
     # Create a mask disabling any values of inf or zero being passed to log10

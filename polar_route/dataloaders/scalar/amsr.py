@@ -1,5 +1,6 @@
 from polar_route.dataloaders.scalar.abstract_scalar import ScalarDataLoader
 from datetime import datetime
+import logging
 
 import xarray as xr
 class AMSRDataLoader(ScalarDataLoader):
@@ -83,6 +84,10 @@ class AMSRDataLoader(ScalarDataLoader):
                 data_array.append(retrieve_data(file, date))
                 relevant_files += [file]
         # Concat all valid files
+        if len(data_array) == 0:
+            logging.error('\tNo files found for date range '+\
+                         f'[ {bounds.get_time_min()} : {bounds.get_time_max()} ]')
+            raise FileNotFoundError('No AMSR files found within specified time range!')
         data = xr.concat(data_array,'time')
 
         # Remove unnecessary column, rename data column

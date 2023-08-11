@@ -4,97 +4,96 @@ Configuration - Mesh Construction
 .. code-block:: json
     
     {
-        "config": {
-            "Mesh_info": {
-                "Region": {
-                    "latMin": -65,
-                    "latMax": -60,
-                    "longMin": -70,
-                    "longMax": -50,
-                    "startTime": "2013-03-01",
-                    "endTime": "2013-03-14",
-                    "cellWidth": 5,
-                    "cellHeight": 2.5
-                },
-                "Data_sources": [
-                    {
-                        "loader": "GEBCO",
-                        "params": {
-                            "downsample_factors": [
-                                5,
-                                5
-                            ],
-                            "file": "../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
-                            "data_name": "elevation",
-                            "value_fill_types": "parent",
-                            "aggregate_type": "MAX",
-                            "splitting_conditions": [
-                                {
-                                    "elevation": {
-                                        "threshold": -10,
-                                        "upper_bound": 1,
-                                        "lower_bound": 0
-                                    }
+        "Mesh_info": {
+            "Region": {
+                "latMin": -65,
+                "latMax": -60,
+                "longMin": -70,
+                "longMax": -50,
+                "startTime": "2013-03-01",
+                "endTime": "2013-03-14",
+                "cellWidth": 5,
+                "cellHeight": 2.5
+            },
+            "Data_sources": [
+                {
+                    "loader": "GEBCO",
+                    "params": {
+                        "downsample_factors": [
+                            5,
+                            5
+                        ],
+                        "file": "../datastore/bathymetry/GEBCO/gebco_2022_n-40.0_s-90.0_w-140.0_e0.0.nc",
+                        "data_name": "elevation",
+                        "value_fill_types": "parent",
+                        "aggregate_type": "MAX",
+                        "splitting_conditions": [
+                            {
+                                "elevation": {
+                                    "threshold": -10,
+                                    "upper_bound": 1,
+                                    "lower_bound": 0
                                 }
-                            ]
-                        }
-                    },
-                    {
-                        "loader": "AMSR",
-                        "params": {
-                            "folder": "../datastore/sic/amsr_south/",
-                            "hemisphere": "south",
-                            "value_fill_types": "parent",
-                            "data_name": "SIC",
-                            "splitting_conditions": [
-                                {
-                                    "SIC": {
-                                        "threshold": 35,
-                                        "upper_bound": 0.9,
-                                        "lower_bound": 0.1
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "loader": "SOSE",
-                        "params": {
-                            "file": "../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
-                            "value_fill_types": "parent",
-                            "data_name": "uC,vC",
-                            "splitting_conditions": [
-                                {
-                                    "uC,vC": {
-                                        "curl": 0.04
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        "loader": "thickness",
-                        "params": {
-                            "data_name": "thickness",
-                            "file": "",
-                            "value_fill_types": "parent"
-                        }
-                    },
-                    {
-                        "loader": "density",
-                        "params": {
-                            "data_name": "density",
-                            "file": "",
-                            "value_fill_types": "parent"
-                        }
+                            }
+                        ]
                     }
-                ],
-                "splitting": {
-                    "split_depth": 4,
-                    "minimum_datapoints": 5
+                },
+                {
+                    "loader": "AMSR",
+                    "params": {
+                        "folder": "../datastore/sic/amsr_south/",
+                        "hemisphere": "south",
+                        "value_fill_types": "parent",
+                        "data_name": "SIC",
+                        "splitting_conditions": [
+                            {
+                                "SIC": {
+                                    "threshold": 35,
+                                    "upper_bound": 0.9,
+                                    "lower_bound": 0.1
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "loader": "SOSE",
+                    "params": {
+                        "file": "../datastore/currents/sose_currents/SOSE_surface_velocity_6yearMean_2005-2010.nc",
+                        "value_fill_types": "parent",
+                        "data_name": "uC,vC",
+                        "splitting_conditions": [
+                            {
+                                "uC,vC": {
+                                    "curl": 0.04
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "loader": "thickness",
+                    "params": {
+                        "data_name": "thickness",
+                        "file": "",
+                        "value_fill_types": "parent"
+                    }
+                },
+                {
+                    "loader": "density",
+                    "params": {
+                        "data_name": "density",
+                        "file": "",
+                        "value_fill_types": "parent"
+                    }
                 }
+            ],
+            "splitting": {
+                "split_depth": 4,
+                "minimum_datapoints": 5
             }
         }
+
     }
 
 The configuration file used for mesh construction contains information required to build the discretised environment in which the route planner
