@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; polar_route 0.2.18 documentation</title>
+  <title>Index &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -237,10 +237,16 @@
 </li>
       <li><a href="sections/Dataloaders/vector/abstractVector.html#polar_route.dataloaders.vector.abstract_vector.VectorDataLoader.calc_reynolds_number">calc_reynolds_number() (polar_route.dataloaders.vector.abstract_vector.VectorDataLoader method)</a>
 </li>
-      <li><a href="sections/Route_calculation.html#polar_route.route_calc.case_from_angle">case_from_angle() (in module polar_route.route_calc)</a>
+      <li><a href="sections/Dataloaders/scalar/abstractScalar.html#polar_route.dataloaders.scalar.abstract_scalar.ScalarDataLoader.calculate_coverage">calculate_coverage() (polar_route.dataloaders.scalar.abstract_scalar.ScalarDataLoader method)</a>
+
+      <ul>
+        <li><a href="sections/Dataloaders/vector/abstractVector.html#polar_route.dataloaders.vector.abstract_vector.VectorDataLoader.calculate_coverage">(polar_route.dataloaders.vector.abstract_vector.VectorDataLoader method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sections/Route_calculation.html#polar_route.route_calc.case_from_angle">case_from_angle() (in module polar_route.route_calc)</a>
+</li>
       <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.cellbox.CellBox">CellBox (class in polar_route.mesh_generation.cellbox)</a>
 </li>
       <li><a href="sections/Route_optimisation.html#polar_route.route_planner.RoutePlanner.compute_routes">compute_routes() (polar_route.route_planner.RoutePlanner method)</a>
@@ -285,6 +291,8 @@
         <li><a href="sections/Dataloaders/vector/abstractVector.html#polar_route.dataloaders.vector.abstract_vector.VectorDataLoader.downsample">(polar_route.dataloaders.vector.abstract_vector.VectorDataLoader method)</a>
 </li>
       </ul></li>
+      <li><a href="sections/Dataloaders/vector/implemented/DUACS.html#polar_route.dataloaders.vector.duacs_current.DuacsCurrentDataLoader">DuacsCurrentDataLoader (class in polar_route.dataloaders.vector.duacs_current)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -295,8 +303,12 @@
 </li>
       <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.environment_mesh.EnvironmentMesh">EnvironmentMesh (class in polar_route.mesh_generation.environment_mesh)</a>
 </li>
+      <li><a href="sections/Dataloaders/vector/implemented/ERA5WaveDirection.html#polar_route.dataloaders.vector.era5_wave_direction.ERA5WaveDirectionLoader">ERA5WaveDirectionLoader (class in polar_route.dataloaders.vector.era5_wave_direction)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sections/Dataloaders/scalar/implemented/ERA5WaveHeight.html#polar_route.dataloaders.scalar.era5_wave_height.ERA5WaveHeightDataLoader">ERA5WaveHeightDataLoader (class in polar_route.dataloaders.scalar.era5_wave_height)</a>
+</li>
       <li><a href="sections/Dataloaders/vector/implemented/ERA5Wind.html#polar_route.dataloaders.vector.era5_wind.ERA5WindDataLoader">ERA5WindDataLoader (class in polar_route.dataloaders.vector.era5_wind)</a>
 </li>
       <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.extreme_ice">extreme_ice() (polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
@@ -312,6 +324,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sections/Route_calculation.html#polar_route.route_calc.find_intersections">find_intersections() (in module polar_route.route_calc)</a>
+</li>
+      <li><a href="sections/Configuration/Configuration_overview.html#polar_route.config_validation.config_validator.flexi_json_input">flexi_json_input() (in module polar_route.config_validation.config_validator)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -337,7 +351,7 @@
       </ul></li>
       <li><a href="sections/Dataloaders/vector/abstractVector.html#polar_route.dataloaders.vector.abstract_vector.VectorDataLoader.get_data_col_name_list">get_data_col_name_list() (polar_route.dataloaders.vector.abstract_vector.VectorDataLoader method)</a>
 </li>
-      <li><a href="sections/Dataloaders/Factory.html#polar_route.dataloaders.factory.DataLoaderFactory.get_dataloader">get_dataloader() (polar_route.dataloaders.factory.DataLoaderFactory method)</a>
+      <li><a href="sections/Dataloaders/Factory.html#polar_route.dataloaders.factory.DataLoaderFactory.get_dataloader">get_dataloader() (polar_route.dataloaders.factory.DataLoaderFactory static method)</a>
 </li>
       <li><a href="sections/Dataloaders/scalar/abstractScalar.html#polar_route.dataloaders.scalar.abstract_scalar.ScalarDataLoader.get_dp_from_coord">get_dp_from_coord() (polar_route.dataloaders.scalar.abstract_scalar.ScalarDataLoader method)</a>
 
@@ -396,6 +410,8 @@
 </li>
         <li><a href="sections/Dataloaders/scalar/implemented/Density.html#polar_route.dataloaders.scalar.density.DensityDataLoader.import_data">(polar_route.dataloaders.scalar.density.DensityDataLoader method)</a>
 </li>
+        <li><a href="sections/Dataloaders/scalar/implemented/ERA5WaveHeight.html#polar_route.dataloaders.scalar.era5_wave_height.ERA5WaveHeightDataLoader.import_data">(polar_route.dataloaders.scalar.era5_wave_height.ERA5WaveHeightDataLoader method)</a>
+</li>
         <li><a href="sections/Dataloaders/scalar/implemented/GEBCO.html#polar_route.dataloaders.scalar.gebco.GEBCODataLoader.import_data">(polar_route.dataloaders.scalar.gebco.GEBCODataLoader method)</a>
 </li>
         <li><a href="sections/Dataloaders/scalar/implemented/IceNet.html#polar_route.dataloaders.scalar.icenet.IceNetDataLoader.import_data">(polar_route.dataloaders.scalar.icenet.IceNetDataLoader method)</a>
@@ -413,6 +429,10 @@
         <li><a href="sections/Dataloaders/vector/abstractVector.html#polar_route.dataloaders.vector.abstract_vector.VectorDataLoader.import_data">(polar_route.dataloaders.vector.abstract_vector.VectorDataLoader method)</a>
 </li>
         <li><a href="sections/Dataloaders/vector/implemented/BalticCurrent.html#polar_route.dataloaders.vector.baltic_current.BalticCurrentDataLoader.import_data">(polar_route.dataloaders.vector.baltic_current.BalticCurrentDataLoader method)</a>
+</li>
+        <li><a href="sections/Dataloaders/vector/implemented/DUACS.html#polar_route.dataloaders.vector.duacs_current.DuacsCurrentDataLoader.import_data">(polar_route.dataloaders.vector.duacs_current.DuacsCurrentDataLoader method)</a>
+</li>
+        <li><a href="sections/Dataloaders/vector/implemented/ERA5WaveDirection.html#polar_route.dataloaders.vector.era5_wave_direction.ERA5WaveDirectionLoader.import_data">(polar_route.dataloaders.vector.era5_wave_direction.ERA5WaveDirectionLoader method)</a>
 </li>
         <li><a href="sections/Dataloaders/vector/implemented/ERA5Wind.html#polar_route.dataloaders.vector.era5_wind.ERA5WindDataLoader.import_data">(polar_route.dataloaders.vector.era5_wind.ERA5WindDataLoader method)</a>
 </li>
@@ -491,6 +511,8 @@
     module
 
       <ul>
+        <li><a href="sections/Configuration/Configuration_overview.html#module-polar_route.config_validation.config_validator">polar_route.config_validation.config_validator</a>
+</li>
         <li><a href="sections/Route_optimisation.html#module-polar_route.crossing">polar_route.crossing</a>
 </li>
         <li><a href="sections/Route_optimisation.html#module-polar_route.crossing_smoothing">polar_route.crossing_smoothing</a>
@@ -511,6 +533,8 @@
 </li>
         <li><a href="sections/Dataloaders/scalar/implemented/Density.html#module-polar_route.dataloaders.scalar.density">polar_route.dataloaders.scalar.density</a>
 </li>
+        <li><a href="sections/Dataloaders/scalar/implemented/ERA5WaveHeight.html#module-polar_route.dataloaders.scalar.era5_wave_height">polar_route.dataloaders.scalar.era5_wave_height</a>
+</li>
         <li><a href="sections/Dataloaders/scalar/implemented/GEBCO.html#module-polar_route.dataloaders.scalar.gebco">polar_route.dataloaders.scalar.gebco</a>
 </li>
         <li><a href="sections/Dataloaders/scalar/implemented/IceNet.html#module-polar_route.dataloaders.scalar.icenet">polar_route.dataloaders.scalar.icenet</a>
@@ -528,6 +552,10 @@
         <li><a href="sections/Dataloaders/vector/abstractVector.html#module-polar_route.dataloaders.vector.abstract_vector">polar_route.dataloaders.vector.abstract_vector</a>
 </li>
         <li><a href="sections/Dataloaders/vector/implemented/BalticCurrent.html#module-polar_route.dataloaders.vector.baltic_current">polar_route.dataloaders.vector.baltic_current</a>
+</li>
+        <li><a href="sections/Dataloaders/vector/implemented/DUACS.html#module-polar_route.dataloaders.vector.duacs_current">polar_route.dataloaders.vector.duacs_current</a>
+</li>
+        <li><a href="sections/Dataloaders/vector/implemented/ERA5WaveDirection.html#module-polar_route.dataloaders.vector.era5_wave_direction">polar_route.dataloaders.vector.era5_wave_direction</a>
 </li>
         <li><a href="sections/Dataloaders/vector/implemented/ERA5Wind.html#module-polar_route.dataloaders.vector.era5_wind">polar_route.dataloaders.vector.era5_wind</a>
 </li>
@@ -619,6 +647,13 @@
       <li><a href="sections/Route_optimisation.html#polar_route.crossing_smoothing.PathValues">PathValues (class in polar_route.crossing_smoothing)</a>
 </li>
       <li>
+    polar_route.config_validation.config_validator
+
+      <ul>
+        <li><a href="sections/Configuration/Configuration_overview.html#module-polar_route.config_validation.config_validator">module</a>
+</li>
+      </ul></li>
+      <li>
     polar_route.crossing
 
       <ul>
@@ -689,6 +724,13 @@
 </li>
       </ul></li>
       <li>
+    polar_route.dataloaders.scalar.era5_wave_height
+
+      <ul>
+        <li><a href="sections/Dataloaders/scalar/implemented/ERA5WaveHeight.html#module-polar_route.dataloaders.scalar.era5_wave_height">module</a>
+</li>
+      </ul></li>
+      <li>
     polar_route.dataloaders.scalar.gebco
 
       <ul>
@@ -753,6 +795,20 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    polar_route.dataloaders.vector.duacs_current
+
+      <ul>
+        <li><a href="sections/Dataloaders/vector/implemented/DUACS.html#module-polar_route.dataloaders.vector.duacs_current">module</a>
+</li>
+      </ul></li>
+      <li>
+    polar_route.dataloaders.vector.era5_wave_direction
+
+      <ul>
+        <li><a href="sections/Dataloaders/vector/implemented/ERA5WaveDirection.html#module-polar_route.dataloaders.vector.era5_wave_direction">module</a>
+</li>
+      </ul></li>
       <li>
     polar_route.dataloaders.vector.era5_wind
 
@@ -988,7 +1044,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.to_tif">to_tif() (polar_route.mesh_generation.environment_mesh.EnvironmentMesh method)</a>
 </li>
-      <li><a href="sections/Dataloaders/Factory.html#polar_route.dataloaders.factory.DataLoaderFactory.translate_file_input">translate_file_input() (polar_route.dataloaders.factory.DataLoaderFactory method)</a>
+      <li><a href="sections/Dataloaders/Factory.html#polar_route.dataloaders.factory.DataLoaderFactory.translate_file_input">translate_file_input() (polar_route.dataloaders.factory.DataLoaderFactory static method)</a>
 </li>
       <li><a href="sections/Route_calculation.html#polar_route.route_calc.traveltime_distance">traveltime_distance() (in module polar_route.route_calc)</a>
 </li>
@@ -1024,14 +1080,22 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sections/Mesh_Construction/Mesh_validation.html#polar_route.mesh_validation.mesh_validator.MeshValidator.validate_mesh">validate_mesh() (polar_route.mesh_validation.mesh_validator.MeshValidator method)</a>
 </li>
+      <li><a href="sections/Configuration/Configuration_overview.html#polar_route.config_validation.config_validator.validate_mesh_config">validate_mesh_config() (in module polar_route.config_validation.config_validator)</a>
+</li>
+      <li><a href="sections/Configuration/Configuration_overview.html#polar_route.config_validation.config_validator.validate_route_config">validate_route_config() (in module polar_route.config_validation.config_validator)</a>
+</li>
+      <li><a href="sections/Configuration/Configuration_overview.html#polar_route.config_validation.config_validator.validate_vessel_config">validate_vessel_config() (in module polar_route.config_validation.config_validator)</a>
+</li>
+      <li><a href="sections/Configuration/Configuration_overview.html#polar_route.config_validation.config_validator.validate_waypoints">validate_waypoints() (in module polar_route.config_validation.config_validator)</a>
+</li>
       <li><a href="sections/Mesh_Construction/Mesh_validation.html#polar_route.mesh_validation.mesh_validator.MeshValidator.validation_length">validation_length (polar_route.mesh_validation.mesh_validator.MeshValidator attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.metadata.Metadata.value_fill_type">value_fill_type (polar_route.mesh_generation.metadata.Metadata attribute)</a>
 </li>
       <li><a href="sections/Dataloaders/vector/implemented/VectorCSV.html#polar_route.dataloaders.vector.vector_csv.VectorCSVDataLoader">VectorCSVDataLoader (class in polar_route.dataloaders.vector.vector_csv)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sections/Dataloaders/vector/abstractVector.html#polar_route.dataloaders.vector.abstract_vector.VectorDataLoader">VectorDataLoader (class in polar_route.dataloaders.vector.abstract_vector)</a>
 </li>
       <li><a href="sections/Dataloaders/vector/implemented/VectorGRF.html#polar_route.dataloaders.vector.vector_grf.VectorGRFDataLoader">VectorGRFDataLoader (class in polar_route.dataloaders.vector.vector_grf)</a>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7.4.3.5. SOSE Currents Dataloader &mdash; polar_route 0.2.18 documentation</title>
+  <title>7.4.3.7. SOSE Currents Dataloader &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="7.4.3.6. Vector CSV Dataloader" href="VectorCSV.html" />
-    <link rel="prev" title="7.4.3.4. ORAS5 Currents Dataloader" href="ORAS5Current.html" /> 
+    <link rel="next" title="7.4.3.8. Vector CSV Dataloader" href="VectorCSV.html" />
+    <link rel="prev" title="7.4.3.6. ORAS5 Currents Dataloader" href="ORAS5Current.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -57,12 +57,14 @@
 <li class="toctree-l3"><a class="reference internal" href="../index.html#vector-dataloader-examples">7.4.2. Vector Dataloader Examples</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="../index.html#implemented-vector-dataloaders">7.4.3. Implemented Vector Dataloaders</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="BalticCurrent.html">7.4.3.1. Baltic Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ERA5Wind.html">7.4.3.2. ERA5 Wind Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="NorthSeaCurrent.html">7.4.3.3. North Sea Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ORAS5Current.html">7.4.3.4. ORAS5 Currents Dataloader</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">7.4.3.5. SOSE Currents Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="VectorCSV.html">7.4.3.6. Vector CSV Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="VectorGRF.html">7.4.3.7. Vector GRF Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DUACS.html">7.4.3.2. DUACS Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ERA5WaveDirection.html">7.4.3.3. ERA5 Wave Direction Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ERA5Wind.html">7.4.3.4. ERA5 Wind Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="NorthSeaCurrent.html">7.4.3.5. North Sea Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ORAS5Current.html">7.4.3.6. ORAS5 Currents Dataloader</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">7.4.3.7. SOSE Currents Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="VectorCSV.html">7.4.3.8. Vector CSV Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="VectorGRF.html">7.4.3.9. Vector GRF Dataloader</a></li>
 </ul>
 </li>
 </ul>
@@ -94,7 +96,7 @@
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../overview.html"><span class="section-number">7. </span>Dataloader Overview</a></li>
           <li class="breadcrumb-item"><a href="../index.html"><span class="section-number">7.4. </span>Vector Dataloaders</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">7.4.3.5. </span>SOSE Currents Dataloader</li>
+      <li class="breadcrumb-item active"><span class="section-number">7.4.3.7. </span>SOSE Currents Dataloader</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../_sources/sections/Dataloaders/vector/implemented/SOSE.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -105,7 +107,7 @@
            <div itemprop="articleBody">
              
   <section id="sose-currents-dataloader">
-<h1><span class="section-number">7.4.3.5. </span>SOSE Currents Dataloader<a class="headerlink" href="#sose-currents-dataloader" title="Permalink to this heading"></a></h1>
+<h1><span class="section-number">7.4.3.7. </span>SOSE Currents Dataloader<a class="headerlink" href="#sose-currents-dataloader" title="Permalink to this heading"></a></h1>
 <p>Southern Ocean State Estimate (SOSE) is a publicly available dataset that provides (amongst other products)
 ocean current vectors of the southern ocean. It is a project led by Mazloff at the Scripps Institution of Oceanography.</p>
 <dl class="simple">
@@ -148,8 +150,8 @@ Dataset has coordinates ‘lat’, ‘long’, and variable ‘uC’, ‘vC’</
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="ORAS5Current.html" class="btn btn-neutral float-left" title="7.4.3.4. ORAS5 Currents Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="VectorCSV.html" class="btn btn-neutral float-right" title="7.4.3.6. Vector CSV Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="ORAS5Current.html" class="btn btn-neutral float-left" title="7.4.3.6. ORAS5 Currents Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="VectorCSV.html" class="btn btn-neutral float-right" title="7.4.3.8. Vector CSV Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
