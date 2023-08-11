@@ -1,10 +1,11 @@
 from polar_route.dataloaders.scalar.abstract_scalar import ScalarDataLoader
 from datetime import datetime
+import logging
 
 import xarray as xr
 class AMSRDataLoader(ScalarDataLoader):
     
-    def add_params(self, params):
+    def add_default_params(self, params):
         '''
         Translates 'hemisphere' parameter into values of in_proj and out_proj 
         that pyProj can understand. Also defines x_col and y_col for AMSR data
@@ -19,6 +20,8 @@ class AMSRDataLoader(ScalarDataLoader):
             dict:
                 Params dictionary with addition of translated key/value pairs
         '''
+        # Set default parameters same as all other scalar dataloaders
+        params = super().add_default_params(params)
         # Translate 'hemisphere' into initial projection
         hemisphere = params['hemisphere'].lower()
         if  hemisphere == 'north':
@@ -68,6 +71,7 @@ class AMSRDataLoader(ScalarDataLoader):
             return data
 
         data_array = []
+        relevant_files = []
         # For each file found from config
         for file in self.files:
             # If date within boundary
@@ -78,12 +82,20 @@ class AMSRDataLoader(ScalarDataLoader):
                 datetime.strptime(date, '%Y-%m-%d') <= \
                 datetime.strptime(bounds.get_time_max(), '%Y-%m-%d'):
                 data_array.append(retrieve_data(file, date))
+                relevant_files += [file]
         # Concat all valid files
+        if len(data_array) == 0:
+            logging.error('\tNo files found for date range '+\
+                         f'[ {bounds.get_time_min()} : {bounds.get_time_max()} ]')
+            raise FileNotFoundError('No AMSR files found within specified time range!')
         data = xr.concat(data_array,'time')
 
         # Remove unnecessary column, rename data column
         data = data.drop_vars('polar_stereographic')
         data = data.rename({'z': 'SIC'})
+        
+        # Limit self.files to only those actually used
+        self.files = relevant_files
         
         # TODO Limit data range before reprojection
         

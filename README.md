@@ -8,13 +8,14 @@
 <a href="https://github.com/antarctica/PolarRoute/blob/main/LICENSE"><img src="https://img.shields.io/github/license/antarctica/PolarRoute" alt="License"></a>
 
 # PolarRoute
-> PolarRoute is a long-distance maritime polar route planning, taking into account complex changing environmental conditions. The codebase allows the construction of optimised routes through three main stages: discrete modelling of the environmental conditions using a non-uniform mesh, the construction of mesh-optimal paths, and physics informed path smoothing. In order to account for different vehicle properties we construct a series of data driven functions that can be applied to the environmental mesh to determine the speed limitations and fuel requirements for a given vessel and mesh cell, representing these quantities graphically and geospatially.
+PolarRoute is a long-distance maritime polar route planning package, taking into account complex changing environmental conditions. The codebase allows the construction of optimised routes through three main stages: discrete modelling of the environmental conditions using a non-uniform mesh, the construction of mesh-optimal paths, and physics informed path smoothing. In order to account for different vehicle properties we construct a series of data driven functions that can be applied to the environmental mesh to determine the speed limitations and fuel requirements for a given vessel and mesh cell, representing these quantities graphically and geospatially.
 
 ## Installation
-The PolarRoute software requires GDAL files to be installed. The PolarRoute software can be installed on Windows by running the required wheels for GDAL and FIONA. MOre information can be found in the manual pages linked above. Once these requirements are met then the software can be installed by:
+The PolarRoute package requires GDAL files to be installed. This software can be installed on Windows by running the required wheels for GDAL and FIONA. More information can be found in the manual pages linked above. Once these requirements are met then the software can be installed by:
 
 Github:
 ```
+git clone https://github.com/Antarctica/PolarRoute
 python setup.py install
 ```
 
@@ -22,6 +23,8 @@ python setup.py install
 ```
 pip install polar-route
 ```
+
+> NOTE: The installation process may vary slightly dependent on OS. Please consult the documentation for further installation guidance.
 
 ## Required Data sources
 Polar-route has been built to work with a variety of open-source atmospheric and oceanographic data sources. 
@@ -45,7 +48,7 @@ rm -r docs/build/.doctrees/
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox, Harrison Abbot, Ayat Fekry
 
 ## Collaboration
-We are currently assessing the best pratice for collaboration on the codebase, until then please contact [marfox@bas.ac.uk](marfox@bas.ac.uk) or [jonsmi@bas.ac.uk](jonsmi@bas.ac.uk) for further info.
+We are currently assessing the best practice for collaboration on the codebase, until then please contact [polarroute@bas.ac.uk](polarroute@bas.ac.uk) for further info.
 
 
 ## License

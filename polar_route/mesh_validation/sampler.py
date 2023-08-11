@@ -20,7 +20,7 @@ class Sampler:
     def generate_samples ( self, ranges):
         """
 
-          generates samples within the provided ranges array, the length of the ranges should equal self.dimensions
+          generates samples within the provided ranges array, the length of the ranges should equal to self.dimensions
 
             Args:
               ranges (float[]): an array that contains the range that each sample dimension should fall within
@@ -32,8 +32,7 @@ class Sampler:
             raise ValueError("ranges length should be equal to the sampler dimension") 
 
         sampler =  qmc.Sobol(d=self.dimensions)
-        n_points_log_2= int (math.log2(self.number_of_samples))
-        samples = sampler.random_base2(m=n_points_log_2)
+        samples = sampler.random(n=self.number_of_samples)
         mapped_samples = []
         # map samples to ranges
         for sample in samples:

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5.3.3.9. MODIS Dataloader &mdash; polar_route 0.0.17 documentation</title>
+  <title>7.3.3.9. MODIS Dataloader &mdash; polar_route 0.2.18 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="5.3.3.10. Scalar CSV Dataloader" href="ScalarCSV.html" />
-    <link rel="prev" title="5.3.3.8. IceNet Dataloader" href="IceNet.html" /> 
+    <link rel="next" title="7.3.3.10. Scalar CSV Dataloader" href="ScalarCSV.html" />
+    <link rel="prev" title="7.3.3.8. IceNet Dataloader" href="IceNet.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,43 +42,46 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../../Code_structure.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Code_overview.html">1. Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../running.html">3. Runnning Codebase</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Configuration.html">4. Input - Configuration</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../../overview.html">5. Dataloader Overview</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../../DataLoaderInterface.html">5.1. Dataloader Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../Factory.html">5.2. Dataloader Factory</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../index.html">5.3. Scalar Dataloaders</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="../index.html#abstract-scalar-base-class">5.3.1. Abstract Scalar Base Class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../index.html#scalar-dataloader-examples">5.3.2. Scalar Dataloader Examples</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="../index.html#implemented-scalar-dataloaders">5.3.3. Implemented Scalar Dataloaders</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="AMSR.html">5.3.3.1. AMSR Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="BSOSEDepth.html">5.3.3.2. BSOSE Depth Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="BSOSESeaIce.html">5.3.3.3. BSOSE Sea Ice Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="BalticSeaIce.html">5.3.3.4. Baltic Sea Ice Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="BinaryGRF.html">5.3.3.5. Binary GRF Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="Density.html">5.3.3.6. Density Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="GEBCO.html">5.3.3.7. GEBCO Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="IceNet.html">5.3.3.8. IceNet Dataloader</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">5.3.3.9. MODIS Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ScalarCSV.html">5.3.3.10. Scalar CSV Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ScalarGRF.html">5.3.3.11. Scalar GRF Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="Shape.html">5.3.3.12. Shape Dataloader</a></li>
-<li class="toctree-l4"><a class="reference internal" href="Thickness.html">5.3.3.13. Thickness Dataloader</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../vector/index.html">5.4. Vector Dataloaders</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../overview.html#section-overview">5.5. Section Overview</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Examples.html">7. Examples of running code</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../Discrete_meshing.html">8. Methods - Mesh Construction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../overview.html">7. Dataloader Overview</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../DataLoaderInterface.html">7.1. Dataloader Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../Factory.html">7.2. Dataloader Factory</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">7.3. Scalar Dataloaders</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../index.html#abstract-scalar-base-class">7.3.1. Abstract Scalar Base Class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../index.html#scalar-dataloader-examples">7.3.2. Scalar Dataloader Examples</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../index.html#implemented-scalar-dataloaders">7.3.3. Implemented Scalar Dataloaders</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="AMSR.html">7.3.3.1. AMSR Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="BSOSEDepth.html">7.3.3.2. BSOSE Depth Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="BSOSESeaIce.html">7.3.3.3. BSOSE Sea Ice Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="BalticSeaIce.html">7.3.3.4. Baltic Sea Ice Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="BinaryGRF.html">7.3.3.5. Binary GRF Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Density.html">7.3.3.6. Density Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GEBCO.html">7.3.3.7. GEBCO Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="IceNet.html">7.3.3.8. IceNet Dataloader</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">7.3.3.9. MODIS Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ScalarCSV.html">7.3.3.10. Scalar CSV Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ScalarGRF.html">7.3.3.11. Scalar GRF Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Shape.html">7.3.3.12. Shape Dataloader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Thickness.html">7.3.3.13. Thickness Dataloader</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../vector/index.html">7.4. Vector Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../AddingDataloaders.html">7.5. Adding New Dataloaders</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../overview.html#section-overview">7.6. Section Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../Route_optimisation.html">10. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Route_calculation.html">11. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Examples.html">12. Examples of running code</a></li>
 </ul>
 
         </div>
@@ -95,9 +98,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../../overview.html"><span class="section-number">5. </span>Dataloader Overview</a></li>
-          <li class="breadcrumb-item"><a href="../index.html"><span class="section-number">5.3. </span>Scalar Dataloaders</a></li>
-      <li class="breadcrumb-item active"><span class="section-number">5.3.3.9. </span>MODIS Dataloader</li>
+          <li class="breadcrumb-item"><a href="../../overview.html"><span class="section-number">7. </span>Dataloader Overview</a></li>
+          <li class="breadcrumb-item"><a href="../index.html"><span class="section-number">7.3. </span>Scalar Dataloaders</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">7.3.3.9. </span>MODIS Dataloader</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../../../_sources/sections/Dataloaders/scalar/implemented/MODIS.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -108,7 +111,7 @@
            <div itemprop="articleBody">
              
   <section id="modis-dataloader">
-<h1><span class="section-number">5.3.3.9. </span>MODIS Dataloader<a class="headerlink" href="#modis-dataloader" title="Permalink to this heading"></a></h1>
+<h1><span class="section-number">7.3.3.9. </span>MODIS Dataloader<a class="headerlink" href="#modis-dataloader" title="Permalink to this heading"></a></h1>
 <p>Moderate Resolution Imaging Spectroradiometer (MODIS) is a satellite-borne
 instrument developed by NASA.</p>
 <dl class="simple">
@@ -122,23 +125,6 @@ found <a class="reference external" href="https://modis.gsfc.nasa.gov/data/datap
 <dt class="sig sig-object py" id="polar_route.dataloaders.scalar.modis.MODISDataLoader">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.dataloaders.scalar.modis.</span></span><span class="sig-name descname"><span class="pre">MODISDataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.scalar.modis.MODISDataLoader" title="Permalink to this definition"></a></dt>
 <dd><dl class="py method">
-<dt class="sig sig-object py" id="polar_route.dataloaders.scalar.modis.MODISDataLoader.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.scalar.modis.MODISDataLoader.__init__" title="Permalink to this definition"></a></dt>
-<dd><blockquote>
-<div><p>Initialises MODIS dataset. Does no post-processing</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>bounds</strong> (<em>Boundary</em>) – Initial boundary to limit the dataset to</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of {key: value} pairs. Keys are attributes
-this dataloader requires to function</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="polar_route.dataloaders.scalar.modis.MODISDataLoader.import_data">
 <span class="sig-name descname"><span class="pre">import_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.dataloaders.scalar.modis.MODISDataLoader.import_data" title="Permalink to this definition"></a></dt>
 <dd><p>Reads in data from a MODIS NetCDF file.
@@ -165,14 +151,14 @@ Dataset has coordinates ‘lat’, ‘long’, and variable ‘SIC’</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="IceNet.html" class="btn btn-neutral float-left" title="5.3.3.8. IceNet Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="ScalarCSV.html" class="btn btn-neutral float-right" title="5.3.3.10. Scalar CSV Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="IceNet.html" class="btn btn-neutral float-left" title="7.3.3.8. IceNet Dataloader" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ScalarCSV.html" class="btn btn-neutral float-right" title="7.3.3.10. Scalar CSV Dataloader" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022, BAS AI Lab.</p>
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,10 +1,13 @@
 dask
-folium
 geopandas
+jsonschema
 matplotlib
 netcdf4
 numpy>=1.21.6
 pandas>=1.3.5,<1.5
+pytest
+shapely
+scikit-learn
+scipy
 tqdm
 xarray
-scipy

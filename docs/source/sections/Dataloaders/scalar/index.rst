@@ -37,7 +37,8 @@ Below is a simple example of how to load in a NetCDF file::
         def import_data(self, bounds):
             logging.debug("Importing my data...")
             # Open Dataset
-            data = xr.open_mfdataset(self.files)
+            if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
+            else:                       data = xr.open_mfdataset(self.files)
 
             # Rename coordinate columns to 'lat', 'long', 'time' if they aren't already
             data = data.rename({'lon':'long'})
@@ -49,12 +50,14 @@ Below is a simple example of how to load in a NetCDF file::
 
 
 Sometimes there are parameters that are constant for a data source, but are not 
-constant for all data sources. Default values may be defined either in the
-dataloader factory, or within the dataloader itself. Below is an example of 
-setting default parameters for reprojection of a dataset::
+constant for all data sources. Default values are defined in the dataloader :code:`add_default_params()`.
+Below is an example of setting default parameters for reprojection of a dataset::
 
     class MyDataLoader(ScalarDataLoader):
-        def add_params(self, params):
+        def add_default_params(self, params):
+            # Add all the regular default params that scalar dataloaders have
+            params = super().add_default_params(params) # This line MUST be included
+
             # Define projection of dataset being imported
             params['in_proj'] = 'EPSG:3412'
             # Define projection required by output 
@@ -64,6 +67,8 @@ setting default parameters for reprojection of a dataset::
             # Coordinates in dataset that will be reprojected into long/lat
             params['x_col'] = 'x' # Becomes 'long'
             params['y_col'] = 'y' # Becomes 'lat'
+
+            return params
             
         def import_data(self, bounds):
             # Open Dataset

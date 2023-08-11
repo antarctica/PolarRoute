@@ -1,37 +1,17 @@
+"""
+Miscellaneous utility functions that may be of use throughout PolarRoute
+"""
+
 import logging
 import time
 import tracemalloc
+import numpy as np
 
 from datetime import datetime, timedelta
 from functools import wraps
 from calendar import monthrange
-
-import numpy as np
 from scipy.fftpack import fftshift
-from math import log10, floor
 
-"""
-Utilities that might be of use
-"""
-def rectangle_overlap(a_coords, b_coords):
-    # Rectangles must have parallel lines
-    # Coords are tuples of format
-    # ((x0, y0), (x2, y2))
-    # where 0/2 denote the min/max extent 
-    # of the x/y coords of the rect
-    min_a_coords = a_coords[0]
-    max_a_coords = a_coords[1]
-    min_b_coords = b_coords[0]
-    max_b_coords = b_coords[1]
-    
-    dx = min(max_a_coords[0], max_b_coords[0]) - \
-         max(min_a_coords[0], min_b_coords[0])
-         
-    dy = min(max_a_coords[1], max_b_coords[1]) - \
-         max(min_a_coords[1], min_b_coords[1])
-         
-    return dx*dy
-    
     
 def frac_of_month(year, month, start_date=None, end_date=None):
     
@@ -50,18 +30,52 @@ def frac_of_month(year, month, start_date=None, end_date=None):
     days_overlap = (end_date - start_date).days + 1
     # Return fraction
     return days_overlap / days_in_month
-    
+
+
 def boundary_to_coords(bounds):
     min_coords = (bounds.get_lat_min(), bounds.get_long_min())
     max_coords = (bounds.get_lat_max(), bounds.get_long_max())
-    return (min_coords, max_coords)
-    
+    return min_coords, max_coords
+
+
 def str_to_datetime(date_str):
     return datetime.strptime(date_str, '%Y-%m-%d')
+
 
 def date_range(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
         yield start_date + timedelta(n)
+
+
+def convert_decimal_days(decimal_days, mins=False):
+    """
+    Convert decimal days to more readable Days, Hours and (optionally) Minutes
+    Args:
+        decimal_days (float): Number of days as a decimal
+        mins (bool): Determines whether to return minutes or decimal hours
+    Returns:
+        new_time (str): The time in the new format
+    """
+    frac_d, days = np.modf(decimal_days)
+    hours = frac_d * 24.0
+
+    if mins:
+        frac_h, hours = np.modf(hours)
+        minutes = round(frac_h * 60.0)
+        if days:
+            new_time = f"{round(days)} days {round(hours)} hours {minutes} minutes"
+        elif hours:
+            new_time = f"{round(hours)} hours {minutes} minutes"
+        else:
+            new_time = f"{minutes} minutes"
+    else:
+        hours = round(hours, 2)
+        if days:
+            new_time = f"{round(days)} days {hours} hours"
+        else:
+            new_time = f"{hours} hours"
+
+    return new_time
 
 
 def round_to_sigfig(x, sigfig=5):
@@ -78,11 +92,11 @@ def round_to_sigfig(x, sigfig=5):
     """
     # Save original type of data so can be returned as input
     orig_type = type(x)
-    if orig_type not in [list, float, int, np.ndarray]:
+    if orig_type not in [list, float, int, np.ndarray, np.float64]:
         raise ValueError(f'Cannot round {type(x)} to sig figs!')
     
     # Cast as array if not initially, so that later processes all act as expected
-    if orig_type in [int, float]:
+    if orig_type in [int, float, np.float64]:
         x = [x]
     x = np.array(x)
     # Create a mask disabling any values of inf or zero being passed to log10
@@ -114,66 +128,85 @@ def round_to_sigfig(x, sigfig=5):
         return rounded
 
 
+def divergence(flow):
+    flow = np.swapaxes(flow, 0, 1)
+    Fx, Fy = flow[:, :, 0], flow[:, :, 1]
+    dFx_dx = np.gradient(Fx, axis=0)
+    dFy_dy = np.gradient(Fy, axis=1)
+    return dFx_dx + dFy_dy
+
+
+def curl(flow):
+    flow = np.swapaxes(flow, 0, 1)
+    Fx, Fy = flow[:, :, 0], flow[:, :, 1]
+    dFx_dy = np.gradient(Fx, axis=1)
+    dFy_dx = np.gradient(Fy, axis=0)
+    curl = dFy_dx - dFx_dy
+    return curl
+
+
 # GRF functions
 def fftind(size):
-    '''
+    """
     Creates a numpy array of shifted Fourier coordinates.
-    
+
     Args:
         size (int):
             The size of the coordinate array to create
-    
+
     Returns:
         np.array:
-            Numpy array of shifted Fourier coordinates (k_x, k_y). 
+            Numpy array of shifted Fourier coordinates (k_x, k_y).
             Has shape (2, size, size), with:\n
             array[0,:,:] = k_x components\n
             array[1,:,:] = k_y components
-    '''
+    """
     # Create array
     k_ind = np.mgrid[:size, :size] - int( (size + 1)/2 )
     # Fourier shift
     k_ind = fftshift(k_ind)
-    return( k_ind )
+    return k_ind
+
 
 def gaussian_random_field(size, alpha):
-            '''
-            Creates a gaussian random field with normal (circular) distribution
-            Code from https://github.com/bsciolla/gaussian-random-fields/blob/master/gaussian_random_fields.py
-            
-            Args:
-                size (int):
-                   Default = 512; 
-                   The number of datapoints created per axis in the GRF
-                alpha (float):
-                    Default = 3.0;
-                    The power of the power-law momentum distribution
-            
-            Returns:
-                np.array:
-                    2D Array of datapoints, shape (size, size)
-            '''
-                
-            # Defines momentum indices
-            k_idx = fftind(size)
+    """
+    Creates a gaussian random field with normal (circular) distribution
+    Code from https://github.com/bsciolla/gaussian-random-fields/blob/master/gaussian_random_fields.py
 
-            # Defines the amplitude as a power law 1/|k|^(alpha/2)
-            amplitude = np.power( k_idx[0]**2 + k_idx[1]**2 + 1e-10, -alpha/4.0 )
-            amplitude[0,0] = 0
-            
-            # Draws a complex gaussian random noise with normal
-            # (circular) distribution
-            noise = np.random.normal(size = (size, size)) \
-                + 1j * np.random.normal(size = (size, size))
-            
-            # To real space
-            grf = np.fft.ifft2(noise * amplitude).real
-            
-            # Normalise the GRF:
-            grf = grf - np.min(grf)
-            grf = grf/(np.max(grf)-np.min(grf))
+    Args:
+        size (int):
+           Default = 512;
+           The number of datapoints created per axis in the GRF
+        alpha (float):
+            Default = 3.0;
+            The power of the power-law momentum distribution
+
+    Returns:
+        np.array:
+            2D Array of datapoints, shape (size, size)
+    """
                 
-            return grf
+    # Defines momentum indices
+    k_idx = fftind(size)
+
+    # Defines the amplitude as a power law 1/|k|^(alpha/2)
+    amplitude = np.power( k_idx[0]**2 + k_idx[1]**2 + 1e-10, -alpha/4.0 )
+    amplitude[0,0] = 0
+
+    # Draws a complex gaussian random noise with normal
+    # (circular) distribution
+    noise = np.random.normal(size = (size, size)) \
+        + 1j * np.random.normal(size = (size, size))
+
+    # To real space
+    grf = np.fft.ifft2(noise * amplitude).real
+
+    # Normalise the GRF:
+    grf = grf - np.min(grf)
+    grf = grf/(np.max(grf)-np.min(grf))
+
+    return grf
+
 
 def memory_trace(func):
     @wraps(func)
@@ -240,18 +273,3 @@ def setup_logging(func,
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         return parsed_args
     return wrapper
-
-
-if __name__ == '__main__':
-    aa = str_to_datetime('2020-03-01')
-    ab = str_to_datetime('2020-03-15')
-    
-    ba = str_to_datetime('2020-02-01')
-    bb = str_to_datetime('2020-04-01')
-    
-    ax = date_range(aa, ab)
-    bx = date_range(ba, bb)
-    
-    print(frac_of_month(2020, 2, start_date='2020-02-29'))
-    # print(time_overlap(ax, bx))
-    

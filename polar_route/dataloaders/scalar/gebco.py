@@ -18,7 +18,8 @@ class GEBCODataLoader(ScalarDataLoader):
                 Dataset has coordinates 'lat', 'long', and variable 'elevation'         
         '''
         # Import data from files defined in config
-        data = xr.open_mfdataset(self.files)
+        if len(self.files) == 1:    data = xr.open_dataset(self.files[0])
+        else:                       data = xr.open_mfdataset(self.files)
         # Rename columns to standard format
         data = data.rename({'lon':'long'})
         # Trim to initial datapoints

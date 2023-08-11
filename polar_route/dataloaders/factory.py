@@ -29,8 +29,9 @@ class DataLoaderFactory:
     '''
     Produces initialised DataLoader objects that can be used by the mesh to 
     quickly retrieve values within a boundary.
-    '''    
-    def get_dataloader(self, name, bounds, params, min_dp=5):
+    '''
+    @staticmethod
+    def get_dataloader(name, bounds, params, min_dp=5):
         '''
         Creates appropriate dataloader object based on name
         
@@ -55,14 +56,18 @@ class DataLoaderFactory:
         '''
         # Cast name to lowercase to make case insensitive
         name = name.lower()
-        # Add default values if they don't exist
-        params = self.set_default_params(name, params, min_dp)
+        # Translate 'file' or 'folder' into 'files' key
+        params = DataLoaderFactory.translate_file_input(params)
+        
+        # Add loader name to params
+        params['dataloader_name'] = name
+        params['min_dp'] = min_dp
         
         dataloader_requirements = {
             # Scalar
             'scalar_csv':   (ScalarCSVDataLoader, ['files']),
-            'scalar_grf':   (ScalarGRFDataLoader, []),
-            'binary_grf':   (ScalarGRFDataLoader,[]),
+            'scalar_grf':   (ScalarGRFDataLoader, ['binary']),
+            'binary_grf':   (ScalarGRFDataLoader,['binary']),
             'amsr':         (AMSRDataLoader, ['files', 'hemisphere']),
             'bsose_sic':    (BSOSESeaIceDataLoader, ['files']),
             'bsose_depth':  (BSOSEDepthDataLoader, ['files']),
@@ -73,10 +78,10 @@ class DataLoaderFactory:
             'thickness':    (ThicknessDataLoader, []),
             'density':      (DensityDataLoader, []),
             # Scalar - Abstract shapes
-            'circle':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'radius', 'centre']),
-            'square':       (ShapeDataLoader, ['shape', 'nx', 'ny', 'side_length', 'centre']),
-            'gradient':     (ShapeDataLoader, ['shape', 'nx', 'ny', 'vertical']),
-            'checkerboard': (ShapeDataLoader, ['shape', 'nx', 'ny', 'gridsize']),
+            'circle':       (ShapeDataLoader, []),
+            'square':       (ShapeDataLoader, []),
+            'gradient':     (ShapeDataLoader, []),
+            'checkerboard': (ShapeDataLoader, []),
             # Vector
             'vector_csv':       (VectorCSVDataLoader, ['files']),
             'vector_grf':       (VectorGRFDataLoader, []),
@@ -103,166 +108,21 @@ class DataLoaderFactory:
         # Create instance of dataloader
         return data_loader(bounds, params)
     
-    def set_default_params(self, name, params, min_dp):
+    @staticmethod
+    def translate_file_input(params):
         '''
-        Set default values for all dataloaders. 
+        Allows flexible file specification in params. Translates 'file' or 
+        'folder' into 'files'
         
         Args:
-            name (str):
-                Name of dataloader entry in dataloader_requirements. Used to
-                specify default parameters for a specific dataloader.
             params (dict): 
-                Dictionary containing attributes that are required for each 
-                dataloader. 
-            min_dp (int):
-                Minimum number of datapoints required to return a homogeneity 
-                condition. Passed in here so it can be added to params
-            
-        Returns:
-            (dict): 
-                Dictionary of attributes the dataloader will require, 
-                completed with default values if not provided in config.
+                Dictionary of parameters written in config
         '''
-        # Save dataloader name in params
-        params['dataloader_name'] = name
-        
-        if 'downsample_factors' not in params:
-            params['downsample_factors'] = [1,1]
-
-        if 'data_name' not in params:
-            params['data_name'] = None
-
-        if 'aggregate_type' not in params: 
-            params['aggregate_type']  = 'MEAN'
-            
-        if 'min_dp' not in params:
-            params['min_dp'] = min_dp
-            
-        if 'in_proj' not in params:
-            params['in_proj'] = 'EPSG:4326'
-            
-        if 'out_proj' not in params:
-            params['out_proj'] = 'EPSG:4326'
-            
-        if 'x_col' not in params:
-            params['x_col'] = 'lat'
-
-        if 'y_col' not in params:
-            params['y_col'] = 'long'
-            
         if 'file' in params:
             params['files'] = [params['file']]
+            del params['file']
         elif 'folder' in params:
             folder = os.path.join(params['folder'], '') # Adds trailing slash if non-existant
             params['files'] = sorted(glob(folder+'*'))
-            
-        # Set defaults for abstract data generators
-        if name in ['circle', 'checkerboard', 'gradient']:
-            params = self.set_default_shape_params(name, params)
-        
-        # Set defaults for GRF generators
-        if name in ['binary_grf', 'scalar_grf', 'vector_grf']:
-            params = self.set_default_grf_params(name, params)
-        
-        return params
-    
-    def set_default_shape_params(self, name, params):
-        '''
-        Set default values for abstract shape dataloaders. This function is
-        seperated out from set_default_params() simply to reduce cognitive
-        complexity, but is otherwise in the same format.
-        
-        Args:
-            name (str):
-                Name of shape entry in dataloader_requirements. Used to
-                specify default parameters for the shape dataloader.
-            params (dict): 
-                Dictionary containing attributes that are required for the
-                shape being loaded.
-            
-        Returns:
-            (dict): 
-                Dictionary of attributes the dataloader will require, 
-                completed with default values if not provided in config.
-        '''
-        # Number of datapoints to populate per axis
-        if 'nx' not in params:
-            params['nx'] = 101
-        if 'ny' not in params:
-            params['ny'] = 101
-            
-        # Shape of abstract dataset
-        if 'shape' not in params:
-            params['shape'] = name
-            
-        # Define default circle parameters
-        if name == 'circle':
-            if 'radius' not in params:
-                params['radius'] = 1
-            if 'centre' not in params:
-                params['centre'] = (None, None)
-        # Define default square parameters
-        elif name == 'square':
-            if 'side_length' not in params:
-                params['side_length'] = 1
-            if 'centre' not in params:
-                params['centre'] = (None, None)
-        # Define default gradient params
-        elif name == 'gradient':
-            if 'vertical' not in params:
-                params['vertical'] = True
-        # Define default checkerboard params
-        elif name == 'checkerboard':
-            if 'gridsize' not in params:
-                params['gridsize'] = (1,1)   
-        
-        
-        return params
-
-    def set_default_grf_params(self, name, params):
-        # Params that all GRF dataloaders need
-        if 'data_name' not in params:
-            params['data_name'] = 'data'
-        if 'seed' not in params:
-            params['seed'] = None
-        if 'size' not in params:
-            params['size'] = 512
-        if 'alpha' not in params:
-            params['alpha'] = 3
-        # Specific GRF loaders
-        # If making a mask (e.g. land)
-        if name == 'binary_grf':
-            params['binary'] = True
-            if 'min' not in params:
-                params['min'] = 0
-            if 'max' not in params:
-                params['max'] = 1
-            # If threshold not set, make it average of min/max val
-            if 'threshold' not in params:
-                params['threshold'] = 0.5
-        # If making a scalar field
-        elif name == 'scalar_grf':
-            params['binary'] = False
-            if 'min' not in params:
-                params['min'] = -10
-            if 'max' not in params:
-                params['max'] = 10
-            # If threshold not set, make it min/max vals
-            if 'threshold' not in params:
-                params['threshold'] = [0,1]
-            if 'multiplier' not in params:
-                params['multiplier'] = 1
-            if 'offset' not in params:
-                params['offset'] = 0
-        # If making a vector field
-        elif name == 'vector_grf':
-            if 'min' not in params:
-                params['min'] = 0
-            if 'max' not in params:
-                params['max'] = 10
-            if 'vec_x' not in params:
-                params['vec_x'] = 'uC'
-            if 'vec_y' not in params:
-                params['vec_y'] = 'vC'
-                
+            del params['folder']
         return params

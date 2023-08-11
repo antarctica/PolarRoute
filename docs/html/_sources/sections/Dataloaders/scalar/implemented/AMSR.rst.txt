@@ -2,12 +2,12 @@
 AMSR Dataloader
 ***************
 
-The AMSR (Advanced Microwave Scanning Radiometer) dataset is a publically
+The AMSR (Advanced Microwave Scanning Radiometer) dataset is a publicly
 available that provides Sea Ice Concentration scans of the earth's oceans.
 It is produced by researchers at the University of Bremen.
 
 The AMSR dataloader is currently the only 'standalone' dataloader, in that it
-is defined independantly of the abstract base class. This is due to issues 
+is defined independently of the abstract base class. This is due to issues
 with :code:`pandas` calculating mean values differently depending on how the 
 data is loaded. This caused issues with the regression tests passing. 
 This issue will be rectified soon by updating the regression tests.

@@ -4,6 +4,8 @@
 from datetime import datetime
 from datetime import timedelta
 
+from math import cos, sin, asin, sqrt, radians
+
 class Boundary:
     """
     A Boundary is a class that defines the geo-spatial/temporal
@@ -12,7 +14,8 @@ class Boundary:
 
     Attributes:
         lat_range (float[]): array contains the start and end of latitude range 
-        long_range (float[]): array contains the start and end of longtitude range 
+        long_range (float[]): array contains the start and end of longtitude range.
+          In the case of constructing a global mesh, the longtitude range should be -180:180.
         time_range(string[]): array contains the start and end of time range 
         
 
@@ -128,16 +131,18 @@ class Boundary:
                 
         """
         if len(lat_range) < 2 or len (long_range)<2 :
-            raise ValueError(f'Boundary: range should contain two values')
+            raise ValueError('Boundary: range should contain two values')
         if lat_range[0] > lat_range [1]:
-             raise ValueError(f'Boundary: Latitude start range should be smaller than range end')
+             raise ValueError('Boundary: Latitude start range should be smaller than range end')
         if long_range[0] > long_range [1]:
-             raise ValueError(f'Boundary: Longtitude start range should be smaller than range end')
+             raise ValueError('Boundary: Longtitude start range should be smaller than range end')
+        if long_range[0] < -180 or long_range[1] > 180:
+            raise ValueError('Boundary: Longtitude range should be within -180:180')
         if len (time_range) > 0:
             if datetime.strptime(time_range[0], '%Y-%m-%d') >= datetime.strptime(time_range[1], '%Y-%m-%d'):
-                     raise ValueError(f'Boundary: Start time range should be smaller than range end')
+                     raise ValueError('Boundary: Start time range should be smaller than range end')
 
-    # Functions used for getting data from a cellBox
+    # Functions used for getting data from a cellbox
     def getcx(self):
         """
             returns x-position of the centroid of the cellbox
@@ -244,6 +249,26 @@ class Boundary:
                     [ self.long_range[1], self.lat_range[0]],
                     [self.long_range[0], self.lat_range[0], ]]
         return bounds
+    
+    def calc_size(self):
+        """
+        Calculate the great circle distance (in meters) between 
+        two points on the earth (specified in decimal degrees)
+        """
+        # convert decimal degrees to radians
+        lon1, lat1, lon2, lat2 = map(radians, [self.get_long_min(), 
+                                               self.get_lat_min(),
+                                               self.get_long_max(),
+                                               self.get_lat_max()])
+        # haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+        c = 2 * asin(sqrt(a))
+        # Get diagonal length
+        m = (6371 * c * 1000)
+        # Divide by sqrt(2) to get 'square' side length
+        return m / sqrt(2)
 
     def __str__(self):
 
