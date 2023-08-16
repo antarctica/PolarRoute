@@ -7,13 +7,13 @@ __copyright__ = "2022-2023, BAS AI Lab"
 
 # Wrapped in try-except so that setup.py can import polar_route without crashing due to dependency errors
 try:
-    from polar_route.mesh_generation.mesh_builder import MeshBuilder as MeshBuilder
-    from polar_route.dataloaders.factory import DataLoaderFactory as DataLoaderFactory
+    from cartographi.mesh_generation.mesh_builder import MeshBuilder as MeshBuilder
+    from cartographi.dataloaders.factory import DataLoaderFactory as DataLoaderFactory
+    from cartographi.mesh_generation.boundary import Boundary as Boundary
 
     from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller as VesselPerformanceModeller
 
     from polar_route.route_planner import RoutePlanner as RoutePlanner
-    from polar_route.mesh_generation.boundary import Boundary as Boundary
 
 except ModuleNotFoundError as err:
     print(f'{err}\n Is PolarRoute installed correctly?')
