@@ -1,4 +1,6 @@
 import copy
+import sys
+
 import pandas as pd
 import numpy as np
 import pyproj
@@ -448,7 +450,7 @@ class Smoothing:
                     else:
                         dY = (F/dF)
                     if iter_number != 0:
-                        improving =  (abs(dY)>_epsilon) or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
+                        improving =  (abs(dY)>_epsilon) or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter_number) > _epsilon)
                     else:
                         improving = True
                     y0  -= dY
@@ -644,7 +646,7 @@ class Smoothing:
                     else:
                         dY = (F/dF)
                     if iter_number != 0:             
-                        improving =abs(dY) > 1 or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter) > _epsilon)
+                        improving =abs(dY) > 1 or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter_number) > _epsilon)
                     else:
                         improving = True
                     y0  -= dY
