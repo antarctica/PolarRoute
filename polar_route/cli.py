@@ -5,6 +5,7 @@ import logging
 
 from cartographi.mesh_generation.mesh_builder import MeshBuilder
 from cartographi.mesh_generation.environment_mesh import EnvironmentMesh
+
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call, convert_decimal_days
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
@@ -17,9 +18,8 @@ def get_args(
         default_output: str,
         config_arg: bool = True,
         mesh_arg: bool = False,
-        waypoints_arg: bool = False,
-        format_arg: bool = False,
-        format_conf: bool = False):
+        waypoints_arg: bool = False
+        ):
     """
     Adds required command line arguments to all CLI entry points.
 
@@ -61,73 +61,40 @@ def get_args(
         ap.add_argument("-p", "--path_only",
                         default=False,
                         action = "store_true",
-                        help="output only the calculated paths")
+                        help="Only output the calculated paths")
 
         ap.add_argument("-d", "--dijkstra",
                         default=False,
                         action = "store_true",
-                        help="output only the calculated paths")
-        
-    if format_arg:
-        ap.add_argument("format",
-                        help = "Export format to transform a mesh into. Supported \
-                        formats are JSON, GEOJSON, Tif")
-        ap.add_argument( "-f", "--format_conf",
-                        default = None,
-                        help = "File location of Export to Tif configuration parameters")
-
-
+                        help="Only output the dijkstra paths")
 
     return ap.parse_args()
 
+
 @timed_call
-def rebuild_mesh_cli():
+def resimulate_vehicle_cli():
     """
         CLI entry point for rebuilding the mesh based on its encoded config files.
     """
 
-    default_output = "rebuild_mesh.output.json"
+    default_output = "resimulate_vehicle.output.json"
+    
     args = get_args(default_output, mesh_arg=True, config_arg=False)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
     mesh_json = json.load(args.mesh)
     config = mesh_json['config']
 
-    # rebuilding mesh...
-    rebuilt_mesh = MeshBuilder(config).build_environmental_mesh()
-    rebuilt_mesh_json = rebuilt_mesh.to_json()
+    # Resimulating vessel
+    vessel_config = config['vessel_info']
+    vp = VesselPerformanceModeller(mesh_json, vessel_config)
+    vp.model_accessibility()
+    vp.model_performance()
+    rebuilt_mesh_json = vp.to_json()
 
-    if 'vessel_info' in config.keys():
-        vessel_config = config['vessel_info']
-        vp = VesselPerformanceModeller(rebuilt_mesh_json, vessel_config)
-        vp.model_accessibility()
-        vp.model_performance()
-        rebuilt_mesh_json = vp.to_json()
-
+    # Saving output
     logging.info("Saving mesh to {}".format(args.output))
-    
     json.dump(rebuilt_mesh_json, open(args.output, "w"), indent=4)
-
-
-
-@timed_call
-def create_mesh_cli():
-    """
-        CLI entry point for the mesh construction
-    """
-    
-    default_output = "create_mesh.output.json"
-    args = get_args(default_output)
-    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
-
-    config = json.load(args.config)
-
-    # Discrete Meshing
-    cg = MeshBuilder(config).build_environmental_mesh()
-
-    logging.info("Saving mesh to {}".format(args.output))
-    info = cg.to_json()
-    json.dump(info, open(args.output, "w"), indent=4)
 
 
 @timed_call
@@ -185,39 +152,7 @@ def optimise_routes_cli():
         json.dump(info['paths'], open(args.output, 'w'), indent=4)
     else:
         json.dump(info, open(args.output, "w"), indent=4)
-
-@timed_call
-def export_mesh_cli():
-    """
-        CLI entry point for exporting a mesh to standard formats.
-        Currently supported formats are JSON, GEOJSON, TIF
-    """
-    # Default, used only by the Mesh Builder and PolarRoute
-    args = get_args("mesh.json", 
-                    config_arg = False, 
-                    mesh_arg = True, 
-                    format_arg = True)
         
-    if args.format.upper() == "GEOJSON":
-        args = get_args("mesh_geo.json", 
-                    config_arg = False, 
-                    mesh_arg = True, 
-                    format_arg = True)
-        
-    elif args.format.upper() == "TIF":
-        args = get_args("mesh.tif", 
-                    config_arg = False, 
-                    mesh_arg = True, 
-                    format_arg = True)
-    
-    logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
-
-    mesh = json.load(args.mesh)
-    env_mesh = EnvironmentMesh.load_from_json(mesh)
-
-    logging.info(f"exporting mesh to {args.output} in format {args.format}")
-
-    env_mesh.save(args.output, args.format , args.format_conf)
 
 @timed_call
 def calculate_route_cli():
@@ -241,6 +176,3 @@ def calculate_route_cli():
         logging.info(f"Saving calculated route to {args.output}")
         with open(args.output, "w") as f:
             json.dump(calc_route, f, indent=4)
-
-
-
