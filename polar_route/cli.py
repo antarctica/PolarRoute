@@ -3,6 +3,8 @@ import json
 import inspect
 import logging
 
+from cartographi.mesh_generation.mesh_builder import MeshBuilder
+
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call, convert_decimal_days
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
@@ -80,11 +82,15 @@ def resimulate_vehicle_cli():
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
     mesh_json = json.load(args.mesh)
-    config = mesh_json['config']
+    mesh_config = mesh_json['config']['mesh_info']
+
+    # Rebuilding mesh, since pruned CB's don't exist in input file
+    rebuilt_mesh = MeshBuilder(mesh_config).build_environmental_mesh()
+    rebuilt_mesh_json = rebuilt_mesh.to_json()
 
     # Resimulating vessel
-    vessel_config = config['vessel_info']
-    vp = VesselPerformanceModeller(mesh_json, vessel_config)
+    vessel_config = mesh_json['config']['vessel_info']
+    vp = VesselPerformanceModeller(rebuilt_mesh_json, vessel_config)
     vp.model_accessibility()
     vp.model_performance()
     rebuilt_mesh_json = vp.to_json()
