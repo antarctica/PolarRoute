@@ -6,5 +6,5 @@
        "HullType": "slender",
        "ForceLimit": 96634.5,
        "MaxIceConc": 80,
-       "MinDepth": -10 
+       "MinDepth": 10 
 }
