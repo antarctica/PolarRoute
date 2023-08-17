@@ -3,9 +3,6 @@ import json
 import inspect
 import logging
 
-from cartographi.mesh_generation.mesh_builder import MeshBuilder
-from cartographi.mesh_generation.environment_mesh import EnvironmentMesh
-
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call, convert_decimal_days
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
