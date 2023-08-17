@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>9. Methods - Vessel Performance &mdash; polar_route 0.3.0 documentation</title>
+  <title>7. Methods - Vessel Performance &mdash; polar_route 0.3.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="11. Methods - Route Calculation" href="Route_calculation.html" />
-    <link rel="prev" title="8.4.2. Mesh Validation" href="Mesh_Construction/Mesh_validation.html" /> 
+    <link rel="next" title="8. Methods - Route Calculation" href="Route_calculation.html" />
+    <link rel="prev" title="6. Outputs - Data Types" href="Outputs.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,11 +48,9 @@
 <li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">7. Dataloader Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">9. Methods - Vessel Performance</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#vessel-overview">9.1. Vessel Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_performance_modeller">9.2. Vessel Performance Modeller</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">7. Methods - Vessel Performance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#vessel-overview">7.1. Vessel Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_performance_modeller">7.2. Vessel Performance Modeller</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.__init__"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.model_accessibility"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.model_accessibility()</span></code></a></li>
@@ -62,14 +60,14 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_factory">9.3. Vessel Factory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_factory">7.3. Vessel Factory</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessel_factory.VesselFactory"><code class="docutils literal notranslate"><span class="pre">VesselFactory</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_factory.VesselFactory.get_vessel"><code class="docutils literal notranslate"><span class="pre">VesselFactory.get_vessel()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.abstract_vessel">9.4. Abstract Vessel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.abstract_vessel">7.4. Abstract Vessel</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel"><code class="docutils literal notranslate"><span class="pre">AbstractVessel</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractVessel.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility"><code class="docutils literal notranslate"><span class="pre">AbstractVessel.model_accessibility()</span></code></a></li>
@@ -78,7 +76,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_ship">9.5. Abstract Ship</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_ship">7.5. Abstract Ship</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip"><code class="docutils literal notranslate"><span class="pre">AbstractShip</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractShip.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.extreme_ice"><code class="docutils literal notranslate"><span class="pre">AbstractShip.extreme_ice()</span></code></a></li>
@@ -89,7 +87,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.SDA">9.6. SDA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.SDA">7.6. SDA</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA"><code class="docutils literal notranslate"><span class="pre">SDA</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.__init__"><code class="docutils literal notranslate"><span class="pre">SDA.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.invert_resistance"><code class="docutils literal notranslate"><span class="pre">SDA.invert_resistance()</span></code></a></li>
@@ -102,9 +100,9 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">11. Methods - Route Calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Examples.html">12. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">8. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">9. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">10. Examples of running code</a></li>
 </ul>
 
         </div>
@@ -121,7 +119,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">9. </span>Methods - Vessel Performance</li>
+      <li class="breadcrumb-item active"><span class="section-number">7. </span>Methods - Vessel Performance</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/sections/Vehicle_specifics.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -132,9 +130,9 @@
            <div itemprop="articleBody">
              
   <section id="methods-vessel-performance">
-<span id="vessel-performance"></span><h1><span class="section-number">9. </span>Methods - Vessel Performance<a class="headerlink" href="#methods-vessel-performance" title="Permalink to this heading"></a></h1>
+<span id="vessel-performance"></span><h1><span class="section-number">7. </span>Methods - Vessel Performance<a class="headerlink" href="#methods-vessel-performance" title="Permalink to this heading"></a></h1>
 <section id="vessel-overview">
-<h2><span class="section-number">9.1. </span>Vessel Overview<a class="headerlink" href="#vessel-overview" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">7.1. </span>Vessel Overview<a class="headerlink" href="#vessel-overview" title="Permalink to this heading"></a></h2>
 <p>All of the functionality that relates to the specific vehicle traversing our meshed environment model is contained within the vessel_performance directory.
 This directory contains a <cite>VesselPerformanceModeller</cite> class that initialises one of the vessel classes in <cite>vessels</cite> and uses this to determine which cells
 in a given mesh are inaccessible for that particular vessel and what its performance will be in each of the accessible cells.</p>
@@ -153,7 +151,7 @@ The latter two quantities are derived from the former.</span><a class="headerlin
 </figure>
 </section>
 <section id="module-polar_route.vessel_performance.vessel_performance_modeller">
-<span id="vessel-performance-modeller"></span><h2><span class="section-number">9.2. </span>Vessel Performance Modeller<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_performance_modeller" title="Permalink to this heading"></a></h2>
+<span id="vessel-performance-modeller"></span><h2><span class="section-number">7.2. </span>Vessel Performance Modeller<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_performance_modeller" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessel_performance_modeller.</span></span><span class="sig-name descname"><span class="pre">VesselPerformanceModeller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_mesh_json</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vessel_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller" title="Permalink to this definition"></a></dt>
@@ -205,7 +203,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessel_factory">
-<span id="vessel-factory"></span><h2><span class="section-number">9.3. </span>Vessel Factory<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_factory" title="Permalink to this heading"></a></h2>
+<span id="vessel-factory"></span><h2><span class="section-number">7.3. </span>Vessel Factory<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_factory" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessel_factory.VesselFactory">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessel_factory.</span></span><span class="sig-name descname"><span class="pre">VesselFactory</span></span><a class="headerlink" href="#polar_route.vessel_performance.vessel_factory.VesselFactory" title="Permalink to this definition"></a></dt>
@@ -230,7 +228,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.abstract_vessel">
-<span id="abstract-vessel"></span><h2><span class="section-number">9.4. </span>Abstract Vessel<a class="headerlink" href="#module-polar_route.vessel_performance.abstract_vessel" title="Permalink to this heading"></a></h2>
+<span id="abstract-vessel"></span><h2><span class="section-number">7.4. </span>Abstract Vessel<a class="headerlink" href="#module-polar_route.vessel_performance.abstract_vessel" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.abstract_vessel.AbstractVessel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.abstract_vessel.</span></span><span class="sig-name descname"><span class="pre">AbstractVessel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel" title="Permalink to this definition"></a></dt>
@@ -245,7 +243,7 @@ the mesh accordingly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_accessibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox"><span class="pre">AggregatedCellBox</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_accessibility</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AggregatedCellBox</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility" title="Permalink to this definition"></a></dt>
 <dd><p>Determine accessibility of the input cell for the given vessel.
 :param cellbox: cell in which accessibility is being determined
 :type cellbox: AggregatedCellBox</p>
@@ -261,7 +259,7 @@ the mesh accordingly.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox"><span class="pre">AggregatedCellBox</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AggregatedCellBox</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance" title="Permalink to this definition"></a></dt>
 <dd><p>Calculate performance parameters for the given vessel.
 :param cellbox: cell in which performance is being modelled
 :type cellbox: AggregatedCellBox</p>
@@ -279,7 +277,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessels.abstract_ship">
-<span id="abstract-ship"></span><h2><span class="section-number">9.5. </span>Abstract Ship<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.abstract_ship" title="Permalink to this heading"></a></h2>
+<span id="abstract-ship"></span><h2><span class="section-number">7.5. </span>Abstract Ship<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.abstract_ship" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessels.abstract_ship.AbstractShip">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessels.abstract_ship.</span></span><span class="sig-name descname"><span class="pre">AbstractShip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip" title="Permalink to this definition"></a></dt>
@@ -362,7 +360,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessels.SDA">
-<span id="sda"></span><h2><span class="section-number">9.6. </span>SDA<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.SDA" title="Permalink to this heading"></a></h2>
+<span id="sda"></span><h2><span class="section-number">7.6. </span>SDA<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.SDA" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessels.SDA.SDA">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessels.SDA.</span></span><span class="sig-name descname"><span class="pre">SDA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessels.SDA.SDA" title="Permalink to this definition"></a></dt>
@@ -390,7 +388,7 @@ The input cellbox should contain the following values</p>
 </div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cellbox</strong> (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox"><em>AggregatedCellBox</em></a>) – input cell from environmental mesh</p>
+<dd class="field-odd"><p><strong>cellbox</strong> (<em>AggregatedCellBox</em>) – input cell from environmental mesh</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Safe vessel speed in km/h</p>
@@ -412,7 +410,7 @@ The input cellbox should contain the following values</p>
 <dd class="field-odd"><p>updated cell with fuel consumption values</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cellbox (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox">AggregatedCellBox</a>)</p>
+<dd class="field-even"><p>cellbox (AggregatedCellBox)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -428,7 +426,7 @@ The input cellbox should contain the following values</p>
 <dd class="field-odd"><p>updated cell with resistance values</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cellbox (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox">AggregatedCellBox</a>)</p>
+<dd class="field-even"><p>cellbox (AggregatedCellBox)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -444,7 +442,7 @@ The input cellbox should contain the following values</p>
 <dd class="field-odd"><p>updated cell with speed values</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>cellbox (<a class="reference internal" href="Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox" title="polar_route.mesh_generation.aggregated_cellbox.AggregatedCellBox">AggregatedCellBox</a>)</p>
+<dd class="field-even"><p>cellbox (AggregatedCellBox)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -458,8 +456,8 @@ The input cellbox should contain the following values</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Mesh_Construction/Mesh_validation.html" class="btn btn-neutral float-left" title="8.4.2. Mesh Validation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Route_calculation.html" class="btn btn-neutral float-right" title="11. Methods - Route Calculation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Outputs.html" class="btn btn-neutral float-left" title="6. Outputs - Data Types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Route_calculation.html" class="btn btn-neutral float-right" title="8. Methods - Route Calculation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
