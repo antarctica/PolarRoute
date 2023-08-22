@@ -670,7 +670,8 @@ class RoutePlanner:
             SmoothedPath['properties']['distance']   = list(DistanceLegs)
             SmoothedPath['properties']['speed']      = list(SpeedLegs)
             SmoothedPaths += [SmoothedPath]
-        
+
+        geojson['type'] = "FeatureCollection"
         geojson['features'] = SmoothedPaths
         self.smoothed_paths = geojson
         self.mesh['paths'] = self.smoothed_paths
