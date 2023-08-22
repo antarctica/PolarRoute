@@ -164,6 +164,6 @@ where the output takes a GeoJSON standard form (more infor given at https://geoj
         * **to**  : Ending waypoint of route
         * **traveltime** : A list of float values representing the cumulative travel time along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
         * **fuel** : A list of float values representing the cumulative fuel along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
-        * **times** : A list of strings representing UTC Datetimes of the route points, given that the route started from `startTime` given in the configuration file.
+        * **times** : A list of strings representing UTC Datetimes of the route points, given that the route started from `start_time` given in the configuration file.
 
 

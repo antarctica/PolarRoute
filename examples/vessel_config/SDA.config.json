@@ -1,10 +1,10 @@
 {
-       "VesselType": "SDA",
-       "MaxSpeed": 26.5,
-       "Unit": "km/hr",
-       "Beam": 24.0,
-       "HullType": "slender",
-       "ForceLimit": 96634.5,
-       "MaxIceConc": 80,
-       "MinDepth": 10 
+       "vessel_type": "SDA",
+       "max_speed": 26.5,
+       "unit": "km/hr",
+       "beam": 24.0,
+       "hull_type": "slender",
+       "force_limit": 96634.5,
+       "max_ice_conc": 80,
+       "min_depth": 10 
 }

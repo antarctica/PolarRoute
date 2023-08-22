@@ -15,11 +15,11 @@ class VesselFactory:
             Returns:
                 vessel: an instance of a vessel class designed for performance modelling
         """
-        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceConc", "MinDepth",
-                                             "Unit"]),
-                               "Underwater": (UnderwaterVessel, ["MaxSpeed", "MaxIceConc", "MinDepth"])}
+        vessel_requirements = {"SDA": (SDA, ["max_speed", "beam", "hull_type", "force_limit", "max_ice_conc", "min_depth",
+                                             "unit"]),
+                               "Underwater": (UnderwaterVessel, ["max_speed", "max_ice_conc", "min_depth"])}
 
-        vessel_type = config['VesselType']
+        vessel_type = config['vessel_type']
 
         if vessel_type in vessel_requirements:
             vessel_class = vessel_requirements[vessel_type][0]

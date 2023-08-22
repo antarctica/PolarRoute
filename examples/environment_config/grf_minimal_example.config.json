@@ -1,15 +1,15 @@
 {
-    "Region": {
-        "latMin": 0,
-        "latMax": 10,
-        "longMin": 0,
-        "longMax": 10,
-        "startTime": "TODAY - 1",
-        "endTime": "TODAY + 1",
-        "cellWidth": 5,
-        "cellHeight": 5
+    "region": {
+        "lat_min": 0,
+        "lat_max": 10,
+        "long_min": 0,
+        "long_max": 10,
+        "start_time": "TODAY - 1",
+        "end_time": "TODAY + 1",
+        "cell_width": 5,
+        "cell_height": 5
     },
-    "Data_sources": [
+    "data_sources": [
         {
             "loader": "scalar_grf",
             "params": {

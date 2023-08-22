@@ -15,9 +15,9 @@ class SDA(AbstractShip):
         """
         super().__init__(params)
 
-        self.force_limit = self.vessel_params['ForceLimit']
-        self.beam = self.vessel_params['Beam']
-        self.hull_type = self.vessel_params['HullType']
+        self.force_limit = self.vessel_params['force_limit']
+        self.beam = self.vessel_params['beam']
+        self.hull_type = self.vessel_params['hull_type']
 
     def model_speed(self, cellbox):
         """

@@ -84,8 +84,8 @@ class PathValues:
                                                 'cell_index':{'processing':None},
                                                 'fuel':{'processing':'cumsum'}}
 
-            unit_shipspeed (string) - Unit speed type. This is a string of type: 'km/hr','knots'
-            unit_time (string) - Unit time format. This is a string of type: 'days','hr','min','s
+            unit_shipspeed (string) - unit speed type. This is a string of type: 'km/hr','knots'
+            unit_time (string) - unit time format. This is a string of type: 'days','hr','min','s
 
         Functions:
             objective_function - For a list of adjacent cell pairs, start and end waypoints compute path attributes

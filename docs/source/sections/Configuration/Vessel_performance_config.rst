@@ -10,23 +10,23 @@ the 'add_vehicle' entry point.
 ::
 
    {
-     "VesselType": "SDA",
-     "MaxSpeed": 26.5,
-     "Unit": "km/hr",
-     "Beam": 24.0,
-     "HullType": "slender",
-     "ForceLimit": 96634.5,
-     "MaxIceConc": 80,
-     "MinDepth": 10
+     "vessel_type": "SDA",
+     "max_speed": 26.5,
+     "unit": "km/hr",
+     "beam": 24.0,
+     "hull_type": "slender",
+     "force_limit": 96634.5,
+     "max_ice_conc": 80,
+     "min_depth": 10
    }
 
 Above are a typical set of configuration parameters used for a vessel where the variables are as follows:
 
-* **VesselType** *(string)* : The specific vessel class to use for performance modelling.
-* **MaxSpeed** *(float)* : The maximum speed of the vessel in open water.
-* **Unit** *(string)* : The units of measurement for the speed of the vessel (currently only "km/hr" is supported).
-* **Beam** *(float)* : The beam (width) of the ship in metres.
-* **HullType** *(string)* : The hull profile of the ship (should be one of either "slender" or "blunt").
-* **ForceLimit** *(float)* : The maximum allowed resistance force, specified in Newtons.
-* **MaxIceConc** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
-* **MinDepth** *(float)* : The minimum depth of water the vessel is able to travel through in metres.
+* **vessel_type** *(string)* : The specific vessel class to use for performance modelling.
+* **max_speed** *(float)* : The maximum speed of the vessel in open water.
+* **unit** *(string)* : The units of measurement for the speed of the vessel (currently only "km/hr" is supported).
+* **beam** *(float)* : The beam (width) of the ship in metres.
+* **hull_type** *(string)* : The hull profile of the ship (should be one of either "slender" or "blunt").
+* **force_limit** *(float)* : The maximum allowed resistance force, specified in Newtons.
+* **max_ice_conc** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
+* **min_depth** *(float)* : The minimum depth of water the vessel is able to travel through in metres.

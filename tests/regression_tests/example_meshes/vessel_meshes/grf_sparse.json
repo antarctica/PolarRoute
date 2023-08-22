@@ -1,17 +1,17 @@
 {
     "config": {
-        "Mesh_info": {
-            "Region": {
-                "latMin": 40.0,
-                "latMax": 60.0,
-                "longMin": 50.0,
-                "longMax": 70,
-                "startTime": "2023-04-18",
-                "endTime": "2023-04-19",
-                "cellWidth": 5.0,
-                "cellHeight": 5.0
+        "mesh_info": {
+            "region": {
+                "lat_min": 40.0,
+                "lat_max": 60.0,
+                "long_min": 50.0,
+                "long_max": 70,
+                "start_time": "2023-04-18",
+                "end_time": "2023-04-19",
+                "cell_width": 5.0,
+                "cell_height": 5.0
             },
-            "Data_sources": [
+            "data_sources": [
                 {
                     "loader": "scalar_grf",
                     "params": {
@@ -201,14 +201,14 @@
             }
         },
         "vessel_info": {
-            "VesselType": "SDA",
-            "MaxSpeed": 26.5,
-            "Unit": "km/hr",
-            "Beam": 24.0,
-            "HullType": "slender",
-            "ForceLimit": 96634.5,
-            "MaxIceConc": 80,
-            "MinDepth": 10
+            "vessel_type": "SDA",
+            "max_speed": 26.5,
+            "unit": "km/hr",
+            "beam": 24.0,
+            "hull_type": "slender",
+            "force_limit": 96634.5,
+            "max_ice_conc": 80,
+            "min_depth": 10
         }
     },
     "cellboxes": [
