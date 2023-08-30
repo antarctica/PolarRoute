@@ -200,27 +200,29 @@ class RoutePlanner:
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points,cell_points,case = cost_func.value()
         # create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel), and return 
-        s1 = Segment (Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[0], crossing_points[1], cellbox_indx=node_id))
+        s1 = Segment (Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[1], crossing_points[0], cellbox_indx=node_id))
         s1.set_travel_time(traveltime[0])
+        print (">>> travel time >> " , traveltime)
         #fill segment metrics
         s1.set_fuel (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
         s1.set_distance (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)])
-        s2 = Segment( Waypoint (crossing_points[0], crossing_points[1], cellbox_indx=neighbour_id), Waypoint.load_from_cellbox(self.cellboxes_lookup[neighbour_id]))
+        s2 = Segment( Waypoint (crossing_points[1], crossing_points[0], cellbox_indx=neighbour_id), Waypoint.load_from_cellbox(self.cellboxes_lookup[neighbour_id]))
         s2.set_travel_time(traveltime[1])
         s2.set_fuel ( s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
         s2.set_distance (s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)])
 
         return [s1,s2]
 
-    def compute_routes(self, waypoints_path):
+    def compute_routes(self, waypoints):
         """
             Computes the Dijkstra Paths between waypoints. 
             Args: 
-                waypoints (String: path to csv file that contains a list of pair of source and dest waypoints
+                waypoints (String/Dataframe): DataFrame that contains source and dest waypoints info/string points to the path of a csv file that contains this info
             Returns:
                 routes (List<Route>): a list of the computed routes     
         """
-        src_wps, end_wps =  self._load_waypoints(waypoints_path)
+
+        src_wps, end_wps =  self._load_waypoints(waypoints)
         src_wps = self._validate_wps(src_wps)
         end_wps =  self._validate_wps(end_wps)
         src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps]   # creating SourceWaypoint objects
@@ -251,11 +253,12 @@ class RoutePlanner:
         def select_cellbox (ids):
             '''
             In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the cellboxes (the current cirteria is to select the north east cellbox)
-                Args:
+                Args:    
                     ids([int]): listt contains the touching cellboxes ids
                 Returns:
                     selected (int): the id of the selected cellbox
             '''
+            print (">>> selecting cellbox ...")
             if self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]], self.cellboxes_lookup [ids[1]]) in [Direction.east , Direction.north_east, Direction.north]:
                 return ids[1]
             return ids[0]
@@ -287,24 +290,28 @@ class RoutePlanner:
         self.src_wps.append (wp)
         return wp
     
-    def _load_waypoints (self, waypoint_path):
+    def _load_waypoints (self, waypoints):
             try:
-                waypoints_df = pd.read_csv(waypoint_path)
+                waypoints_df = waypoints
+                if  isinstance(waypoints,str):
+                     waypoints_df= pd.read_csv(waypoints)
                 source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
                 dest_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
                 src_wps = [ Waypoint (source ['Lat'] , source['Long'] , source ['Name'] ) for index, source in source_waypoints_df.iterrows()] 
                 dest_wps = [ Waypoint (dest ['Lat'] , dest['Long'] , dest ['Name'] ) for index, dest in dest_waypoints_df.iterrows()] 
                 return src_wps , dest_wps
             except FileNotFoundError:
-                raise ValueError("Unable to load '{}', please check path name".format(waypoint_path))
+                raise ValueError("Unable to load '{}', please check path name".format(waypoints))
 
 
 
 if __name__ == '__main__':
 
       config = None
-      mesh_file = "../tests/regression_tests/example_routes/dijkstra/fuel/gaussian_random_field.json"
-      mesh_file = "grf_reprojection.json"
+     # mesh_file = "../tests/regression_tests/example_routes/dijkstra/fuel/gaussian_random_field.json"
+      mesh_file = "add_vehicle.output.json"
+
+    #   mesh_file = "grf_reprojection.json"
       wp_file = "../tests/unit_tests/resources/waypoint/waypoints_2.csv"
       route_conf = "../tests/unit_tests/resources/waypoint/route_config.json"
       route_planner= None
@@ -314,14 +321,15 @@ if __name__ == '__main__':
     #   mesh_json = json.load(mesh_json)
       
 
-      vp = VesselPerformanceModeller(mesh_json, config['vessel_info'])
-      vp.model_accessibility()
-      vp.model_performance()
-      info = vp.to_json()
-      json.dump(info, open('vessel_mesh.json', "w"), indent=4)
+    #   vp = VesselPerformanceModeller(mesh_json, config['vessel_info'])
+    #   vp.model_accessibility()
+    #   vp.model_performance()
+    #   info = vp.to_json()
+    #   json.dump(info, open('vessel_mesh.json', "w"), indent=4)
     #   with open (route_conf , "r") as config_file:
     #       config = json.load(config_file)
-      route_planner= RoutePlanner ("vessel_mesh.json", route_conf)
+    #   route_planner= RoutePlanner ("vessel_mesh.json", route_conf)
+      route_planner= RoutePlanner (mesh_file, route_conf)
     # #   src, dest = route_planner._load_waypoints (wp_file)
     # #   route_planner._validate_wps (src)
     # #   route_planner._validate_wps (dest)

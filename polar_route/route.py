@@ -54,7 +54,7 @@ class Route:
         path['geometry'] = {}
         path['geometry']['type'] = "LineString"
         path_points= []      
-        path['geometry']['coordinates'] =  [segment.get_points()  for segment in self.segments ]
+        path['geometry']['coordinates'] =  self.get_points()
         path['properties'] = {}
         path['properties']['name'] = self.name
         path['properties']['from'] = self._from
@@ -63,7 +63,7 @@ class Route:
         cell_indices  = []
         for segment in self.segments:
             cell_indices.append (segment.start_wp.get_cellbox_indx())
-            cell_indices.append (segment.end_wp.get_cellbox_indx())
+           # cell_indices.append (segment.end_wp.get_cellbox_indx())
         # path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]]) ???
         path['properties']['CellIndices'] = cell_indices
         path['properties']['traveltime']  = [ segment.get_travel_time() for segment in self.segments ]
@@ -203,3 +203,12 @@ class Route:
         elif self.conf['time_unit'] == 's':
             return val
     
+    def get_points(self):
+        points = []
+        if len(self.segments) > 0:
+            points.append (self.segments[0].get_start_wp().to_point())
+
+            for segment in self.segments:
+                 points.append (segment.get_end_wp().to_point())
+        return points
+        

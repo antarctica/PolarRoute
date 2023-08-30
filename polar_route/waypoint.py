@@ -60,3 +60,6 @@ class Waypoint:
     
     def to_list (self):
         return [self.lat , self.long]
+    
+    def to_point(self):
+        return [self.get_longtitude(), self.get_latitude()]

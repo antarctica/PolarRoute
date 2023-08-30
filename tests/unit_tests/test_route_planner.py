@@ -26,7 +26,8 @@ class TestEnvMesh(unittest.TestCase):
       self.assertEqual (len (src_wps) , 0) # in valid wp so the len should be 0
       self.assertEqual (len (dest_wps) , 0)
 
-
+#test_wp_on_edge_case
+#test wp touching 2 cellboxes with different orientation
    def test_dijkstra(self):
       pass
 

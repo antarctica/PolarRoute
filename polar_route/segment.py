@@ -61,7 +61,7 @@ class Segment:
         '''
         returns the points of the segments
         '''
-        return[[self.start_wp.get_latitude(), self.start_wp.get_longtitude()] , [self.end_wp.get_latitude(), self.end_wp.get_longtitude()]]
+        return[[self.start_wp.get_longtitude(), self.start_wp.get_latitude()] , [self.end_wp.get_longtitude(), self.end_wp.get_latitude()]]
     
     def get_variable (self, variable):
         return getattr(self, variable)
@@ -86,3 +86,7 @@ class Segment:
             return self.start_wp
         elif indx == -1:
             return self.end_wp #get the end waypoint
+        
+    def to_str (self):
+        return "[ {} , {} ] [{} , {}]".format( self.start_wp.get_longtitude() ,  self.start_wp.get_latitude() , self.end_wp.get_longtitude() ,  self.end_wp.get_latitude() )
+    
