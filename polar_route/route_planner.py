@@ -25,7 +25,7 @@ from polar_route.routing_info import RoutingInfo
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 from polar_route.crossing import NewtonianDistance, NewtonianCurve
-from polar_route.utils import _json_str
+from polar_route.utils import _json_str, unit_speed
 from polar_route.mesh_generation.direction import Direction
 
 class RoutePlanner:
@@ -75,8 +75,10 @@ class RoutePlanner:
                 cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only!
                
         """
-        self.env_mesh = EnvironmentMesh.load_from_json (_json_str(mesh_file))
+        mesh_json = _json_str(mesh_file)
+        self.env_mesh = EnvironmentMesh.load_from_json (mesh_json)
         self.config = _json_str(config_file)
+        self.config['unit_shipspeed'] = mesh_json['config']['vessel_info']['Unit']
         # validate conf and mesh
         mandatory_fields = ["objective_function", "path_variables" , "vector_names" , "time_unit"]
         for field in mandatory_fields: 
@@ -117,6 +119,7 @@ class RoutePlanner:
                 routes(list<Route>): list of the constructed routes
         """
         routes = []
+        
         for i, s_wp in enumerate(start_waypoints):
                 route_segments = []
                 e_wp = end_waypoints[i]
@@ -144,9 +147,10 @@ class RoutePlanner:
                     for s in route_segments:
                         print (s.to_str())
                 print (route.segments[0].get_start_wp ().get_cellbox_indx())
-                route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()] , s_wp, 0)
+                
+                route._waypoint_correction (self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()] , s_wp , route.segments[0].get_end_wp(),  0)
                 if len (route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and dest are within the same cellbox
-                    route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_end_wp().get_cellbox_indx()] , e_wp, -1)
+                    route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_end_wp().get_cellbox_indx()] , e_wp, route.segments[-1].get_start_wp(), -1)
                 routes.append (route)
                 
         return routes
@@ -155,7 +159,7 @@ class RoutePlanner:
 
     def _dijkstra(self, wp , end_wps):
         """
-            Runs dijkstra across the whole of the domain.
+            Runs dijkstra across the whole of the domain.cellboxes_lookup
             Args:
                 wp (Waypoint): object contains the lat, long information of the source waypoint
                 end_wps(List(Waypoint)): a list of the end waypoints
@@ -202,14 +206,14 @@ class RoutePlanner:
         # create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel), and return 
         s1 = Segment (Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]) , Waypoint (crossing_points[1], crossing_points[0], cellbox_indx=node_id))
         s1.set_travel_time(traveltime[0])
-        print (">>> travel time >> " , traveltime)
+        # print (">>> travel time >> " , traveltime)
         #fill segment metrics
         s1.set_fuel (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
-        s1.set_distance (s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)])
+        s1.set_distance (s1.get_travel_time() * unit_speed (self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)] , self.config ['unit_shipspeed']))
         s2 = Segment( Waypoint (crossing_points[1], crossing_points[0], cellbox_indx=neighbour_id), Waypoint.load_from_cellbox(self.cellboxes_lookup[neighbour_id]))
         s2.set_travel_time(traveltime[1])
         s2.set_fuel ( s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
-        s2.set_distance (s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)])
+        s2.set_distance (s2.get_travel_time() * unit_speed (self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)], self.config ['unit_shipspeed']))
 
         return [s1,s2]
 

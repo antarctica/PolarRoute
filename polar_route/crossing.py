@@ -63,6 +63,7 @@ class NewtonianDistance:
         self.unit_time       = unit_time
         self.source_speed    = self._unit_speed(self.source_cellbox.agg_data['speed'] [direction.index(case)])
         self.neighbour_speed = self._unit_speed(self.neighbour_cellbox.agg_data['speed'] [direction.index(case)])
+
         self.case            = case
 
 
@@ -84,6 +85,8 @@ class NewtonianDistance:
         """
             Find the y value of the crossing point and travel time in each cell using the Newton method
         """
+
+       
         y0 = (Y*x)/(x+a)
         if self.debugging:
             print('---Initial y={:.2f}'.format(y0))
@@ -233,6 +236,9 @@ class NewtonianDistance:
         else:
             ptvl = -1.0
 
+
+
+
         s_cx  = self.source_cellbox.get_boundary().getcx()
         s_cy  = self.source_cellbox.get_boundary().getcy()
         s_dcx = self.source_cellbox.get_boundary().getdcx()
@@ -241,6 +247,7 @@ class NewtonianDistance:
         n_cy  = self.neighbour_cellbox.get_boundary().getcy()
         n_dcx = self.neighbour_cellbox.get_boundary().getdcx()
         n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
+
 
 
         Su = ptvl*self.source_cellbox.agg_data['uC'] 
@@ -360,7 +367,7 @@ class NewtonianDistance:
 
 
     def _corner(self):
-        '''
+        '''   print (">> TravelTime >>" , TravelTime )
             FILL
         '''
 
@@ -444,7 +451,10 @@ class NewtonianDistance:
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
             CellPoints  = [np.nan,np.nan]
+        # print (">> cellpoints >>" , CellPoints )
+        # print (">> CrossPoints >>" , CrossPoints )
 
+        print (">> TravelTime >>" , TravelTime )
         return TravelTime, CrossPoints, CellPoints, self.case
 
 

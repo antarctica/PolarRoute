@@ -150,5 +150,5 @@ class AggregatedCellBox:
                 return True
         return False
 
-    def get_bounds (self):  # adding this method to be compatabile with the Cellbox get_bounds method and use the NeighbourGraph.get_neighbour_case method
+    def get_bounds (self):  # adding this method to be compatabile with the Cellbox and use the NeighbourGraph.get_neighbour_case method
         return self.get_boundary()
