@@ -121,6 +121,8 @@ class RoutePlanner:
         routes = []
         
         for i, s_wp in enumerate(start_waypoints):
+                
+                s_wp.print_routing_table ()
                 route_segments = []
                 e_wp = end_waypoints[i]
                 e_wp_indx = e_wp.get_cellbox_indx()
@@ -130,6 +132,7 @@ class RoutePlanner:
                    route = Route ([Segment (s_wp, e_wp)],s_wp.get_name(), e_wp.get_name() , self.config)
                 else:
                     while s_wp.get_cellbox_indx() != e_wp_indx:
+                        # print (">>> s_wp_indx >>>" , s_wp)
                         # print (">>> e_wp_indx >>>" , e_wp_indx)
                         routing_info = s_wp.get_routing_info(e_wp_indx)
                         route_segments.append (routing_info.get_path())
@@ -167,6 +170,7 @@ class RoutePlanner:
         def find_min_objective (source_wp):
             min_obj = np.inf
             cellbox_indx = -1
+            source_wp.print_routing_table()
             for node_id in source_wp.routing_table.keys():
                 is_accessible = not self.cellboxes_lookup[str(node_id)].agg_data ['inaccessible']
                 if not source_wp.is_visited (str(node_id)) and source_wp.routing_table[node_id].get_obj (self.config['objective_function'])< min_obj and is_accessible:
@@ -179,18 +183,19 @@ class RoutePlanner:
             for case, neighbours in neighbour_map.items():
                 if len (neighbours) !=0:
                   for neighbour in neighbours:  
-                     edges = self._neighbour_cost(_id, str(neighbour), int (case))
-                     edges_cost = sum (segment.get_variable(self.config['objective_function']) for segment in edges) 
-                     new_cost =  source_wp.get_routing_info(_id).get_obj(self.config['objective_function'])+ edges_cost
-                     if new_cost < source_wp.get_routing_info(str(neighbour)).get_obj(self.config['objective_function']):
-                         source_wp.update_routing_table (str(neighbour) , RoutingInfo (_id, edges))
-            
+                     if not source_wp.is_visited (neighbour): # to avoid cycles
+                        edges = self._neighbour_cost(_id, str(neighbour), int (case))
+                        edges_cost = sum (segment.get_variable(self.config['objective_function']) for segment in edges) 
+                        new_cost =  source_wp.get_routing_info(_id).get_obj(self.config['objective_function'])+ edges_cost
+                        if new_cost < source_wp.get_routing_info(str(neighbour)).get_obj(self.config['objective_function']):
+                            source_wp.update_routing_table (str(neighbour) , RoutingInfo (_id, edges))
+                
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         print (">>>> src >>>> " , wp.get_cellbox_indx())
         print (">>>> end_wp >>>> " , end_wps[0].get_cellbox_indx())
         while not wp.is_all_visited():
             min_obj_indx = find_min_objective(wp)  # Determining the index of the minimum objective function that has not been visited
-            # print ("min_obj >>> " , min_obj_indx )
+            print ("min_obj >>> " , min_obj_indx )
             
             consider_neighbours (wp , min_obj_indx)
             wp.visit (min_obj_indx)
@@ -241,7 +246,7 @@ class RoutePlanner:
             logging.info('--- Processing Waypoint = {}'.format(wp.get_name()))
             self._dijkstra(wp, end_wps)
 
-
+        print (">>> dijkstra done ...")
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         return self._dijkstra_paths(src_wps, end_wps)  # returning the constructed routes
     
@@ -266,7 +271,7 @@ class RoutePlanner:
             if self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]], self.cellboxes_lookup [ids[1]]) in [Direction.east , Direction.north_east, Direction.north]:
                 return ids[1]
             return ids[0]
-        
+      
         valid_wps = wps
         for wp in wps: 
             wp_id = []
@@ -297,6 +302,8 @@ class RoutePlanner:
     def _load_waypoints (self, waypoints):
             try:
                 waypoints_df = waypoints
+                if isinstance (waypoints, dict):
+                    waypoints_df = pd.DataFrame.from_dict(waypoints)  
                 if  isinstance(waypoints,str):
                      waypoints_df= pd.read_csv(waypoints)
                 source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
@@ -312,16 +319,19 @@ class RoutePlanner:
 if __name__ == '__main__':
 
       config = None
-     # mesh_file = "../tests/regression_tests/example_routes/dijkstra/fuel/gaussian_random_field.json"
-      mesh_file = "add_vehicle.output.json"
+      mesh_file = "../tests/regression_tests/example_routes/dijkstra/time/checkerboard.json"
+      #mesh_file = "add_vehicle.output.json"
+      
 
     #   mesh_file = "grf_reprojection.json"
       wp_file = "../tests/unit_tests/resources/waypoint/waypoints_2.csv"
       route_conf = "../tests/unit_tests/resources/waypoint/route_config.json"
       route_planner= None
+      vessel_mesh = None
       with open (mesh_file , "r") as mesh_json:
-          config = json.load(mesh_json)['config']
-      mesh_json = MeshBuilder(config).build_environmental_mesh().to_json()
+          #config = json.load(mesh_json)['config']
+          vessel_mesh =  json.load(mesh_json)
+      #mesh_json = MeshBuilder(config).build_environmental_mesh().to_json()
     #   mesh_json = json.load(mesh_json)
       
 
@@ -337,5 +347,5 @@ if __name__ == '__main__':
     # #   src, dest = route_planner._load_waypoints (wp_file)
     # #   route_planner._validate_wps (src)
     # #   route_planner._validate_wps (dest)
-      routes = route_planner.compute_routes (wp_file)
-      print (routes[0].to_geojson())
+      routes = route_planner.compute_routes (vessel_mesh['waypoints'])
+      print (routes[0].to_json())

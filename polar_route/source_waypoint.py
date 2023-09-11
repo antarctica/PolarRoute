@@ -36,11 +36,13 @@ class SourceWaypoint (Waypoint):
         self.visited_nodes.append (cellbox_indx)
 
     def is_visited (self , indx): 
-        return indx in  self.visited_nodes
+      
+        return str(indx) in  self.visited_nodes
     
     def is_all_visited(self):
+        print ("visited >>> " , self.visited_nodes)
         for wp in self.end_wps:
-            if wp.get_cellbox_indx() not in self.visited_nodes:
+            if str(wp.get_cellbox_indx()) not  in self.visited_nodes:
                 return False
         return True
     def get_routing_info(self, _id):
@@ -48,3 +50,7 @@ class SourceWaypoint (Waypoint):
             self.routing_table[_id] = RoutingInfo(-1, None) # indicating incaccessible node and returns infinity obj
          
         return self.routing_table[_id]
+    def print_routing_table (self):
+        print ('Routing table of {} source waypoint:'.format (self.cellbox_indx))
+        for x in self.routing_table.keys():
+            print ("To {}, through node_idx: {}".format (x , self.routing_table [x].get_node_index() ) )

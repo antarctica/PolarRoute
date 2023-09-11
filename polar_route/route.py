@@ -44,17 +44,20 @@ class Route:
         '''
         return  sum (segment.get_fuel() for segment in self.segments)
       
-    def to_geojson(self ):
+    def to_json(self ):
         '''
             puts the constructed route in geojson format
         '''
+        output = {}
+        paths = []
+        geojson = {}
+        geojson['type'] = "FeatureCollection"
         paths = []
         path_variables = self.conf['path_variables']
         path = dict()
         path['type'] = "Feature"
         path['geometry'] = {}
-        path['geometry']['type'] = "LineString"
-        path_points= []      
+        path['geometry']['type'] = "LineString"    
         path['geometry']['coordinates'] =  self.get_points()
         path['properties'] = {}
         path['properties']['name'] = self.name
@@ -72,8 +75,10 @@ class Route:
         for variable in path_variables: 
              path['properties'][variable] = self._accumulate_metric (variable) 
 
-
-        return path
+        paths.append(path)
+        geojson['features'] = paths
+        output['paths'] = geojson
+        return output
 
     def _accumulate_metric (self, metric):
         metrics = [getattr(segment, metric)  for segment in self.segments]
@@ -133,7 +138,7 @@ class Route:
             Determine within cell parameters for a source and end point on the edge
         '''
         
-        
+        case = -1
         print (">> wp >>", wp.to_point())
         print (">> cp >>" ,cp.to_point())
         m_long  = 111.321*1000
@@ -141,7 +146,10 @@ class Route:
         # x = self._dist_around_globe(cp.get_longtitude(),wp.get_longtitude())*m_long*np.cos(wp.get_latitude()*(np.pi/180))
         x =  (cp.get_longtitude()-wp.get_longtitude())*m_long*np.cos(wp.get_latitude()*(np.pi/180))
         y = (cp.get_latitude()-wp.get_latitude())*m_lat
-        case = case_from_angle(cp.to_point(),wp.to_point())
+        if indx == 0:
+            case = case_from_angle(wp.to_point(),cp.to_point())
+        else: 
+            case = case_from_angle(cp.to_point(),wp.to_point())
         Su  = cellbox.agg_data['uC']
         Sv  =  cellbox.agg_data['vC']
         Ssp = unit_speed(cellbox.agg_data['speed'][case] , self.conf['unit_shipspeed'])
@@ -150,7 +158,7 @@ class Route:
         print ("WP_correction>>> tt >> " , traveltime)
         print ("WP_correction>>> distance >> " , distance)
         traveltime = unit_time(traveltime , self.conf['time_unit'])
-        print ("WP_correction>>> tt >> " , traveltime)
+        print ("case >> " , case)
        
 
         # update segment and its metrics
