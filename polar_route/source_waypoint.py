@@ -20,7 +20,7 @@ class SourceWaypoint (Waypoint):
                 source(Waypoint): an object that encapsulates the latitude, longtitude, name and cellbox_id information
                 end_wps (list <Waypoint>): list of the end waypoints
         """
-        super().__init__(source.get_latitude(),source.get_longtitude(), source.get_name())
+        super().__init__(source.get_latitude(),source.get_longtitude(), name = source.get_name())
         self.cellbox_indx = source.get_cellbox_indx()
         self.end_wps = end_wps
         self.visited_nodes = []
@@ -40,7 +40,7 @@ class SourceWaypoint (Waypoint):
         return str(indx) in  self.visited_nodes
     
     def is_all_visited(self):
-        print ("visited >>> " , self.visited_nodes)
+        # print ("visited >>> " , self.visited_nodes)
         for wp in self.end_wps:
             if str(wp.get_cellbox_indx()) not  in self.visited_nodes:
                 return False

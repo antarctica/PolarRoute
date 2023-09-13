@@ -122,7 +122,7 @@ class RoutePlanner:
         
         for i, s_wp in enumerate(start_waypoints):
                 
-                s_wp.print_routing_table ()
+                # s_wp.print_routing_table ()
                 route_segments = []
                 e_wp = end_waypoints[i]
                 e_wp_indx = e_wp.get_cellbox_indx()
@@ -144,7 +144,7 @@ class RoutePlanner:
                     if len(cases)>1:
                         route_segments.reverse()
                         cases.reverse()
-                    route = Route (route_segments , s_wp.get_name() , end_waypoints[i].get_name(), self.config)
+                    route = Route (route_segments , s_wp.get_name() , e_wp.get_name(), self.config)
                     route.set_cases(cases)
                 # correct the first and last segment
                     for s in route_segments:
@@ -155,6 +155,7 @@ class RoutePlanner:
                 if len (route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and dest are within the same cellbox
                     route._waypoint_correction (self.cellboxes_lookup[route.segments[-1].get_end_wp().get_cellbox_indx()] , e_wp, route.segments[-1].get_start_wp(), -1)
                 routes.append (route)
+                print (route.to_json())
                 
         return routes
 
@@ -170,7 +171,7 @@ class RoutePlanner:
         def find_min_objective (source_wp):
             min_obj = np.inf
             cellbox_indx = -1
-            source_wp.print_routing_table()
+            # source_wp.print_routing_table()
             for node_id in source_wp.routing_table.keys():
                 is_accessible = not self.cellboxes_lookup[str(node_id)].agg_data ['inaccessible']
                 if not source_wp.is_visited (str(node_id)) and source_wp.routing_table[node_id].get_obj (self.config['objective_function'])< min_obj and is_accessible:
@@ -308,9 +309,9 @@ class RoutePlanner:
                      waypoints_df= pd.read_csv(waypoints)
                 source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
                 dest_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
-                src_wps = [ Waypoint (source ['Lat'] , source['Long'] , source ['Name'] ) for index, source in source_waypoints_df.iterrows()] 
-                dest_wps = [ Waypoint (dest ['Lat'] , dest['Long'] , dest ['Name'] ) for index, dest in dest_waypoints_df.iterrows()] 
-                return src_wps , dest_wps
+                src_wps = [ Waypoint (source ['Lat'] , source['Long'] , name = source ['Name'] ) for index, source in source_waypoints_df.iterrows()] 
+                dest_wps = [ Waypoint (dest ['Lat'] , dest['Long'] , name = dest ['Name'] ) for index, dest in dest_waypoints_df.iterrows()] 
+                return  src_wps, dest_wps
             except FileNotFoundError:
                 raise ValueError("Unable to load '{}', please check path name".format(waypoints))
 
