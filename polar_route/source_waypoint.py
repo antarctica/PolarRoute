@@ -1,6 +1,6 @@
 from polar_route.routing_info import RoutingInfo
 from polar_route.waypoint import Waypoint
-
+import numpy as np 
 
 class SourceWaypoint (Waypoint):
     '''
@@ -54,3 +54,29 @@ class SourceWaypoint (Waypoint):
         print ('Routing table of {} source waypoint:'.format (self.cellbox_indx))
         for x in self.routing_table.keys():
             print ("To {}, through node_idx: {}".format (x , self.routing_table [x].get_node_index() ) )
+
+    def print_detailed_routing_info(self):
+
+        print ('Routing table of {} source waypoint:'.format (self.cellbox_indx))
+        for x in self.routing_table.keys():
+            print ("To {}, through node_idx: {}".format (x , self.routing_table [x].get_node_index() ) )
+            print ("using segments >> ")
+            for s in self.routing_table [x].get_path():
+                print(s.to_str())
+
+    def get_obj (self, node_indx , obj):
+        # print (self.node_indx)
+        # print (self.path)
+        if node_indx not in self.routing_table.keys(): # this info means inaccessible node so the obj is infinity
+            return np.inf
+        
+        obj_value =0
+        for segment in self.routing_table [node_indx].get_path():
+            obj_value +=  getattr(segment, obj)# this should be recursive until the source wp
+        through_indx = self.routing_table[node_indx].node_indx
+        while  through_indx!= self.cellbox_indx:  #shoud recurse and sum up the remaining segments until we reach the s_wp
+                for segment in self.routing_table [through_indx].get_path():
+                        obj_value +=  getattr(segment, obj)   
+                through_indx = self.routing_table[through_indx].node_indx 
+ 
+        return obj_value

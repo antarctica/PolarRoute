@@ -33,6 +33,9 @@ class RoutingInfo:
         
         obj_value =0
         for segment in self.path:
-            obj_value +=  getattr(segment, obj)
+            obj_value +=  getattr(segment, obj)# this should be recursive until the source wp
  
         return obj_value
+    
+    def to_str (self):
+        print ("To {}, through nodeidx: {}".format (self.node_indx ) )
