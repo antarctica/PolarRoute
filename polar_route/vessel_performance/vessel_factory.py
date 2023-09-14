@@ -9,6 +9,7 @@ class VesselFactory:
     def get_vessel(cls, config):
         """
             Method to return an initialised instance of a vessel class designed for performance modelling
+
             Args:
                 config (dict): a vessel config dictionary
 

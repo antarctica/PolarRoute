@@ -23,6 +23,7 @@ class SlocumGlider(AbstractGlider):
     def model_speed(self, cellbox):
         """
             Method to determine the maximum speed that the glider can traverse the given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -36,6 +37,7 @@ class SlocumGlider(AbstractGlider):
     def model_battery(self, cellbox):
         """
             Method to determine the rate of battery usage in a given cell in Ah/day
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 

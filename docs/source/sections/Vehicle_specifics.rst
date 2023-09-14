@@ -15,7 +15,7 @@ in a given mesh are inaccessible for that particular vessel and what its perform
     :align: center
     :width: 700
 
-    Maps of the sea ice concentration (a), speed (b) and fuel consumption (c) across the Weddell Sea.
+    Maps of the sea ice concentration (a), speed (b) and fuel consumption (c) for the SDA across the Weddell Sea.
     The latter two quantities are derived from the former.
 
 .. figure:: ./Figures/VesselUML.png
@@ -74,4 +74,24 @@ SDA
 .. autoclass:: polar_route.vessel_performance.vessels.SDA.SDA
    :special-members: __init__
    :members: model_speed, model_fuel, model_resistance, invert_resistance
+
+
+Abstract Glider
+###############
+
+.. automodule:: polar_route.vessel_performance.vessels.abstract_glider
+
+.. autoclass:: polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider
+   :special-members: __init__
+   :members: model_performance, model_accessibility, land, shallow, extreme_ice
+
+
+Slocum Glider
+#############
+
+.. automodule:: polar_route.vessel_performance.vessels.slocum
+
+.. autoclass:: polar_route.vessel_performance.vessels.slocum.SlocumGlider
+   :special-members: __init__
+   :members: model_speed, model_battery
 

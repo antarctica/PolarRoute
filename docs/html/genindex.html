@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; polar_route 0.3.0 documentation</title>
+  <title>Index &mdash; polar_route 0.3.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -48,8 +48,8 @@
 <li class="toctree-l1"><a class="reference internal" href="sections/Dataloaders/overview.html">7. Dataloader Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Route_optimisation.html">10. Methods - Route Planner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Route_calculation.html">11. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Route_calculation.html">10. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Route_optimisation.html">11. Methods - Route Planner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Examples.html">12. Examples of running code</a></li>
 </ul>
 
@@ -128,9 +128,13 @@
 </li>
         <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.__init__">(polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller method)</a>
 </li>
+        <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.__init__">(polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider method)</a>
+</li>
         <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.__init__">(polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
 </li>
         <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.SDA.SDA.__init__">(polar_route.vessel_performance.vessels.SDA.SDA method)</a>
+</li>
+        <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.slocum.SlocumGlider.__init__">(polar_route.vessel_performance.vessels.slocum.SlocumGlider method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -169,6 +173,8 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider">AbstractGlider (class in polar_route.vessel_performance.vessels.abstract_glider)</a>
+</li>
       <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip">AbstractShip (class in polar_route.vessel_performance.vessels.abstract_ship)</a>
 </li>
       <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.abstract_vessel.AbstractVessel">AbstractVessel (class in polar_route.vessel_performance.abstract_vessel)</a>
@@ -311,8 +317,12 @@
 </li>
       <li><a href="sections/Dataloaders/vector/implemented/ERA5Wind.html#polar_route.dataloaders.vector.era5_wind.ERA5WindDataLoader">ERA5WindDataLoader (class in polar_route.dataloaders.vector.era5_wind)</a>
 </li>
-      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.extreme_ice">extreme_ice() (polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
+      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.extreme_ice">extreme_ice() (polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider method)</a>
+
+      <ul>
+        <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.extreme_ice">(polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -459,12 +469,16 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.land">land() (polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
+      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.land">land() (polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider method)</a>
+
+      <ul>
+        <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.land">(polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
 </li>
-      <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.load_from_json">load_from_json() (polar_route.mesh_generation.environment_mesh.EnvironmentMesh class method)</a>
-</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.environment_mesh.EnvironmentMesh.load_from_json">load_from_json() (polar_route.mesh_generation.environment_mesh.EnvironmentMesh class method)</a>
+</li>
       <li><a href="sections/Route_calculation.html#polar_route.route_calc.load_mesh">load_mesh() (in module polar_route.route_calc)</a>
 </li>
       <li><a href="sections/Route_calculation.html#polar_route.route_calc.load_route">load_route() (in module polar_route.route_calc)</a>
@@ -488,9 +502,13 @@
       <ul>
         <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.model_accessibility">(polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller method)</a>
 </li>
+        <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.model_accessibility">(polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider method)</a>
+</li>
         <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.model_accessibility">(polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
 </li>
       </ul></li>
+      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.slocum.SlocumGlider.model_battery">model_battery() (polar_route.vessel_performance.vessels.slocum.SlocumGlider method)</a>
+</li>
       <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.SDA.SDA.model_fuel">model_fuel() (polar_route.vessel_performance.vessels.SDA.SDA method)</a>
 </li>
       <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance">model_performance() (polar_route.vessel_performance.abstract_vessel.AbstractVessel method)</a>
@@ -498,13 +516,19 @@
       <ul>
         <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.model_performance">(polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller method)</a>
 </li>
+        <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.model_performance">(polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider method)</a>
+</li>
         <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.model_performance">(polar_route.vessel_performance.vessels.abstract_ship.AbstractShip method)</a>
 </li>
       </ul></li>
       <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.SDA.SDA.model_resistance">model_resistance() (polar_route.vessel_performance.vessels.SDA.SDA method)</a>
 </li>
       <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.SDA.SDA.model_speed">model_speed() (polar_route.vessel_performance.vessels.SDA.SDA method)</a>
+
+      <ul>
+        <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.slocum.SlocumGlider.model_speed">(polar_route.vessel_performance.vessels.slocum.SlocumGlider method)</a>
 </li>
+      </ul></li>
       <li><a href="sections/Dataloaders/scalar/implemented/MODIS.html#polar_route.dataloaders.scalar.modis.MODISDataLoader">MODISDataLoader (class in polar_route.dataloaders.scalar.modis)</a>
 </li>
       <li>
@@ -595,9 +619,13 @@
 </li>
         <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessel_performance_modeller">polar_route.vessel_performance.vessel_performance_modeller</a>
 </li>
+        <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.abstract_glider">polar_route.vessel_performance.vessels.abstract_glider</a>
+</li>
         <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.abstract_ship">polar_route.vessel_performance.vessels.abstract_ship</a>
 </li>
         <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.SDA">polar_route.vessel_performance.vessels.SDA</a>
+</li>
+        <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.slocum">polar_route.vessel_performance.vessels.slocum</a>
 </li>
       </ul></li>
   </ul></td>
@@ -793,8 +821,6 @@
         <li><a href="sections/Dataloaders/vector/implemented/BalticCurrent.html#module-polar_route.dataloaders.vector.baltic_current">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     polar_route.dataloaders.vector.duacs_current
 
@@ -802,6 +828,8 @@
         <li><a href="sections/Dataloaders/vector/implemented/DUACS.html#module-polar_route.dataloaders.vector.duacs_current">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     polar_route.dataloaders.vector.era5_wave_direction
 
@@ -943,6 +971,13 @@
 </li>
       </ul></li>
       <li>
+    polar_route.vessel_performance.vessels.abstract_glider
+
+      <ul>
+        <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.abstract_glider">module</a>
+</li>
+      </ul></li>
+      <li>
     polar_route.vessel_performance.vessels.abstract_ship
 
       <ul>
@@ -954,6 +989,13 @@
 
       <ul>
         <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.SDA">module</a>
+</li>
+      </ul></li>
+      <li>
+    polar_route.vessel_performance.vessels.slocum
+
+      <ul>
+        <li><a href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.slocum">module</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1000,15 +1042,19 @@
       </ul></li>
       <li><a href="sections/Dataloaders/vector/abstractVector.html#polar_route.dataloaders.vector.abstract_vector.VectorDataLoader.set_data_col_name_list">set_data_col_name_list() (polar_route.dataloaders.vector.abstract_vector.VectorDataLoader method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.cellbox.CellBox.set_data_source">set_data_source() (polar_route.mesh_generation.cellbox.CellBox method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.cellbox.CellBox.set_parent">set_parent() (polar_route.mesh_generation.cellbox.CellBox method)</a>
+</li>
+      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.shallow">shallow() (polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider method)</a>
 </li>
       <li><a href="sections/Dataloaders/scalar/implemented/Shape.html#polar_route.dataloaders.scalar.shape.ShapeDataLoader">ShapeDataLoader (class in polar_route.dataloaders.scalar.shape)</a>
 </li>
       <li><a href="sections/Mesh_Construction/Mesh_construction_classes.html#polar_route.mesh_generation.cellbox.CellBox.should_split">should_split() (polar_route.mesh_generation.cellbox.CellBox method)</a>
+</li>
+      <li><a href="sections/Vehicle_specifics.html#polar_route.vessel_performance.vessels.slocum.SlocumGlider">SlocumGlider (class in polar_route.vessel_performance.vessels.slocum)</a>
 </li>
       <li><a href="sections/Dataloaders/vector/implemented/SOSE.html#polar_route.dataloaders.vector.sose.SOSEDataLoader">SOSEDataLoader (class in polar_route.dataloaders.vector.sose)</a>
 </li>

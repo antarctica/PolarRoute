@@ -23,6 +23,7 @@ class AbstractShip(AbstractVessel):
     def model_performance(self, cellbox):
         """
             Method to determine the performance characteristics for the ship
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -46,6 +47,7 @@ class AbstractShip(AbstractVessel):
     def model_accessibility(self, cellbox):
         """
             Method to determine if a given cell is accessible to the ship
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -67,6 +69,7 @@ class AbstractShip(AbstractVessel):
     def model_speed(self, cellbox: AggregatedCellBox):
         """
             Method to determine the maximum speed that the ship can traverse the given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -79,6 +82,7 @@ class AbstractShip(AbstractVessel):
     def model_fuel(self, cellbox: AggregatedCellBox):
         """
             Method to determine the fuel consumption rate of the ship in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -89,7 +93,8 @@ class AbstractShip(AbstractVessel):
 
     def land(self, cellbox):
         """
-            Method to determine if a cell is land based on configured minimum depth.
+            Method to determine if a cell is land based on configured minimum depth
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
@@ -105,7 +110,8 @@ class AbstractShip(AbstractVessel):
 
     def extreme_ice(self, cellbox):
         """
-            Method to determine if a cell is inaccessible based on configured max ice concentration.
+            Method to determine if a cell is inaccessible based on configured max ice concentration
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
@@ -123,6 +129,7 @@ class AbstractShip(AbstractVessel):
     def model_resistance(self, cellbox: AggregatedCellBox):
         """
             Method to determine the resistance force acting on the ship in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -135,6 +142,7 @@ class AbstractShip(AbstractVessel):
     def invert_resistance(self, cellbox: AggregatedCellBox):
         """
             Method to determine the speed that reduces the resistance force on the ship to an acceptable value
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
