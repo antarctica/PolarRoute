@@ -22,6 +22,7 @@ class SDA(AbstractShip):
     def model_speed(self, cellbox):
         """
             Method to determine the maximum speed that the SDA can traverse the given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -63,6 +64,7 @@ class SDA(AbstractShip):
     def model_fuel(self, cellbox):
         """
             Method to determine the fuel consumption rate of the SDA in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -81,6 +83,7 @@ class SDA(AbstractShip):
     def model_resistance(self, cellbox):
         """
             Method to determine the resistance force acting on the SDA in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -106,7 +109,8 @@ class SDA(AbstractShip):
 
     def ice_resistance(self, cellbox):
         """
-            Method to find the ice resistance force acting on the SDA at a given speed in a given cell.
+            Method to find the ice resistance force acting on the SDA at a given speed in a given cell
+
             The input cellbox should contain the following values:
                 velocity (float): The speed of the vessel in km/h
                 sic (float): The average sea ice concentration in the cell as a percentage
@@ -146,7 +150,8 @@ class SDA(AbstractShip):
 
     def invert_resistance(self, cellbox):
         """
-            Method to find the vessel speed that keeps the ice resistance force below a given threshold in a given cell.
+            Method to find the vessel speed that keeps the ice resistance force below a given threshold in a given cell
+
             The input cellbox should contain the following values\n
                 sic (float) - The average sea ice concentration in the cell as a percentage \n
                 thickness (float) - The average ice thickness in the cell in m \n
@@ -189,6 +194,7 @@ class SDA(AbstractShip):
 def fuel_eq(speed, resistance):
     """
         Equation to calculate the fuel consumption in tons/day given the speed in km/h and the resistance force in N
+
         Args:
             speed (float): the SDA's speed in km/h
             resistance (float): the resistance force in N

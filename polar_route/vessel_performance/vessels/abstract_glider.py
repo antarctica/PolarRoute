@@ -1,11 +1,12 @@
 from polar_route.vessel_performance.abstract_vessel import AbstractVessel
-from polar_route.mesh_generation.environment_mesh import AggregatedCellBox
+from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from abc import abstractmethod
 import logging
 
-class AbstractShip(AbstractVessel):
+
+class AbstractGlider(AbstractVessel):
     """
-        Abstract class to define the methods and attributes common to any vessel that is a ship
+        Abstract class to model the performance of an underwater glider
     """
     def __init__(self, params):
         """
@@ -14,43 +15,34 @@ class AbstractShip(AbstractVessel):
         """
         self.vessel_params = params
         logging.info(f"Initialising a vessel object of type: {self.vessel_params['VesselType']}")
-
         self.max_speed = self.vessel_params['MaxSpeed']
         self.speed_unit = self.vessel_params['Unit']
         self.max_elevation = -1 * self.vessel_params['MinDepth']
         self.max_ice = self.vessel_params['MaxIceConc']
 
+
     def model_performance(self, cellbox):
         """
-            Method to determine the performance characteristics for the ship
+            Method to determine the performance characteristics for the underwater glider
 
             Args:
-                cellbox (AggregatedCellBox): input cell from environmental mesh
-
-            Returns:
-                performance_values (dict): the value of the modelled performance characteristics for the ship
+                    cellbox (AggregatedCellBox): input cell from environmental mesh
         """
-        logging.debug(f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['VesselType']}")
-        # Check if the speed is defined in the input cellbox
-        if 'speed' not in cellbox.agg_data:
-            logging.debug(f'No speed in cell, assigning default value of {self.max_speed} '
-                          f'{self.speed_unit} from config')
-            cellbox.agg_data['speed'] = self.max_speed
-
+        logging.debug(
+            f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['VesselType']}")
         perf_cellbox = self.model_speed(cellbox)
-        perf_cellbox = self.model_fuel(perf_cellbox)
+        perf_cellbox = self.model_battery(perf_cellbox)
 
-        performance_values = {k:v for k,v in perf_cellbox.agg_data.items() if k not in cellbox.agg_data}
+        performance_values = {k: v for k, v in perf_cellbox.agg_data.items() if k not in cellbox.agg_data}
 
         return performance_values
 
     def model_accessibility(self, cellbox):
         """
-            Method to determine if a given cell is accessible to the ship
+            Method to determine if a given cell is accessible to the underwater glider
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
-
             Returns:
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
@@ -59,41 +51,16 @@ class AbstractShip(AbstractVessel):
         access_values = dict()
 
         access_values['land'] = self.land(cellbox)
+        access_values['shallow'] = self.shallow(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
 
         access_values['inaccessible'] = any(access_values.values())
 
         return access_values
 
-    @abstractmethod
-    def model_speed(self, cellbox: AggregatedCellBox):
-        """
-            Method to determine the maximum speed that the ship can traverse the given cell
-
-            Args:
-                cellbox (AggregatedCellBox): input cell from environmental mesh
-
-            Returns:
-                cellbox (AggregatedCellBox): updated cell with speed values
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def model_fuel(self, cellbox: AggregatedCellBox):
-        """
-            Method to determine the fuel consumption rate of the ship in a given cell
-
-            Args:
-                cellbox (AggregatedCellBox): input cell from environmental mesh
-
-            Returns:
-                cellbox (AggregatedCellBox): updated cell with fuel consumption values
-        """
-        raise NotImplementedError
-
     def land(self, cellbox):
         """
-            Method to determine if a cell is land based on configured minimum depth
+            Method to determine if a cell is land based on sea level
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -104,9 +71,26 @@ class AbstractShip(AbstractVessel):
             logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is land")
             land = False
         else:
-            land = cellbox.agg_data['elevation'] > self.max_elevation
+            land = cellbox.agg_data['elevation'] >= 0.0
 
         return land
+
+    def shallow(self, cellbox):
+        """
+            Method to determine if the water in a cell is too shallow for a glider based on configured minimum depth
+
+            Args:
+                cellbox (AggregatedCellBox): input cell from environmental mesh
+            Returns:
+                shallow (bool): boolean that is True if the cell is too shallow for a glider
+        """
+        if 'elevation' not in cellbox.agg_data:
+            logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is too shallow")
+            shallow = False
+        else:
+            shallow = 0.0 > cellbox.agg_data['elevation'] > self.max_elevation
+
+        return shallow
 
     def extreme_ice(self, cellbox):
         """
@@ -114,6 +98,7 @@ class AbstractShip(AbstractVessel):
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
+
             Returns:
                 ext_ice (bool): boolean that is True if the cell is inaccessible due to ice
         """
@@ -126,26 +111,29 @@ class AbstractShip(AbstractVessel):
         return ext_ice
 
     @abstractmethod
-    def model_resistance(self, cellbox: AggregatedCellBox):
+    def model_speed(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the resistance force acting on the ship in a given cell
+            Method to determine the maximum speed that the glider can traverse the given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
             Returns:
-                cellbox (AggregatedCellBox): updated cell with resistance values
+                cellbox (AggregatedCellBox): updated cell with speed values
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
-    def invert_resistance(self, cellbox: AggregatedCellBox):
+    def model_battery(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the speed that reduces the resistance force on the ship to an acceptable value
+            Method to determine the battery consumption rate of the glider in a given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
+
             Returns:
-                speed (float): Safe vessel speed in km/h
+                cellbox (AggregatedCellBox): updated cell with battery consumption values
         """
-        pass
+        raise NotImplementedError
+
+
