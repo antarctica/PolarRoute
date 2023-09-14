@@ -1,5 +1,5 @@
 from polar_route.vessel_performance.vessels.SDA import SDA
-from polar_route.vessel_performance.vessels.underwater_vessel import UnderwaterVessel
+from polar_route.vessel_performance.vessels.slocum import SlocumGlider
 
 class VesselFactory:
     """
@@ -9,15 +9,16 @@ class VesselFactory:
     def get_vessel(cls, config):
         """
             Method to return an initialised instance of a vessel class designed for performance modelling
+
             Args:
                 config (dict): a vessel config dictionary
 
             Returns:
                 vessel: an instance of a vessel class designed for performance modelling
         """
-        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Beam", "HullType", "ForceLimit", "MaxIceConc", "MinDepth",
-                                             "Unit"]),
-                               "Underwater": (UnderwaterVessel, ["MaxSpeed", "MaxIceConc", "MinDepth"])}
+        vessel_requirements = {"SDA": (SDA, ["MaxSpeed", "Unit", "Beam", "HullType", "ForceLimit", "MaxIceConc",
+                                             "MinDepth"]),
+                               "Slocum": (SlocumGlider, ["MaxSpeed", "Unit", "MaxIceConc", "MinDepth"])}
 
         vessel_type = config['VesselType']
 
