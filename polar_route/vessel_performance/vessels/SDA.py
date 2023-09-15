@@ -190,6 +190,20 @@ class SDA(AbstractShip):
 
         return new_speed
 
+    def wave_resistance(self, w_height):
+        """
+        Method to calculate the wave resistance given the wave height and vessel geometry.
+        Recommended by the ITTC for small wave heights: https://ittc.info/media/1936/75-04-01-012.pdf
+        """
+        rho_w = 9807 # N/m^3 (specific weight of water at 4°C from wikipedia, will vary with temp and salinity)
+        beam = self.vessel_params['Beam']
+        c_block = self.vessel_params.get('c_block', 0.75) # ratio of underwater volume to cuboid
+        length = self.vessel_params['Length']
+
+        wave_res = (0.64*rho_w*c_block*(w_height**2)*(beam**2))/length # Kreitner, valid up to ~2m wave height
+
+        return wave_res
+
 
 def fuel_eq(speed, resistance):
     """
