@@ -22,6 +22,7 @@ class SDA(AbstractShip):
     def model_speed(self, cellbox):
         """
             Method to determine the maximum speed that the SDA can traverse the given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -63,6 +64,7 @@ class SDA(AbstractShip):
     def model_fuel(self, cellbox):
         """
             Method to determine the fuel consumption rate of the SDA in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -81,6 +83,7 @@ class SDA(AbstractShip):
     def model_resistance(self, cellbox):
         """
             Method to determine the resistance force acting on the SDA in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -106,7 +109,8 @@ class SDA(AbstractShip):
 
     def ice_resistance(self, cellbox):
         """
-            Method to find the ice resistance force acting on the SDA at a given speed in a given cell.
+            Method to find the ice resistance force acting on the SDA at a given speed in a given cell
+
             The input cellbox should contain the following values:
                 velocity (float): The speed of the vessel in km/h
                 sic (float): The average sea ice concentration in the cell as a percentage
@@ -146,7 +150,8 @@ class SDA(AbstractShip):
 
     def invert_resistance(self, cellbox):
         """
-            Method to find the vessel speed that keeps the ice resistance force below a given threshold in a given cell.
+            Method to find the vessel speed that keeps the ice resistance force below a given threshold in a given cell
+
             The input cellbox should contain the following values\n
                 sic (float) - The average sea ice concentration in the cell as a percentage \n
                 thickness (float) - The average ice thickness in the cell in m \n
@@ -185,10 +190,25 @@ class SDA(AbstractShip):
 
         return new_speed
 
+    def wave_resistance(self, w_height):
+        """
+        Method to calculate the wave resistance given the wave height and vessel geometry.
+        Recommended by the ITTC for small wave heights: https://ittc.info/media/1936/75-04-01-012.pdf
+        """
+        rho_w = 9807 # N/m^3 (specific weight of water at 4°C from wikipedia, will vary with temp and salinity)
+        beam = self.vessel_params['Beam']
+        c_block = self.vessel_params.get('c_block', 0.75) # ratio of underwater volume to cuboid
+        length = self.vessel_params['Length']
+
+        wave_res = (0.64*rho_w*c_block*(w_height**2)*(beam**2))/length # Kreitner, valid up to ~2m wave height
+
+        return wave_res
+
 
 def fuel_eq(speed, resistance):
     """
         Equation to calculate the fuel consumption in tons/day given the speed in km/h and the resistance force in N
+
         Args:
             speed (float): the SDA's speed in km/h
             resistance (float): the resistance force in N

@@ -19,10 +19,12 @@ class AbstractShip(AbstractVessel):
         self.speed_unit = self.vessel_params['unit']
         self.max_elevation = -1 * self.vessel_params['min_depth']
         self.max_ice = self.vessel_params['max_ice_conc']
+        self.max_wave = self.vessel_params.get('max_wave')
 
     def model_performance(self, cellbox):
         """
             Method to determine the performance characteristics for the ship
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -46,17 +48,23 @@ class AbstractShip(AbstractVessel):
     def model_accessibility(self, cellbox):
         """
             Method to determine if a given cell is accessible to the ship
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
             Returns:
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
-        logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: {self.vessel_params['vessel_type']}")
+        logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: "
+                      f"{self.vessel_params['vessel_type']}")
         access_values = dict()
 
         access_values['land'] = self.land(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
+
+        if self.max_wave is not None:
+            logging.debug(f"Excluding areas with wave height above {self.max_wave}m")
+            access_values['ext_waves'] = self.extreme_waves(cellbox)
 
         access_values['inaccessible'] = any(access_values.values())
 
@@ -66,6 +74,7 @@ class AbstractShip(AbstractVessel):
     def model_speed(self, cellbox: AggregatedCellBox):
         """
             Method to determine the maximum speed that the ship can traverse the given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -78,6 +87,7 @@ class AbstractShip(AbstractVessel):
     def model_fuel(self, cellbox: AggregatedCellBox):
         """
             Method to determine the fuel consumption rate of the ship in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -88,7 +98,8 @@ class AbstractShip(AbstractVessel):
 
     def land(self, cellbox):
         """
-            Method to determine if a cell is land based on configured minimum depth.
+            Method to determine if a cell is land based on configured minimum depth
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
@@ -104,7 +115,8 @@ class AbstractShip(AbstractVessel):
 
     def extreme_ice(self, cellbox):
         """
-            Method to determine if a cell is inaccessible based on configured max ice concentration.
+            Method to determine if a cell is inaccessible based on configured max ice concentration
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
@@ -118,10 +130,27 @@ class AbstractShip(AbstractVessel):
 
         return ext_ice
 
+    def extreme_waves(self, cellbox):
+        """
+            Method to determine if a cell is inaccessible based on configured max wave height.
+            Args:
+                cellbox (AggregatedCellBox): input cell from environmental mesh
+            Returns:
+                ext_wave (bool): boolean that is True if the cell is inaccessible due to waves
+        """
+        if 'swh' not in cellbox.agg_data:
+            logging.debug(f"No wave height data in cell {cellbox.id}")
+            ext_wave = False
+        else:
+            ext_wave = cellbox.agg_data['swh'] > self.max_wave
+
+        return ext_wave
+
     @abstractmethod
     def model_resistance(self, cellbox: AggregatedCellBox):
         """
             Method to determine the resistance force acting on the ship in a given cell
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
 
@@ -134,6 +163,7 @@ class AbstractShip(AbstractVessel):
     def invert_resistance(self, cellbox: AggregatedCellBox):
         """
             Method to determine the speed that reduces the resistance force on the ship to an acceptable value
+
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
