@@ -52,7 +52,7 @@ class JGridAggregatedCellBox (AggregatedCellBox):
       
         self.id = id
     
-    def get_boundary(self):
+    def get_bounds(self):
         """
             get the boundary of the CellBox
         """

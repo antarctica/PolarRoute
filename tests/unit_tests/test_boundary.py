@@ -38,10 +38,10 @@ class TestBoundary (unittest.TestCase):
 
    def test_load_from_json (self):
       
-      json_file = "../regression_tests/example_meshes/Enviromental_Meshes/create_mesh.output2013_4_80.json"
+      json_file = "../regression_tests/example_meshes/env_meshes/grf_reprojection.json"
       with open (json_file , "r") as config_file:
           config = json.load(config_file) ['config']
           boundary = Boundary.from_json (config)
-          self.assertEqual ( boundary.get_bounds() , [[-70, -65], [-70, -60], [-50, -60], [-50, -65], [-70, -65]] )
+          self.assertEqual ( boundary.get_bounds() , [[-70.0, -70.0], [-70.0, -50.0], [-50.0, -50.0], [-50.0, -70.0], [-70.0, -70.0]] )
 
 

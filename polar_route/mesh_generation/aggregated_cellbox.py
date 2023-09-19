@@ -78,7 +78,7 @@ class AggregatedCellBox:
         """
         self.id = id
     
-    def get_boundary(self):
+    def get_bounds(self):
         """
             get the boundary of the CellBox
         """
@@ -118,11 +118,11 @@ class AggregatedCellBox:
                 cell_json (dict): A JSON parsable dictionary representation of this AggregatedCellBox
         '''
         cell_json = {
-            "geometry": str(Polygon(self.get_boundary().get_bounds())),
-            'cx': float(self.get_boundary().getcx()),
-            'cy': float(self.get_boundary().getcy()),
-            'dcx': float(self.get_boundary().getdcx()),
-            'dcy': float(self.get_boundary().getdcy()),
+            "geometry": str(Polygon(self.get_bounds().get_bounds())),
+            'cx': float(self.get_bounds().getcx()),
+            'cy': float(self.get_bounds().getcy()),
+            'dcx': float(self.get_bounds().getdcx()),
+            'dcy': float(self.get_bounds().getdcy()),
            
         }
 
@@ -149,3 +149,4 @@ class AggregatedCellBox:
             if (long >= self.boundary.get_long_min()) & (long <= self.boundary.get_long_max()):
                 return True
         return False
+    
