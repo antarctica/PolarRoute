@@ -10,8 +10,8 @@ class TestMeshValidator(unittest.TestCase):
    
 
    def setUp(self):
-    #  self.mesh_validator = MeshValidator("../regression_tests/example_meshes/abstract_env_meshes/hgrad.json")
-     self.mesh_validator = MeshValidator("./resources/amsr_3day_single_SIC_split_config.json") 
+     self.mesh_validator = MeshValidator("../regression_tests/example_meshes/abstract_env_meshes/hgrad.json")
+     
 
 
    def test_sampler(self):
