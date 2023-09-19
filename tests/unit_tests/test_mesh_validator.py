@@ -10,8 +10,8 @@ class TestMeshValidator(unittest.TestCase):
    
 
    def setUp(self):
-     self.mesh_validator = MeshValidator("../regression_tests/example_meshes/Abstract_Environmental_Meshes/hgrad_n201_vF_mesh.json")
-      
+    #  self.mesh_validator = MeshValidator("../regression_tests/example_meshes/abstract_env_meshes/hgrad.json")
+     self.mesh_validator = MeshValidator("./resources/amsr_3day_single_SIC_split_config.json") 
 
 
    def test_sampler(self):
@@ -29,11 +29,12 @@ class TestMeshValidator(unittest.TestCase):
 
    def test_validate_mesh(self):
       distance = self.mesh_validator.validate_mesh()
+      print (distance)
       self.assertLess (distance, 0.1)
    
 
 
-
-
+if __name__ == '__main__':
+    unittest.main()
 
 
