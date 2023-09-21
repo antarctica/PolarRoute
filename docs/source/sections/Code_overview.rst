@@ -22,10 +22,8 @@ The outline of the toolkit can be separated into the four main sections shown in
 
 The separate stages can be broken down into:
 
-1. :ref:`Dataloaders <dataloaders-overview>` - Reading in different datasets of differing types. Throughout this section we will outline the form that the input datasets should take and useful tips for pre-processing your data.
-2. :ref:`Mesh Construction <mesh_construction_overview>` - Generating a Digital Twin of the environmental conditions. In this section we outline the different Python classes that are used to construct a discretised representation across the user defined datasets, giving a coding background to the dynamic splitting of the mesh to finer resolution in regions of datasets that are spatially varying.
-3. :ref:`Vessel Performance <vessel-performance>` - Application of vehicle specific features applied to the discrete mesh. In this section we will supply the user with the knowledge of how vehicle specific features are applied to the discrete mesh or with variables applied to the computational graph of the mesh.
-4. :ref:`Route Planner` - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (e.g. travel time, fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths.
+1. :ref:`Vessel Performance <vessel-performance>` - Application of vehicle specific features applied to the discrete mesh. In this section we will supply the user with the knowledge of how vehicle specific features are applied to the discrete mesh or with variables applied to the computational graph of the mesh.
+2. :ref:`Route Planner` - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (e.g. travel time, fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths.
 
 .. figure:: ./Figures/PolarRoute_CodeFlowDiagram.png
    :align: center

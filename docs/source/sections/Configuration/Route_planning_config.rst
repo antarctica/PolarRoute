@@ -15,7 +15,7 @@ Configuration - Route Planning
      "Vector Names": ["uC","vC"],
      "Zero_Currents": false,
      "Variable_Speed": true,
-     "Time_Unit": "days",
+     "Time_unit": "days",
      "Early_Stopping_Criterion": true,
      "Save_Dijkstra_Graphs": false,
      "Smooth Path":{

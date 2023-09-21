@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>8. Methods - Route Calculation &mdash; polar_route 0.3.2 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="9. Methods - Route Planner" href="Route_optimisation.html" />
+    <link rel="prev" title="7. Methods - Vessel Performance" href="Vehicle_specifics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">7. Methods - Vessel Performance</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">8. Methods - Route Calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#route-calculation-overview">8.1. Route Calculation Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.route_calc">8.2. Route Calculation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.case_from_angle"><code class="docutils literal notranslate"><span class="pre">case_from_angle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.find_intersections"><code class="docutils literal notranslate"><span class="pre">find_intersections()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.load_mesh"><code class="docutils literal notranslate"><span class="pre">load_mesh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.load_route"><code class="docutils literal notranslate"><span class="pre">load_route()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.order_track"><code class="docutils literal notranslate"><span class="pre">order_track()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.route_calc"><code class="docutils literal notranslate"><span class="pre">route_calc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.traveltime_distance"><code class="docutils literal notranslate"><span class="pre">traveltime_distance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.traveltime_in_cell"><code class="docutils literal notranslate"><span class="pre">traveltime_in_cell()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">9. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">10. Examples of running code</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">8. </span>Methods - Route Calculation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/sections/Route_calculation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="methods-route-calculation">
+<h1><span class="section-number">8. </span>Methods - Route Calculation<a class="headerlink" href="#methods-route-calculation" title="Permalink to this heading"></a></h1>
+<section id="route-calculation-overview">
+<h2><span class="section-number">8.1. </span>Route Calculation Overview<a class="headerlink" href="#route-calculation-overview" title="Permalink to this heading"></a></h2>
+<p>This section describes the code used for the evaluation of user-defined routes through a mesh constructed by the methods
+described in previous sections. This mesh should include all the relevant vessel performance parameters needed to
+calculate the fuel and time cost of the route.</p>
+</section>
+<section id="module-polar_route.route_calc">
+<span id="route-calculation"></span><h2><span class="section-number">8.2. </span>Route Calculation<a class="headerlink" href="#module-polar_route.route_calc" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.case_from_angle">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">case_from_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.case_from_angle" title="Permalink to this definition"></a></dt>
+<dd><p>Determine the direction of travel between two points and return the associated case</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (<em>ndarray</em>) – the coordinates of the start point within the cell</p></li>
+<li><p><strong>end</strong> (<em>ndarray</em>) – the coordinates of the end point within the cell</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the case to use to select variable values from a list</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>case (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.find_intersections">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">find_intersections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.find_intersections" title="Permalink to this definition"></a></dt>
+<dd><p>Find crossing points of the route and the cells in the mesh
+:param df: Route info in dataframe format
+:type df: DataFrame
+:param mesh: Mesh in GeoDataFrame format
+:type mesh: GeoDataFrame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary of crossing points and cell ids</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>track_points (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.load_mesh">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">load_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.load_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>Load mesh from file into GeoDataFrame
+:param mesh_file: Path to mesh with vehicle information
+:type mesh_file: str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mesh in GeoDataFrame format</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>mesh (GeoDataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.load_route">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">load_route</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.load_route" title="Permalink to this definition"></a></dt>
+<dd><p>Load route information from file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>route_file</strong> (<em>str</em>) – Path to user defined route</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataframe with route info
+from_wp (str): Name of start waypoint
+to_wp (str) Name of end waypoint</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>df (Dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.order_track">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">order_track</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_points</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.order_track" title="Permalink to this definition"></a></dt>
+<dd><p>Order crossing points into a track along the route
+:param df: Route info in dataframe format
+:type df: DataFrame
+:param track_points: Dictionary of crossing points and cell ids
+:type track_points: dict</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame of ordered crossing points and cell ids</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>user_track (DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.route_calc">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">route_calc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">route_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.route_calc" title="Permalink to this definition"></a></dt>
+<dd><p>Function to calculate the fuel/time cost of a user defined route in a given mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>route_file</strong> (<em>str</em>) – Path to user defined route</p></li>
+<li><p><strong>mesh_file</strong> (<em>str</em>) – Path to mesh with vehicle information</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>User defined route in geojson format with calculated cost information</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>user_path (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.traveltime_distance">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">traveltime_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellbox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">speed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'speed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vC'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.traveltime_distance" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate travel time and distance for two points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cellbox</strong> (<em>dict</em>) – the cell containing the line segment</p></li>
+<li><p><strong>wp</strong> (<em>ndarray</em>) – the start point</p></li>
+<li><p><strong>cp</strong> (<em>ndarray</em>) – the end point</p></li>
+<li><p><strong>speed</strong> (<em>str</em>) – the key for speed</p></li>
+<li><p><strong>vector_x</strong> (<em>str</em>) – the key for the x vector component</p></li>
+<li><p><strong>vector_y</strong> (<em>str</em>) – the key for the y vector component</p></li>
+<li><p><strong>case</strong> (<em>int</em>) – case giving the index of the speed array</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the time to travel the line segment
+distance (float): the distance along the line segment</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>traveltime (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="polar_route.route_calc.traveltime_in_cell">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_calc.</span></span><span class="sig-name descname"><span class="pre">traveltime_in_cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xdist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ydist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_calc.traveltime_in_cell" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate travel time inside cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xdist</strong> (<em>float</em>) – x distance</p></li>
+<li><p><strong>ydist</strong> (<em>float</em>) – y distance</p></li>
+<li><p><strong>u</strong> (<em>float</em>) – current x component</p></li>
+<li><p><strong>v</strong> (<em>float</em>) – current y component</p></li>
+<li><p><strong>s</strong> (<em>float</em>) – ship speed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the travel time
+distance (float): the distance</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>traveltime (float)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Vehicle_specifics.html" class="btn btn-neutral float-left" title="7. Methods - Vessel Performance" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Route_optimisation.html" class="btn btn-neutral float-right" title="9. Methods - Route Planner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

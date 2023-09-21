@@ -2,21 +2,21 @@ import unittest
 from copy import copy
 import numpy as np
 from polar_route.vessel_performance.vessels.SDA import SDA, wind_resistance, wind_mag_dir, c_wind, calc_wind, fuel_eq
-from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
-from polar_route.mesh_generation.boundary import Boundary
+from cartographi.mesh_generation.aggregated_cellbox import AggregatedCellBox
+from cartographi.mesh_generation.boundary import Boundary
 
 
 class TestSDA(unittest.TestCase):
     def setUp(self):
         config = {
-            "VesselType": "SDA",
-            "MaxSpeed": 26.5,
-            "Unit": "km/hr",
-            "Beam": 24.0,
-            "HullType": "slender",
-            "ForceLimit": 96634.5,
-            "MaxIceConc": 80,
-            "MinDepth": -10
+            "vessel_type": "SDA",
+            "max_speed": 26.5,
+            "unit": "km/hr",
+            "beam": 24.0,
+            "hull_type": "slender",
+            "force_limit": 96634.5,
+            "max_ice_conc": 80,
+            "min_depth": -10
             }
         boundary = Boundary([-85, -84.9], [-135, -134.9], ['1970-01-01', '2021-12-31'])
 

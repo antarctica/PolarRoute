@@ -1,5 +1,5 @@
+from cartographi.mesh_generation.environment_mesh import AggregatedCellBox
 from polar_route.vessel_performance.abstract_vessel import AbstractVessel
-from polar_route.mesh_generation.environment_mesh import AggregatedCellBox
 from abc import abstractmethod
 import logging
 
@@ -13,13 +13,13 @@ class AbstractShip(AbstractVessel):
                 params (dict): vessel parameters from the vessel config file
         """
         self.vessel_params = params
-        logging.info(f"Initialising a vessel object of type: {self.vessel_params['VesselType']}")
+        logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
 
-        self.max_speed = self.vessel_params['MaxSpeed']
-        self.speed_unit = self.vessel_params['Unit']
-        self.max_elevation = -1 * self.vessel_params['MinDepth']
-        self.max_ice = self.vessel_params['MaxIceConc']
-        self.max_wave = self.vessel_params.get('MaxWave')
+        self.max_speed = self.vessel_params['max_speed']
+        self.speed_unit = self.vessel_params['unit']
+        self.max_elevation = -1 * self.vessel_params['min_depth']
+        self.max_ice = self.vessel_params['max_ice_conc']
+        self.max_wave = self.vessel_params.get('max_wave')
 
     def model_performance(self, cellbox):
         """
@@ -31,7 +31,7 @@ class AbstractShip(AbstractVessel):
             Returns:
                 performance_values (dict): the value of the modelled performance characteristics for the ship
         """
-        logging.debug(f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['VesselType']}")
+        logging.debug(f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['vessel_type']}")
         # Check if the speed is defined in the input cellbox
         if 'speed' not in cellbox.agg_data:
             logging.debug(f'No speed in cell, assigning default value of {self.max_speed} '
@@ -56,7 +56,7 @@ class AbstractShip(AbstractVessel):
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
         logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: "
-                      f"{self.vessel_params['VesselType']}")
+                      f"{self.vessel_params['vessel_type']}")
         access_values = dict()
 
         access_values['land'] = self.land(cellbox)

@@ -1,17 +1,17 @@
 {
     "config": {
-        "Mesh_info": {
-            "Region": {
-                "latMin": -10.0,
-                "latMax": 10.0,
-                "longMin": -10.0,
-                "longMax": 10,
-                "startTime": "2023-04-18",
-                "endTime": "2023-04-19",
-                "cellWidth": 1.0,
-                "cellHeight": 1.0
+        "mesh_info": {
+            "region": {
+                "lat_min": -10.0,
+                "lat_max": 10.0,
+                "long_min": -10.0,
+                "long_max": 10,
+                "start_time": "2023-04-18",
+                "end_time": "2023-04-19",
+                "cell_width": 1.0,
+                "cell_height": 1.0
             },
-            "Data_sources": [
+            "data_sources": [
                 {
                     "loader": "checkerboard",
                     "params": {
@@ -105,14 +105,14 @@
             }
         },
         "vessel_info": {
-            "VesselType": "SDA",
-            "MaxSpeed": 10,
-            "Unit": "km/hr",
-            "Beam": 1.0,
-            "HullType": "slender",
-            "ForceLimit": 1.0,
-            "MaxIceConc": 0.0,
-            "MinDepth": 0.5
+            "vessel_type": "SDA",
+            "max_speed": 10,
+            "unit": "km/hr",
+            "beam": 1.0,
+            "hull_type": "slender",
+            "force_limit": 1.0,
+            "max_ice_conc": 0.0,
+            "min_depth": 0.5
         },
         "route_info": {
             "objective_function": "traveltime",

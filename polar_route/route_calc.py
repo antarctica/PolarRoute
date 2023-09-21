@@ -177,9 +177,9 @@ def load_mesh(mesh_file):
     mesh['geometry'] = mesh['geometry'].apply(wkt.loads)
     mesh = gpd.GeoDataFrame(mesh, crs='EPSG:4326', geometry='geometry')
 
-    region = info['config']['Mesh_info']['Region']
-    region_poly = Polygon(((region['longMin'], region['latMin']), (region['longMin'], region['latMax']),
-                           (region['longMax'], region['latMax']), (region['longMax'], region['latMin'])))
+    region = info['config']['mesh_info']['region']
+    region_poly = Polygon(((region['long_min'], region['lat_min']), (region['long_min'], region['lat_max']),
+                           (region['long_max'], region['lat_max']), (region['long_max'], region['lat_min'])))
 
     return mesh, region_poly
 
