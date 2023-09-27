@@ -1,4 +1,4 @@
-cartographi
+cartographi@git+https://github.com/antarctica/CartograPhi@RNN_DataLoaders
 dask
 geopandas
 jsonschema
@@ -12,3 +12,4 @@ scikit-learn
 scipy
 tqdm
 xarray
+tensorflow
