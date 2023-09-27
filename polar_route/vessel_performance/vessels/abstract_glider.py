@@ -19,6 +19,7 @@ class AbstractGlider(AbstractVessel):
         self.speed_unit = self.vessel_params['Unit']
         self.max_elevation = -1 * self.vessel_params['MinDepth']
         self.max_ice = self.vessel_params['MaxIceConc']
+        self.excluded_zones = self.vessel_params.get('excluded_zones')
 
 
     def model_performance(self, cellbox):
@@ -50,9 +51,15 @@ class AbstractGlider(AbstractVessel):
                       f"{self.vessel_params['VesselType']}")
         access_values = dict()
 
+        # Exclude cells due to land or ice
         access_values['land'] = self.land(cellbox)
         access_values['shallow'] = self.shallow(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
+
+        # Exclude any other cell types specified in config
+        if self.excluded_zones is not None:
+            for zone in self.excluded_zones:
+                access_values[zone] = cellbox.agg_data[zone]
 
         access_values['inaccessible'] = any(access_values.values())
 
