@@ -14,11 +14,11 @@ class AbstractGlider(AbstractVessel):
                 params (dict): vessel parameters from the vessel config file
         """
         self.vessel_params = params
-        logging.info(f"Initialising a vessel object of type: {self.vessel_params['VesselType']}")
-        self.max_speed = self.vessel_params['MaxSpeed']
-        self.speed_unit = self.vessel_params['Unit']
-        self.max_elevation = -1 * self.vessel_params['MinDepth']
-        self.max_ice = self.vessel_params['MaxIceConc']
+        logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
+        self.max_speed = self.vessel_params['max_speed']
+        self.speed_unit = self.vessel_params['unit']
+        self.max_elevation = -1 * self.vessel_params['min_depth']
+        self.max_ice = self.vessel_params['max_ice_conc']
         self.excluded_zones = self.vessel_params.get('excluded_zones')
 
 
@@ -30,7 +30,7 @@ class AbstractGlider(AbstractVessel):
                     cellbox (AggregatedCellBox): input cell from environmental mesh
         """
         logging.debug(
-            f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['VesselType']}")
+            f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['vessel_type']}")
         perf_cellbox = self.model_speed(cellbox)
         perf_cellbox = self.model_battery(perf_cellbox)
 
@@ -48,7 +48,7 @@ class AbstractGlider(AbstractVessel):
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
         logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: "
-                      f"{self.vessel_params['VesselType']}")
+                      f"{self.vessel_params['vessel_type']}")
         access_values = dict()
 
         # Exclude cells due to land or ice
