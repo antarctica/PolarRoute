@@ -154,14 +154,14 @@ def optimise_routes_cli():
             dijkstra_output_file_strs[-1] = 'geojson'
             dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
             logging.info("\tExtracting standalone path GeoJSON")
-            json.dump(info_dijkstra['paths'], open(dijkstra_output_file), indent=4)
+            json.dump(info_dijkstra['paths'], open(dijkstra_output_file, 'w'), indent=4)
     
     logging.info("Calculating smoothed routes")
     rp.compute_smoothed_routes()
     info = rp.to_json()
 
     logging.info("Outputting smoothed path")
-    json.dump(info, open(output_file, "w"), indent=4)
+    json.dump(info, open(output_file, 'w'), indent=4)
     if args.path_geojson:
         # Create GeoJSON filename
         output_file_strs[-1] = 'geojson'
