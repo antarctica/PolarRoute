@@ -460,7 +460,9 @@ class RoutePlanner:
                                                   index=variable_vals.index)
                             variable_diff = traveltime_diff*case_vals
                             path['properties'][vrbl] = np.cumsum(variable_diff.to_numpy()).tolist()
+                            path['properties']['total_'+vrbl] = path['properties'][vrbl][-1]
                         path['properties']['traveltime'] = path['properties']['traveltime'].tolist()
+                        path['properties']['total_traveltime'] = path['properties']['traveltime'][-1]
                         paths.append(path)
 
                     except:
@@ -666,7 +668,9 @@ class RoutePlanner:
             SmoothedPath['properties']['from']       = route['properties']['from']
             SmoothedPath['properties']['to']         = route['properties']['to']
             SmoothedPath['properties']['traveltime'] = list(TravelTimeLegs)
+            SmoothedPath['properties']['total_traveltime'] = SmoothedPath['properties']['traveltime'][-1]
             SmoothedPath['properties']['fuel']       = list(FuelLegs)
+            SmoothedPath['properties']['total_fuel'] = SmoothedPath['properties']['fuel'][-1]
             SmoothedPath['properties']['distance']   = list(DistanceLegs)
             SmoothedPath['properties']['speed']      = list(SpeedLegs)
             SmoothedPaths += [SmoothedPath]
