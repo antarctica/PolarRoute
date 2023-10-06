@@ -1,4 +1,4 @@
-from cartographi.mesh_generation.aggregated_cellbox import AggregatedCellBox
+from meshiphi.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from polar_route.vessel_performance.vessels.abstract_ship import AbstractShip
 import numpy as np
 import logging

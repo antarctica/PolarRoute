@@ -3,7 +3,7 @@ import json
 import inspect
 import logging
 
-from cartographi.mesh_generation.mesh_builder import MeshBuilder
+from meshiphi.mesh_generation.mesh_builder import MeshBuilder
 
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call, convert_decimal_days

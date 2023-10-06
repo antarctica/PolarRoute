@@ -2,8 +2,8 @@ import unittest
 from copy import copy
 import numpy as np
 from polar_route.vessel_performance.vessels.SDA import SDA, wind_resistance, wind_mag_dir, c_wind, calc_wind, fuel_eq
-from cartographi.mesh_generation.aggregated_cellbox import AggregatedCellBox
-from cartographi.mesh_generation.boundary import Boundary
+from meshiphi.mesh_generation.aggregated_cellbox import AggregatedCellBox
+from meshiphi.mesh_generation.boundary import Boundary
 
 
 class TestSDA(unittest.TestCase):

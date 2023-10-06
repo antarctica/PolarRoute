@@ -4,7 +4,7 @@ Python & iPython Notebooks
 
 Route planning may also be done using a python terminal. This is case, the CLI is not required but the steps required for route planning 
 follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
-To perform the steps detailed in this section, a mesh must first be generated using `CartograPhi <https://github.com/antarctica/CartograPhi>`_.
+To perform the steps detailed in this section, a mesh must first be generated using `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_.
  
 
 
@@ -12,7 +12,7 @@ To perform the steps detailed in this section, a mesh must first be generated us
 Simulating a Vessel in a Digital Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once a digital environment **`Mesh`** object has been created with `CartograPhi <https://github.com/antarctica/CartograPhi>`_, how a vessel interacts with it may be simulated. The **`VesselPerformance`**
+Once a digital environment **`Mesh`** object has been created with `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_, how a vessel interacts with it may be simulated. The **`VesselPerformance`**
 object requires a digital environment in *json* format and vessel specific configuration parameters, also in *json* format. These may either
 be loaded from a file, or created within the python terminal.
 
