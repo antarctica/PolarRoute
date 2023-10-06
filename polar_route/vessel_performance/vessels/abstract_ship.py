@@ -72,7 +72,10 @@ class AbstractShip(AbstractVessel):
         # Exclude any other cells specified in config
         if self.excluded_zones is not None:
             for zone in self.excluded_zones:
-                access_values[zone] = cellbox.agg_data[zone]
+                try:
+                    access_values[zone] = cellbox.agg_data[zone]
+                except KeyError:
+                    logging.debug(f'{zone} not found in agg cellbox!')
 
         access_values['inaccessible'] = any(access_values.values())
 
