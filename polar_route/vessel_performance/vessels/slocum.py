@@ -1,5 +1,5 @@
 from polar_route.vessel_performance.vessels.abstract_glider import AbstractGlider
-from cartographi.mesh_generation.aggregated_cellbox import AggregatedCellBox
+from meshiphi.mesh_generation.aggregated_cellbox import AggregatedCellBox
 import numpy as np
 import logging
 
