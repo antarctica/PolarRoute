@@ -7,9 +7,9 @@ __copyright__ = "2022-2023, BAS AI Lab"
 
 # Wrapped in try-except so that setup.py can import polar_route without crashing due to dependency errors
 try:
-    from cartographi.mesh_generation.mesh_builder import MeshBuilder as MeshBuilder
-    from cartographi.dataloaders.factory import DataLoaderFactory as DataLoaderFactory
-    from cartographi.mesh_generation.boundary import Boundary as Boundary
+    from meshiphi.mesh_generation.mesh_builder import MeshBuilder as MeshBuilder
+    from meshiphi.dataloaders.factory import DataLoaderFactory as DataLoaderFactory
+    from meshiphi.mesh_generation.boundary import Boundary as Boundary
 
     from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller as VesselPerformanceModeller
 
