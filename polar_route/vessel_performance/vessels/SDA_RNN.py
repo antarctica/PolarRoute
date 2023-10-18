@@ -3,6 +3,8 @@ from polar_route.vessel_performance.vessels.abstract_ship import AbstractShip
 import numpy as np
 import logging
 import tensorflow as tf
+import pickle
+import os
 
 class SDA_RNN(AbstractShip):
     """
@@ -20,6 +22,18 @@ class SDA_RNN(AbstractShip):
         self.beam = self.vessel_params['beam']
         self.hull_type = self.vessel_params['hull_type']
 
+        self.base_path = os.path.dirname(os.path.realpath(__file__))
+
+        # Load the trained models
+        sog_model_path = os.path.join(self.base_path, 'sog_relativedir_190923.h5')
+        rpm_model_path = os.path.join(self.base_path, 'power_relativedir.h5')
+        spline_model_path = os.path.join(self.base_path, 'spline_model.pkl')
+
+        self.sog_model = tf.keras.models.load_model(sog_model_path)
+        self.rpm_model = tf.keras.models.load_model(rpm_model_path)
+        with open(spline_model_path, "rb") as f:
+            self.spline_model = pickle.load(f)
+
     def model_speed(self, cellbox):
         """
             Method to determine the maximum speed that the SDA can traverse the given cell
@@ -35,9 +49,6 @@ class SDA_RNN(AbstractShip):
 
         speeds = list()
         heads = [45., 90., 135., 180., 225., 270., 315., 0.]
-
-        # Load the trained model
-        model = tf.keras.models.load_model("/home/gecoomb/PycharmProjects/PolarRoute/polar_route/vessel_performance/vessels/sog_relativedir_190923.h5")
 
         # Load data for RNN from cellbox
         curr_speed = np.sqrt(cellbox.agg_data['uC']**2 + cellbox.agg_data['vC']**2)
@@ -68,7 +79,7 @@ class SDA_RNN(AbstractShip):
 
             input_data = cell_vals.reshape(1, 1, cell_vals.shape[0])
 
-            output = model.predict(input_data)
+            output = self.sog_model.predict(input_data)
 
             speed = output[0][0] * 1.852
 
@@ -77,6 +88,68 @@ class SDA_RNN(AbstractShip):
         cellbox.agg_data['speed'] = speeds
 
         return cellbox
+
+    def model_power(self, cellbox):
+        """
+            Method to determine the power requirement of the SDA when traversing given cell
+
+            Args:
+                cellbox (AggregatedCellBox): input cell from environmental mesh
+
+            Returns:
+                cellbox (AggregatedCellBox): updated cell with power values
+        """
+
+        logging.debug(f"Calculating power requirement for cellbox {cellbox.id} based on SDA ML model")
+
+        powers = list()
+        heads = [45., 90., 135., 180., 225., 270., 315., 0.]
+
+        # Load data for rnn from cellbox
+        curr_speed = np.sqrt(cellbox.agg_data['uC'] ** 2 + cellbox.agg_data['vC'] ** 2)
+        wind_speed = cellbox.agg_data['wind_mag']
+        sigwaveh = cellbox.agg_data['swh']
+        maxwaveh = cellbox.agg_data['hmax']
+        wave_period = cellbox.agg_data['mwp']
+        curr_dir = np.mod(180 + (180 / np.pi) * np.arctan2(cellbox.agg_data['vC'], cellbox.agg_data['uC']), 360)
+        wind_dir = cellbox.agg_data['wind_dir']
+        wave_dir = cellbox.agg_data['mwd']
+
+        for head in heads:
+            if curr_dir > head:
+                rel_curr_dir = curr_dir - head
+            else:
+                rel_curr_dir = 360 + (curr_dir - head)
+            if wind_dir > head:
+                rel_wind_dir = wind_dir - head
+            else:
+                rel_wind_dir = 360 + (wind_dir - head)
+            if wave_dir > head:
+                rel_wave_dir = wave_dir - head
+            else:
+                rel_wave_dir = 360 + (wave_dir - head)
+
+            cell_vals = np.array([curr_speed, wind_speed, sigwaveh, maxwaveh, wave_period, rel_curr_dir/360., rel_wind_dir/360.,
+                          rel_wave_dir/360.])
+
+            input_data = cell_vals.reshape(1, 1, cell_vals.shape[0])
+
+            predictions = self.rpm_model.predict(input_data)
+
+            predictions = predictions.squeeze().tolist()
+            predictions = [x * 10 for x in predictions]
+
+            predictions = np.array(predictions)
+            rpm = predictions.reshape(-1, 1)
+
+            power = self.spline_model.predict(rpm)
+
+            powers.append(power[0][0])
+
+        cellbox.agg_data['power'] = powers
+
+        return cellbox
+
 
     def model_fuel(self, cellbox):
         """
