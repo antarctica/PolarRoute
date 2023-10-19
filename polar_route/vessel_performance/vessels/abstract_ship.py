@@ -40,6 +40,7 @@ class AbstractShip(AbstractVessel):
 
         perf_cellbox = self.model_speed(cellbox)
         perf_cellbox = self.model_fuel(perf_cellbox)
+        perf_cellbox = self.model_power(perf_cellbox)
 
         performance_values = {k:v for k,v in perf_cellbox.agg_data.items() if k not in cellbox.agg_data}
 

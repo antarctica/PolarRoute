@@ -100,7 +100,7 @@ class SDA_RNN(AbstractShip):
                 cellbox (AggregatedCellBox): updated cell with power values
         """
 
-        logging.debug(f"Calculating power requirement for cellbox {cellbox.id} based on SDA ML model")
+        logging.debug(f"Calculating power requirement in kW for cellbox {cellbox.id} based on SDA ML model")
 
         powers = list()
         heads = [45., 90., 135., 180., 225., 270., 315., 0.]
@@ -134,13 +134,7 @@ class SDA_RNN(AbstractShip):
 
             input_data = cell_vals.reshape(1, 1, cell_vals.shape[0])
 
-            predictions = self.rpm_model.predict(input_data)
-
-            predictions = predictions.squeeze().tolist()
-            predictions = [x * 10 for x in predictions]
-
-            predictions = np.array(predictions)
-            rpm = predictions.reshape(-1, 1)
+            rpm = self.rpm_model.predict(input_data)
 
             power = self.spline_model.predict(rpm)
 
