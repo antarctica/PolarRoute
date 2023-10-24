@@ -9,7 +9,7 @@ The Vessel_mesh.json file
 #########################
 
 The vessel performance mesh is an extension to an environmental mesh created by the 
-`CartograPhi <https://github.com/antarctica/CartograPhi>`_ library.
+`MeshiPhi <https://github.com/antarctica/MeshiPhi>`_ library.
 Once a discrete mesh environment is created, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle. These vehicle specific values 
 are then encoded into the mesh json object and passed down-stream to the route planner.

@@ -28,7 +28,7 @@ positional arguments:
     mesh : A digital environment file.
 
 The format for the required *<vessel.json>* file can be found in the :ref:`configuration - vessel performance modeller` section of the documentation.
-The required *<mesh.json>* file can be created using the *create_mesh* command from the `CartograPhi <https://github.com/antarctica/CartograPhi>`_ package.
+The required *<mesh.json>* file can be created using the *create_mesh* command from the `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_ package.
 
 optional arguments are
 
