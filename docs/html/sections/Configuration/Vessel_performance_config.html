@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5.1. Configuration - Vessel Performance Modeller &mdash; polar_route 0.3.2 documentation</title>
+  <title>5.1. Configuration - Vessel Performance Modeller &mdash; polar_route 0.3.8 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -97,7 +97,9 @@ the ‘add_vehicle’ entry point.</p>
   <span class="s2">&quot;hull_type&quot;</span><span class="p">:</span> <span class="s2">&quot;slender&quot;</span><span class="p">,</span>
   <span class="s2">&quot;force_limit&quot;</span><span class="p">:</span> <span class="mf">96634.5</span><span class="p">,</span>
   <span class="s2">&quot;max_ice_conc&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
-  <span class="s2">&quot;min_depth&quot;</span><span class="p">:</span> <span class="mi">10</span>
+  <span class="s2">&quot;min_depth&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+  <span class="s2">&quot;max_wave&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s2">&quot;excluded_zones&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;exclusion_zone&quot;</span><span class="p">]</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -111,6 +113,8 @@ the ‘add_vehicle’ entry point.</p>
 <li><p><strong>force_limit</strong> <em>(float)</em> : The maximum allowed resistance force, specified in Newtons.</p></li>
 <li><p><strong>max_ice_conc</strong> <em>(float)</em> : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.</p></li>
 <li><p><strong>min_depth</strong> <em>(float)</em> : The minimum depth of water the vessel is able to travel through in metres.</p></li>
+<li><p><strong>max_wave</strong> <em>(float)</em> : The maximum significant wave height the vessel is able to travel through in metres.</p></li>
+<li><p><strong>excluded_zones</strong> <em>(float)</em> : A list of of strings that name different boolean properties of a cell. Any cell with a value of True for any of the entered keys will be marked as unnavigable.</p></li>
 </ul>
 </section>
 

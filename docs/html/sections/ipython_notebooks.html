@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3. Python &amp; iPython Notebooks &mdash; polar_route 0.3.2 documentation</title>
+  <title>3. Python &amp; iPython Notebooks &mdash; polar_route 0.3.8 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -86,10 +86,10 @@
 <h1><span class="section-number">3. </span>Python &amp; iPython Notebooks<a class="headerlink" href="#python-ipython-notebooks" title="Permalink to this heading"></a></h1>
 <p>Route planning may also be done using a python terminal. This is case, the CLI is not required but the steps required for route planning
 follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
-To perform the steps detailed in this section, a mesh must first be generated using <a class="reference external" href="https://github.com/antarctica/CartograPhi">CartograPhi</a>.</p>
+To perform the steps detailed in this section, a mesh must first be generated using <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>.</p>
 <section id="simulating-a-vessel-in-a-digital-environment">
 <h2><span class="section-number">3.1. </span>Simulating a Vessel in a Digital Environment<a class="headerlink" href="#simulating-a-vessel-in-a-digital-environment" title="Permalink to this heading"></a></h2>
-<p>Once a digital environment <strong>`Mesh`</strong> object has been created with <a class="reference external" href="https://github.com/antarctica/CartograPhi">CartograPhi</a>, how a vessel interacts with it may be simulated. The <strong>`VesselPerformance`</strong>
+<p>Once a digital environment <strong>EnvironmentMesh</strong> object has been created with <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>, how a vessel interacts with it may be simulated. The <strong>`VesselPerformanceModeller`</strong>
 object requires a digital environment in <em>json</em> format and vessel specific configuration parameters, also in <em>json</em> format. These may either
 be loaded from a file, or created within the python terminal.</p>
 <p>Loading mesh and vessel from <em>json</em> files:</p>
@@ -103,15 +103,17 @@ be loaded from a file, or created within the python terminal.</p>
     <span class="n">vessel</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The <strong>`VesselPerformance`</strong> object can then be initialised. This will simulate the performance of the vessel and encodes this information
+<p>The <strong>VesselPerformanceModeller</strong> object can then be initialised. This can be used to simulate the performance of the vessel and encode this information
 into the digital environment.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.vessel_performance</span> <span class="kn">import</span> <span class="n">VesselPerformance</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.vessel_performance.vessel_performance_modeller</span> <span class="kn">import</span> <span class="n">VesselPerformanceModeller</span>
 <span class="n">vp</span> <span class="o">=</span> <span class="n">VesselPerformance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">vessel</span><span class="p">)</span>
+<span class="n">vp</span><span class="o">.</span><span class="n">model_accessibility</span><span class="p">()</span>
+<span class="n">vp</span><span class="o">.</span><span class="n">model_performance</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The <strong>`VesselPerformance`</strong> object can then be cast to a json object and saved to a file. This <em>vessel_mesh.json</em> file can then
-be used by the CLI entry-point <a class="reference internal" href="Command_line_interface.html#optimise-routes"><span class="std std-ref">optimise_routes</span></a>, or the json object can be passed to the <strong>`RoutePlanner`</strong> object in a python
-terminal.</p>
+<p>The <strong>VesselPerformanceModeller</strong> object can then be cast to a json object and saved to a file. This <em>vessel_mesh.json</em> file can then
+be used by the CLI entry-point <a class="reference internal" href="Command_line_interface.html#optimise-routes"><span class="std std-ref">optimise_routes</span></a>, or the json object can be passed to the <strong>RoutePlanner</strong> object in a python
+console.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vessel_mesh</span> <span class="o">=</span> <span class="n">vp</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;vessel_mesh.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">vessel_mesh</span><span class="p">)</span>
@@ -120,7 +122,7 @@ terminal.</p>
 </section>
 <section id="route-optimisation">
 <h2><span class="section-number">3.2. </span>Route Optimisation<a class="headerlink" href="#route-optimisation" title="Permalink to this heading"></a></h2>
-<p>Now that the vessel dependent environmental mesh is defined, and represented in the <cite>vessel_performance</cite> object, we can
+<p>Now that the vessel dependent environmental mesh is defined, and represented in the <cite>VesselPerformanceModeller</cite> object, we can
 construct routes, with parameters defined by the user in the configuration file. Waypoints are passed as an input
 file path, <cite>waypoints.csv</cite>, discussed more in the Inputs section of the manual pages.  The route construction is done
 in two stages: construction of the meshed dijkstra optimal routes, <cite>.compute_routes()</cite>; and, the smoothing of the
