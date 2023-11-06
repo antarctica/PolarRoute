@@ -370,10 +370,17 @@ def gpx_route_import(f_name):
         Returns:
             geojson: Route in geojson format
     """
-    gdf = gpd.read_file(f_name, layer="routes")
+    gdf_r = gpd.read_file(f_name, layer="routes")
+    gdf_p = gpd.read_file(f_name, layer="route_points")
+
     # Drop empty fields from original gpx file
-    gdf = gdf.dropna(how='all', axis=1)
-    geojson = json.loads(gdf.to_json())
+    gdf_r = gdf_r.dropna(how='all', axis=1)
+    # Convert route to geojson linestring
+    geojson = json.loads(gdf_r.to_json())
+
+    # Extract start and end waypoints and add to geojson properties
+    geojson['features'][0]['properties']['from'] = gdf_p['name'].iloc[0]
+    geojson['features'][0]['properties']['to'] = gdf_p['name'].iloc[-1]
 
     return geojson
 
