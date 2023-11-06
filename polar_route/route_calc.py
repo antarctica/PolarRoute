@@ -5,6 +5,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely import wkt
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
+from polar_route.utils import gpx_route_import
 
 
 # Define ordering of cases in array data
@@ -142,6 +143,16 @@ def load_route(route_file):
     elif route_file[-4:] == "json":
         with open(route_file, "r") as f:
             route_json = json.load(f)
+        route_coords = route_json['features'][0]['geometry']['coordinates']
+        to_wp = route_json['features'][0]['properties']['to']
+        from_wp = route_json['features'][0]['properties']['from']
+        longs = [c[0] for c in route_coords]
+        lats = [c[1] for c in route_coords]
+        df = pd.DataFrame()
+        df['Long'] = longs
+        df['Lat'] = lats
+    elif route_file[-3:] == "gpx":
+        route_json = gpx_route_import(route_file)
         route_coords = route_json['features'][0]['geometry']['coordinates']
         to_wp = route_json['features'][0]['properties']['to']
         from_wp = route_json['features'][0]['properties']['from']
@@ -326,8 +337,16 @@ def route_calc(route_file, mesh_file):
         # Check for inaccessible cells on user defined route
         if cell_box['inaccessible']:
             logging.warning(f"This route crosses an inaccessible cell! Cell located at Lat: {cell_box['cy']} "
-                         f"Long: {cell_box['cx']}. Please reroute around it.")
-            return None
+                         f"Long: {cell_box['cx']}")
+            blocked_cell = cell_box['id']
+            logging.warning("Trying with speed and fuel from previous cell, reroute for more accurate results")
+            i = 0
+            while cell_box['id'] == blocked_cell:
+                i += 1
+                cell_box = mesh.iloc[user_track['CellID'].iloc[idx-i]]
+            if cell_box['inaccessible']:
+                logging.warning(f"This route crosses multiple inaccessible cells! Please reroute to avoid this!")
+                return None
 
         traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
                                                    vector_y='vC', case=case)
