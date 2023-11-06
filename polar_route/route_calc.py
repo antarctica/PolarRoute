@@ -134,6 +134,7 @@ def load_route(route_file):
             to_wp (str) Name of end waypoint
 
     """
+    logging.info(f"Loading route from: {route_file}")
     # Loading route from csv file
     if route_file[-3:] == "csv":
         df = pd.read_csv(route_file)
@@ -165,6 +166,8 @@ def load_route(route_file):
         logging.warning("Invalid route input! Please supply either a csv, gpx or geojson file with the route waypoints.")
         return None
 
+    logging.info(f"Route start waypoint: {from_wp}")
+    logging.info(f"Route end waypoint: {to_wp}")
     logging.debug(f"Route has {len(df)} waypoints")
     df['id'] = 1
     df['order'] = np.arange(len(df))
@@ -181,6 +184,7 @@ def load_mesh(mesh_file):
         Returns:
             mesh (GeoDataFrame): Mesh in GeoDataFrame format
     """
+    logging.info(f"Loading mesh from: {mesh_file}")
     # Loading mesh information
     with open(mesh_file, 'r') as fp:
         info = json.load(fp)
