@@ -162,7 +162,7 @@ def load_route(route_file):
         df['Long'] = longs
         df['Lat'] = lats
     else:
-        logging.warning("Invalid route input! Please supply either a csv or geojson file with the route waypoints.")
+        logging.warning("Invalid route input! Please supply either a csv, gpx or geojson file with the route waypoints.")
         return None
 
     logging.debug(f"Route has {len(df)} waypoints")
