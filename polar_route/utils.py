@@ -6,6 +6,7 @@ import logging
 import time
 import tracemalloc
 import numpy as np
+import geopandas as gpd
 
 from datetime import datetime, timedelta
 from functools import wraps
@@ -358,3 +359,21 @@ def unit_speed(val , unit):
             return val
         else:
             return None
+
+def gpx_route_import(f_name):
+    """
+        Function to import a route in gpx format and convert it to geojson format
+
+        Args:
+            f_name: Filename of gpx route file
+
+        Returns:
+            geojson: Route in geojson format
+    """
+    gdf = gpd.read_file(f_name, layer="routes")
+    # Drop empty fields from original gpx file
+    gdf = gdf.dropna(how='all', axis=1)
+    geojson = json.loads(gdf.to_json())
+
+    return geojson
+
