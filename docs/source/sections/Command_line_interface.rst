@@ -28,7 +28,7 @@ positional arguments:
     mesh : A digital environment file.
 
 The format for the required *<vessel.json>* file can be found in the :ref:`configuration - vessel performance modeller` section of the documentation.
-The required *<mesh.json>* file can be created using the *create_mesh* command from the `CartograPhi <https://github.com/antarctica/CartograPhi>`_ package.
+The required *<mesh.json>* file can be created using the *create_mesh* command from the `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_ package.
 
 optional arguments are
 
@@ -140,4 +140,4 @@ Plotting
 Meshes produced at any stage in the route planning process can be visualised using the GeoPlot 
 library found at the relevant `GitHub page <https://github.com/antarctica/GeoPlot>`_. Meshes and routes can also be
 plotted in other GIS software such as QGIS by exporting the mesh to a common format such as .geojson or .tif using
-the :ref:`export_mesh` command.
+the export_mesh command described in the `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_ docs.

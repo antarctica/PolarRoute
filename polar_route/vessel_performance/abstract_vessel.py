@@ -1,4 +1,4 @@
-from cartographi.mesh_generation.aggregated_cellbox import AggregatedCellBox
+from meshiphi.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from abc import ABCMeta, abstractmethod
 
 class AbstractVessel(metaclass=ABCMeta):

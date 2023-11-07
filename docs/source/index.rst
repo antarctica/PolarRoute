@@ -2,7 +2,7 @@ Welcome to the PolarRoute Manual Pages
 ======================================
 
 PolarRoute is a tool for the optimisation of routes for maritime vehicles travelling in polar waters.
-It is an extension of `CartograPhi <https://github.com/antarctica/CartograPhi>`_; a package designed to 
+It is an extension of `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_; a package designed to 
 discretise the world from heterogeneous data sources (follow link for more details and docs). 
 This software package has been developed by the **British Antarctic Survey** (BAS), primarily for the 
 optimisation of polar routes for the BAS research vessel RRS Sir David Attenborough, though it is applicable 

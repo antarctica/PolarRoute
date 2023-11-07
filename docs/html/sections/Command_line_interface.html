@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>4. Command Line Interface &mdash; polar_route 0.3.2 documentation</title>
+  <title>4. Command Line Interface &mdash; polar_route 0.3.8 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -48,10 +48,8 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">4. Command Line Interface</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#add-vehicle">4.1. add_vehicle</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#optimise-routes">4.2. optimise_routes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#export-mesh">4.3. export_mesh</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rebuild-mesh">4.4. rebuild_mesh</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#calculate-route">4.5. calculate_route</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#plotting">4.6. Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#calculate-route">4.3. calculate_route</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plotting">4.4. Plotting</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
@@ -89,10 +87,10 @@
   <section id="command-line-interface">
 <h1><span class="section-number">4. </span>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this heading"></a></h1>
 <p>The PolarRoute package provides 4 CLI entry points, intended to be used in succession to plan a route through a digital environment.</p>
-<figure class="align-center" id="id1">
+<figure class="align-center" id="id2">
 <a class="reference internal image-reference" href="../_images/PolarRoute_CLI.png"><img alt="../_images/PolarRoute_CLI.png" src="../_images/PolarRoute_CLI.png" style="width: 700px;" /></a>
 <figcaption>
-<p><span class="caption-text"><em>Overview figure of the Command Line Interface entry points of PolarRoute</em></span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><em>Overview figure of the Command Line Interface entry points of PolarRoute</em></span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <section id="add-vehicle">
@@ -108,7 +106,7 @@ information is then encoded into the digital environment file.</p>
 </pre></div>
 </div>
 <p>The format for the required <em>&lt;vessel.json&gt;</em> file can be found in the <a class="reference internal" href="Configuration/Vessel_performance_config.html#configuration-vessel-performance-modeller"><span class="std std-ref">Configuration - Vessel Performance Modeller</span></a> section of the documentation.
-The required <em>&lt;mesh.json&gt;</em> file can be created using the <em>create_mesh</em> command from the <a class="reference external" href="https://github.com/antarctica/CartograPhi">CartograPhi</a> package.</p>
+The required <em>&lt;mesh.json&gt;</em> file can be created using the <em>create_mesh</em> command from the <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a> package.</p>
 <p>optional arguments are</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">v</span> <span class="p">(</span><span class="n">verbose</span> <span class="n">logging</span><span class="p">)</span>
 <span class="o">-</span><span class="n">o</span> <span class="o">&lt;</span><span class="n">output</span> <span class="n">location</span><span class="o">&gt;</span> <span class="p">(</span><span class="nb">set</span> <span class="n">output</span> <span class="n">location</span> <span class="k">for</span> <span class="n">mesh</span><span class="p">)</span>
@@ -195,80 +193,8 @@ waypoints marked with an <strong>X</strong> in the source column to all waypoint
 </div>
 <p>The format of the returned <em>&lt;route.json&gt;</em> file is explained in <a class="reference internal" href="Outputs.html#the-route-json-file"><span class="std std-ref">The Route.json file</span></a> section of the documentation.</p>
 </section>
-<section id="export-mesh">
-<h2><span class="section-number">4.3. </span>export_mesh<a class="headerlink" href="#export-mesh" title="Permalink to this heading"></a></h2>
-<p>Once a mesh has been built using the <em>create_mesh</em> or <em>add_vehicle</em> command, it can be exported other file types for
-use in other systems (such as GIS software) using the the <em>export_mesh</em> command.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export_mesh</span> <span class="o">&lt;</span><span class="n">mesh</span><span class="o">.</span><span class="n">json</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">output_location</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">output_format</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p>positional arguments:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="p">:</span> <span class="n">A</span> <span class="n">digital</span> <span class="n">environment</span> <span class="n">file</span><span class="o">.</span>
-<span class="n">output_location</span> <span class="p">:</span> <span class="n">The</span> <span class="n">location</span> <span class="n">to</span> <span class="n">save</span> <span class="n">the</span> <span class="n">exported</span> <span class="n">mesh</span><span class="o">.</span>
-<span class="n">output_format</span> <span class="p">:</span> <span class="n">The</span> <span class="nb">format</span> <span class="n">to</span> <span class="n">export</span> <span class="n">the</span> <span class="n">mesh</span> <span class="n">to</span><span class="o">.</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>supported output formats are:</dt><dd><ul class="simple">
-<li><p>.json (default) [JSON]</p></li>
-<li><p>geo.json (collection of polygons for each cell in the mesh) [GEOJSON]</p></li>
-<li><p>.tif (rasterised mesh) [TIF]</p></li>
-</ul>
-</dd>
-</dl>
-<p>optional arguments:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">v</span> <span class="p">:</span> <span class="n">verbose</span> <span class="n">logging</span>
-<span class="o">-</span><span class="n">o</span> <span class="p">:</span> <span class="n">output</span> <span class="n">location</span>
-<span class="o">-</span><span class="n">format_conf</span><span class="p">:</span> <span class="n">configuration</span> <span class="n">file</span> <span class="k">for</span> <span class="n">output</span> <span class="nb">format</span> <span class="p">(</span><span class="n">required</span> <span class="k">for</span> <span class="n">TIF</span> <span class="n">export</span><span class="p">,</span> <span class="n">optional</span> <span class="k">for</span> <span class="n">GEOJSON</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>the format of the <em>&lt;format_conf.json&gt;</em> file required for .tif export is as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;data_name&quot;</span><span class="p">:</span> <span class="s2">&quot;elevation&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;sampling_resolution&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="mi">150</span><span class="p">,</span>
-        <span class="mi">150</span>
-    <span class="p">],</span>
-    <span class="s2">&quot;projection&quot;</span><span class="p">:</span> <span class="s2">&quot;3031&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;color_conf&quot;</span><span class="p">:</span> <span class="s2">&quot;path to/color_conf.txt&quot;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>where the variables are as follows:</dt><dd><ul class="simple">
-<li><p><strong>data_name</strong> : The name of the data to be exported. This is the name of the data layer in the mesh.</p></li>
-<li><p><strong>sampling_resolution</strong> : The resolution of the exported mesh. This is a list of two values, the first being the x resolution and the second being the y resolution.</p></li>
-<li><p><strong>projection</strong> : The projection of the exported mesh. This is a string of the EPSG code of the projection.</p></li>
-<li><p><strong>color_conf</strong> : The path to the color configuration file. This is a text file containing the color scheme to be used when exporting the mesh. The format of this file is as follows:</p></li>
-</ul>
-</dd>
-</dl>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span> <span class="mi">240</span> <span class="mi">250</span> <span class="mi">160</span>
-<span class="mi">30</span> <span class="mi">230</span> <span class="mi">220</span> <span class="mi">170</span>
-<span class="mi">60</span> <span class="mi">220</span> <span class="mi">220</span> <span class="mi">220</span>
-<span class="mi">100</span> <span class="mi">250</span> <span class="mi">250</span> <span class="mi">250</span>
-</pre></div>
-</div>
-<p>The color_conf.txt contains 4 columns per line: the data_name value and the
-corresponding red, green, blue value between 0 and 255.</p>
-<p>When using the <em>-format_conf</em> option for GEOJSON output the only variable required is the <strong>data_name</strong>. This specifies which of the data layers you want to export as a single GEOJSON file.</p>
-</section>
-<section id="rebuild-mesh">
-<h2><span class="section-number">4.4. </span>rebuild_mesh<a class="headerlink" href="#rebuild-mesh" title="Permalink to this heading"></a></h2>
-<p>Once a mesh has been built using the <em>create_mesh</em> command the <em>rebuild_mesh</em> command allows a user to rebuild it based on the
-original configs stored within the mesh file. This is primarily useful for debugging or to update old meshes produced with an older version
-of the package. Running this command will also reapply any vessel performance simulations, if these were run on the original mesh.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rebuild_mesh</span> <span class="o">&lt;</span><span class="n">mesh</span><span class="o">.</span><span class="n">json</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p>optional arguments:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">v</span> <span class="p">:</span> <span class="n">verbose</span> <span class="n">logging</span>
-<span class="o">-</span><span class="n">o</span> <span class="p">:</span> <span class="n">output</span> <span class="n">location</span>
-</pre></div>
-</div>
-</section>
 <section id="calculate-route">
-<h2><span class="section-number">4.5. </span>calculate_route<a class="headerlink" href="#calculate-route" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">4.3. </span>calculate_route<a class="headerlink" href="#calculate-route" title="Permalink to this heading"></a></h2>
 <p>The cost of a user-defined route through a pre-generated mesh containing vehicle information can be calculated using the command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">calculate_route</span> <span class="o">&lt;</span><span class="n">vessel_mesh</span><span class="o">.</span><span class="n">json</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">route</span><span class="o">&gt;</span>
 </pre></div>
@@ -291,11 +217,11 @@ also be logged out once the route file has been generated. If the user-defined r
 considered inaccessible to the vessel then a warning will be displayed and no route will be saved.</p>
 </section>
 <section id="plotting">
-<h2><span class="section-number">4.6. </span>Plotting<a class="headerlink" href="#plotting" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">4.4. </span>Plotting<a class="headerlink" href="#plotting" title="Permalink to this heading"></a></h2>
 <p>Meshes produced at any stage in the route planning process can be visualised using the GeoPlot
 library found at the relevant <a class="reference external" href="https://github.com/antarctica/GeoPlot">GitHub page</a>. Meshes and routes can also be
 plotted in other GIS software such as QGIS by exporting the mesh to a common format such as .geojson or .tif using
-the <a class="reference internal" href="#export-mesh"><span class="std std-ref">export_mesh</span></a> command.</p>
+the export_mesh command described in the <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a> docs.</p>
 </section>
 </section>
 
