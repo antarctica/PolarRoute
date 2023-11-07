@@ -168,7 +168,9 @@ def optimise_routes_cli():
     logging.info("Calculating smoothed routes")
     rp.compute_smoothed_routes()
     info = rp.to_json()
-
+    # Resetting output file str in case dijkstra output run
+    output_file = args.output
+    output_file_strs = output_file.split('.')
     logging.info(f"\tOutputting smoothed path to {output_file}")
     with open(output_file, 'w+') as fp:
         json.dump(info, fp, indent=4)
