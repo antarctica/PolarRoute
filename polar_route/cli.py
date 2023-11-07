@@ -101,7 +101,7 @@ def resimulate_vehicle_cli():
     rebuilt_mesh_json = vp.to_json()
 
     # Saving output
-    logging.info("Saving mesh to {}".format(args.output))
+    logging.info(f"Saving mesh to {args.output}")
     with open(args.output, 'w+') as fp:
         json.dump(rebuilt_mesh_json, fp, indent=4)
 
@@ -123,8 +123,8 @@ def add_vehicle_cli():
     vp.model_accessibility()
     vp.model_performance()
 
-    logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
+    logging.info(f"Saving vp mesh to {args.output}")
     with open(args.output, 'w+') as fp:
         json.dump(info, fp, indent=4)
 
@@ -153,15 +153,15 @@ def optimise_routes_cli():
         dijkstra_output_file_strs = output_file_strs
         dijkstra_output_file_strs[0] += '_dijkstra'
         
-        logging.info("\tOutputting dijkstra path")
         dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
+        logging.info(f"\tOutputting dijkstra path to {dijkstra_output_file}")
         with open(dijkstra_output_file, 'w+') as fp:
             json.dump(info_dijkstra, fp, indent=4)
         # Create GeoJSON filename
         if args.path_geojson:
             dijkstra_output_file_strs[-1] = 'geojson'
             dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
-            logging.info("\tExtracting standalone path GeoJSON")
+            logging.info(f"\tExtracting standalone dijkstra path GeoJSON to {dijkstra_output_file}")
             with open(dijkstra_output_file, 'w+') as fp:
                 json.dump(info_dijkstra['paths'], fp, indent=4)
     
@@ -169,14 +169,14 @@ def optimise_routes_cli():
     rp.compute_smoothed_routes()
     info = rp.to_json()
 
-    logging.info("Outputting smoothed path")
+    logging.info(f"\tOutputting smoothed path to {output_file}")
     with open(output_file, 'w+') as fp:
         json.dump(info, fp, indent=4)
     if args.path_geojson:
         # Create GeoJSON filename
         output_file_strs[-1] = 'geojson'
         output_file = '.'.join(output_file_strs)
-        logging.info("Extracting standalone path GeoJSON")
+        logging.info(f"\tExtracting standalone path GeoJSON to {output_file}")
         with open(output_file, 'w+') as fp:
                 json.dump(info['paths'], fp, indent=4)
     # If want charttracker formatted csv
@@ -191,6 +191,7 @@ def optimise_routes_cli():
         for i, csv_str in enumerate(csv_strs):
             output_file_strs[1] = f'r{i}'
             output_file = '.'.join(output_file_strs)
+            logging.info(f"\tOutputting ChartTracker CSV to {output_file}")
             with open(output_file, 'w+') as fp:
                 fp.write(csv_str)
         
