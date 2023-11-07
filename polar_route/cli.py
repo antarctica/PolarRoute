@@ -102,7 +102,8 @@ def resimulate_vehicle_cli():
 
     # Saving output
     logging.info("Saving mesh to {}".format(args.output))
-    json.dump(rebuilt_mesh_json, open(args.output, "w"), indent=4)
+    with open(args.output, 'w+') as fp:
+        json.dump(rebuilt_mesh_json, fp, indent=4)
 
 
 @timed_call
@@ -124,7 +125,8 @@ def add_vehicle_cli():
 
     logging.info("Saving mesh to {}".format(args.output))
     info = vp.to_json()
-    json.dump(info, open(args.output, "w"), indent=4)
+    with open(args.output, 'w+') as fp:
+        json.dump(info, fp, indent=4)
 
 
 @timed_call
@@ -153,26 +155,30 @@ def optimise_routes_cli():
         
         logging.info("\tOutputting dijkstra path")
         dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
-        json.dump(info_dijkstra, open(dijkstra_output_file, 'w'), indent=4)
+        with open(dijkstra_output_file, 'w+') as fp:
+            json.dump(info_dijkstra, fp, indent=4)
         # Create GeoJSON filename
         if args.path_geojson:
             dijkstra_output_file_strs[-1] = 'geojson'
             dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
             logging.info("\tExtracting standalone path GeoJSON")
-            json.dump(info_dijkstra['paths'], open(dijkstra_output_file, 'w'), indent=4)
+            with open(dijkstra_output_file, 'w+') as fp:
+                json.dump(info_dijkstra['paths'], fp, indent=4)
     
     logging.info("Calculating smoothed routes")
     rp.compute_smoothed_routes()
     info = rp.to_json()
 
     logging.info("Outputting smoothed path")
-    json.dump(info, open(output_file, 'w'), indent=4)
+    with open(output_file, 'w+') as fp:
+        json.dump(info, fp, indent=4)
     if args.path_geojson:
         # Create GeoJSON filename
         output_file_strs[-1] = 'geojson'
         output_file = '.'.join(output_file_strs)
         logging.info("Extracting standalone path GeoJSON")
-        json.dump(info['paths'], open(output_file, 'w'), indent=4)
+        with open(output_file, 'w+') as fp:
+                json.dump(info['paths'], fp, indent=4)
     # If want charttracker formatted csv
     if args.chart_tracker:
         # Extract each route as csv string
@@ -185,7 +191,7 @@ def optimise_routes_cli():
         for i, csv_str in enumerate(csv_strs):
             output_file_strs[1] = f'r{i}'
             output_file = '.'.join(output_file_strs)
-            with open(output_file, 'w') as fp:
+            with open(output_file, 'w+') as fp:
                 fp.write(csv_str)
         
     
@@ -211,5 +217,5 @@ def calculate_route_cli():
         logging.info(f"Calculated route has travel time: {max_time} and fuel cost: {max_fuel} tons")
 
         logging.info(f"Saving calculated route to {args.output}")
-        with open(args.output, "w") as f:
+        with open(args.output, 'w+') as f:
             json.dump(calc_route, f, indent=4)
