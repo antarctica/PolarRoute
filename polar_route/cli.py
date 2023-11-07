@@ -66,6 +66,11 @@ def get_args(
                         default=False,
                         action = "store_true",
                         help="Output dijkstra paths")
+        
+        ap.add_argument("--chart_tracker",
+                        default=False,
+                        action = "store",
+                        help="Output the calculated paths as CSV readable by ChartTracker")
 
     return ap.parse_args()
 
@@ -168,6 +173,21 @@ def optimise_routes_cli():
         output_file = '.'.join(output_file_strs)
         logging.info("Extracting standalone path GeoJSON")
         json.dump(info['paths'], open(output_file, 'w'), indent=4)
+    # If want charttracker formatted csv
+    if args.chart_tracker:
+        # Extract each route as csv string
+        route_name = 'PolarRoute' if args.chart_tracker == True else args.chart_tracker
+        csv_strs = rp.to_charttracker_csv(route_name=route_name)
+        # Format output filename
+        output_file_strs[-1] = 'csv'
+        output_file_strs.insert(1,'r0')
+        # For each path generated, write to csv with unique name
+        for i, csv_str in enumerate(csv_strs):
+            output_file_strs[1] = f'r{i}'
+            output_file = '.'.join(output_file_strs)
+            with open(output_file, 'w') as fp:
+                fp.write(csv_str)
+        
     
         
 
