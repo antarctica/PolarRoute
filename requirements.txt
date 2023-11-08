@@ -1,4 +1,4 @@
-cartographi@git+https://github.com/antarctica/CartograPhi@RNN_DataLoaders
+meshiphi
 dask
 geopandas
 jsonschema

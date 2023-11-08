@@ -17,7 +17,9 @@ the 'add_vehicle' entry point.
      "hull_type": "slender",
      "force_limit": 96634.5,
      "max_ice_conc": 80,
-     "min_depth": 10
+     "min_depth": 10,
+     "max_wave": 3,
+     "excluded_zones": ["exclusion_zone"]
    }
 
 Above are a typical set of configuration parameters used for a vessel where the variables are as follows:
@@ -30,3 +32,5 @@ Above are a typical set of configuration parameters used for a vessel where the 
 * **force_limit** *(float)* : The maximum allowed resistance force, specified in Newtons.
 * **max_ice_conc** *(float)* : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.
 * **min_depth** *(float)* : The minimum depth of water the vessel is able to travel through in metres.
+* **max_wave** *(float)* : The maximum significant wave height the vessel is able to travel through in metres.
+* **excluded_zones** *(float)* : A list of of strings that name different boolean properties of a cell. Any cell with a value of True for any of the entered keys will be marked as unnavigable.

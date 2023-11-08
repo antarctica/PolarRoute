@@ -1,4 +1,4 @@
-from cartographi.mesh_generation.environment_mesh import AggregatedCellBox
+from meshiphi.mesh_generation.environment_mesh import AggregatedCellBox
 from polar_route.vessel_performance.abstract_vessel import AbstractVessel
 from abc import abstractmethod
 import logging
@@ -20,6 +20,7 @@ class AbstractShip(AbstractVessel):
         self.max_elevation = -1 * self.vessel_params['min_depth']
         self.max_ice = self.vessel_params['max_ice_conc']
         self.max_wave = self.vessel_params.get('max_wave')
+        self.excluded_zones = self.vessel_params.get('excluded_zones')
 
     def model_performance(self, cellbox):
         """
@@ -60,12 +61,22 @@ class AbstractShip(AbstractVessel):
                       f"{self.vessel_params['vessel_type']}")
         access_values = dict()
 
+        # Make land and extreme ice cells inaccessible
         access_values['land'] = self.land(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
 
+        # Make cells above wave height threshold inaccessible
         if self.max_wave is not None:
             logging.debug(f"Excluding areas with wave height above {self.max_wave}m")
             access_values['ext_waves'] = self.extreme_waves(cellbox)
+
+        # Exclude any other cells specified in config
+        if self.excluded_zones is not None:
+            for zone in self.excluded_zones:
+                try:
+                    access_values[zone] = cellbox.agg_data[zone]
+                except KeyError:
+                    logging.debug(f'{zone} not found in agg cellbox!')
 
         access_values['inaccessible'] = any(access_values.values())
 

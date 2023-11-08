@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>6. Outputs - Data Types &mdash; polar_route 0.3.2 documentation</title>
+  <title>6. Outputs - Data Types &mdash; polar_route 0.3.8 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -90,7 +90,9 @@
 <span id="outputs"></span><h1><span class="section-number">6. </span>Outputs - Data Types<a class="headerlink" href="#outputs-data-types" title="Permalink to this heading"></a></h1>
 <section id="the-vessel-mesh-json-file">
 <h2><span class="section-number">6.1. </span>The Vessel_mesh.json file<a class="headerlink" href="#the-vessel-mesh-json-file" title="Permalink to this heading"></a></h2>
-<p>Once a discrete mesh environment is contracted, it is then passed to the vessel performance modeller
+<p>The vessel performance mesh is an extension to an environmental mesh created by the
+<a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a> library.
+Once a discrete mesh environment is created, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle. These vehicle specific values
 are then encoded into the mesh json object and passed down-stream to the route planner.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>

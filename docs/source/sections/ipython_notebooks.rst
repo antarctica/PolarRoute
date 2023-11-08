@@ -4,7 +4,7 @@ Python & iPython Notebooks
 
 Route planning may also be done using a python terminal. This is case, the CLI is not required but the steps required for route planning 
 follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
-To perform the steps detailed in this section, a mesh must first be generated using `CartograPhi <https://github.com/antarctica/CartograPhi>`_.
+To perform the steps detailed in this section, a mesh must first be generated using `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_.
  
 
 
@@ -12,7 +12,7 @@ To perform the steps detailed in this section, a mesh must first be generated us
 Simulating a Vessel in a Digital Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once a digital environment **`Mesh`** object has been created with `CartograPhi <https://github.com/antarctica/CartograPhi>`_, how a vessel interacts with it may be simulated. The **`VesselPerformance`**
+Once a digital environment **EnvironmentMesh** object has been created with `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_, how a vessel interacts with it may be simulated. The **VesselPerformanceModeller**
 object requires a digital environment in *json* format and vessel specific configuration parameters, also in *json* format. These may either
 be loaded from a file, or created within the python terminal.
 
@@ -28,16 +28,18 @@ Loading mesh and vessel from *json* files:
     with open('vessel.json', 'r') as f:
         vessel = json.load(f) 
 
-The **`VesselPerformance`** object can then be initialised. This will simulate the performance of the vessel and encodes this information 
+The **VesselPerformanceModeller** object can then be initialised. This can be used to simulate the performance of the vessel and encode this information
 into the digital environment.
 ::
 
-   from polar_route.vessel_performance import VesselPerformance
+   from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
    vp = VesselPerformance(mesh, vessel)
+   vp.model_accessibility()
+   vp.model_performance()
 
-The **`VesselPerformance`** object can then be cast to a json object and saved to a file. This *vessel_mesh.json* file can then 
-be used by the CLI entry-point :ref:`optimise_routes`, or the json object can be passed to the **`RoutePlanner`** object in a python 
-terminal.
+The **VesselPerformanceModeller** object can then be cast to a json object and saved to a file. This *vessel_mesh.json* file can then
+be used by the CLI entry-point :ref:`optimise_routes`, or the json object can be passed to the **RoutePlanner** object in a python
+console.
 ::
 
     vessel_mesh = vp.to_json()
@@ -47,7 +49,7 @@ terminal.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Route Optimisation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Now that the vessel dependent environmental mesh is defined, and represented in the `vessel_performance` object, we can 
+Now that the vessel dependent environmental mesh is defined, and represented in the `VesselPerformanceModeller` object, we can
 construct routes, with parameters defined by the user in the configuration file. Waypoints are passed as an input 
 file path, `waypoints.csv`, discussed more in the Inputs section of the manual pages.  The route construction is done 
 in two stages: construction of the meshed dijkstra optimal routes, `.compute_routes()`; and, the smoothing of the 
