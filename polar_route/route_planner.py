@@ -136,10 +136,10 @@ def _adjust_waypoints(point, cellboxes):
     cb_polygon = wkt.loads(nearest_cb['geometry'])
     
     if point.within(cb_polygon):
-        print('waypoint is accessible')
+        logging.debug(f'({point.y},{point.x}) in accessible cellbox')
         return point
     else:
-        print('waypoint not accessible')
+        logging.debug(f'({point.y},{point.x}) not in accessible cellbox')
         # Create a line between CB centre and point
         cb_centre = Point([nearest_cb['cx'],nearest_cb['cy']])
         connecting_line = LineString([point, cb_centre])
@@ -153,8 +153,8 @@ def _adjust_waypoints(point, cellboxes):
         interior_point = buffered_point.exterior.intersection(intersecting_line)
         # Interior point is now a point inside the cellbox 
         # that is not on the boundary
-        print(f'Old point: {[point]}')
-        print(f'New point: {[interior_point]}')
+        logging.info(f'({point.y},{point.x}) not accessible cellbox')
+        logging.info(f'Adjusted to ({interior_point.y},{interior_point.x})')
         return interior_point
     
 class RoutePlanner:
@@ -478,6 +478,11 @@ class RoutePlanner:
             path_csvs += [csv_str]
         # Return list of csv strings with each smoothed path
         return path_csvs
+
+    def to_gpx(self):
+        '''
+        Output route to GPX
+        '''
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
