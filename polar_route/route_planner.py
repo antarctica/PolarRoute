@@ -7,8 +7,7 @@ import copy, json, ast, warnings
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from shapely import wkt
-from shapely.geometry.polygon import Point
+from shapely import wkt, Point, LineString, STRtree
 import geopandas as gpd
 import logging
 
@@ -123,10 +122,41 @@ def _pandas_dataframe_str(input):
             raise Exception("Unable to load '{}', please check path name".format(input))
     return output
 
-
-
-
-
+def _adjust_waypoints(point, cellboxes):
+    '''
+    Moves waypoint to closest accessible cellbox if it isn't already in one
+    '''
+    # Extract cellboxes from mesh
+    cbs = gpd.GeoDataFrame.from_records(cellboxes)
+    # Prune inaccessible waypoints from search
+    cbs = cbs[cbs['inaccessible'] == False]
+    # Find nearest cellbox to point that is accessible
+    tree = STRtree(wkt.loads(cbs['geometry']))
+    nearest_cb = cbs.iloc[tree.nearest(point)]
+    cb_polygon = wkt.loads(nearest_cb['geometry'])
+    
+    if point.within(cb_polygon):
+        print('waypoint is accessible')
+        return point
+    else:
+        print('waypoint not accessible')
+        # Create a line between CB centre and point
+        cb_centre = Point([nearest_cb['cx'],nearest_cb['cy']])
+        connecting_line = LineString([point, cb_centre])
+        # Extract segment of line inside the accessible cellbox    
+        intersecting_line = connecting_line.intersection(cb_polygon)
+        # Find where it meets the cellbox boundary
+        boundary_point = connecting_line.intersection(cb_polygon.exterior)
+        # Draw a small circle around it
+        buffered_point = boundary_point.buffer(intersecting_line.length*1e-3)
+        # Find point along line that intersects circle
+        interior_point = buffered_point.exterior.intersection(intersecting_line)
+        # Interior point is now a point inside the cellbox 
+        # that is not on the boundary
+        print(f'Old point: {[point]}')
+        print(f'New point: {[interior_point]}')
+        return interior_point
+    
 class RoutePlanner:
     """
         ---
@@ -323,6 +353,7 @@ class RoutePlanner:
         # Initialising Waypoints positions and cell index
         wpts = self.mesh['waypoints']
         wpts['index'] = np.nan
+
         for idx,wpt in wpts.iterrows():
             indices = self.neighbour_graph[self.neighbour_graph['geometry'].contains(Point(wpt[['Long','Lat']]))].index
             # Waypoint is not within a mesh cell, but could still be on the edge of one. So perturbing the position slightly to the north-east and checking again. 
@@ -339,8 +370,18 @@ class RoutePlanner:
             else:
                 wpts['index'].loc[idx] = int(indices[0])
 
+        # Move waypoint to closest accessible cellbox if it isn't in one already
+        for idx, row in wpts.iterrows():
+            point = Point([row['Long'], row['Lat']])
+            adjusted_point = _adjust_waypoints(point, self.mesh['cellboxes'])
+            row['Long'] = adjusted_point.x
+            row['Lat'] = adjusted_point.y
+            print(row)
+
         self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
         self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
+        
+        
         self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
 
         # ==== Printing Configuration and Information
