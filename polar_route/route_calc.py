@@ -342,15 +342,12 @@ def route_calc(route_file, mesh_file):
         if cell_box['inaccessible']:
             logging.warning(f"This route crosses an inaccessible cell! Cell located at Lat: {cell_box['cy']} "
                          f"Long: {cell_box['cx']}")
-            blocked_cell = cell_box['id']
-            logging.warning("Trying with speed and fuel from previous cell, reroute for more accurate results")
+            logging.info("Trying with speed and fuel from previous cells, reroute for more accurate results")
             i = 0
-            while cell_box['id'] == blocked_cell:
+            # Go back along path to find previous accessible cell
+            while cell_box['inaccessible']:
                 i += 1
                 cell_box = mesh.iloc[user_track['CellID'].iloc[idx-i]]
-            if cell_box['inaccessible']:
-                logging.warning(f"This route crosses multiple inaccessible cells! Please reroute to avoid this!")
-                return None
 
         traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
                                                    vector_y='vC', case=case)
