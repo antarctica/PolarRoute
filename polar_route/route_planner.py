@@ -136,9 +136,10 @@ def _mesh_boundary_polygon(mesh):
     p4 = Point([long_max, lat_min])
     return Polygon([p1,p2,p3,p4])
 
-def _adjust_waypoints(point, cellboxes):
+def _adjust_waypoints(point, cellboxes, max_distance=5):
     '''
     Moves waypoint to closest accessible cellbox if it isn't already in one
+    Allows up to 5 degrees flexibility by default
     '''
     # Extract cellboxes from mesh
     cbs = gpd.GeoDataFrame.from_records(cellboxes)
@@ -159,17 +160,24 @@ def _adjust_waypoints(point, cellboxes):
         connecting_line = LineString([point, cb_centre])
         # Extract segment of line inside the accessible cellbox    
         intersecting_line = connecting_line.intersection(cb_polygon)
+        
+        # Put limit on how far it's allowed to adjust waypoint
+        distance_away = connecting_line.length - intersecting_line.length
+        if distance_away > max_distance:
+            logging.info(f'Waypoint too far from accessible cellbox!')
+            return point
+        
         # Find where it meets the cellbox boundary
         boundary_point = connecting_line.intersection(cb_polygon.exterior)
         # Draw a small circle around it
         buffered_point = boundary_point.buffer(intersecting_line.length*1e-3)
         # Find point along line that intersects circle
-        interior_point = buffered_point.exterior.intersection(intersecting_line)
+        adjusted_point = buffered_point.exterior.intersection(intersecting_line)
         # Interior point is now a point inside the cellbox 
         # that is not on the boundary
         logging.info(f'({point.y},{point.x}) not accessible cellbox')
-        logging.info(f'Adjusted to ({interior_point.y},{interior_point.x})')
-        return interior_point
+        logging.info(f'Adjusted to ({adjusted_point.y},{adjusted_point.x})')
+        return adjusted_point
 class RoutePlanner:
     """
         ---
