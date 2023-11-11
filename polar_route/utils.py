@@ -6,6 +6,7 @@ import logging
 import time
 import tracemalloc
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 
 from datetime import datetime, timedelta
@@ -383,4 +384,66 @@ def gpx_route_import(f_name):
     geojson['features'][0]['properties']['to'] = gdf_p['name'].iloc[-1]
 
     return geojson
+
+def to_chart_track_csv(route):
+    """
+        Output a route in Chart Track csv format
+    """
+
+    def dd_to_dmm(dd, axis):
+        """
+        Converts decimal degrees to dmm formatted string
+        """
+        if dd >= 0:
+            degs, mins = divmod(dd, 1)
+            cardinal_dir = 'E' if axis == 'long' else 'N'
+        else:
+            degs, mins = divmod(-dd, 1)
+            cardinal_dir = 'W' if axis == 'long' else 'S'
+        return f"{int(degs)}-{60 * mins:.3f}'{cardinal_dir}"
+
+    def get_bearing(lat1, long1, lat2, long2):
+        """
+        Calculate bearing of travel from lat/long pairs
+        """
+        dlon = long2 - long1
+        x = np.cos(np.radians(lat2)) * np.sin(np.radians(dlon))
+        y = np.cos(np.radians(lat1)) * np.sin(np.radians(lat2)) - \
+            np.sin(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.cos(np.radians(dlon))
+        bearing = np.arctan2(x, y)
+        return np.degrees(bearing)
+
+    # For path, generate a csv string (typo to match output from Chart Track)
+    header = f"Route Name:,{route['properties']['from']}_{route['properties']['to']}\n" + \
+             "Way Point,Position,,Radius,Reach,ROT,XTD,SPD,RL/GC,Leg,Disance(NM),,ETA\n" + \
+             "ID,LAT,LON,,,,,,,,To WPT,TOTAL\n"
+    # Turn coords into DMM format
+    coords = np.array(route['geometry']['coordinates'])
+    long = [dd_to_dmm(long, 'long') for long in coords[:, 0]]
+    lat = [dd_to_dmm(lat, 'lat') for lat in coords[:, 1]]
+    # Distance column
+    cumulative_distance = np.array(route['properties']['distance']) * 0.000539957  # In nautical miles
+    distance = np.diff(cumulative_distance)
+    # Waypoint names
+    wps = [f'WP{i}' for i in range(len(cumulative_distance))]
+    leg = get_bearing(coords[:, 1][:-1], coords[:, 0][:-1],
+                      coords[:, 1][1:], coords[:, 0][1:]) % 360
+    eta = route['properties']['traveltime']
+    # Construct table with information
+    path_df = pd.DataFrame({'ID': wps,
+                            'LAT': lat,
+                            'LON': long,
+                            'Radius': '',
+                            'Reach': '',
+                            'ROT': '',
+                            'XTD': '',
+                            'SPD': '',
+                            'RL/GC': 'RL',
+                            'Leg': np.concatenate((leg, [np.nan])),
+                            'To WPT': np.concatenate(([np.nan], distance)),
+                            'TOTAL': cumulative_distance})
+    # Combine to one string and add to list of strs
+    csv_str = header + path_df.to_csv()
+    return csv_str
+
 
