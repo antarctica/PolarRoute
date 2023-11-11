@@ -2,11 +2,12 @@ import argparse
 import json
 import inspect
 import logging
+import geopandas as gpd
 
 from meshiphi.mesh_generation.mesh_builder import MeshBuilder
 
 from polar_route import __version__ as version
-from polar_route.utils import setup_logging, timed_call, convert_decimal_days
+from polar_route.utils import setup_logging, timed_call, convert_decimal_days, to_chart_track_csv
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 from polar_route.route_planner import RoutePlanner
 from polar_route.route_calc import route_calc
@@ -197,7 +198,61 @@ def optimise_routes_cli():
             with open(output_file, 'w+') as fp:
                 fp.write(csv_str)
         
-    
+@timed_call
+def extract_routes_cli():
+    """
+        CLI entry point to extract individual routes from the output of optimise_routes
+    """
+    args = get_args("extracted_route.json", config_arg = False, mesh_arg = True)
+
+    output_file = args.output
+    output_file_strs = output_file.split('.')
+
+    route_file = json.load(args.mesh)
+    logging.info(f"Extracting routes from: {args.mesh.name} with base output: {args.output}")
+
+    # Check if input is just a route file or if the routes are nested within a mesh
+    if route_file.get("type") == "FeatureCollection":
+        routes = route_file["features"]
+    else:
+        routes = route_file["paths"]["features"]
+
+    if output_file_strs[-1] in ["json", "geojson"]:
+        logging.info("Extracting routes in geojson format")
+        for route in routes:
+            geojson_wrapper = {"type": "FeatureCollection",
+                               "features": []}
+            from_wp = route["properties"]["from"].replace(" ", "_")
+            to_wp = route["properties"]["to"].replace(" ", "_")
+            geojson_output = geojson_wrapper
+            geojson_output["features"].append(route)
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + "." + output_file_strs[-1]
+            logging.info(f"Saving route to {route_output_str}")
+            with open(route_output_str, "w") as f:
+                json.dump(geojson_output, f, indent=4)
+
+
+    elif output_file_strs[-1] == "gpx":
+        logging.info("Extracting routes in gpx format")
+        for route in routes:
+            from_wp = route["properties"]["from"].replace(" ", "_")
+            to_wp = route["properties"]["to"].replace(" ", "_")
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + ".gpx"
+            gdf = gpd.GeoDataFrame.from_features([route])
+            logging.info(f"Saving route to {route_output_str}")
+            gdf['geometry'].to_file(route_output_str, "GPX")
+    elif output_file_strs[-1] == "csv":
+        logging.info("Extracting routes in ChartTrack csv format")
+        for route in routes:
+            from_wp = route["properties"]["from"].replace(" ", "_")
+            to_wp = route["properties"]["to"].replace(" ", "_")
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + ".csv"
+            csv_route = to_chart_track_csv(route)
+            logging.info(f"Saving route to {route_output_str}")
+            with open(route_output_str, "w") as f:
+                f.write(csv_route)
+    else:
+        logging.warning("Unrecognised output type! No routes have been extracted!")
         
 
 @timed_call
