@@ -209,6 +209,7 @@ def extract_routes_cli():
     output_file_strs = output_file.split('.')
 
     route_file = json.load(args.mesh)
+    logging.info(f"Extracting routes from: {args.mesh.name} with base output: {args.output}")
 
     # Check if input is just a route file or if the routes are nested within a mesh
     if route_file.get("type") == "FeatureCollection":
@@ -225,7 +226,7 @@ def extract_routes_cli():
             to_wp = route["properties"]["to"].replace(" ", "_")
             geojson_output = geojson_wrapper
             geojson_output["features"].append(route)
-            route_output_str = '.'.join(output_file_strs[:-1]) + from_wp + to_wp + "." + output_file_strs[-1]
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + "." + output_file_strs[-1]
             logging.info(f"Saving route to {route_output_str}")
             with open(route_output_str, "w") as f:
                 json.dump(geojson_output, f, indent=4)
@@ -236,7 +237,7 @@ def extract_routes_cli():
         for route in routes:
             from_wp = route["properties"]["from"].replace(" ", "_")
             to_wp = route["properties"]["to"].replace(" ", "_")
-            route_output_str = '.'.join(output_file_strs[:-1]) + from_wp + to_wp + ".gpx"
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + ".gpx"
             gdf = gpd.GeoDataFrame.from_features([route])
             logging.info(f"Saving route to {route_output_str}")
             gdf['geometry'].to_file(route_output_str, "GPX")
@@ -245,7 +246,7 @@ def extract_routes_cli():
         for route in routes:
             from_wp = route["properties"]["from"].replace(" ", "_")
             to_wp = route["properties"]["to"].replace(" ", "_")
-            route_output_str = '.'.join(output_file_strs[:-1]) + from_wp + to_wp + ".csv"
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + ".csv"
             csv_route = to_chart_track_csv(route)
             logging.info(f"Saving route to {route_output_str}")
             with open(route_output_str, "w") as f:
