@@ -1,3 +1,5 @@
 include pyproject.toml
 include *.md
 include LICENSE
+include polar_route/vessel_performance/vessels/trained_models/*.h5
+include polar_route/vessel_performance/vessels/trained_models/*.pkl
