@@ -25,9 +25,9 @@ class SDA_RNN(AbstractShip):
         self.base_path = os.path.dirname(os.path.realpath(__file__))
 
         # Load the trained models
-        sog_model_path = os.path.join(self.base_path, 'sog_relativedir_190923.h5')
-        rpm_model_path = os.path.join(self.base_path, 'power_relativedir.h5')
-        spline_model_path = os.path.join(self.base_path, 'spline_model.pkl')
+        sog_model_path = os.path.join(self.base_path, 'trained_models/sog_relativedir_190923.h5')
+        rpm_model_path = os.path.join(self.base_path, 'trained_models/power_relativedir.h5')
+        spline_model_path = os.path.join(self.base_path, 'trained_models/spline_model.pkl')
 
         self.sog_model = tf.keras.models.load_model(sog_model_path)
         self.rpm_model = tf.keras.models.load_model(rpm_model_path)
