@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5.1. Configuration - Vessel Performance Modeller &mdash; polar_route 0.3.8 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="5.2. Configuration - Route Planning" href="Route_planning_config.html" />
+    <link rel="prev" title="5. Configuration Overview" href="Configuration_overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Code_overview.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Configuration_overview.html">5. Configuration Overview</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">5.1. Configuration - Vessel Performance Modeller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Route_planning_config.html">5.2. Configuration - Route Planning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../Outputs.html">6. Outputs - Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Vehicle_specifics.html">7. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Route_calculation.html">8. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Route_optimisation.html">9. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Examples.html">10. Examples of running code</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="Configuration_overview.html"><span class="section-number">5. </span>Configuration Overview</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">5.1. </span>Configuration - Vessel Performance Modeller</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/sections/Configuration/Vessel_performance_config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration-vessel-performance-modeller">
+<h1><span class="section-number">5.1. </span>Configuration - Vessel Performance Modeller<a class="headerlink" href="#configuration-vessel-performance-modeller" title="Permalink to this heading"></a></h1>
+<p>The Vessel configuration file provides all the necessary information about the vessel that will execute
+the routes such that performance parameters (e.g. speed or fuel consumption) can be calculated by the
+<cite>VesselPerformanceModeller</cite> class. A file of this structure is also used as a command line argument for
+the ‘add_vehicle’ entry point.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;vessel_type&quot;</span><span class="p">:</span> <span class="s2">&quot;SDA&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;max_speed&quot;</span><span class="p">:</span> <span class="mf">26.5</span><span class="p">,</span>
+  <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;km/hr&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;beam&quot;</span><span class="p">:</span> <span class="mf">24.0</span><span class="p">,</span>
+  <span class="s2">&quot;hull_type&quot;</span><span class="p">:</span> <span class="s2">&quot;slender&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;force_limit&quot;</span><span class="p">:</span> <span class="mf">96634.5</span><span class="p">,</span>
+  <span class="s2">&quot;max_ice_conc&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+  <span class="s2">&quot;min_depth&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+  <span class="s2">&quot;max_wave&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="s2">&quot;excluded_zones&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;exclusion_zone&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Above are a typical set of configuration parameters used for a vessel where the variables are as follows:</p>
+<ul class="simple">
+<li><p><strong>vessel_type</strong> <em>(string)</em> : The specific vessel class to use for performance modelling.</p></li>
+<li><p><strong>max_speed</strong> <em>(float)</em> : The maximum speed of the vessel in open water.</p></li>
+<li><p><strong>unit</strong> <em>(string)</em> : The units of measurement for the speed of the vessel (currently only “km/hr” is supported).</p></li>
+<li><p><strong>beam</strong> <em>(float)</em> : The beam (width) of the ship in metres.</p></li>
+<li><p><strong>hull_type</strong> <em>(string)</em> : The hull profile of the ship (should be one of either “slender” or “blunt”).</p></li>
+<li><p><strong>force_limit</strong> <em>(float)</em> : The maximum allowed resistance force, specified in Newtons.</p></li>
+<li><p><strong>max_ice_conc</strong> <em>(float)</em> : The maximum Sea Ice Concentration the vessel is able to travel through given as a percentage.</p></li>
+<li><p><strong>min_depth</strong> <em>(float)</em> : The minimum depth of water the vessel is able to travel through in metres.</p></li>
+<li><p><strong>max_wave</strong> <em>(float)</em> : The maximum significant wave height the vessel is able to travel through in metres.</p></li>
+<li><p><strong>excluded_zones</strong> <em>(float)</em> : A list of of strings that name different boolean properties of a cell. Any cell with a value of True for any of the entered keys will be marked as unnavigable.</p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Configuration_overview.html" class="btn btn-neutral float-left" title="5. Configuration Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Route_planning_config.html" class="btn btn-neutral float-right" title="5.2. Configuration - Route Planning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

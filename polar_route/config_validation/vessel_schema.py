@@ -1,14 +1,14 @@
 vessel_schema = {
     "type": "object",
-    "required": ["VesselType", "MaxSpeed",
-                 "Unit", "MaxIceConc",
-                 "MinDepth"],
+    "required": ["vessel_type", "max_speed",
+                 "unit", "max_ice_conc",
+                 "min_depth"],
     "additionalProperties": True,
     "properties": {
-        "VesselType": {"type": "string"},
-        "MaxSpeed": {"type": "number", "minimum": 0},
-        "Unit": {"type": "string"},
-        "MaxIceConc": {"type": "number", "minimum": 0, "maximum": 100},
-        "MinDepth": {"type": "number", "minimum": 0}
+        "vessel_type": {"type": "string"},
+        "max_speed": {"type": "number", "minimum": 0},
+        "unit": {"type": "string"},
+        "max_ice_conc": {"type": "number", "minimum": 0, "maximum": 100},
+        "min_depth": {"type": "number", "minimum": 0}
     }
 }

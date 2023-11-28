@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5.2. Configuration - Route Planning &mdash; polar_route 0.3.8 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="6. Outputs - Data Types" href="../Outputs.html" />
+    <link rel="prev" title="5.1. Configuration - Vessel Performance Modeller" href="Vessel_performance_config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            polar_route
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../Code_overview.html">1. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Command_line_interface.html">4. Command Line Interface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Configuration_overview.html">5. Configuration Overview</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Vessel_performance_config.html">5.1. Configuration - Vessel Performance Modeller</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">5.2. Configuration - Route Planning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../Outputs.html">6. Outputs - Data Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Vehicle_specifics.html">7. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Route_calculation.html">8. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Route_optimisation.html">9. Methods - Route Planner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Examples.html">10. Examples of running code</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">polar_route</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="Configuration_overview.html"><span class="section-number">5. </span>Configuration Overview</a></li>
+      <li class="breadcrumb-item active"><span class="section-number">5.2. </span>Configuration - Route Planning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/sections/Configuration/Route_planning_config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration-route-planning">
+<h1><span class="section-number">5.2. </span>Configuration - Route Planning<a class="headerlink" href="#configuration-route-planning" title="Permalink to this heading"></a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;Objective_Function&quot;</span><span class="p">:</span> <span class="s2">&quot;traveltime&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Path_Variables&quot;</span><span class="p">:</span> <span class="p">[</span>
+     <span class="s2">&quot;fuel&quot;</span><span class="p">,</span>
+     <span class="s2">&quot;traveltime&quot;</span>
+  <span class="p">],</span>
+  <span class="s2">&quot;WayPoints&quot;</span><span class="p">:</span> <span class="s2">&quot;./WayPoints_org.csv&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Source_Waypoints&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;LongPathStart&quot;</span><span class="p">],</span>
+  <span class="s2">&quot;End_Waypoints&quot;</span><span class="p">:</span> <span class="p">[],</span>
+  <span class="s2">&quot;Vector Names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;uC&quot;</span><span class="p">,</span><span class="s2">&quot;vC&quot;</span><span class="p">],</span>
+  <span class="s2">&quot;Zero_Currents&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;Variable_Speed&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+  <span class="s2">&quot;Time_unit&quot;</span><span class="p">:</span> <span class="s2">&quot;days&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;Early_Stopping_Criterion&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+  <span class="s2">&quot;Save_Dijkstra_Graphs&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+  <span class="s2">&quot;Smooth Path&quot;</span><span class="p">:{</span>
+     <span class="s2">&quot;Max Iteration Number&quot;</span><span class="p">:</span><span class="mi">1000</span><span class="p">,</span>
+     <span class="s2">&quot;Minimum Difference&quot;</span><span class="p">:</span> <span class="mf">1e-3</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>above is a typical set of configuration parameters used for route planning where the variables are as follows:</p>
+<ul class="simple">
+<li><p><strong>objective_function</strong> <em>(string)</em> : Defining the objective function to minimise for the construction of the mesh based Dijkstra routes. This variable can either be defined as ‘traveltime’ or ‘fuel’ .</p></li>
+<li><p><strong>path_variables</strong> <em>(list&lt;(string)&gt;)</em> : A list of strings of the route variables to return in the output geojson.</p></li>
+<li><p><strong>waypoints_path</strong> <em>(string)</em> : A filepath to a CSV containing the user defined waypoints with columns including: ‘Name’,’Lat’,”Long”</p></li>
+<li><p><strong>source_waypoints</strong> <em>(list&lt;(string)&gt;)</em>: The source waypoints to define the routes from. The names in this list must be the same as names within the <cite>waypoints_path</cite> file. If left blank then routes will be determined from all waypoints.</p></li>
+<li><p><strong>end_waypoints</strong> <em>(list&lt;(string)&gt;)</em> : The end waypoints to define the routes to. The names in this list must be the same as names within the <cite>waypoints_path</cite> file. If left blank then routes will be determined to all waypoints.</p></li>
+<li><p><strong>vector_names</strong> <em>(list&lt;(string)&gt;)</em> : The definition of the horizontal and vertical components of the vector acting on the ship within each CellBox. These names must be within the ‘cellboxes’.</p></li>
+<li><p><strong>zero_currents</strong> <em>(bool)</em> : For development use only. Removes the effect of currents acting on the ship, setting all current vectors to zero.</p></li>
+<li><p><strong>Variable_Speed</strong> <em>(bool)</em>  : For development use only. Removes the effect of variable speed acting on the ship, ship speed set to max speed defined by ‘Vessel’:{‘Speed’:…}.</p></li>
+<li><p><strong>time_unit</strong> <em>(string)</em> : The time unit to output the route path information. Currently only takes ‘days’, but will support ‘hrs’ in future releases.</p></li>
+<li><p><strong>early_stopping_criterion</strong> <em>(bool)</em> : For development use only. Dijkstra early stopping criterion. For development use only if the full objective_function from each starting waypoint is required. Should be used in conjunction with <cite>save_dijkstra_graphs</cite>.</p></li>
+<li><p><strong>save_dijkstra_graphs</strong> <em>(bool)</em> : For development use only. Saves the full dijkstra graph representing the objective_function value across all mesh cells.</p></li>
+<li><dl class="simple">
+<dt><strong>Smooth Path</strong></dt><dd><ul>
+<li><p><strong>max_iteration_number</strong> <em>(int)</em> : For development use only. Maximum number of iterations in the path smoothing. For most paths convergence is met 100x earlier than this value.</p></li>
+<li><p><strong>minimum_difference</strong> <em>(float)</em> : For development use only. Minimum difference between two path smoothing iterations before convergence is triggered</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Vessel_performance_config.html" class="btn btn-neutral float-left" title="5.1. Configuration - Vessel Performance Modeller" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../Outputs.html" class="btn btn-neutral float-right" title="6. Outputs - Data Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

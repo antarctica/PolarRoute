@@ -1,202 +1,200 @@
 {
-    "Mesh_info": {
-        "Region": {
-            "latMin": 0,
-            "latMax": 10,
-            "longMin": 0,
-            "longMax": 10,
-            "startTime": "TODAY - 1",
-            "endTime": "TODAY + 1",
-            "cellWidth": 10,
-            "cellHeight": 10
-        },
-        "Data_sources": [
-            {
-                "loader": "scalar_grf",
-                "params": {
-                    "data_name": "SIC",
-                    "min": 0,
-                    "max": 100,
-                    "seed": 16,
-                    "offset": 5,
-                    "splitting_conditions": [
-                        {
-                            "SIC": {
-                                "threshold": 75,
-                                "upper_bound": 1.0,
-                                "lower_bound": 0.0
-                            }
+    "region": {
+        "lat_min": 0,
+        "lat_max": 10,
+        "long_min": 0,
+        "long_max": 10,
+        "start_time": "TODAY - 1",
+        "end_time": "TODAY + 1",
+        "cell_width": 10,
+        "cell_height": 10
+    },
+    "data_sources": [
+        {
+            "loader": "scalar_grf",
+            "params": {
+                "data_name": "SIC",
+                "min": 0,
+                "max": 100,
+                "seed": 16,
+                "offset": 5,
+                "splitting_conditions": [
+                    {
+                        "SIC": {
+                            "threshold": 75,
+                            "upper_bound": 1.0,
+                            "lower_bound": 0.0
                         }
-                    ],
-                    "dataloader_name": "scalar_grf",
-                    "downsample_factors": [
-                        1,
-                        1
-                    ],
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5,
-                    "in_proj": "EPSG:4326",
-                    "out_proj": "EPSG:4326",
-                    "x_col": "lat",
-                    "y_col": "long",
-                    "size": 512,
-                    "alpha": 3,
-                    "binary": false,
-                    "threshold": [
-                        0,
-                        1
-                    ],
-                    "multiplier": 1
-                }
-            },
-            {
-                "loader": "scalar_grf",
-                "params": {
-                    "data_name": "elevation",
-                    "min": -100,
-                    "max": 50,
-                    "seed": 30,
-                    "splitting_conditions": [
-                        {
-                            "elevation": {
-                                "threshold": -10,
-                                "upper_bound": 1.0,
-                                "lower_bound": 0.0
-                            }
-                        }
-                    ],
-                    "dataloader_name": "scalar_grf",
-                    "downsample_factors": [
-                        1,
-                        1
-                    ],
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5,
-                    "in_proj": "EPSG:4326",
-                    "out_proj": "EPSG:4326",
-                    "x_col": "lat",
-                    "y_col": "long",
-                    "size": 512,
-                    "alpha": 3,
-                    "binary": false,
-                    "threshold": [
-                        0,
-                        1
-                    ],
-                    "multiplier": 1,
-                    "offset": 0
-                }
-            },
-            {
-                "loader": "scalar_grf",
-                "params": {
-                    "data_name": "thickness",
-                    "min": 0.65,
-                    "max": 1.4,
-                    "seed": 44,
-                    "dataloader_name": "scalar_grf",
-                    "downsample_factors": [
-                        1,
-                        1
-                    ],
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5,
-                    "in_proj": "EPSG:4326",
-                    "out_proj": "EPSG:4326",
-                    "x_col": "lat",
-                    "y_col": "long",
-                    "size": 512,
-                    "alpha": 3,
-                    "binary": false,
-                    "threshold": [
-                        0,
-                        1
-                    ],
-                    "multiplier": 1,
-                    "offset": 0
-                }
-            },
-            {
-                "loader": "scalar_grf",
-                "params": {
-                    "data_name": "density",
-                    "min": 850,
-                    "max": 1000,
-                    "seed": 40,
-                    "dataloader_name": "scalar_grf",
-                    "downsample_factors": [
-                        1,
-                        1
-                    ],
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5,
-                    "in_proj": "EPSG:4326",
-                    "out_proj": "EPSG:4326",
-                    "x_col": "lat",
-                    "y_col": "long",
-                    "size": 512,
-                    "alpha": 3,
-                    "binary": false,
-                    "threshold": [
-                        0,
-                        1
-                    ],
-                    "multiplier": 1,
-                    "offset": 0
-                }
-            },
-            {
-                "loader": "vector_grf",
-                "params": {
-                    "data_name": "uC,vC",
-                    "min": 0,
-                    "max": 1,
-                    "seed": 21,
-                    "dataloader_name": "vector_grf",
-                    "downsample_factors": [
-                        1,
-                        1
-                    ],
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5,
-                    "in_proj": "EPSG:4326",
-                    "out_proj": "EPSG:4326",
-                    "x_col": "lat",
-                    "y_col": "long",
-                    "size": 512,
-                    "alpha": 3,
-                    "vec_x": "uC",
-                    "vec_y": "vC"
-                }
-            },
-            {
-                "loader": "vector_grf",
-                "params": {
-                    "data_name": "u10,v10",
-                    "min": 0,
-                    "max": 1,
-                    "seed": 21,
-                    "dataloader_name": "vector_grf",
-                    "downsample_factors": [
-                        1,
-                        1
-                    ],
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5,
-                    "in_proj": "EPSG:4326",
-                    "out_proj": "EPSG:4326",
-                    "x_col": "lat",
-                    "y_col": "long",
-                    "size": 512,
-                    "alpha": 3,
-                    "vec_x": "uC",
-                    "vec_y": "vC"
-                }
+                    }
+                ],
+                "dataloader_name": "scalar_grf",
+                "downsample_factors": [
+                    1,
+                    1
+                ],
+                "aggregate_type": "MEAN",
+                "min_dp": 5,
+                "in_proj": "EPSG:4326",
+                "out_proj": "EPSG:4326",
+                "x_col": "lat",
+                "y_col": "long",
+                "size": 512,
+                "alpha": 3,
+                "binary": false,
+                "threshold": [
+                    0,
+                    1
+                ],
+                "multiplier": 1
             }
-        ],
-        "splitting": {
-            "split_depth": 6,
-            "minimum_datapoints": 5
+        },
+        {
+            "loader": "scalar_grf",
+            "params": {
+                "data_name": "elevation",
+                "min": -100,
+                "max": 50,
+                "seed": 30,
+                "splitting_conditions": [
+                    {
+                        "elevation": {
+                            "threshold": -10,
+                            "upper_bound": 1.0,
+                            "lower_bound": 0.0
+                        }
+                    }
+                ],
+                "dataloader_name": "scalar_grf",
+                "downsample_factors": [
+                    1,
+                    1
+                ],
+                "aggregate_type": "MEAN",
+                "min_dp": 5,
+                "in_proj": "EPSG:4326",
+                "out_proj": "EPSG:4326",
+                "x_col": "lat",
+                "y_col": "long",
+                "size": 512,
+                "alpha": 3,
+                "binary": false,
+                "threshold": [
+                    0,
+                    1
+                ],
+                "multiplier": 1,
+                "offset": 0
+            }
+        },
+        {
+            "loader": "scalar_grf",
+            "params": {
+                "data_name": "thickness",
+                "min": 0.65,
+                "max": 1.4,
+                "seed": 44,
+                "dataloader_name": "scalar_grf",
+                "downsample_factors": [
+                    1,
+                    1
+                ],
+                "aggregate_type": "MEAN",
+                "min_dp": 5,
+                "in_proj": "EPSG:4326",
+                "out_proj": "EPSG:4326",
+                "x_col": "lat",
+                "y_col": "long",
+                "size": 512,
+                "alpha": 3,
+                "binary": false,
+                "threshold": [
+                    0,
+                    1
+                ],
+                "multiplier": 1,
+                "offset": 0
+            }
+        },
+        {
+            "loader": "scalar_grf",
+            "params": {
+                "data_name": "density",
+                "min": 850,
+                "max": 1000,
+                "seed": 40,
+                "dataloader_name": "scalar_grf",
+                "downsample_factors": [
+                    1,
+                    1
+                ],
+                "aggregate_type": "MEAN",
+                "min_dp": 5,
+                "in_proj": "EPSG:4326",
+                "out_proj": "EPSG:4326",
+                "x_col": "lat",
+                "y_col": "long",
+                "size": 512,
+                "alpha": 3,
+                "binary": false,
+                "threshold": [
+                    0,
+                    1
+                ],
+                "multiplier": 1,
+                "offset": 0
+            }
+        },
+        {
+            "loader": "vector_grf",
+            "params": {
+                "data_name": "uC,vC",
+                "min": 0,
+                "max": 1,
+                "seed": 21,
+                "dataloader_name": "vector_grf",
+                "downsample_factors": [
+                    1,
+                    1
+                ],
+                "aggregate_type": "MEAN",
+                "min_dp": 5,
+                "in_proj": "EPSG:4326",
+                "out_proj": "EPSG:4326",
+                "x_col": "lat",
+                "y_col": "long",
+                "size": 512,
+                "alpha": 3,
+                "vec_x": "uC",
+                "vec_y": "vC"
+            }
+        },
+        {
+            "loader": "vector_grf",
+            "params": {
+                "data_name": "u10,v10",
+                "min": 0,
+                "max": 1,
+                "seed": 21,
+                "dataloader_name": "vector_grf",
+                "downsample_factors": [
+                    1,
+                    1
+                ],
+                "aggregate_type": "MEAN",
+                "min_dp": 5,
+                "in_proj": "EPSG:4326",
+                "out_proj": "EPSG:4326",
+                "x_col": "lat",
+                "y_col": "long",
+                "size": 512,
+                "alpha": 3,
+                "vec_x": "uC",
+                "vec_y": "vC"
+            }
         }
+    ],
+    "splitting": {
+        "split_depth": 6,
+        "minimum_datapoints": 5
     }
 }

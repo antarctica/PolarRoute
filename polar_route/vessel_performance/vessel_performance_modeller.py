@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 
-from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
+from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from polar_route.vessel_performance.vessel_factory import VesselFactory
 from polar_route.config_validation.config_validator import validate_vessel_config
 from polar_route.utils import timed_call

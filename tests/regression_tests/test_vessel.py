@@ -11,13 +11,13 @@ from polar_route import __version__ as pr_version
 from polar_route import VesselPerformanceModeller
 
 # Import tests, which are automatically run
-from .mesh_test_functions import test_mesh_cellbox_attributes
-from .mesh_test_functions import test_mesh_cellbox_count
-from .mesh_test_functions import test_mesh_cellbox_ids
-from .mesh_test_functions import test_mesh_cellbox_values
-from .mesh_test_functions import test_mesh_neighbour_graph_count
-from .mesh_test_functions import test_mesh_neighbour_graph_ids
-from .mesh_test_functions import test_mesh_neighbour_graph_values
+from .vessel_test_functions import test_mesh_cellbox_attributes
+from .vessel_test_functions import test_mesh_cellbox_count
+from .vessel_test_functions import test_mesh_cellbox_ids
+from .vessel_test_functions import test_mesh_cellbox_values
+from .vessel_test_functions import test_mesh_neighbour_graph_count
+from .vessel_test_functions import test_mesh_neighbour_graph_ids
+from .vessel_test_functions import test_mesh_neighbour_graph_values
 
 import logging
 LOGGER = logging.getLogger(__name__)

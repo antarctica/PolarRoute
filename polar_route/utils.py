@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from calendar import monthrange
 from scipy.fftpack import fftshift
-
+import json
     
 def frac_of_month(year, month, start_date=None, end_date=None):
     
@@ -63,7 +63,10 @@ def convert_decimal_days(decimal_days, mins=False):
         frac_h, hours = np.modf(hours)
         minutes = round(frac_h * 60.0)
         if days:
-            new_time = f"{round(days)} days {round(hours)} hours {minutes} minutes"
+            if round(days) == 1:
+                new_time = f"{round(days)} day {round(hours)} hours {minutes} minutes"
+            else:
+                new_time = f"{round(days)} days {round(hours)} hours {minutes} minutes"
         elif hours:
             new_time = f"{round(hours)} hours {minutes} minutes"
         else:
@@ -71,7 +74,10 @@ def convert_decimal_days(decimal_days, mins=False):
     else:
         hours = round(hours, 2)
         if days:
-            new_time = f"{round(days)} days {hours} hours"
+            if round(days) == 1:
+                new_time = f"{round(days)} day {hours} hours"
+            else:
+                new_time = f"{round(days)} days {hours} hours"
         else:
             new_time = f"{hours} hours"
 
@@ -273,3 +279,82 @@ def setup_logging(func,
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         return parsed_args
     return wrapper
+
+def _json_str(input):
+    if type(input) is dict:
+        output = input
+    elif type(input) is str:
+        try:
+            with open(input, 'r') as f:
+                output = json.load(f)
+        except:
+            raise ValueError("Unable to load '{}', please check path name".format(input))
+    return output
+def case_from_angle( start,end):
+        """
+            Determine the direction of travel between two points in the same cell and return the associated case
+
+            Args:
+                start (list): the coordinates of the start point within the cell
+                end (list):  the coordinates of the end point within the cell
+
+            Returns:
+                case (int): the case to use to select variable values from a list
+        """
+
+        direct_vec = [end[0]-start[0], end[1]-start[1]]
+        direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
+
+        case = None
+
+        if -22.5 <= direct_ang < 22.5:
+            case = -4
+        elif 22.5 <= direct_ang < 67.5:
+            case = 1
+        elif 67.5 <= direct_ang < 112.5:
+            case = 2
+        elif 112.5 <= direct_ang < 157.5:
+            case = 3
+        elif 157.5 <= abs(direct_ang) <= 180:
+            case = 4
+        elif -67.5 <= direct_ang < -22.5:
+            case = -3
+        elif -112.5 <= direct_ang < -67.5:
+            case = -2
+        elif -157.5 <= direct_ang < -112.5:
+            case = -1
+
+        return case
+
+def unit_time(val , unit):
+        '''
+            Applying Unit time for a specific input type
+        '''
+        if unit == 'days':
+            return val/(60*60*24)
+        elif unit == 'hr':
+            return val/(60*60)
+        elif unit == 'min':
+            return val/(60)
+        elif unit == 's':
+            return val
+        
+def unit_speed(val , unit):
+        '''
+            Applying unit speed for an input type.
+            
+            Input:
+                Val (float) - Input speed in m/s
+                unit (strint) - the unit to convert to
+            Output:
+                Val (float) - Output speed in unit type 'unit'
+
+        '''
+        if not isinstance(val,type(None)):
+            if unit == 'km/hr':
+                val = val*(1000/(60*60))
+            if unit == 'knots':
+                val = (val*0.51)
+            return val
+        else:
+            return None

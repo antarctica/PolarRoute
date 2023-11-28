@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>10. Methods - Route Planner &mdash; polar_route 0.2.18 documentation</title>
+  <title>9. Methods - Route Planner &mdash; polar_route 0.3.8 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="12. Examples of running code" href="Examples.html" />
-    <link rel="prev" title="11. Methods - Route Calculation" href="Route_calculation.html" /> 
+    <link rel="next" title="10. Examples of running code" href="Examples.html" />
+    <link rel="prev" title="8. Methods - Route Calculation" href="Route_calculation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,21 +48,20 @@
 <li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Dataloaders/overview.html">7. Dataloader Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mesh_Construction/Mesh_construction_overview.html">8. Methods - Mesh Construction</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">9. Methods - Vessel Performance</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">10. Methods - Route Planner</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#route-optimisation-overview">10.1. Route Optimisation Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#route-optimisation-modules">10.2. Route Optimisation Modules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.route_planner">10.2.1. Route Planner</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">7. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">8. Methods - Route Calculation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">9. Methods - Route Planner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#route-optimisation-overview">9.1. Route Optimisation Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#route-optimisation-modules">9.2. Route Optimisation Modules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.route_planner">9.2.1. Route Planner</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.RoutePlanner"><code class="docutils literal notranslate"><span class="pre">RoutePlanner</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner._initialise_dijkstra_graph"><code class="docutils literal notranslate"><span class="pre">_initialise_dijkstra_graph()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner._initialise_dijkstra_route"><code class="docutils literal notranslate"><span class="pre">_initialise_dijkstra_route()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner._json_str"><code class="docutils literal notranslate"><span class="pre">_json_str()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.crossing">10.2.2. Crossing Points</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.crossing_smoothing">10.2.3. Crossing Point Smoothing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.crossing">9.2.2. Crossing Points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-polar_route.crossing_smoothing">9.2.3. Crossing Point Smoothing</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.crossing_smoothing.PathValues"><code class="docutils literal notranslate"><span class="pre">PathValues</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.crossing_smoothing._dist_around_globe"><code class="docutils literal notranslate"><span class="pre">_dist_around_globe()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.crossing_smoothing.find_edge"><code class="docutils literal notranslate"><span class="pre">find_edge</span></code></a></li>
@@ -72,8 +71,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">11. Methods - Route Calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Examples.html">12. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">10. Examples of running code</a></li>
 </ul>
 
         </div>
@@ -90,7 +88,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">10. </span>Methods - Route Planner</li>
+      <li class="breadcrumb-item active"><span class="section-number">9. </span>Methods - Route Planner</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/sections/Route_optimisation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,17 +99,17 @@
            <div itemprop="articleBody">
              
   <section id="methods-route-planner">
-<h1><span class="section-number">10. </span>Methods - Route Planner<a class="headerlink" href="#methods-route-planner" title="Permalink to this heading"></a></h1>
+<h1><span class="section-number">9. </span>Methods - Route Planner<a class="headerlink" href="#methods-route-planner" title="Permalink to this heading"></a></h1>
 <section id="route-optimisation-overview">
-<h2><span class="section-number">10.1. </span>Route Optimisation Overview<a class="headerlink" href="#route-optimisation-overview" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">9.1. </span>Route Optimisation Overview<a class="headerlink" href="#route-optimisation-overview" title="Permalink to this heading"></a></h2>
 <p>In this section we outline the code used to generate optimal routes through a mesh constructed by the methods described
 in previous sections. This mesh should include the vessel performance parameters with respect to which objective
 functions can be defined for optimisation.</p>
 </section>
 <section id="route-optimisation-modules">
-<h2><span class="section-number">10.2. </span>Route Optimisation Modules<a class="headerlink" href="#route-optimisation-modules" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">9.2. </span>Route Optimisation Modules<a class="headerlink" href="#route-optimisation-modules" title="Permalink to this heading"></a></h2>
 <section id="module-polar_route.route_planner">
-<span id="route-planner"></span><h3><span class="section-number">10.2.1. </span>Route Planner<a class="headerlink" href="#module-polar_route.route_planner" title="Permalink to this heading"></a></h3>
+<span id="route-planner"></span><h3><span class="section-number">9.2.1. </span>Route Planner<a class="headerlink" href="#module-polar_route.route_planner" title="Permalink to this heading"></a></h3>
 <p>This section of the codebase is used for construction of route paths using the
 environmental mesh between a series of user defined waypoints</p>
 <dl class="py class">
@@ -332,14 +330,14 @@ These are then used to update the edge values in the dijkstra graph.</p>
 
 </section>
 <section id="module-polar_route.crossing">
-<span id="crossing-points"></span><h3><span class="section-number">10.2.2. </span>Crossing Points<a class="headerlink" href="#module-polar_route.crossing" title="Permalink to this heading"></a></h3>
+<span id="crossing-points"></span><h3><span class="section-number">9.2.2. </span>Crossing Points<a class="headerlink" href="#module-polar_route.crossing" title="Permalink to this heading"></a></h3>
 <p>The python package <cite>crossing</cite> implement the optimisation for the crossing point for the unsmoothed and smoothed path
 construction. The package is separated into two classes <cite>NewtonianDistance</cite> and <cite>NewtonianCurve</cite>.
 In the section below we will go through, stage by stage, how the crossing point is determined and the methods
 used within the classes.</p>
 </section>
 <section id="module-polar_route.crossing_smoothing">
-<span id="crossing-point-smoothing"></span><h3><span class="section-number">10.2.3. </span>Crossing Point Smoothing<a class="headerlink" href="#module-polar_route.crossing_smoothing" title="Permalink to this heading"></a></h3>
+<span id="crossing-point-smoothing"></span><h3><span class="section-number">9.2.3. </span>Crossing Point Smoothing<a class="headerlink" href="#module-polar_route.crossing_smoothing" title="Permalink to this heading"></a></h3>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.crossing_smoothing.PathValues">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">PathValues</span></span><a class="headerlink" href="#polar_route.crossing_smoothing.PathValues" title="Permalink to this definition"></a></dt>
@@ -541,8 +539,8 @@ end   (dict)     - Dictionary containing the environmental parameters of the end
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Route_calculation.html" class="btn btn-neutral float-left" title="11. Methods - Route Calculation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Examples.html" class="btn btn-neutral float-right" title="12. Examples of running code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Route_calculation.html" class="btn btn-neutral float-left" title="8. Methods - Route Calculation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Examples.html" class="btn btn-neutral float-right" title="10. Examples of running code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
