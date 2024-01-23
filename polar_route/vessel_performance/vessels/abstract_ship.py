@@ -62,7 +62,6 @@ class AbstractShip(AbstractVessel):
 
         # Make land and extreme ice cells inaccessible
         access_values['land'] = self.land(cellbox)
-        access_values['shallow'] = self.shallow(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
 
         # Make cells above wave height threshold inaccessible
@@ -121,27 +120,9 @@ class AbstractShip(AbstractVessel):
             logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is land")
             land = False
         else:
-            land = cellbox.agg_data['elevation'] > 0
+            land = cellbox.agg_data['elevation'] > self.max_elevation
 
         return land
-
-    def shallow(self, cellbox):
-        """
-            Method to determine if the water in a cell is too shallow for safe 
-            travel of the SDA based on configured minimum depth
-
-            Args:
-                cellbox (AggregatedCellBox): input cell from environmental mesh
-            Returns:
-                shallow (bool): boolean that is True if the cell is too shallow for a glider
-        """
-        if 'elevation' not in cellbox.agg_data:
-            logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is too shallow")
-            shallow = False
-        else:
-            shallow = 0.0 > cellbox.agg_data['elevation'] > self.max_elevation
-
-        return shallow
 
     def extreme_ice(self, cellbox):
         """
