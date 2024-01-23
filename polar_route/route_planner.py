@@ -622,6 +622,9 @@ class RoutePlanner:
         """
         # Determining the nearest neighbour index for the cell
         source_graph   = self.dijkstra_info[wpt_name].loc[minimum_objective_index]
+        # Reset these arrays to empty so no duplicates are produced
+        source_graph['neighbourTravelLegs'] = []
+        source_graph['neighbourCrossingPoints'] = []
 
         # Looping over idx
         for idx in range(len(source_graph['case'])):
