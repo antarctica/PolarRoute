@@ -2,7 +2,7 @@
 Command Line Interface
 ###############################
 
-The PolarRoute package provides 4 CLI entry points, intended to be used in succession to plan a route through a digital environment.
+The PolarRoute package provides multiple CLI entry points, intended to be used in succession to plan a route through a digital environment.
 
 .. figure:: ./Figures/PolarRoute_CLI.png
    :align: center
@@ -37,7 +37,31 @@ optional arguments are
     -v (verbose logging)
     -o <output location> (set output location for mesh)
 
-The format of the return Vessel_Mesh.json file is explain in :ref:`the vessel_mesh.json file` section of the documentation.
+The format of the return Vessel_Mesh.json file is explained in :ref:`the vessel_mesh.json file` section of the documentation.
+
+^^^^^^^^^^^^^^^^^^
+resimulate_vehicle
+^^^^^^^^^^^^^^^^^^
+
+The *resimulate_vehicle* command allows vehicle specific simulations to be performed again on an existing vessel mesh.
+This allows new models to be easily run using the pre-existing config parameters.
+
+::
+
+    resimulate_vehicle <vessel_mesh.json>
+
+positional arguments:
+
+::
+
+    vessel_mesh : A digital environment file with added vessel specific simulations.
+
+optional arguments are
+
+::
+
+    -v (verbose logging)
+    -o <output location> (set output location for mesh)
 
 ^^^^^^^^^^^^^^^
 optimise_routes
@@ -133,6 +157,30 @@ The format of the output *<route.json>* file is identical to that from the :ref:
 This is explained in :ref:`the route.json file` section of the documentation. The time and fuel cost of the route will
 also be logged out once the route file has been generated. If the user-defined route crosses a cell in the mesh that is
 considered inaccessible to the vessel then a warning will be displayed and no route will be saved.
+
+^^^^^^^^^^^^^^
+extract_routes
+^^^^^^^^^^^^^^
+
+This command allows individual routes to be extracted from a larger file containing multiple routes. It automatically
+determines the output format from the output filename given. Supported output types are json, geojson, csv and gpx.
+
+::
+
+    extract_routes <route_file.json>
+
+positional parameters:
+
+::
+
+    route_file.json : A file containing multiple geojson formatted routes.
+
+optional arguments:
+
+::
+
+    -v : verbose logging
+    -o : output location
 
 ^^^^^^^^
 Plotting

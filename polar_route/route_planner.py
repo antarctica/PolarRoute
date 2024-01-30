@@ -7,8 +7,7 @@ import copy, json, ast, warnings
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from shapely import wkt
-from shapely.geometry.polygon import Point
+from shapely import wkt, Point, LineString, STRtree, Polygon
 import geopandas as gpd
 import logging
 
@@ -123,10 +122,62 @@ def _pandas_dataframe_str(input):
             raise Exception("Unable to load '{}', please check path name".format(input))
     return output
 
+def _mesh_boundary_polygon(mesh):
+    '''
+    Creates a polygon from the mesh boundary
+    '''
+    lat_min = mesh['config']['mesh_info']['region']['lat_min']
+    lat_max = mesh['config']['mesh_info']['region']['lat_max']
+    long_min = mesh['config']['mesh_info']['region']['long_min']
+    long_max = mesh['config']['mesh_info']['region']['long_max']
+    p1 = Point([long_min, lat_min])
+    p2 = Point([long_min, lat_max])
+    p3 = Point([long_max, lat_max])
+    p4 = Point([long_max, lat_min])
+    return Polygon([p1,p2,p3,p4])
 
-
-
-
+def _adjust_waypoints(point, cellboxes, max_distance=5):
+    '''
+    Moves waypoint to closest accessible cellbox if it isn't already in one
+    Allows up to 5 degrees flexibility by default
+    '''
+    # Extract cellboxes from mesh
+    cbs = gpd.GeoDataFrame.from_records(cellboxes)
+    # Prune inaccessible waypoints from search
+    cbs = cbs[cbs['inaccessible'] == False]
+    # Find nearest cellbox to point that is accessible
+    tree = STRtree(wkt.loads(cbs['geometry']))
+    nearest_cb = cbs.iloc[tree.nearest(point)]
+    cb_polygon = wkt.loads(nearest_cb['geometry'])
+    
+    if point.within(cb_polygon):
+        logging.debug(f'({point.y},{point.x}) in accessible cellbox')
+        return point
+    else:
+        logging.debug(f'({point.y},{point.x}) not in accessible cellbox')
+        # Create a line between CB centre and point
+        cb_centre = Point([nearest_cb['cx'],nearest_cb['cy']])
+        connecting_line = LineString([point, cb_centre])
+        # Extract segment of line inside the accessible cellbox    
+        intersecting_line = connecting_line.intersection(cb_polygon)
+        
+        # Put limit on how far it's allowed to adjust waypoint
+        distance_away = connecting_line.length - intersecting_line.length
+        if distance_away > max_distance:
+            logging.info(f'Waypoint too far from accessible cellbox!')
+            return point
+        
+        # Find where it meets the cellbox boundary
+        boundary_point = connecting_line.intersection(cb_polygon.exterior)
+        # Draw a small circle around it
+        buffered_point = boundary_point.buffer(intersecting_line.length*1e-3)
+        # Find point along line that intersects circle
+        adjusted_point = buffered_point.exterior.intersection(intersecting_line)
+        # Interior point is now a point inside the cellbox 
+        # that is not on the boundary
+        logging.info(f'({point.y},{point.x}) not accessible cellbox')
+        logging.info(f'Adjusted to ({adjusted_point.y},{adjusted_point.x})')
+        return adjusted_point
 class RoutePlanner:
     """
         ---
@@ -243,6 +294,19 @@ class RoutePlanner:
         self.mesh             = _json_str(mesh)
         self.config           = _json_str(config)
         waypoints_df          = _pandas_dataframe_str(waypoints)
+
+        mesh_boundary = _mesh_boundary_polygon(self.mesh)
+        # Move waypoint to closest accessible cellbox if it isn't in one already
+        for idx, row in waypoints_df.iterrows():
+            point = Point([row['Long'], row['Lat']])
+            # Only allow waypoints within an existing mesh
+            assert(point.within(mesh_boundary)), \
+                f"Waypoint {row['Name']} outside of mesh boundary! {point}"
+            adjusted_point = _adjust_waypoints(point, self.mesh['cellboxes'])
+            
+            waypoints_df['Long'][idx] = adjusted_point.x
+            waypoints_df['Lat'][idx] = adjusted_point.y
+        
         source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
         des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
 
@@ -278,7 +342,6 @@ class RoutePlanner:
         # ====== Speed Function Checking ======
         # Checking if Speed defined in file
         if 'speed' not in self.neighbour_graph:
-            print(self.neighbour_graph.columns)
             raise Exception('Vessel Speed not in the mesh information ! Please run vessel performance')
         
         # ======= Sea-Ice Concentration ======
@@ -319,7 +382,6 @@ class RoutePlanner:
 
         # ====== Waypoints ======
         self.mesh['waypoints'] = waypoints_df
-
         # Initialising Waypoints positions and cell index
         wpts = self.mesh['waypoints']
         wpts['index'] = np.nan
@@ -373,6 +435,70 @@ class RoutePlanner:
         output_json = json.loads(json.dumps(mesh))
         del mesh
         return output_json
+    
+    def to_charttracker_csv(self, route_name='PolarRoutePath'):
+        '''
+            Outputting route to chart tracker csv file
+        '''
+        def dd_to_dmm(dd, axis):    
+            '''
+            Converts decimal degrees to dmm formatted string
+            '''
+            if dd >= 0:
+                degs, mins = divmod(dd,1)
+                cardinal_dir = 'E' if axis == 'long' else 'N'
+            else:
+                degs, mins = divmod(-dd, 1)
+                cardinal_dir = 'W' if axis == 'long' else 'S'
+            return f"{int(degs)}-{60*mins:.3f}'{cardinal_dir}"
+        
+        def get_bearing(lat1, long1, lat2, long2):
+            '''
+            Calculates bearing of travel from lat/long pairs
+            '''
+            dlon = long2-long1
+            x = np.cos(np.radians(lat2)) * np.sin(np.radians(dlon))
+            y = np.cos(np.radians(lat1)) * np.sin(np.radians(lat2)) - \
+                np.sin(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.cos(np.radians(dlon))
+            bearing = np.arctan2(x,y)
+            return np.degrees(bearing)
+        
+        # For each path, generate a csv string and add to list
+        path_csvs = []
+        for path_num, path in enumerate(self.smoothed_paths['features']):
+            header = f"Route Name:,{route_name}_{path_num}\n" + \
+                      "Way Point,Position,,Radius,Reach,ROT,XTD,SPD,RL/GC,Leg,Disance(NM),,ETA\n" + \
+                      "ID,LAT,LON,,,,,,,,To WPT,TOTAL\n"
+            # Turn coords into DMM format
+            coords = np.array(path['geometry']['coordinates'])
+            long = [dd_to_dmm(long, 'long') for long in coords[:,0]]
+            lat = [dd_to_dmm(lat, 'lat') for lat in coords[:,1]]
+            # Distance column
+            cumulative_distance = np.array(path['properties']['distance']) * 0.000539957 # In nautical miles  
+            distance = np.diff(cumulative_distance)
+            # Waypoint names
+            wps = [f'WP{i}' for i in range(len(cumulative_distance))]
+            leg = get_bearing(coords[:,1][:-1], coords[:,0][:-1],
+                            coords[:,1][1:], coords[:,0][1:])%360
+            eta = path['properties']['traveltime']
+            # Construct table with information
+            path_df = pd.DataFrame({'ID':wps,
+                                      'LAT':lat,
+                                      'LON':long,
+                                      'Radius':'',
+                                      'Reach':'',
+                                      'ROT':'',
+                                      'XTD':'',
+                                      'SPD':'',
+                                      'RL/GC':'RL',
+                                      'Leg':np.concatenate((leg, [np.nan])),
+                                      'To WPT':np.concatenate(([np.nan],distance)),
+                                      'TOTAL': cumulative_distance})
+            # Combine to one string and add to list of strs
+            csv_str = header + path_df.to_csv()
+            path_csvs += [csv_str]
+        # Return list of csv strings with each smoothed path
+        return path_csvs
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
