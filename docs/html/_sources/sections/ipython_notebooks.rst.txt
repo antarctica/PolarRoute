@@ -12,7 +12,7 @@ To perform the steps detailed in this section, a mesh must first be generated us
 Simulating a Vessel in a Digital Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once a digital environment **EnvironmentMesh** object has been created with `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_, how a vessel interacts with it may be simulated. The **`VesselPerformanceModeller`**
+Once a digital environment **EnvironmentMesh** object has been created with `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_, how a vessel interacts with it may be simulated. The **VesselPerformanceModeller**
 object requires a digital environment in *json* format and vessel specific configuration parameters, also in *json* format. These may either
 be loaded from a file, or created within the python terminal.
 
