@@ -140,7 +140,7 @@ class RoutePlanner:
         mesh_json = _json_str(mesh_file)
         self.env_mesh = EnvironmentMesh.load_from_json (mesh_json)
         self.config = _json_str(config_file)
-        self.config['unit_shipspeed'] = mesh_json['config']['vessel_info']['Unit']
+        self.config['unit_shipspeed'] = mesh_json['config']['vessel_info']['unit']
         # validate conf and mesh e.g. validate_route_config(self.config)
         mandatory_fields = ["objective_function", "path_variables" , "vector_names" , "time_unit"]
         for field in mandatory_fields: 

@@ -286,14 +286,14 @@ class NewtonianDistance:
 
 
 
-        s_cx  = self.source_cellbox.get_boundary().getcx()
-        s_cy  = self.source_cellbox.get_boundary().getcy()
-        s_dcx = self.source_cellbox.get_boundary().getdcx()
-        s_dcy = self.source_cellbox.get_boundary().getdcy()
-        n_cx  = self.neighbour_cellbox.get_boundary().getcx()
-        n_cy  = self.neighbour_cellbox.get_boundary().getcy()
-        n_dcx = self.neighbour_cellbox.get_boundary().getdcx()
-        n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
+        s_cx  = self.source_cellbox.get_bounds().getcx()
+        s_cy  = self.source_cellbox.get_bounds().getcy()
+        s_dcx = self.source_cellbox.get_bounds().getdcx()
+        s_dcy = self.source_cellbox.get_bounds().getdcy()
+        n_cx  = self.neighbour_cellbox.get_bounds().getcx()
+        n_cy  = self.neighbour_cellbox.get_bounds().getcy()
+        n_dcx = self.neighbour_cellbox.get_bounds().getdcx()
+        n_dcy = self.neighbour_cellbox.get_bounds().getdcy()
 
 
 
@@ -357,14 +357,14 @@ class NewtonianDistance:
             ptvl = -1.0
 
 
-        s_cx  = self.source_cellbox.get_boundary().getcx()
-        s_cy  = self.source_cellbox.get_boundary().getcy()
-        s_dcx = self.source_cellbox.get_boundary().getdcx()
-        s_dcy = self.source_cellbox.get_boundary().getdcy()
-        n_cx  = self.neighbour_cellbox.get_boundary().getcx()
-        n_cy  = self.neighbour_cellbox.get_boundary().getcy()
-        n_dcx = self.neighbour_cellbox.get_boundary().getdcx()
-        n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
+        s_cx  = self.source_cellbox.get_bounds().getcx()
+        s_cy  = self.source_cellbox.get_bounds().getcy()
+        s_dcx = self.source_cellbox.get_bounds().getdcx()
+        s_dcy = self.source_cellbox.get_bounds().getdcy()
+        n_cx  = self.neighbour_cellbox.get_bounds().getcx()
+        n_cy  = self.neighbour_cellbox.get_bounds().getcy()
+        n_dcx = self.neighbour_cellbox.get_bounds().getdcx()
+        n_dcy = self.neighbour_cellbox.get_bounds().getdcy()
 
 
         Su = -1*ptvl*self.source_cellbox.agg_data['vC']
@@ -424,14 +424,14 @@ class NewtonianDistance:
         '''
 
 
-        s_cx  = self.source_cellbox.get_boundary().getcx()
-        s_cy  = self.source_cellbox.get_boundary().getcy()
-        s_dcx = self.source_cellbox.get_boundary().getdcx()
-        s_dcy = self.source_cellbox.get_boundary().getdcy()
-        n_cx  = self.neighbour_cellbox.get_boundary().getcx()
-        n_cy  = self.neighbour_cellbox.get_boundary().getcy()
-        n_dcx = self.neighbour_cellbox.get_boundary().getdcx()
-        n_dcy = self.neighbour_cellbox.get_boundary().getdcy()
+        s_cx  = self.source_cellbox.get_bounds().getcx()
+        s_cy  = self.source_cellbox.get_bounds().getcy()
+        s_dcx = self.source_cellbox.get_bounds().getdcx()
+        s_dcy = self.source_cellbox.get_bounds().getdcy()
+        n_cx  = self.neighbour_cellbox.get_bounds().getcx()
+        n_cy  = self.neighbour_cellbox.get_bounds().getcy()
+        n_dcx = self.neighbour_cellbox.get_bounds().getdcx()
+        n_dcy = self.neighbour_cellbox.get_bounds().getdcy()
 
 
 
@@ -506,7 +506,7 @@ class NewtonianDistance:
             TravelTime,CrossPoints,CellPoints = self._corner()
         else:
             print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.\
-                format(self.source_cellbox.get_boundary().getcx(),self.source_cellbox.get_boundary().getcy()))
+                format(self.source_cellbox.get_bounds().getcx(),self.source_cellbox.get_bounds().getcy()))
 
             TravelTime  = [np.inf,np.inf]
             CrossPoints = [np.nan,np.nan]
