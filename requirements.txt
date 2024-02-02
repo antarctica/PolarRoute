@@ -1,5 +1,7 @@
+meshiphi
 dask
 geopandas
+jsonschema
 matplotlib
 netcdf4
 numpy>=1.21.6

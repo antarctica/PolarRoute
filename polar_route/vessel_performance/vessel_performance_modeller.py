@@ -1,7 +1,9 @@
-from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
-from polar_route.vessel_performance.vessel_factory import VesselFactory
 import numpy as np
 import logging
+
+from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
+from polar_route.vessel_performance.vessel_factory import VesselFactory
+from polar_route.config_validation.config_validator import validate_vessel_config
 from polar_route.utils import timed_call
 
 class VesselPerformanceModeller:
@@ -18,6 +20,7 @@ class VesselPerformanceModeller:
             vessel_config (dict): a dictionary loaded from a vessel config json file
         """
         logging.info("Initialising Vessel Performance Modeller")
+        validate_vessel_config(vessel_config)
 
         self.env_mesh = EnvironmentMesh.load_from_json(env_mesh_json)
         self.config = vessel_config
@@ -50,6 +53,8 @@ class VesselPerformanceModeller:
 
         """
         for i, cellbox in enumerate(self.env_mesh.agg_cellboxes):
+            if cellbox.agg_data.get('inaccessible'):
+                continue
             performance_values = self.vessel.model_performance(cellbox)
             self.env_mesh.update_cellbox(i, performance_values)
 

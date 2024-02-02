@@ -7,15 +7,14 @@ import copy, json, ast, warnings
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from shapely import wkt
-from shapely.geometry.polygon import Point
+from shapely import wkt, Point, LineString, STRtree, Polygon
 import geopandas as gpd
 import logging
 import itertools
 from pandas.core.common import SettingWithCopyWarning
 
-from polar_route.mesh_generation.environment_mesh import EnvironmentMesh
-from polar_route.mesh_generation.mesh_builder import MeshBuilder
+from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
+from meshiphi.mesh_generation.mesh_builder import MeshBuilder
 from polar_route.route import Route
 from polar_route.source_waypoint import SourceWaypoint
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
@@ -24,9 +23,72 @@ from polar_route.segment import Segment
 from polar_route.routing_info import RoutingInfo
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-from polar_route.crossing import NewtonianDistance, NewtonianCurve
+from polar_route.crossing import NewtonianDistance
+from polar_route.crossing_smoothing import Smoothing,PathValues,find_edge
 from polar_route.utils import _json_str, unit_speed
-from polar_route.mesh_generation.direction import Direction
+from polar_route.config_validation.config_validator import validate_route_config
+from polar_route.config_validation.config_validator import validate_waypoints
+from meshiphi.mesh_generation.direction import Direction
+
+
+# Functions for flexible waypoints, TODO update to work with refactored code
+def _mesh_boundary_polygon(mesh):
+    '''
+    Creates a polygon from the mesh boundary
+    '''
+    lat_min = mesh['config']['mesh_info']['region']['lat_min']
+    lat_max = mesh['config']['mesh_info']['region']['lat_max']
+    long_min = mesh['config']['mesh_info']['region']['long_min']
+    long_max = mesh['config']['mesh_info']['region']['long_max']
+    p1 = Point([long_min, lat_min])
+    p2 = Point([long_min, lat_max])
+    p3 = Point([long_max, lat_max])
+    p4 = Point([long_max, lat_min])
+    return Polygon([p1,p2,p3,p4])
+
+def _adjust_waypoints(point, cellboxes, max_distance=5):
+    '''
+    Moves waypoint to closest accessible cellbox if it isn't already in one
+    Allows up to 5 degrees flexibility by default
+    '''
+    # Extract cellboxes from mesh
+    cbs = gpd.GeoDataFrame.from_records(cellboxes)
+    # Prune inaccessible waypoints from search
+    cbs = cbs[cbs['inaccessible'] == False]
+    # Find nearest cellbox to point that is accessible
+    tree = STRtree(wkt.loads(cbs['geometry']))
+    nearest_cb = cbs.iloc[tree.nearest(point)]
+    cb_polygon = wkt.loads(nearest_cb['geometry'])
+    
+    if point.within(cb_polygon):
+        logging.debug(f'({point.y},{point.x}) in accessible cellbox')
+        return point
+    else:
+        logging.debug(f'({point.y},{point.x}) not in accessible cellbox')
+        # Create a line between CB centre and point
+        cb_centre = Point([nearest_cb['cx'],nearest_cb['cy']])
+        connecting_line = LineString([point, cb_centre])
+        # Extract segment of line inside the accessible cellbox    
+        intersecting_line = connecting_line.intersection(cb_polygon)
+        
+        # Put limit on how far it's allowed to adjust waypoint
+        distance_away = connecting_line.length - intersecting_line.length
+        if distance_away > max_distance:
+            logging.info(f'Waypoint too far from accessible cellbox!')
+            return point
+        
+        # Find where it meets the cellbox boundary
+        boundary_point = connecting_line.intersection(cb_polygon.exterior)
+        # Draw a small circle around it
+        buffered_point = boundary_point.buffer(intersecting_line.length*1e-3)
+        # Find point along line that intersects circle
+        adjusted_point = buffered_point.exterior.intersection(intersecting_line)
+        # Interior point is now a point inside the cellbox 
+        # that is not on the boundary
+        logging.info(f'({point.y},{point.x}) not accessible cellbox')
+        logging.info(f'Adjusted to ({adjusted_point.y},{adjusted_point.x})')
+        return adjusted_point
+
 
 class RoutePlanner:
     """
@@ -79,7 +141,7 @@ class RoutePlanner:
         self.env_mesh = EnvironmentMesh.load_from_json (mesh_json)
         self.config = _json_str(config_file)
         self.config['unit_shipspeed'] = mesh_json['config']['vessel_info']['Unit']
-        # validate conf and mesh
+        # validate conf and mesh e.g. validate_route_config(self.config)
         mandatory_fields = ["objective_function", "path_variables" , "vector_names" , "time_unit"]
         for field in mandatory_fields: 
             if field not in self.config:
@@ -96,7 +158,7 @@ class RoutePlanner:
         if 'speed' not in self.env_mesh.agg_cellboxes[0].agg_data:
             raise ValueError('Vessel Speed not in the mesh information! Please run vessel performance')
         
-        #  check if objective function is in the env mesh (ex. speed)            
+        #  check if objective function is in the env mesh (ex. speed)
         if self.config['objective_function'] != 'traveltime':
             if self.config['objective_function'] not in self.env_mesh.agg_cellboxes[0].agg_data:
                 raise ValueError("Objective Function '{}' requires  the mesh cellboxex to have '{}' in the aggregated data".format(self.config['objective_function'], self.config['objective_function']))
@@ -104,7 +166,7 @@ class RoutePlanner:
         self.cellboxes_lookup = {str(self.env_mesh.agg_cellboxes[i].get_id()): self.env_mesh.agg_cellboxes[i] for i in range (len(self.env_mesh.agg_cellboxes))}
         # ====== Defining the cost function ======
         self.cost_func       = cost_func
-       # Case indices
+        # Case indices
         self.src_wps = []
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
@@ -230,6 +292,7 @@ class RoutePlanner:
         """
 
         src_wps, end_wps =  self._load_waypoints(waypoints)
+        # Waypoint validation, TODO: consider replacing with validate_waypoints in future?
         src_wps = self._validate_wps(src_wps)
         end_wps =  self._validate_wps(end_wps)
         src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps]   # creating SourceWaypoint objects

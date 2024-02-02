@@ -1,107 +1,104 @@
-{"config": {
-    "Mesh_info": {
-        "Region": {
-            "latMin": -80,
-            "latMax": -40,
-            "longMin": -130,
-            "longMax": 0,
-            "startTime": "TODAY - 4",
-            "endTime": "TODAY - 1",
-            "cellWidth": 5,
-            "cellHeight": 2.5
-        },
-        "Data_sources": [
-            {
-                "loader": "GEBCO",
-                "params": {
-                    "downsample_factors": [
-                        5,
-                        5
-                    ],
-                    "data_name": "elevation",
-                    "file" : "datastore/bathymetry/gebco/gebco_global.nc",
-                    "value_fill_types": "parent",
-                    "aggregate_type": "MAX",
-                    "splitting_conditions": [
-                        {
-                            "elevation": {
-                                "threshold": -10,
-                                "upper_bound": 1,
-                                "lower_bound": 0
-                            }
+{
+    "region": {
+        "lat_min": -80,
+        "lat_max": -40,
+        "long_min": -130,
+        "long_max": 0,
+        "start_time": "TODAY - 4",
+        "end_time": "TODAY - 1",
+        "cell_width": 5,
+        "cell_height": 2.5
+    },
+    "data_sources": [
+        {
+            "loader": "GEBCO",
+            "params": {
+                "downsample_factors": [
+                    5,
+                    5
+                ],
+                "data_name": "elevation",
+                "file" : "datastore/bathymetry/gebco/gebco_global.nc",
+                "value_fill_types": "parent",
+                "aggregate_type": "MAX",
+                "splitting_conditions": [
+                    {
+                        "elevation": {
+                            "threshold": -10,
+                            "upper_bound": 1,
+                            "lower_bound": 0
                         }
-                    ]
-                }
-            },
-            {
-                "loader": "amsr",
-                "params": {
-                    "folder": "datastore/sic/amsr2/south/",
-                    "hemisphere": "south",
-                    "value_fill_types": "parent",
-                    "data_name": "SIC",
-                    "splitting_conditions": [
-                        {
-                            "SIC": {
-                                "threshold": 1,
-                                "upper_bound": 1,
-                                "lower_bound": 0
-                            }
-                        },
-                        {
-                            "SIC": {
-                                "threshold": 35,
-                                "upper_bound": 1,
-                                "lower_bound": 0
-                            }
-                        },
-                        {
-                            "SIC": {
-                                "threshold": 80,
-                                "upper_bound": 1,
-                                "lower_bound": 0
-                            }
-                        }
-                    ],
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5,
-                    "in_proj": "EPSG:3412",
-                    "out_proj": "EPSG:4326",
-                    "x_col": "x",
-                    "y_col": "y"
-                }
-            },
-            {
-                "loader": "SOSE",
-                "params": {
-                    "value_fill_types": "parent",
-                    "data_name": "uC,vC",
-                    "aggregate_type": "MEAN",
-                    "file": "datastore/currents/sose/SOSE_surface_velocity_6yearMean_2005-2010.nc"
-                }
-            },
-            {
-                "loader": "thickness",
-                "params": {
-                    "data_name": "thickness",
-                    "value_fill_types": "parent",
-                    "aggregate_type": "MEAN",
-                    "min_dp": 5
-                }
-            },
-            {
-                "loader": "density",
-                "params": {
-                    "data_name": "density",
-                    "value_fill_types": "parent",
-                    "aggregate_type": "MEAN"
-                }
+                    }
+                ]
             }
-        ],
-        "splitting": {
-            "split_depth": 4,
-            "minimum_datapoints": 5
+        },
+        {
+            "loader": "amsr",
+            "params": {
+                "folder": "datastore/sic/amsr2/south/",
+                "hemisphere": "south",
+                "value_fill_types": "parent",
+                "data_name": "SIC",
+                "splitting_conditions": [
+                    {
+                        "SIC": {
+                            "threshold": 1,
+                            "upper_bound": 1,
+                            "lower_bound": 0
+                        }
+                    },
+                    {
+                        "SIC": {
+                            "threshold": 35,
+                            "upper_bound": 1,
+                            "lower_bound": 0
+                        }
+                    },
+                    {
+                        "SIC": {
+                            "threshold": 80,
+                            "upper_bound": 1,
+                            "lower_bound": 0
+                        }
+                    }
+                ],
+                "aggregate_type": "MEAN",
+                "min_dp": 5,
+                "in_proj": "EPSG:3412",
+                "out_proj": "EPSG:4326",
+                "x_col": "x",
+                "y_col": "y"
+            }
+        },
+        {
+            "loader": "SOSE",
+            "params": {
+                "value_fill_types": "parent",
+                "data_name": "uC,vC",
+                "aggregate_type": "MEAN",
+                "file": "datastore/currents/sose/SOSE_surface_velocity_6yearMean_2005-2010.nc"
+            }
+        },
+        {
+            "loader": "thickness",
+            "params": {
+                "data_name": "thickness",
+                "value_fill_types": "parent",
+                "aggregate_type": "MEAN",
+                "min_dp": 5
+            }
+        },
+        {
+            "loader": "density",
+            "params": {
+                "data_name": "density",
+                "value_fill_types": "parent",
+                "aggregate_type": "MEAN"
+            }
         }
+    ],
+    "splitting": {
+        "split_depth": 4,
+        "minimum_datapoints": 5
     }
-}
 }

@@ -1,4 +1,4 @@
-from polar_route.mesh_generation.aggregated_cellbox import AggregatedCellBox
+from meshiphi.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from abc import ABCMeta, abstractmethod
 
 class AbstractVessel(metaclass=ABCMeta):
@@ -10,6 +10,7 @@ class AbstractVessel(metaclass=ABCMeta):
     def __init__(self, params: dict):
         """
         Initialise the vessel object with parameters from the config.
+
         Args:
             params (dict): vessel parameters from the vessel config file
         """
@@ -19,6 +20,7 @@ class AbstractVessel(metaclass=ABCMeta):
     def model_performance(self, cellbox: AggregatedCellBox):
         """
         Calculate performance parameters for the given vessel.
+
         Args:
             cellbox (AggregatedCellBox): cell in which performance is being modelled
 
@@ -31,6 +33,7 @@ class AbstractVessel(metaclass=ABCMeta):
     def model_accessibility(self, cellbox: AggregatedCellBox):
         """
         Determine accessibility of the input cell for the given vessel.
+
         Args:
             cellbox (AggregatedCellBox): cell in which accessibility is being determined
 

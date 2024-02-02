@@ -5,6 +5,7 @@ import pandas as pd
 import geopandas as gpd
 from shapely import wkt
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
+from polar_route.utils import gpx_route_import
 
 
 # Define ordering of cases in array data
@@ -133,6 +134,7 @@ def load_route(route_file):
             to_wp (str) Name of end waypoint
 
     """
+    logging.info(f"Loading route from: {route_file}")
     # Loading route from csv file
     if route_file[-3:] == "csv":
         df = pd.read_csv(route_file)
@@ -150,10 +152,22 @@ def load_route(route_file):
         df = pd.DataFrame()
         df['Long'] = longs
         df['Lat'] = lats
+    elif route_file[-3:] == "gpx":
+        route_json = gpx_route_import(route_file)
+        route_coords = route_json['features'][0]['geometry']['coordinates']
+        to_wp = route_json['features'][0]['properties']['to']
+        from_wp = route_json['features'][0]['properties']['from']
+        longs = [c[0] for c in route_coords]
+        lats = [c[1] for c in route_coords]
+        df = pd.DataFrame()
+        df['Long'] = longs
+        df['Lat'] = lats
     else:
-        logging.warning("Invalid route input! Please supply either a csv or geojson file with the route waypoints.")
+        logging.warning("Invalid route input! Please supply either a csv, gpx or geojson file with the route waypoints.")
         return None
 
+    logging.info(f"Route start waypoint: {from_wp}")
+    logging.info(f"Route end waypoint: {to_wp}")
     logging.debug(f"Route has {len(df)} waypoints")
     df['id'] = 1
     df['order'] = np.arange(len(df))
@@ -170,6 +184,7 @@ def load_mesh(mesh_file):
         Returns:
             mesh (GeoDataFrame): Mesh in GeoDataFrame format
     """
+    logging.info(f"Loading mesh from: {mesh_file}")
     # Loading mesh information
     with open(mesh_file, 'r') as fp:
         info = json.load(fp)
@@ -177,9 +192,9 @@ def load_mesh(mesh_file):
     mesh['geometry'] = mesh['geometry'].apply(wkt.loads)
     mesh = gpd.GeoDataFrame(mesh, crs='EPSG:4326', geometry='geometry')
 
-    region = info['config']['Mesh_info']['Region']
-    region_poly = Polygon(((region['longMin'], region['latMin']), (region['longMin'], region['latMax']),
-                           (region['longMax'], region['latMax']), (region['longMax'], region['latMin'])))
+    region = info['config']['mesh_info']['region']
+    region_poly = Polygon(((region['long_min'], region['lat_min']), (region['long_min'], region['lat_max']),
+                           (region['long_max'], region['lat_max']), (region['long_max'], region['lat_min'])))
 
     return mesh, region_poly
 
@@ -326,8 +341,13 @@ def route_calc(route_file, mesh_file):
         # Check for inaccessible cells on user defined route
         if cell_box['inaccessible']:
             logging.warning(f"This route crosses an inaccessible cell! Cell located at Lat: {cell_box['cy']} "
-                         f"Long: {cell_box['cx']}. Please reroute around it.")
-            return None
+                         f"Long: {cell_box['cx']}")
+            logging.info("Trying with speed and fuel from previous cells, reroute for more accurate results")
+            i = 0
+            # Go back along path to find previous accessible cell
+            while cell_box['inaccessible']:
+                i += 1
+                cell_box = mesh.iloc[user_track['CellID'].iloc[idx-i]]
 
         traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
                                                    vector_y='vC', case=case)
