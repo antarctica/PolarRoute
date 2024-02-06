@@ -1,5 +1,5 @@
 """
-Miscellaneous utility functions that may be of use throughout PolarRoute
+    Miscellaneous utility functions that may be of use throughout PolarRoute
 """
 
 import logging
@@ -17,7 +17,6 @@ from scipy.fftpack import fftshift
 
 
 def frac_of_month(year, month, start_date=None, end_date=None):
-    
     # Determine the number of days in the month specified
     days_in_month = monthrange(year, month)[1]
     # If not specified, default to beginning/end of month
@@ -52,12 +51,12 @@ def date_range(start_date, end_date):
 
 def convert_decimal_days(decimal_days, mins=False):
     """
-    Convert decimal days to more readable Days, Hours and (optionally) Minutes
-    Args:
-        decimal_days (float): Number of days as a decimal
-        mins (bool): Determines whether to return minutes or decimal hours
-    Returns:
-        new_time (str): The time in the new format
+        Convert decimal days to more readable Days, Hours and (optionally) Minutes
+        Args:
+            decimal_days (float): Number of days as a decimal
+            mins (bool): Determines whether to return minutes or decimal hours
+        Returns:
+            new_time (str): The time in the new format
     """
     frac_d, days = np.modf(decimal_days)
     hours = frac_d * 24.0
@@ -89,15 +88,15 @@ def convert_decimal_days(decimal_days, mins=False):
 
 def round_to_sigfig(x, sigfig=5):
     """
-    Rounds numbers to some number of significant figures
+        Rounds numbers to some number of significant figures
 
-    Args:
-        x (float or np.array): Value(s) to round to sig figs
-        sigfig (int): Number of significant figures desired
+        Args:
+            x (float or np.array): Value(s) to round to sig figs
+            sigfig (int): Number of significant figures desired
 
-    Returns:
-        np.array:
-            Values rounded to the desired number of significant figures
+        Returns:
+            np.array:
+                Values rounded to the desired number of significant figures
     """
     # Save original type of data so can be returned as input
     orig_type = type(x)
@@ -157,18 +156,18 @@ def curl(flow):
 # GRF functions
 def fftind(size):
     """
-    Creates a numpy array of shifted Fourier coordinates.
+        Creates a numpy array of shifted Fourier coordinates.
 
-    Args:
-        size (int):
-            The size of the coordinate array to create
+        Args:
+            size (int):
+                The size of the coordinate array to create
 
-    Returns:
-        np.array:
-            Numpy array of shifted Fourier coordinates (k_x, k_y).
-            Has shape (2, size, size), with:\n
-            array[0,:,:] = k_x components\n
-            array[1,:,:] = k_y components
+        Returns:
+            np.array:
+                Numpy array of shifted Fourier coordinates (k_x, k_y).
+                Has shape (2, size, size), with:\n
+                array[0,:,:] = k_x components\n
+                array[1,:,:] = k_y components
     """
     # Create array
     k_ind = np.mgrid[:size, :size] - int( (size + 1)/2 )
@@ -179,22 +178,21 @@ def fftind(size):
 
 def gaussian_random_field(size, alpha):
     """
-    Creates a gaussian random field with normal (circular) distribution
-    Code from https://github.com/bsciolla/gaussian-random-fields/blob/master/gaussian_random_fields.py
+        Creates a gaussian random field with normal (circular) distribution
+        Code from https://github.com/bsciolla/gaussian-random-fields/blob/master/gaussian_random_fields.py
 
-    Args:
-        size (int):
-           Default = 512;
-           The number of datapoints created per axis in the GRF
-        alpha (float):
-            Default = 3.0;
-            The power of the power-law momentum distribution
+        Args:
+            size (int):
+               Default = 512;
+               The number of datapoints created per axis in the GRF
+            alpha (float):
+                Default = 3.0;
+                The power of the power-law momentum distribution
 
-    Returns:
-        np.array:
-            2D Array of datapoints, shape (size, size)
+        Returns:
+            np.array:
+                2D Array of datapoints, shape (size, size)
     """
-                
     # Defines momentum indices
     k_idx = fftind(size)
 
@@ -294,6 +292,8 @@ def _json_str(input):
         except:
             raise ValueError("Unable to load '{}', please check path name".format(input))
     return output
+
+
 def case_from_angle( start,end):
         """
             Determine the direction of travel between two points in the same cell and return the associated case
@@ -330,38 +330,40 @@ def case_from_angle( start,end):
 
         return case
 
-def unit_time(val , unit):
-        '''
-            Applying Unit time for a specific input type
-        '''
-        if unit == 'days':
-            return val/(60*60*24)
-        elif unit == 'hr':
-            return val/(60*60)
-        elif unit == 'min':
-            return val/(60)
-        elif unit == 's':
-            return val
-        
-def unit_speed(val , unit):
-        '''
-            Applying unit speed for an input type.
-            
-            Input:
-                Val (float) - Input speed in m/s
-                unit (strint) - the unit to convert to
-            Output:
-                Val (float) - Output speed in unit type 'unit'
 
-        '''
-        if not isinstance(val,type(None)):
-            if unit == 'km/hr':
-                val = val*(1000/(60*60))
-            if unit == 'knots':
-                val = (val*0.51)
-            return val
-        else:
-            return None
+def unit_time(val, unit):
+    """
+        Applying Unit time for a specific input type
+    """
+    if unit == 'days':
+        return val/(60*60*24)
+    elif unit == 'hr':
+        return val/(60*60)
+    elif unit == 'min':
+        return val/60
+    elif unit == 's':
+        return val
+
+
+def unit_speed(val, unit):
+    """
+        Applying unit speed for an input type.
+
+        Input:
+            Val (float) - Input speed in m/s
+            unit (strint) - the unit to convert to
+        Output:
+            Val (float) - Output speed in unit type 'unit'
+
+    """
+    if not isinstance(val,type(None)):
+        if unit == 'km/hr':
+            val = val*(1000/(60*60))
+        if unit == 'knots':
+            val = (val*0.51)
+        return val
+    else:
+        return None
 
 
 def gpx_route_import(f_name):
@@ -395,7 +397,7 @@ def to_chart_track_csv(route):
 
     def dd_to_dmm(dd, axis):
         """
-        Converts decimal degrees to dmm formatted string
+            Converts decimal degrees to dmm formatted string
         """
         if dd >= 0:
             degs, mins = divmod(dd, 1)
@@ -407,7 +409,7 @@ def to_chart_track_csv(route):
 
     def get_bearing(lat1, long1, lat2, long2):
         """
-        Calculate bearing of travel from lat/long pairs
+            Calculate bearing of travel from lat/long pairs
         """
         dlon = long2 - long1
         x = np.cos(np.radians(lat2)) * np.sin(np.radians(dlon))
