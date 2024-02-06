@@ -1,5 +1,5 @@
-from polar_route.routing_info import RoutingInfo
-from polar_route.waypoint import Waypoint
+from polar_route.route_planner.routing_info import RoutingInfo
+from polar_route.route_planner.waypoint import Waypoint
 import numpy as np
 import logging
 

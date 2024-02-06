@@ -9,7 +9,7 @@ from meshiphi.mesh_generation.mesh_builder import MeshBuilder
 from polar_route import __version__ as version
 from polar_route.utils import setup_logging, timed_call, convert_decimal_days, to_chart_track_csv
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
-from polar_route.route_planner import RoutePlanner
+from polar_route.route_planner.route_planner import RoutePlanner
 from polar_route.route_calc import route_calc
 
 

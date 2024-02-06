@@ -4,7 +4,7 @@ import time
 
 
 from polar_route import __version__ as pr_version
-from polar_route import RoutePlanner
+from polar_route.route_planner.route_planner import RoutePlanner
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
 
@@ -70,7 +70,7 @@ def calculate_smoothed_route(config, mesh):
     # Initial set up
     waypoints   = extract_waypoints(mesh)
     
-    # Calculate dijskstra route
+    # Calculate dijkstra route
     rp = RoutePlanner(mesh, config, waypoints)
     rp.compute_routes()
     rp.compute_smoothed_routes()

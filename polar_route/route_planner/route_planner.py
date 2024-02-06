@@ -13,16 +13,13 @@ import logging
 import itertools
 from pandas.core.common import SettingWithCopyWarning
 
-from polar_route.route import Route
-from polar_route.source_waypoint import SourceWaypoint
-from polar_route.waypoint import Waypoint
-from polar_route.segment import Segment
-from polar_route.routing_info import RoutingInfo
-from polar_route.crossing import NewtonianDistance
-from polar_route.crossing_smoothing import Smoothing, PathValues, FindEdge
+from polar_route.route_planner.route import Route
+from polar_route.route_planner.source_waypoint import SourceWaypoint
+from polar_route.route_planner.waypoint import Waypoint
+from polar_route.route_planner.segment import Segment
+from polar_route.route_planner.routing_info import RoutingInfo
+from polar_route.route_planner.crossing import NewtonianDistance
 from polar_route.utils import _json_str, unit_speed
-from polar_route.config_validation.config_validator import validate_route_config
-from polar_route.config_validation.config_validator import validate_waypoints
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
 

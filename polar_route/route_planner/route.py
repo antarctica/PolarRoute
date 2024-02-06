@@ -1,4 +1,3 @@
-from polar_route.segment import Segment
 import numpy as np
 from polar_route.utils import case_from_angle, unit_time, unit_speed
 

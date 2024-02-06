@@ -3,8 +3,7 @@ import pytest
 import time
 
 from polar_route import __version__ as pr_version
-from polar_route import RoutePlanner
-
+from polar_route.route_planner.route_planner import RoutePlanner
 
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
@@ -21,7 +20,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
-# location of test files to be recalcaulted for regression testing
+# location of test files to be recalculated for regression testing
 TEST_ROUTES = [
     './example_routes/dijkstra/fuel/gaussian_random_field.json',
     # './example_routes/dijkstra/fuel/checkerboard.json',
