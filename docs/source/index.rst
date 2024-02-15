@@ -2,7 +2,7 @@ Welcome to the PolarRoute Manual Pages
 ======================================
 
 PolarRoute is a tool for the optimisation of routes for maritime vehicles travelling in polar waters.
-It leverages `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_; a package designed to
+It depends on `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_; a package designed to
 discretise the world from heterogeneous data sources (follow link for more details and docs).
 This software package has been developed by the **British Antarctic Survey** (BAS), primarily for the 
 optimisation of polar routes for the BAS research vessel RRS Sir David Attenborough, though it is applicable 
@@ -21,8 +21,8 @@ Contents:
    :maxdepth: 2
    :numbered:
 
-   ./sections/Code_overview
    ./sections/Installation
+   ./sections/Code_overview
    ./sections/ipython_notebooks
    ./sections/Command_line_interface
    ./sections/Configuration/Configuration_overview
