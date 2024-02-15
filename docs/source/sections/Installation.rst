@@ -2,9 +2,7 @@
 Installation
 ************
 
-In this section we will outline the installation steps for installing the software package on a corresponding OS. 
-
-The first stage is installing a version of Python (PolarRoute requires Python 3.8 or higher). If you don't already have a working version we suggest installing an Anaconda distribution from https://anaconda.org/anaconda/python and following the instructions on that page.
+In this section we will outline the necessary steps for installing the PolarRoute software package. PolarRoute requires a pre-existing installation of Python 3.8 or higher.
 
 Installing PolarRoute
 #####################
