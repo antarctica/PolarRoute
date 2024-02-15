@@ -4,28 +4,27 @@ Installation
 
 In this section we will outline the installation steps for installing the software package on a corresponding OS. 
 
-The first stage is installing a version of Python (PolarRoute requires Python 3.8 or higher). If you don't already have a working version we suggest installing an Anaconda distribution from https://anaconda.org/anaconda/python following the instructions on that page.
+The first stage is installing a version of Python (PolarRoute requires Python 3.8 or higher). If you don't already have a working version we suggest installing an Anaconda distribution from https://anaconda.org/anaconda/python and following the instructions on that page.
 
 Installing PolarRoute
 #####################
 
 PolarRoute is available from PyPI and can be installed by running:
-
-Pip:
 ::
 
     pip install polar-route
 
-Alternatively you can install PolarRoute by downloading the source code from GitHub:
+For development purposes you can install PolarRoute by downloading the source code from GitHub:
 ::
+
     git clone https://github.com/Antarctica/PolarRoute
     pip install -e ./PolarRoute
 
-Use of `-e` is optional, based on whether you want to be able to edit the installed copy of the package.
+Use of :code:`-e` is optional, depending on whether you want to be able to edit the installed copy of the package.
 
 
-Installing GDAL
-###############
+Installing GDAL (Optional)
+##########################
 
 The PolarRoute software has GDAL as an optional requirement. It is only used when exporting TIFF images, 
 so if this is not useful to you, you can skip this step. It is not always trivial and is a common source of problems.
