@@ -30,8 +30,8 @@ Use of `-e` is optional, based on whether you want to be able to edit the instal
 ## Required Data sources
 PolarRoute has been built to work with a variety of open-source atmospheric and oceanographic data sources. For testing and demonstration purposes it is also possible to generate artificial Gaussian Random Field data.  
 
-A full list of supported data sources and their associated data-loaders is given in the 
-'Data Loaders' section of the MeshiPhi manual. 
+A full list of supported data sources and their associated dataloaders is given in the 
+'Dataloader Overview' section of the [MeshiPhi manual](https://antarctica.github.io/MeshiPhi/)
 
 ## Documentation
 The documentation for the package is available to read at: https://antarctica.github.io/PolarRoute/
