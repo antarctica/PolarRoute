@@ -78,9 +78,9 @@ To perform the steps detailed in this section, a mesh must first be generated us
 The files used in the following example are those used in the synthetic example from the notebook section above. Download them
 :download:`here<Examples/example_3.zip>`.
  
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Creating the digital environment.
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A configuration file is needed to initialise the **`Mesh`** object which forms the digital environment. This configuration file
 is of the same format used in the :ref:`create_mesh` CLI entry-point, and may either be loaded from a *json* file or constructed 
@@ -90,7 +90,8 @@ Loading configuration from *json* file:
 ::
 
     import json
-    with open('examples/environment_config/grf_example.config.json', 'r') as f:
+    # Read in config file
+    with open('/path/to/grf_example.config.json', 'r') as f:
         config = json.load(f)    
 
 
@@ -102,9 +103,18 @@ docs for a more in-depth explanation. The digital environment **`Mesh`** object 
 
     from meshiphi.mesh_generation.mesh_builder import MeshBuilder
 
+    # Create mesh from config
     cg = MeshBuilder(config).build_environmental_mesh()
-    
     mesh = cg.to_json()
+
+    # Save output file
+    with open('/path/to/grf_example.mesh.json', 'w+') as f:
+        config = json.dump(mesh, f, indent=4)    
+
+.. note::
+    We are saving the file after each stage, but if you are running the code snippets 
+    back to back, there is no need to save the json output and then load it in again. 
+    Just pass the dictionary created from the :code:`to_json()` call into the next function
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -118,13 +128,12 @@ be loaded from a file, or created within the python terminal.
 Loading mesh and vessel from *json* files:
 ::
 
-    import json
     # Loading digital environment from file
-    with open('mesh.json', 'r') as f:
+    with open('/path/to/grf_example.mesh.json', 'r') as f:
         mesh = json.load(f)  
 
     # Loading vessel configuration parameters from file
-    with open('vessel.json', 'r') as f:
+    with open('/path/to/ship.json', 'r') as f:
         vessel = json.load(f) 
 
 The **VesselPerformanceModeller** object can then be initialised. This can be used to simulate the performance of the vessel and encode this information
@@ -142,8 +151,9 @@ console.
 ::
 
     vessel_mesh = vp.to_json()
-    with open('vessel_mesh.json') as f:
-        json.dumps(vessel_mesh)
+    # Save to output file
+    with open('/path/to/grf_example.vessel.json', 'w+') as f:
+        json.dump(vessel_mesh, f, indent=4)
 
 ^^^^^^^^^^^^^^^^^^
 Route Optimisation
@@ -161,10 +171,18 @@ paths please see the Outputs section of the manual.
 ::
 
     from polar_route.route_planner import RoutePlanner
-    rp = RoutePlanner(vessel_mesh, route_config, waypoints)
+    rp = RoutePlanner('/path/to/grf_example.vessel.json', 
+                      '/path/to/traveltime.config.json', 
+                      '/path/to/waypoints_example.csv')
+    # Calculate optimal dijkstra path between waypoints
     rp.compute_routes()
+    # Smooth the dijkstra routes
     rp.compute_smoothed_routes()
-    info = rp.to_json()
+
+    route_mesh = rp.to_json()
+    # Save to output file
+    with open('/path/to/grf_example.route.json', 'w+') as f:
+        json.dump(route_mesh, f, indent=4)
 
 
 ^^^^^^^^^^^^^^^^^^^
