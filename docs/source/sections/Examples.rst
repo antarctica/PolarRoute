@@ -5,6 +5,32 @@ Command Line Interface Examples
 The CLI provides multiple entry-points through which the PolarRoute package can be used. Each command is described in the 
 :ref:`Command Line Interface <cli>` section of these docs.
 
+To summarise, the basic process is to create an environment mesh, add vehicle performance characteristics to each
+cellbox in that mesh, then find an optimal route between waypoints in that mesh. At any stage, GeoPlot can be used 
+to visualise the outputs.
+
+::
+
+    # From MeshiPhi
+    create_mesh <mesh_config_file> -o <mesh_output_file>
+    
+    # From PolarRoute
+    add_vehicle <vessel_config_file> <mesh_output_file> -o <vessel_output_file>
+    optimise_routes <route_config_file> <vessel_output_file> <waypoints_file> -o <route_output_file>
+    
+    # From GeoPlot
+    plot_mesh <any_output_file> -o <output_file>
+
+
+Above are the commands to run in order to fulfill this process. If you have successfully installed PolarRoute and would
+like to try, :download:`here<Examples/example_3.zip>` is some example data which you can use. Simply extract the configs
+out of the zip archive, and run the commands on the appropriate files. To map the commands to the files in the zip archive:
+
+* :code:`<mesh_config_file>` is called :code:`grf_example.config.json`
+* :code:`<vessel_config_file>` is called :code:`ship.config.json`
+* :code:`<route_config_file>` is called :code:`traveltime.config.json`
+* :code:`<waypoints_file>` is called :code:`waypoints_example.csv`
+
 Several notebooks have been created that will guide you through each stage in PolarRoute, from mesh creation through to route planning. 
 These notebooks use the CLI entry-points to show how someone would typically interact with PolarRoute through the terminal.
 
@@ -14,6 +40,7 @@ Empty Mesh Example
 Here we provide two examples of empty meshes that are simple to process to get you started. Since these are empty meshes,
 we expect the optimal calculated route to be a straight line between two waypoints, which is seen as a great circle arc on
 the mercator projection that GeoPlot provides. 
+
 * :download:`Uniform Mesh<Examples/example_1.zip>`
 * :download:`Non-Uniform Mesh<Examples/example_2.zip>`
 * `See on Google Colab <https://colab.research.google.com/drive/1N1mxOy2oX7bEGtPy7Ztshrs4Fs_7lBpV?usp=sharing>`_
@@ -24,6 +51,7 @@ Synthetic Data Example
 In this example, we provide synthetic data in the form of Gaussian Random Fields, which provide a random, yet somewhat
 realistic representation of real-world features such as bathymetry. Here we walk through every step involved in PolarRoute, 
 from creating the mesh through to optimising a route through it. 
+
 * :download:`Gaussian Random Field data<Examples/example_3.zip>`
 * `Synthetic Data Example <https://colab.research.google.com/drive/1BOzTyBjpCbAJ6PMJi0GS55shuaMu72h5?usp=sharing>`_
 
