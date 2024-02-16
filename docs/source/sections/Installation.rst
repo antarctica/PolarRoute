@@ -20,6 +20,16 @@ For development purposes you can install PolarRoute by downloading the source co
 
 Use of :code:`-e` is optional, depending on whether you want to be able to edit the installed copy of the package.
 
+Installing GeoPlot
+#####################
+
+Plotting functionality for the outputs of PolarRoute is provided by the `GeoPlot <https://github.com/antarctica/GeoPlot>`_ package, also developed at BAS.
+
+Geoplot is available from PyPI and can be installed by running:
+::
+
+    pip install bas-geoplot
+
 
 Installing GDAL (Optional)
 ##########################
