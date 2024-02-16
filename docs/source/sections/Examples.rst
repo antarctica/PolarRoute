@@ -67,9 +67,9 @@ in the MeshiPhi docs for more info on each source of data that PolarRoute curren
 * :download:`Real-world data 2<Examples/example_5.zip>`
 * `Real Data Example <https://colab.research.google.com/drive/1atTQFk4eK_SKImHofmEXIfoN9oAP1cJb?usp=sharing>`_
 
-######
-Python
-######
+###############
+Python Examples
+###############
 
 Route planning may also be done using a python terminal. In this case, the CLI is not required but the steps required for route planning 
 follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
