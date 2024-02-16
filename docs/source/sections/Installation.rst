@@ -2,32 +2,30 @@
 Installation
 ************
 
-In this section we will outline the installation steps for installing the software package on a corresponding OS. 
-
-The first stage is installing a version of Python 3.9, if you don't have a working version. We suggest installing a working Anaconda distribution from https://www.anaconda.com/products/distribution#macos following the instructions on that page.
+In this section we will outline the necessary steps for installing the PolarRoute software package. PolarRoute requires a pre-existing installation of Python 3.8 or higher.
 
 Installing PolarRoute
 #####################
 
-The PolarRoute software can be installed on Windows/Linux/MacOS by running one of the two following commands.
-
-Github:
-::
-
-    git clone https://https://github.com/antarctica/PolarRoute.git
-    python setup.py install
-
-Pip: 
+PolarRoute is available from PyPI and can be installed by running:
 ::
 
     pip install polar-route
 
+For development purposes you can install PolarRoute by downloading the source code from GitHub:
+::
 
-Installing GDAL
-###############
+    git clone https://github.com/Antarctica/PolarRoute
+    pip install -e ./PolarRoute
+
+Use of :code:`-e` is optional, depending on whether you want to be able to edit the installed copy of the package.
+
+
+Installing GDAL (Optional)
+##########################
 
 The PolarRoute software has GDAL as an optional requirement. It is only used when exporting TIFF images, 
-so if this is not useful to you, we would recommend steering clear. It is not trivial and is a common source of problems.
+so if this is not useful to you, you can skip this step. It is not always trivial and is a common source of problems.
 With that said, below are instructions for various operating systems.
 
 Windows
@@ -54,8 +52,8 @@ Ubuntu/Debian:
 ::
    
     sudo add-apt-repository ppa:ubuntugis/ppa
-    sudo apt-get update
-    sudo apt-get install gdal-bin libgdal-dev
+    sudo apt update
+    sudo apt install gdal-bin libgdal-dev
     export CPLUS_INCLUDE_PATH=/usr/include/gdal
     export C_INCLUDE_PATH=/usr/include/gdal
     pip install GDAL==$(gdal-config --version)
