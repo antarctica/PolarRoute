@@ -19,7 +19,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="4. Command Line Interface" href="Command_line_interface.html" />
-    <link rel="prev" title="2. Installation" href="Installation.html" /> 
+    <link rel="prev" title="2. Background" href="Code_overview.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,8 +42,8 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">1. Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">2. Background</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">3. Python &amp; iPython Notebooks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#simulating-a-vessel-in-a-digital-environment">3.1. Simulating a Vessel in a Digital Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#route-optimisation">3.2. Route Optimisation</a></li>
@@ -89,7 +89,7 @@ follow the same format - create a digital environment; simulated a vessel agains
 To perform the steps detailed in this section, a mesh must first be generated using <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>.</p>
 <section id="simulating-a-vessel-in-a-digital-environment">
 <h2><span class="section-number">3.1. </span>Simulating a Vessel in a Digital Environment<a class="headerlink" href="#simulating-a-vessel-in-a-digital-environment" title="Permalink to this heading"></a></h2>
-<p>Once a digital environment <strong>EnvironmentMesh</strong> object has been created with <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>, how a vessel interacts with it may be simulated. The <strong>VesselPerformanceModeller</strong>
+<p>Once a digital environment <strong>EnvironmentMesh</strong> object has been created with <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>, a vessels performance when travelling within it may be simulated. The <strong>VesselPerformanceModeller</strong>
 object requires a digital environment in <em>json</em> format and vessel specific configuration parameters, also in <em>json</em> format. These may either
 be loaded from a file, or created within the python terminal.</p>
 <p>Loading mesh and vessel from <em>json</em> files:</p>
@@ -107,8 +107,8 @@ be loaded from a file, or created within the python terminal.</p>
 into the digital environment.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.vessel_performance.vessel_performance_modeller</span> <span class="kn">import</span> <span class="n">VesselPerformanceModeller</span>
 <span class="n">vp</span> <span class="o">=</span> <span class="n">VesselPerformance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">vessel</span><span class="p">)</span>
-<span class="n">vp</span><span class="o">.</span><span class="n">model_accessibility</span><span class="p">()</span>
-<span class="n">vp</span><span class="o">.</span><span class="n">model_performance</span><span class="p">()</span>
+<span class="n">vp</span><span class="o">.</span><span class="n">model_accessibility</span><span class="p">()</span> <span class="c1"># Method to determine any inaccessible areas, e.g. land</span>
+<span class="n">vp</span><span class="o">.</span><span class="n">model_performance</span><span class="p">()</span> <span class="c1"># Method to determine the performance of the vessel in accessible regions, e.g speed or fuel consumption</span>
 </pre></div>
 </div>
 <p>The <strong>VesselPerformanceModeller</strong> object can then be cast to a json object and saved to a file. This <em>vessel_mesh.json</em> file can then
@@ -145,7 +145,7 @@ paths please see the Outputs section of the manual.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Installation.html" class="btn btn-neutral float-left" title="2. Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Code_overview.html" class="btn btn-neutral float-left" title="2. Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="Command_line_interface.html" class="btn btn-neutral float-right" title="4. Command Line Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>10. Examples of running code &mdash; polar_route 0.3.10 documentation</title>
+  <title>2. Command Line Interface Examples &mdash; polar_route 0.3.10 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,7 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="9. Methods - Route Planner" href="Route_optimisation.html" /> 
+    <link rel="next" title="4. Command Line Interface" href="Command_line_interface.html" />
+    <link rel="prev" title="1. Installation" href="Installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,21 +42,27 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">1. Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">1. Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">2. Command Line Interface Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#empty-mesh-example">2.1. Empty Mesh Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#synthetic-data-example">2.2. Synthetic Data Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#real-data-example">2.3. Real Data Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#python-examples">3. Python Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#creating-the-digital-environment">3.1. Creating the digital environment.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simulating-a-vessel-in-a-digital-environment">3.2. Simulating a Vessel in a Digital Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#route-optimisation">3.3. Route Optimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visualising-outputs">3.4. Visualising Outputs</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">7. Methods - Vessel Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">8. Methods - Route Calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">9. Methods - Route Planner</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">10. Examples of running code</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#example-1-antarctica-processing-all-stages-of-route-planner">10.1. Example 1 - Antarctica Processing all stages of route planner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#example-2-dijkstra-vs-smooth-paths">10.2. Example 2 - Dijkstra vs smooth paths</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#example-2-variations-of-vehicle-properties-on-route-paths">10.3. Example 2 - Variations of Vehicle Properties on Route Paths</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">7. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">8. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">9. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
 </ul>
 
         </div>
@@ -72,7 +79,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">10. </span>Examples of running code</li>
+      <li class="breadcrumb-item active"><span class="section-number">2. </span>Command Line Interface Examples</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/sections/Examples.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -82,20 +89,192 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="examples-of-running-code">
-<h1><span class="section-number">10. </span>Examples of running code<a class="headerlink" href="#examples-of-running-code" title="Permalink to this heading"></a></h1>
-<p>Throughout this section we will discuss a series of examples that can be run by the user either from the Command-Line or within python/ipython notebooks. All these examples and more can be found at the Google Colab <a class="reference external" href="https://colab.research.google.com/drive/12D-CN10X7xAcXn_df0zNLHtdiiXxZVkz">Link</a>.</p>
-<section id="example-1-antarctica-processing-all-stages-of-route-planner">
-<h2><span class="section-number">10.1. </span>Example 1 - Antarctica Processing all stages of route planner<a class="headerlink" href="#example-1-antarctica-processing-all-stages-of-route-planner" title="Permalink to this heading"></a></h2>
-<p>In this section we will outline the full processing procedures for running PolarRoute …to be added shortly …</p>
+  <section id="command-line-interface-examples">
+<h1><span class="section-number">2. </span>Command Line Interface Examples<a class="headerlink" href="#command-line-interface-examples" title="Permalink to this heading"></a></h1>
+<p>The CLI provides multiple entry-points through which the PolarRoute package can be used. Each command is described in the
+<a class="reference internal" href="Command_line_interface.html#cli"><span class="std std-ref">Command Line Interface</span></a> section of these docs.</p>
+<p>To summarise, the basic process is to create an environment mesh, add vehicle performance characteristics to each
+cellbox in that mesh, then find an optimal route between waypoints in that mesh. At any stage, GeoPlot can be used
+to visualise the outputs.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># From MeshiPhi</span>
+<span class="n">create_mesh</span> <span class="o">&lt;</span><span class="n">mesh_config_file</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">o</span> <span class="o">&lt;</span><span class="n">mesh_output_file</span><span class="o">&gt;</span>
+
+<span class="c1"># From PolarRoute</span>
+<span class="n">add_vehicle</span> <span class="o">&lt;</span><span class="n">vessel_config_file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">mesh_output_file</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">o</span> <span class="o">&lt;</span><span class="n">vessel_output_file</span><span class="o">&gt;</span>
+<span class="n">optimise_routes</span> <span class="o">&lt;</span><span class="n">route_config_file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">vessel_output_file</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">waypoints_file</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">o</span> <span class="o">&lt;</span><span class="n">route_output_file</span><span class="o">&gt;</span>
+
+<span class="c1"># From GeoPlot</span>
+<span class="n">plot_mesh</span> <span class="o">&lt;</span><span class="n">any_output_file</span><span class="o">&gt;</span> <span class="o">-</span><span class="n">o</span> <span class="o">&lt;</span><span class="n">output_file</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Above are the commands to run in order to fulfill this process. If you have successfully installed PolarRoute and would
+like to try, <a class="reference download internal" download="" href="../_downloads/1c6fcfe595ce230536ce14a81ea31e97/example_3.zip"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a> is some example data which you can use. Simply extract the configs
+out of the zip archive, and run the commands on the appropriate files. To map the commands to the files in the zip archive:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">&lt;mesh_config_file&gt;</span></code> is called <code class="code docutils literal notranslate"><span class="pre">grf_example.config.json</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&lt;vessel_config_file&gt;</span></code> is called <code class="code docutils literal notranslate"><span class="pre">ship.config.json</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&lt;route_config_file&gt;</span></code> is called <code class="code docutils literal notranslate"><span class="pre">traveltime.config.json</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">&lt;waypoints_file&gt;</span></code> is called <code class="code docutils literal notranslate"><span class="pre">waypoints_example.csv</span></code></p></li>
+</ul>
+<p>Several notebooks have been created that will guide you through each stage in PolarRoute, from mesh creation through to route planning.
+These notebooks use the CLI entry-points to show how someone would typically interact with PolarRoute through the terminal.</p>
+<section id="empty-mesh-example">
+<h2><span class="section-number">2.1. </span>Empty Mesh Example<a class="headerlink" href="#empty-mesh-example" title="Permalink to this heading"></a></h2>
+<p>Here we provide two examples of empty meshes that are simple to process to get you started. Since these are empty meshes,
+we expect the optimal calculated route to be a straight line between two waypoints, which is seen as a great circle arc on
+the mercator projection that GeoPlot provides.</p>
+<ul class="simple">
+<li><p><a class="reference download internal" download="" href="../_downloads/9464dc901e09495ba844a7d67976eb4a/example_1.zip"><code class="xref download docutils literal notranslate"><span class="pre">Uniform</span> <span class="pre">Mesh</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="../_downloads/a4d8986ac52053dcfec5cc60ec2dc622/example_2.zip"><code class="xref download docutils literal notranslate"><span class="pre">Non-Uniform</span> <span class="pre">Mesh</span></code></a></p></li>
+<li><p><a class="reference external" href="https://colab.research.google.com/drive/1N1mxOy2oX7bEGtPy7Ztshrs4Fs_7lBpV?usp=sharing">See on Google Colab</a></p></li>
+</ul>
 </section>
-<section id="example-2-dijkstra-vs-smooth-paths">
-<h2><span class="section-number">10.2. </span>Example 2 - Dijkstra vs smooth paths<a class="headerlink" href="#example-2-dijkstra-vs-smooth-paths" title="Permalink to this heading"></a></h2>
-<p>…to be added shortly …</p>
+<section id="synthetic-data-example">
+<h2><span class="section-number">2.2. </span>Synthetic Data Example<a class="headerlink" href="#synthetic-data-example" title="Permalink to this heading"></a></h2>
+<p>In this example, we provide synthetic data in the form of Gaussian Random Fields, which provide a random, yet somewhat
+realistic representation of real-world features such as bathymetry. Here we walk through every step involved in PolarRoute,
+from creating the mesh through to optimising a route through it.</p>
+<ul class="simple">
+<li><p><a class="reference download internal" download="" href="../_downloads/1c6fcfe595ce230536ce14a81ea31e97/example_3.zip"><code class="xref download docutils literal notranslate"><span class="pre">Gaussian</span> <span class="pre">Random</span> <span class="pre">Field</span> <span class="pre">data</span></code></a></p></li>
+<li><p><a class="reference external" href="https://colab.research.google.com/drive/1BOzTyBjpCbAJ6PMJi0GS55shuaMu72h5?usp=sharing">Synthetic Data Example</a></p></li>
+</ul>
 </section>
-<section id="example-2-variations-of-vehicle-properties-on-route-paths">
-<h2><span class="section-number">10.3. </span>Example 2 - Variations of Vehicle Properties on Route Paths<a class="headerlink" href="#example-2-variations-of-vehicle-properties-on-route-paths" title="Permalink to this heading"></a></h2>
-<p>…to be added shortly …</p>
+<section id="real-data-example">
+<h2><span class="section-number">2.3. </span>Real Data Example<a class="headerlink" href="#real-data-example" title="Permalink to this heading"></a></h2>
+<p>Real world data has been used to generate these meshes around the coast of Antarctica. This data is publically available,
+however is not included here to avoid violating data sharing policies. Instead, we provide a mesh file after the ‘create_mesh’ stage
+since that is a derived product. See <a class="reference external" href="https://antarctica.github.io/MeshiPhi/html/sections/Dataloaders/overview.html">Dataloaders</a>
+in the MeshiPhi docs for more info on each source of data that PolarRoute currently supports.</p>
+<ul class="simple">
+<li><p><a class="reference download internal" download="" href="../_downloads/b9d013b4c19ec99448103f2034eb205b/example_4.zip"><code class="xref download docutils literal notranslate"><span class="pre">Real-world</span> <span class="pre">data</span> <span class="pre">1</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="../_downloads/7ce39e4ea5d564809801ec60b702fd69/example_5.zip"><code class="xref download docutils literal notranslate"><span class="pre">Real-world</span> <span class="pre">data</span> <span class="pre">2</span></code></a></p></li>
+<li><p><a class="reference external" href="https://colab.research.google.com/drive/1atTQFk4eK_SKImHofmEXIfoN9oAP1cJb?usp=sharing">Real Data Example</a></p></li>
+</ul>
+</section>
+</section>
+<section id="python-examples">
+<h1><span class="section-number">3. </span>Python Examples<a class="headerlink" href="#python-examples" title="Permalink to this heading"></a></h1>
+<p>Route planning may also be done using a python terminal. In this case, the CLI is not required but the steps required for route planning
+follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
+To perform the steps detailed in this section, a mesh must first be generated using <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>.</p>
+<p>The files used in the following example are those used in the synthetic example from the notebook section above. Download them
+<a class="reference download internal" download="" href="../_downloads/1c6fcfe595ce230536ce14a81ea31e97/example_3.zip"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
+<section id="creating-the-digital-environment">
+<h2><span class="section-number">3.1. </span>Creating the digital environment.<a class="headerlink" href="#creating-the-digital-environment" title="Permalink to this heading"></a></h2>
+<p>A configuration file is needed to initialise the <strong>`Mesh`</strong> object which forms the digital environment. This configuration file
+is of the same format used in the <a class="reference internal" href="Command_line_interface.html#create-mesh"><span class="std std-ref">create_mesh</span></a> CLI entry-point, and may either be loaded from a <em>json</em> file or constructed
+within the python terminal.</p>
+<p>Loading configuration from <em>json</em> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="c1"># Read in config file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.config.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The digital environment <strong>`Mesh`</strong> object can then be initialised. This mesh object will be constructed using parameters in it
+configuration file. This mesh object can be manipulated further, such as increasing its resolution through further
+splitting, adding additional data sources or altering is configuration parameters. See <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>
+docs for a more in-depth explanation. The digital environment <strong>`Mesh`</strong> object can then be cast to a json object and saved to a file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">meshiphi.mesh_generation.mesh_builder</span> <span class="kn">import</span> <span class="n">MeshBuilder</span>
+
+<span class="c1"># Create mesh from config</span>
+<span class="n">cg</span> <span class="o">=</span> <span class="n">MeshBuilder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">build_environmental_mesh</span><span class="p">()</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">cg</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+
+<span class="c1"># Save output file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.mesh.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We are saving the file after each stage, but if you are running the code snippets
+back to back, there is no need to save the json output and then load it in again.
+Just pass the dictionary created from the <code class="code docutils literal notranslate"><span class="pre">to_json()</span></code> call into the next function</p>
+</div>
+</section>
+<section id="simulating-a-vessel-in-a-digital-environment">
+<h2><span class="section-number">3.2. </span>Simulating a Vessel in a Digital Environment<a class="headerlink" href="#simulating-a-vessel-in-a-digital-environment" title="Permalink to this heading"></a></h2>
+<p>Once a digital environment <strong>EnvironmentMesh</strong> object has been created with <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>, a vessels performance when travelling within it may be simulated. The <strong>VesselPerformanceModeller</strong>
+object requires a digital environment in <em>json</em> format and vessel specific configuration parameters, also in <em>json</em> format. These may either
+be loaded from a file, or created within the python terminal.</p>
+<p>Loading mesh and vessel from <em>json</em> files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Loading digital environment from file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.mesh.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+<span class="c1"># Loading vessel configuration parameters from file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path/to/ship.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">vessel</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <strong>VesselPerformanceModeller</strong> object can then be initialised. This can be used to simulate the performance of the vessel and encode this information
+into the digital environment.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.vessel_performance.vessel_performance_modeller</span> <span class="kn">import</span> <span class="n">VesselPerformanceModeller</span>
+<span class="n">vp</span> <span class="o">=</span> <span class="n">VesselPerformance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">vessel</span><span class="p">)</span>
+<span class="n">vp</span><span class="o">.</span><span class="n">model_accessibility</span><span class="p">()</span> <span class="c1"># Method to determine any inaccessible areas, e.g. land</span>
+<span class="n">vp</span><span class="o">.</span><span class="n">model_performance</span><span class="p">()</span> <span class="c1"># Method to determine the performance of the vessel in accessible regions, e.g speed or fuel consumption</span>
+</pre></div>
+</div>
+<p>The <strong>VesselPerformanceModeller</strong> object can then be cast to a json object and saved to a file. This <em>vessel_mesh.json</em> file can then
+be used by the CLI entry-point <a class="reference internal" href="Command_line_interface.html#optimise-routes"><span class="std std-ref">optimise_routes</span></a>, or the json object can be passed to the <strong>RoutePlanner</strong> object in a python
+console.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vessel_mesh</span> <span class="o">=</span> <span class="n">vp</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="c1"># Save to output file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.vessel.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">vessel_mesh</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="route-optimisation">
+<h2><span class="section-number">3.3. </span>Route Optimisation<a class="headerlink" href="#route-optimisation" title="Permalink to this heading"></a></h2>
+<p>Now that the vessel dependent environmental mesh is defined, and represented in the <cite>VesselPerformanceModeller</cite> object, we can
+construct routes, with parameters defined by the user in the configuration file. Waypoints are passed as an input
+file path, <cite>waypoints.csv</cite>, discussed more in the Inputs section of the manual pages.  The route construction is done
+in two stages: construction of the meshed dijkstra optimal routes, <cite>.compute_routes()</cite>; and, the smoothing of the
+dijkstra routes to further optimise the solution and reduce mesh dependencies, <cite>.compute_smooth_routes()</cite>.
+During <cite>.compute_routes()</cite> the paths are appended to the object as an entry <cite>paths</cite>, which are replaced by the
+smoothed paths after running <cite>.compute_smooth_routes()</cite>. An additional entry <cite>waypoints</cite> is generated to give the
+waypoints information used in route construction. For further info about the structure of the outputs of the
+paths please see the Outputs section of the manual.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.route_planner</span> <span class="kn">import</span> <span class="n">RoutePlanner</span>
+<span class="n">rp</span> <span class="o">=</span> <span class="n">RoutePlanner</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.vessel.json&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;/path/to/traveltime.config.json&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;/path/to/waypoints_example.csv&#39;</span><span class="p">)</span>
+<span class="c1"># Calculate optimal dijkstra path between waypoints</span>
+<span class="n">rp</span><span class="o">.</span><span class="n">compute_routes</span><span class="p">()</span>
+<span class="c1"># Smooth the dijkstra routes</span>
+<span class="n">rp</span><span class="o">.</span><span class="n">compute_smoothed_routes</span><span class="p">()</span>
+
+<span class="n">route_mesh</span> <span class="o">=</span> <span class="n">rp</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>
+<span class="c1"># Save to output file</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.route.json&#39;</span><span class="p">,</span> <span class="s1">&#39;w+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">route_mesh</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="visualising-outputs">
+<h2><span class="section-number">3.4. </span>Visualising Outputs<a class="headerlink" href="#visualising-outputs" title="Permalink to this heading"></a></h2>
+<p>The <strong>`Mesh`</strong> object can be visualised using the <strong>`GeoPlot`</strong> package, also developed by BAS. This package is not included in the distribution
+of MeshiPhi, but can be installed using the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">bas_geoplot</span>
+</pre></div>
+</div>
+<p><strong>`GeoPlot`</strong> can be used to visualise the <strong>`Mesh`</strong> object using the following code in an iPython notebook:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bas_geoplot.interactive</span> <span class="kn">import</span> <span class="n">Map</span>
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mesh_json</span><span class="p">[</span><span class="s1">&#39;cellboxes&#39;</span><span class="p">])</span>
+<span class="n">mp</span> <span class="o">=</span> <span class="n">Map</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;GRF Example&quot;</span><span class="p">)</span>
+
+<span class="n">mp</span><span class="o">.</span><span class="n">Maps</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="s1">&#39;MeshGrid&#39;</span><span class="p">,</span> <span class="n">predefined</span><span class="o">=</span><span class="s1">&#39;cx&#39;</span><span class="p">)</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">Maps</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="s1">&#39;SIC&#39;</span><span class="p">,</span> <span class="n">predefined</span><span class="o">=</span><span class="s1">&#39;SIC&#39;</span><span class="p">)</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">Maps</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="s1">&#39;Elevation&#39;</span><span class="p">,</span> <span class="n">predefined</span><span class="o">=</span><span class="s1">&#39;Elev&#39;</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">Vectors</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span><span class="s1">&#39;Currents - Mesh&#39;</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">predefined</span><span class="o">=</span><span class="s1">&#39;Currents&#39;</span><span class="p">)</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">Vectors</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="s1">&#39;Winds&#39;</span><span class="p">,</span> <span class="n">predefined</span><span class="o">=</span><span class="s1">&#39;Winds&#39;</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">mp</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -103,7 +282,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Route_optimisation.html" class="btn btn-neutral float-left" title="9. Methods - Route Planner" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Installation.html" class="btn btn-neutral float-left" title="1. Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Command_line_interface.html" class="btn btn-neutral float-right" title="4. Command Line Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
