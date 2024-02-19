@@ -12,16 +12,20 @@ Pull requests will not be accepted unless all required regression tests pass.
 | `vessel_factory.py`              |                                         |
 | `vessel_performance_modeller.py` |                                         |
 | `SDA.py`                         |                                         |
-| `underwater_vessel.py`           |                                         |
+| `slocum.py`                      |                                         |
 | `abstract_ship.py`               |                                         |
+| `abstract_glider.py`             |                                         |
+|                                  |                                         |
+
 
 
 ## Route Planning
-| **Files altered**    | **Tests**                                           |
-|----------------------|-----------------------------------------------------|
-| `crossing.py`        | `tests/regression_tests/test_routes_dijkstra.py`    |
-| `route_planner.py`   | `tests/regression_tests/test_routes_smoothed.py`    |
-|                      |                                                     |
+| **Files altered**       | **Tests**                                        |
+|-------------------------|--------------------------------------------------|
+| `crossing.py`           | `tests/regression_tests/test_routes_dijkstra.py` |
+| `crossing_smoothing.py` | `tests/regression_tests/test_routes_smoothed.py` |
+| `route_planner.py`      |                                                  |
+|                         |                                                  |
 
 
 ## Testing files
