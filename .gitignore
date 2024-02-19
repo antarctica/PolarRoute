@@ -26,5 +26,4 @@ outputs/*
 docs_builder/*
 testing.ipynb
 docs/build/*
-docs/html/*
 dev_venv/*
