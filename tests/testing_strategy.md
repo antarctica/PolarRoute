@@ -3,22 +3,7 @@ When updating any files within the PolarRoute repository, tests must be run to e
 
 Evidence that all the required regression tests have passed needs to be submitted as part of a pull request. This should be in the form of a `pytest_output.txt` attached to the pull request. 
 
-Pull requests will not be accepted unless all required regression tests pass. 
-
-## Mesh Construction
-| **Files altered**          | **Tests**                             |
-|----------------------------|---------------------------------------|
-| `mesh_builder.py`          | `tests/regression_tests/test_mesh.py` |
-| `mesh.py`                  |                                       |
-| `neighbour_graph.py`       |                                       |
-| `metadata.py`              |                                       |
-| `aggregated_cellBox.py`    |                                       |
-| `boundary.py`              |                                       |
-| `cellbox.py`               |                                       |
-| `direction.py`             |                                       |
-| `environment_mesh.py`      |                                       |
-|                            |                                       |
-
+Pull requests will not be accepted unless all required regression tests pass.
 
 ## Vessel Performance Modelling
 | **Files altered**                | **Tests**                               |
