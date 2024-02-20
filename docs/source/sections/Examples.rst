@@ -76,7 +76,7 @@ follow the same format - create a digital environment; simulated a vessel agains
 To perform the steps detailed in this section, a mesh must first be generated using `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_.
 
 The files used in the following example are those used in the synthetic example from the notebook section above. Download them
-:download:`here<Examples/example_3.zip>`.
+:download:`here<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_3.zip>`.
  
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Creating the digital environment.
