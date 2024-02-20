@@ -2,7 +2,8 @@
 Installation
 ************
 
-In this section we will outline the necessary steps for installing the PolarRoute software package. PolarRoute requires a pre-existing installation of Python 3.8 or higher.
+In this section we will outline the necessary steps for installing the PolarRoute software package. Any installation of PolarRoute will also include `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_; a package designed to
+discretise the world from heterogeneous data sources (follow link for more details and docs). PolarRoute requires a pre-existing installation of Python 3.8 or higher.
 
 Installing PolarRoute
 #####################

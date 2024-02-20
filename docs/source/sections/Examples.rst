@@ -82,7 +82,7 @@ The files used in the following example are those used in the synthetic example 
 Creating the digital environment.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A configuration file is needed to initialise the **`Mesh`** object which forms the digital environment. This configuration file
+A configuration file is needed to initialise the **EnvironmentMesh** object which forms the digital environment. This configuration file
 is of the same format used in the :ref:`create_mesh` CLI entry-point, and may either be loaded from a *json* file or constructed 
 within a python interpreter.
 
@@ -196,7 +196,7 @@ of MeshiPhi, but can be installed using the following command:
 
     pip install bas_geoplot
 
-**GeoPlot** can be used to visualise the **Mesh** object using the following code in an iPython notebook or any python interpreter:
+**GeoPlot** can be used to visualise the **EnvironmentMesh** object using the following code in an iPython notebook or any python interpreter:
 
 ::
     

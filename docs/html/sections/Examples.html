@@ -161,7 +161,7 @@ To perform the steps detailed in this section, a mesh must first be generated us
 <a class="reference download internal" download="" href="../_downloads/1c6fcfe595ce230536ce14a81ea31e97/example_3.zip"><code class="xref download docutils literal notranslate"><span class="pre">here</span></code></a>.</p>
 <section id="creating-the-digital-environment">
 <h2><span class="section-number">3.1. </span>Creating the digital environment.<a class="headerlink" href="#creating-the-digital-environment" title="Permalink to this heading"></a></h2>
-<p>A configuration file is needed to initialise the <strong>`Mesh`</strong> object which forms the digital environment. This configuration file
+<p>A configuration file is needed to initialise the <strong>EnvironmentMesh</strong> object which forms the digital environment. This configuration file
 is of the same format used in the <a class="reference internal" href="Command_line_interface.html#create-mesh"><span class="std std-ref">create_mesh</span></a> CLI entry-point, and may either be loaded from a <em>json</em> file or constructed
 within a python interpreter.</p>
 <p>Loading configuration from <em>json</em> file:</p>
@@ -260,7 +260,7 @@ of MeshiPhi, but can be installed using the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">bas_geoplot</span>
 </pre></div>
 </div>
-<p><strong>GeoPlot</strong> can be used to visualise the <strong>Mesh</strong> object using the following code in an iPython notebook or any python interpreter:</p>
+<p><strong>GeoPlot</strong> can be used to visualise the <strong>EnvironmentMesh</strong> object using the following code in an iPython notebook or any python interpreter:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bas_geoplot.interactive</span> <span class="kn">import</span> <span class="n">Map</span>
 
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mesh_json</span><span class="p">[</span><span class="s1">&#39;cellboxes&#39;</span><span class="p">])</span>
