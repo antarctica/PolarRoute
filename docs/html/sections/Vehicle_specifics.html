@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>8. Methods - Vessel Performance &mdash; polar_route 0.3.10 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -51,75 +54,13 @@
 <li class="toctree-l1"><a class="reference internal" href="Code_overview.html">7. Background</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">8. Methods - Vessel Performance</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#vessel-overview">8.1. Vessel Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_performance_modeller">8.2. Vessel Performance Modeller</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.__init__"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.model_accessibility"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.model_accessibility()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.model_performance"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.model_performance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.to_json"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.to_json()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_factory">8.3. Vessel Factory</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessel_factory.VesselFactory"><code class="docutils literal notranslate"><span class="pre">VesselFactory</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_factory.VesselFactory.get_vessel"><code class="docutils literal notranslate"><span class="pre">VesselFactory.get_vessel()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.abstract_vessel">8.4. Abstract Vessel</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel"><code class="docutils literal notranslate"><span class="pre">AbstractVessel</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractVessel.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility"><code class="docutils literal notranslate"><span class="pre">AbstractVessel.model_accessibility()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_performance"><code class="docutils literal notranslate"><span class="pre">AbstractVessel.model_performance()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_ship">8.5. Abstract Ship</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip"><code class="docutils literal notranslate"><span class="pre">AbstractShip</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractShip.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.extreme_ice"><code class="docutils literal notranslate"><span class="pre">AbstractShip.extreme_ice()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.land"><code class="docutils literal notranslate"><span class="pre">AbstractShip.land()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.model_accessibility"><code class="docutils literal notranslate"><span class="pre">AbstractShip.model_accessibility()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.model_performance"><code class="docutils literal notranslate"><span class="pre">AbstractShip.model_performance()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.SDA">8.6. SDA</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA"><code class="docutils literal notranslate"><span class="pre">SDA</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.__init__"><code class="docutils literal notranslate"><span class="pre">SDA.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.invert_resistance"><code class="docutils literal notranslate"><span class="pre">SDA.invert_resistance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.model_fuel"><code class="docutils literal notranslate"><span class="pre">SDA.model_fuel()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.model_resistance"><code class="docutils literal notranslate"><span class="pre">SDA.model_resistance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.model_speed"><code class="docutils literal notranslate"><span class="pre">SDA.model_speed()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_glider">8.7. Abstract Glider</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider"><code class="docutils literal notranslate"><span class="pre">AbstractGlider</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.extreme_ice"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.extreme_ice()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.land"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.land()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.model_accessibility"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.model_accessibility()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.model_performance"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.model_performance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.shallow"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.shallow()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.slocum">8.8. Slocum Glider</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider"><code class="docutils literal notranslate"><span class="pre">SlocumGlider</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider.__init__"><code class="docutils literal notranslate"><span class="pre">SlocumGlider.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider.model_battery"><code class="docutils literal notranslate"><span class="pre">SlocumGlider.model_battery()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider.model_speed"><code class="docutils literal notranslate"><span class="pre">SlocumGlider.model_speed()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_performance_modeller">8.2. Vessel Performance Modeller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_factory">8.3. Vessel Factory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.abstract_vessel">8.4. Abstract Vessel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_ship">8.5. Abstract Ship</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.SDA">8.6. SDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_glider">8.7. Abstract Glider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.slocum">8.8. Slocum Glider</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">9. Methods - Route Calculation</a></li>
