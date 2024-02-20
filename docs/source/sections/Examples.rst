@@ -71,7 +71,7 @@ in the MeshiPhi docs for more info on each source of data that PolarRoute curren
 Python Examples
 ###############
 
-Route planning may also be done using a python terminal. In this case, the CLI is not required but the steps required for route planning 
+Route planning may also be done in a python interpreter. In this case, the CLI is not required but the steps required for route planning
 follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
 To perform the steps detailed in this section, a mesh must first be generated using `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_.
 
@@ -84,7 +84,7 @@ Creating the digital environment.
 
 A configuration file is needed to initialise the **`Mesh`** object which forms the digital environment. This configuration file
 is of the same format used in the :ref:`create_mesh` CLI entry-point, and may either be loaded from a *json* file or constructed 
-within the python terminal.
+within a python interpreter.
 
 Loading configuration from *json* file:
 ::
@@ -95,10 +95,10 @@ Loading configuration from *json* file:
         config = json.load(f)    
 
 
-The digital environment **`Mesh`** object can then be initialised. This mesh object will be constructed using parameters in it
-configuration file. This mesh object can be manipulated further, such as increasing its resolution through further 
-splitting, adding additional data sources or altering is configuration parameters. See `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_
-docs for a more in-depth explanation. The digital environment **`Mesh`** object can then be cast to a json object and saved to a file. 
+The **EnvironmentMesh** object can then be initialised. This mesh object will be constructed using the parameters in its
+configuration file. This mesh object can then be manipulated further, such as increasing its resolution through further
+splitting, adding additional data sources or altering its configuration parameters. See `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_
+docs for a more in-depth explanation. The **EnvironmentMesh** object can then be cast to a json object and saved to a file.
 ::
 
     from meshiphi.mesh_generation.mesh_builder import MeshBuilder
@@ -121,9 +121,9 @@ docs for a more in-depth explanation. The digital environment **`Mesh`** object 
 Simulating a Vessel in a Digital Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Once a digital environment **EnvironmentMesh** object has been created with `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_, a vessels performance when travelling within it may be simulated. The **VesselPerformanceModeller**
+Once a digital environment **EnvironmentMesh** object has been created with `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_, a vessel's performance when travelling within it may be simulated. The **VesselPerformanceModeller**
 object requires a digital environment in *json* format and vessel specific configuration parameters, also in *json* format. These may either
-be loaded from a file, or created within the python terminal.
+be loaded from a file, or created within any python interpreter.
 
 Loading mesh and vessel from *json* files:
 ::
@@ -189,14 +189,14 @@ paths please see the Outputs section of the manual.
 Visualising Outputs
 ^^^^^^^^^^^^^^^^^^^
 
-The **`Mesh`** object can be visualised using the **`GeoPlot`** package, also developed by BAS. This package is not included in the distribution 
+The **EnvironmentMesh** object can be visualised using the **GeoPlot** package, also developed by BAS. This package is not included in the distribution
 of MeshiPhi, but can be installed using the following command:
 
 :: 
 
     pip install bas_geoplot
 
-**`GeoPlot`** can be used to visualise the **`Mesh`** object using the following code in an iPython notebook:
+**GeoPlot** can be used to visualise the **Mesh** object using the following code in an iPython notebook or any python interpreter:
 
 ::
     
