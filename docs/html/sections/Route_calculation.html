@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>9. Methods - Route Calculation &mdash; polar_route 0.3.10 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -52,17 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">8. Methods - Vessel Performance</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">9. Methods - Route Calculation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#route-calculation-overview">9.1. Route Calculation Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.route_calc">9.2. Route Calculation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.case_from_angle"><code class="docutils literal notranslate"><span class="pre">case_from_angle()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.find_intersections"><code class="docutils literal notranslate"><span class="pre">find_intersections()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.load_mesh"><code class="docutils literal notranslate"><span class="pre">load_mesh()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.load_route"><code class="docutils literal notranslate"><span class="pre">load_route()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.order_track"><code class="docutils literal notranslate"><span class="pre">order_track()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.route_calc"><code class="docutils literal notranslate"><span class="pre">route_calc()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.traveltime_distance"><code class="docutils literal notranslate"><span class="pre">traveltime_distance()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#polar_route.route_calc.traveltime_in_cell"><code class="docutils literal notranslate"><span class="pre">traveltime_in_cell()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.route_calc">9.2. Route Calculation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
