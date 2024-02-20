@@ -154,7 +154,7 @@ in the MeshiPhi docs for more info on each source of data that PolarRoute curren
 </section>
 <section id="python-examples">
 <h1><span class="section-number">3. </span>Python Examples<a class="headerlink" href="#python-examples" title="Permalink to this heading"></a></h1>
-<p>Route planning may also be done using a python terminal. In this case, the CLI is not required but the steps required for route planning
+<p>Route planning may also be done in a python interpreter. In this case, the CLI is not required but the steps required for route planning
 follow the same format - create a digital environment; simulated a vessel against it; optimise a route plan through the digital environment.
 To perform the steps detailed in this section, a mesh must first be generated using <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>.</p>
 <p>The files used in the following example are those used in the synthetic example from the notebook section above. Download them
@@ -163,7 +163,7 @@ To perform the steps detailed in this section, a mesh must first be generated us
 <h2><span class="section-number">3.1. </span>Creating the digital environment.<a class="headerlink" href="#creating-the-digital-environment" title="Permalink to this heading"></a></h2>
 <p>A configuration file is needed to initialise the <strong>`Mesh`</strong> object which forms the digital environment. This configuration file
 is of the same format used in the <a class="reference internal" href="Command_line_interface.html#create-mesh"><span class="std std-ref">create_mesh</span></a> CLI entry-point, and may either be loaded from a <em>json</em> file or constructed
-within the python terminal.</p>
+within a python interpreter.</p>
 <p>Loading configuration from <em>json</em> file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="c1"># Read in config file</span>
@@ -171,10 +171,10 @@ within the python terminal.</p>
     <span class="n">config</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The digital environment <strong>`Mesh`</strong> object can then be initialised. This mesh object will be constructed using parameters in it
-configuration file. This mesh object can be manipulated further, such as increasing its resolution through further
-splitting, adding additional data sources or altering is configuration parameters. See <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>
-docs for a more in-depth explanation. The digital environment <strong>`Mesh`</strong> object can then be cast to a json object and saved to a file.</p>
+<p>The <strong>EnvironmentMesh</strong> object can then be initialised. This mesh object will be constructed using the parameters in its
+configuration file. This mesh object can then be manipulated further, such as increasing its resolution through further
+splitting, adding additional data sources or altering its configuration parameters. See <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>
+docs for a more in-depth explanation. The <strong>EnvironmentMesh</strong> object can then be cast to a json object and saved to a file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">meshiphi.mesh_generation.mesh_builder</span> <span class="kn">import</span> <span class="n">MeshBuilder</span>
 
 <span class="c1"># Create mesh from config</span>
@@ -195,9 +195,9 @@ Just pass the dictionary created from the <code class="code docutils literal not
 </section>
 <section id="simulating-a-vessel-in-a-digital-environment">
 <h2><span class="section-number">3.2. </span>Simulating a Vessel in a Digital Environment<a class="headerlink" href="#simulating-a-vessel-in-a-digital-environment" title="Permalink to this heading"></a></h2>
-<p>Once a digital environment <strong>EnvironmentMesh</strong> object has been created with <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>, a vessels performance when travelling within it may be simulated. The <strong>VesselPerformanceModeller</strong>
+<p>Once a digital environment <strong>EnvironmentMesh</strong> object has been created with <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>, a vessel’s performance when travelling within it may be simulated. The <strong>VesselPerformanceModeller</strong>
 object requires a digital environment in <em>json</em> format and vessel specific configuration parameters, also in <em>json</em> format. These may either
-be loaded from a file, or created within the python terminal.</p>
+be loaded from a file, or created within any python interpreter.</p>
 <p>Loading mesh and vessel from <em>json</em> files:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Loading digital environment from file</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.mesh.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -255,12 +255,12 @@ paths please see the Outputs section of the manual.</p>
 </section>
 <section id="visualising-outputs">
 <h2><span class="section-number">3.4. </span>Visualising Outputs<a class="headerlink" href="#visualising-outputs" title="Permalink to this heading"></a></h2>
-<p>The <strong>`Mesh`</strong> object can be visualised using the <strong>`GeoPlot`</strong> package, also developed by BAS. This package is not included in the distribution
+<p>The <strong>EnvironmentMesh</strong> object can be visualised using the <strong>GeoPlot</strong> package, also developed by BAS. This package is not included in the distribution
 of MeshiPhi, but can be installed using the following command:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">bas_geoplot</span>
 </pre></div>
 </div>
-<p><strong>`GeoPlot`</strong> can be used to visualise the <strong>`Mesh`</strong> object using the following code in an iPython notebook:</p>
+<p><strong>GeoPlot</strong> can be used to visualise the <strong>Mesh</strong> object using the following code in an iPython notebook or any python interpreter:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bas_geoplot.interactive</span> <span class="kn">import</span> <span class="n">Map</span>
 
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mesh_json</span><span class="p">[</span><span class="s1">&#39;cellboxes&#39;</span><span class="p">])</span>
