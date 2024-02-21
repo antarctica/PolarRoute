@@ -47,7 +47,7 @@ sphinx-build -b html ./docs/source ./docs/html
 ```
 Sometimes the cache needs to be cleared for internal links to update. If facing this problem, run this from the PolarRoute directory.
 ```
-rm -r docs/build/.doctrees/
+rm -r docs/html/.doctrees/
 ```
 ## Developers
 Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox, Harrison Abbot, Ayat Fekry
