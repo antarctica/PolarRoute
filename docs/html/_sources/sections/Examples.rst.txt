@@ -23,7 +23,7 @@ to visualise the outputs.
 
 
 Above are the commands to run in order to fulfill this process. If you have successfully installed PolarRoute and would
-like to try, :download:`here<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_3.zip>` is some example data which you can use. Simply extract the configs
+like to try, :download:`here<https://raw.githubusercontent.com/antarctica/PolarRoute/main/docs/source/sections/Examples/example_3.zip>` is some example data which you can use. Simply extract the configs
 out of the zip archive, and run the commands on the appropriate files. To map the commands to the files in the zip archive:
 
 * :code:`<mesh_config_file>` is called :code:`grf_example.config.json`
@@ -41,8 +41,8 @@ Here we provide two examples of empty meshes that are simple to process to get y
 we expect the optimal calculated route to be a straight line between two waypoints, which is seen as a great circle arc on
 the mercator projection that GeoPlot provides. 
 
-* :download:`Uniform Mesh<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_1.zip>`
-* :download:`Non-Uniform Mesh<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_2.zip>`
+* :download:`Uniform Mesh<https://raw.githubusercontent.com/antarctica/PolarRoute/main/docs/source/sections/Examples/example_1.zip>`
+* :download:`Non-Uniform Mesh<https://raw.githubusercontent.com/antarctica/PolarRoute/main/docs/source/sections/Examples/example_2.zip>`
 * `See on Google Colab <https://colab.research.google.com/drive/1N1mxOy2oX7bEGtPy7Ztshrs4Fs_7lBpV?usp=sharing>`_
 
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -52,7 +52,7 @@ In this example, we provide synthetic data in the form of Gaussian Random Fields
 realistic representation of real-world features such as bathymetry. Here we walk through every step involved in PolarRoute, 
 from creating the mesh through to optimising a route through it. 
 
-* :download:`Gaussian Random Field data<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_3.zip>`
+* :download:`Gaussian Random Field data<https://raw.githubusercontent.com/antarctica/PolarRoute/main/docs/source/sections/Examples/example_3.zip>`
 * `Synthetic Data Example <https://colab.research.google.com/drive/1BOzTyBjpCbAJ6PMJi0GS55shuaMu72h5?usp=sharing>`_
 
 ^^^^^^^^^^^^^^^^^
@@ -63,8 +63,8 @@ however is not included here to avoid violating data sharing policies. Instead, 
 since that is a derived product. See `Dataloaders <https://antarctica.github.io/MeshiPhi/html/sections/Dataloaders/overview.html>`_ 
 in the MeshiPhi docs for more info on each source of data that PolarRoute currently supports.
 
-* :download:`Real-world data 1<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_4.zip>`
-* :download:`Real-world data 2<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_6.zip>`
+* :download:`Real-world data 1<https://raw.githubusercontent.com/antarctica/PolarRoute/main/docs/source/sections/Examples/example_4.zip>`
+* :download:`Real-world data 2<https://raw.githubusercontent.com/antarctica/PolarRoute/main/docs/source/sections/Examples/example_6.zip>`
 * `Real Data Example <https://colab.research.google.com/drive/1atTQFk4eK_SKImHofmEXIfoN9oAP1cJb?usp=sharing>`_
 
 ###############
@@ -76,7 +76,7 @@ follow the same format - create a digital environment; simulated a vessel agains
 To perform the steps detailed in this section, a mesh must first be generated using `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_.
 
 The files used in the following example are those used in the synthetic example from the notebook section above. Download them
-:download:`here<https://raw.githubusercontent.com/antarctica/PolarRoute/docs_update/docs/source/sections/Examples/example_3.zip>`.
+:download:`here<https://raw.githubusercontent.com/antarctica/PolarRoute/main/docs/source/sections/Examples/example_3.zip>`.
  
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Creating the digital environment.
