@@ -126,10 +126,14 @@ def _mesh_boundary_polygon(mesh):
     '''
     Creates a polygon from the mesh boundary
     '''
-    lat_min = mesh['config']['mesh_info']['region']['lat_min']
-    lat_max = mesh['config']['mesh_info']['region']['lat_max']
-    long_min = mesh['config']['mesh_info']['region']['long_min']
-    long_max = mesh['config']['mesh_info']['region']['long_max']
+
+    # Defining a tiny value
+    tiny_value = 1e-10
+
+    lat_min = mesh['config']['mesh_info']['region']['lat_min']-tiny_value
+    lat_max = mesh['config']['mesh_info']['region']['lat_max']+tiny_value
+    long_min = mesh['config']['mesh_info']['region']['long_min']-tiny_value
+    long_max = mesh['config']['mesh_info']['region']['long_max']+tiny_value
     p1 = Point([long_min, lat_min])
     p2 = Point([long_min, lat_max])
     p3 = Point([long_max, lat_max])
@@ -302,6 +306,9 @@ class RoutePlanner:
             # Only allow waypoints within an existing mesh
             assert(point.within(mesh_boundary)), \
                 f"Waypoint {row['Name']} outside of mesh boundary! {point}"
+            
+        
+
             adjusted_point = _adjust_waypoints(point, self.mesh['cellboxes'])
             
             waypoints_df['Long'][idx] = adjusted_point.x
