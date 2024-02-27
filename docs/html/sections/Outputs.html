@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>6. Outputs - Data Types &mdash; polar_route 0.3.10 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=e7531570"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="7. Methods - Vessel Performance" href="Vehicle_specifics.html" />
+    <link rel="next" title="7. Background" href="Code_overview.html" />
     <link rel="prev" title="5.2. Configuration - Route Planning" href="Configuration/Route_planning_config.html" /> 
 </head>
 
@@ -42,9 +45,9 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">1. Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">2. Command Line Interface Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html#python-examples">3. Python Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">6. Outputs - Data Types</a><ul>
@@ -56,10 +59,10 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">7. Methods - Vessel Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">8. Methods - Route Calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">9. Methods - Route Planner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Examples.html">10. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">7. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Vehicle_specifics.html">8. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">9. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
 </ul>
 
         </div>
@@ -94,7 +97,7 @@
 <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a> library.
 Once a discrete mesh environment is created, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle. These vehicle specific values
-are then encoded into the mesh json object and passed down-stream to the route planner.</p>
+are then encoded into the mesh json object and passed downstream to the route planner.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">polar_route.vessel_performance.vessel_performance_modeller</span> <span class="kn">import</span> <span class="n">VesselPerformanceModeller</span>
 
@@ -114,13 +117,13 @@ are then encoded into the mesh json object and passed down-stream to the route p
 <p>To make use of the full range of vessel performance transformations, a Mesh should be constructed with
 the following attributes:</p>
 <ul class="simple">
-<li><p>elevation (available via data_loaders: <em>gebco</em>, <em>bsose_depth</em>)</p></li>
-<li><p>SIC (available via data_loaders: <em>amsr</em>, <em>bsose_sic</em>, <em>baltic_sic</em>, <em>icenet</em>, <em>modis</em>)</p></li>
-<li><p>thickness (available via data_loaders: <em>thickness</em>)</p></li>
-<li><p>density (available via data_loaders: <em>density</em>)</p></li>
-<li><p>u10, v10 (available via data_loaders: <em>era5_wind</em>)</p></li>
+<li><p>elevation (available via dataloaders: <em>gebco</em>, <em>bsose_depth</em>)</p></li>
+<li><p>SIC (available via dataloaders: <em>amsr</em>, <em>bsose_sic</em>, <em>baltic_sic</em>, <em>icenet</em>, <em>modis</em>, <em>visual_iced</em>)</p></li>
+<li><p>thickness (available via dataloaders: <em>thickness</em>)</p></li>
+<li><p>density (available via dataloaders: <em>density</em>)</p></li>
+<li><p>u10, v10 (available via dataloaders: <em>era5_wind</em>)</p></li>
 </ul>
-<p>see section <strong>Dataloader Overview</strong> for more information on data_loaders</p>
+<p>see section <strong>Dataloader Overview</strong> in the <a class="reference external" href="https://antarctica.github.io/MeshiPhi/">MeshiPhi docs</a> for more information on dataloaders</p>
 <p>The vessel performance modeller will still run without these attributes but will assign default values from the
 configuration file where any data is missing.</p>
 </div>
@@ -145,9 +148,9 @@ have a set of new attributes as follows:</p>
 as outputs to the processing stage. Descriptions of the structure of the two outputs are given below:</p>
 <section id="waypoints">
 <h3><span class="section-number">6.2.1. </span>waypoints<a class="headerlink" href="#waypoints" title="Permalink to this heading"></a></h3>
-<p>An entry in the json including all the information of the waypoints defined by the user from the <cite>waypoints_path</cite>
-file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints
-are returned to this entry. The structure of the entry follows:</p>
+<p>An entry in the json including all the information about the waypoints defined by the user in the <cite>waypoints.csv</cite>
+file. It may be the case that not all waypoints would have been used in the route construction, but all waypoints
+that are defined can be found in this entry. The structure of the entry is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>\<span class="n">n</span>
     <span class="s2">&quot;Name&quot;</span><span class="p">:{</span>\<span class="n">n</span>
         <span class="s1">&#39;0&#39;</span><span class="p">:</span><span class="s2">&quot;Falklands&quot;</span><span class="p">,</span>\<span class="n">n</span>
@@ -171,7 +174,7 @@ are returned to this entry. The structure of the entry follows:</p>
 <p>where each of the values represent the following:</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><strong>&lt;Name&gt;</strong><span class="classifier">The waypoint name defined by user</span></dt><dd><ul>
+<dt><strong>&lt;Name&gt;</strong><span class="classifier">The waypoint name defined by the user</span></dt><dd><ul>
 <li><p><strong>0</strong>  : The name of waypoint for index row ‘0’</p></li>
 <li><p><strong>1</strong>  : The name of waypoint for index row ‘1’ etc</p></li>
 </ul>
@@ -209,7 +212,7 @@ waypoints_dataframe = pd.DataFrame(waypoints)</p>
 </section>
 <section id="paths">
 <h3><span class="section-number">6.2.2. </span>paths<a class="headerlink" href="#paths" title="Permalink to this heading"></a></h3>
-<p>An entry in the json, in a geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:</p>
+<p>An entry in the json, in geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>\<span class="n">n</span>
     <span class="s1">&#39;types&#39;</span><span class="p">:</span><span class="s1">&#39;FeatureCollection&#39;</span><span class="p">,</span>\<span class="n">n</span>
     <span class="s2">&quot;features&quot;</span><span class="p">:{[</span>\<span class="n">n</span>
@@ -242,7 +245,7 @@ waypoints_dataframe = pd.DataFrame(waypoints)</p>
 <span class="p">}</span>\<span class="n">n</span>
 </pre></div>
 </div>
-<p>where the output takes a GeoJSON standard form (more infor given at <a class="reference external" href="https://geojson.org">https://geojson.org</a>) given by:</p>
+<p>where the output takes a GeoJSON standard form (more info at <a class="reference external" href="https://geojson.org">https://geojson.org</a>) given by:</p>
 <ul class="simple">
 <li><dl class="simple">
 <dt><strong>&lt;features&gt;</strong><span class="classifier">A list of the features representing each of the separate routes constructed</span></dt><dd><ul>
@@ -255,10 +258,10 @@ waypoints_dataframe = pd.DataFrame(waypoints)</p>
 </li>
 <li><dl class="simple">
 <dt><strong>&lt;properties&gt;</strong><span class="classifier">A list of meta-information about the route</span></dt><dd><ul>
-<li><p><strong>from</strong>  : Starting waypoint of route</p></li>
-<li><p><strong>to</strong>  : Ending waypoint of route</p></li>
-<li><p><strong>traveltime</strong> : A list of float values representing the cumulative travel time along the route. This entry was originally defined as a output in the configuration file by the <cite>path_variables</cite> definition.</p></li>
-<li><p><strong>fuel</strong> : A list of float values representing the cumulative fuel along the route. This entry was originally defined as a output in the configuration file by the <cite>path_variables</cite> definition.</p></li>
+<li><p><strong>from</strong>  : Start waypoint of route</p></li>
+<li><p><strong>to</strong>  : End waypoint of route</p></li>
+<li><p><strong>traveltime</strong> : A list of float values representing the cumulative travel time along the route. This entry was originally defined as an output in the configuration file by the <cite>path_variables</cite> definition.</p></li>
+<li><p><strong>fuel</strong> : A list of float values representing the cumulative fuel along the route. This entry was originally defined as an output in the configuration file by the <cite>path_variables</cite> definition.</p></li>
 <li><p><strong>times</strong> : A list of strings representing UTC Datetimes of the route points, given that the route started from <cite>start_time</cite> given in the configuration file.</p></li>
 </ul>
 </dd>
@@ -278,7 +281,7 @@ waypoints_dataframe = pd.DataFrame(waypoints)</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="Configuration/Route_planning_config.html" class="btn btn-neutral float-left" title="5.2. Configuration - Route Planning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Vehicle_specifics.html" class="btn btn-neutral float-right" title="7. Methods - Vessel Performance" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Code_overview.html" class="btn btn-neutral float-right" title="7. Background" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

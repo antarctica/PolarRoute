@@ -11,6 +11,8 @@ route-planning process as command-line arguments or through a Python script.
 
 Example configuration files are provided in the `config` directory.
 
+The format of the config used to generate an environmental mesh can be found in the `"Configuration - Mesh Construction" <https://antarctica.github.io/MeshiPhi/html/sections/Configuration/Mesh_construction_config.html>`_ section of the `MeshiPhi documentation <https://antarctica.github.io/MeshiPhi/>`_ .
+
 Descriptions of the configuration options for the Vessel Performance Modelling can 
 be found in the :ref:`Configuration - Vessel Performance Modeller` section of the 
 documentation.
