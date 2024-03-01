@@ -1037,8 +1037,8 @@ class Smoothing:
 
             Args:
                 new_cell (dict) - New cell to add environmental parameters as dict
-                cell_a (dict) - Start cell to add environmental parameters as dict
-                cell_b (dict) - End cell to add environmental parameters as dict
+                cell_a (dict)   - Start cell to add environmental parameters as dict
+                cell_b (dict)   - End cell to add environmental parameters as dict
 
             Return:
                 True if the cell cannot be entered, False if the cell can
@@ -1047,8 +1047,10 @@ class Smoothing:
         end   = cell_b['SIC']
         max_new = new_cell['SIC']
 
-        percentage_diff = (max_new-start)
-        if percentage_diff < self.blocked_sic:
+        percentage_diff1  = (max_new-start)
+        percentage_diff2  = (max_new-end)
+
+        if (percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end) or (max_new<=self.blocked_sic):
             return False
         else:
             return True
