@@ -328,6 +328,11 @@ class RoutePlanner:
         self.smoothed_paths = None
         self.dijkstra_info = {}
 
+
+        self.mesh = self._zero_currents(self.mesh)
+
+
+
         # ====== Loading Mesh & Neighbour Graph ======
         # Formatting the Mesh and Neighbour Graph to the right form
         self.neighbour_graph = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
@@ -354,6 +359,8 @@ class RoutePlanner:
         # ======= Sea-Ice Concentration ======
         if 'SIC' not in self.neighbour_graph:
             self.neighbour_graph['SIC'] = 0.0
+
+
 
         # ====== Objective Function Information ======
         #  Checking if objective function is in the dijkstra            
@@ -431,6 +438,23 @@ class RoutePlanner:
         # else:
         #     self.output = output
 
+    def _zero_currents(self,mesh):
+        '''
+            Applying zero currents to mesh
+
+            Input 
+                mesh (JSON) - MeshiPhi Mesh input
+            Output:
+                mesh (JSON) - MeshiPhi Mesh Corrected
+        '''
+        if 'zero_currents' in self.config:
+            if self.config['zero_currents']:
+                logging.info('Zero Currents for Mesh !')
+                for idx,cell in enumerate(mesh['cellboxes']):
+                    cell[self.config['vector_names'][0]] = 0.0
+                    cell[self.config['vector_names'][1]] = 0.0
+                    mesh['cellboxes'][idx] = cell
+        return mesh
 
 
     def to_json(self):
