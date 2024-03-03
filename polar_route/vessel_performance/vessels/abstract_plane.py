@@ -4,7 +4,7 @@ from abc import abstractmethod
 import logging
 
 
-class AbstractGlider(AbstractVessel):
+class AbstractPlane(AbstractVessel):
     """
         Abstract class to model the performance of an underwater glider
     """
@@ -15,10 +15,10 @@ class AbstractGlider(AbstractVessel):
         """
         self.vessel_params = params
         logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
-        self.max_speed = self.vessel_params['max_speed']
-        self.speed_unit = self.vessel_params['unit']
-        self.max_elevation = -1 * self.vessel_params['min_depth']
-        self.max_ice = self.vessel_params['max_ice_conc']
+        self.max_speed      = self.vessel_params['max_speed']
+        self.speed_unit     = self.vessel_params['unit']
+        self.max_elevation  = -1 * self.vessel_params['min_depth']
+        self.max_ice        = self.vessel_params['max_ice_conc']
         self.excluded_zones = self.vessel_params.get('excluded_zones')
 
 
@@ -32,7 +32,7 @@ class AbstractGlider(AbstractVessel):
         logging.debug(
             f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['vessel_type']}")
         perf_cellbox = self.model_speed(cellbox)
-        perf_cellbox = self.model_battery(perf_cellbox)
+        perf_cellbox = self.model_fuel(perf_cellbox)
 
         performance_values = {k: v for k, v in perf_cellbox.agg_data.items() if k not in cellbox.agg_data}
 
@@ -52,7 +52,7 @@ class AbstractGlider(AbstractVessel):
         access_values = dict()
 
         # Exclude cells due to land or ice
-        access_values['land']    = self.land(cellbox)
+        
         access_values['shallow'] = self.shallow(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
 
@@ -62,6 +62,8 @@ class AbstractGlider(AbstractVessel):
                 access_values[zone] = cellbox.agg_data[zone]
 
         access_values['inaccessible'] = any(access_values.values())
+
+        access_values['land']    = self.land(cellbox)
 
         return access_values
 
@@ -91,12 +93,7 @@ class AbstractGlider(AbstractVessel):
             Returns:
                 shallow (bool): boolean that is True if the cell is too shallow for a glider
         """
-        if 'elevation' not in cellbox.agg_data:
-            logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is too shallow")
-            shallow = False
-        else:
-            shallow = 0.0 > cellbox.agg_data['elevation'] > self.max_elevation
-
+        shallow = False
         return shallow
 
     def extreme_ice(self, cellbox):
@@ -109,12 +106,7 @@ class AbstractGlider(AbstractVessel):
             Returns:
                 ext_ice (bool): boolean that is True if the cell is inaccessible due to ice
         """
-        if 'SIC' not in cellbox.agg_data:
-            logging.debug(f"No sea ice concentration data in cell {cellbox.id}")
-            ext_ice = False
-        else:
-            ext_ice = cellbox.agg_data['SIC'] > self.max_ice
-
+        ext_ice = False
         return ext_ice
 
     @abstractmethod
@@ -131,7 +123,7 @@ class AbstractGlider(AbstractVessel):
         raise NotImplementedError
 
     @abstractmethod
-    def model_battery(self, cellbox: AggregatedCellBox):
+    def model_fuel(self, cellbox: AggregatedCellBox):
         """
             Method to determine the battery consumption rate of the glider in a given cell
 

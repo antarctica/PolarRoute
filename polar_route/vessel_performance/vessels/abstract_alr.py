@@ -4,7 +4,7 @@ from abc import abstractmethod
 import logging
 
 
-class AbstractGlider(AbstractVessel):
+class AbstractALR(AbstractVessel):
     """
         Abstract class to model the performance of an underwater glider
     """
@@ -15,10 +15,10 @@ class AbstractGlider(AbstractVessel):
         """
         self.vessel_params = params
         logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
-        self.max_speed = self.vessel_params['max_speed']
-        self.speed_unit = self.vessel_params['unit']
-        self.max_elevation = -1 * self.vessel_params['min_depth']
-        self.max_ice = self.vessel_params['max_ice_conc']
+        self.max_speed      = self.vessel_params['max_speed']
+        self.speed_unit     = self.vessel_params['unit']
+        self.max_elevation  = -1 * self.vessel_params['min_depth']
+        self.max_ice        = self.vessel_params['max_ice_conc']
         self.excluded_zones = self.vessel_params.get('excluded_zones')
 
 
@@ -82,6 +82,7 @@ class AbstractGlider(AbstractVessel):
 
         return land
 
+
     def shallow(self, cellbox):
         """
             Method to determine if the water in a cell is too shallow for a glider based on configured minimum depth
@@ -95,9 +96,10 @@ class AbstractGlider(AbstractVessel):
             logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is too shallow")
             shallow = False
         else:
-            shallow = 0.0 > cellbox.agg_data['elevation'] > self.max_elevation
+            condition_shallow1 = 0.0 > cellbox.agg_data['elevation'] > self.max_elevation
 
-        return shallow
+        return any([condition_shallow1])
+
 
     def extreme_ice(self, cellbox):
         """
