@@ -835,6 +835,8 @@ class RoutePlanner:
             SmoothedPath['properties']['speed']      = list(SpeedLegs)
             SmoothedPaths += [SmoothedPath]
 
+            logging.info('{} iterations'.format(sf.jj))
+
         geojson['type'] = "FeatureCollection"
         geojson['features'] = SmoothedPaths
         self.smoothed_paths = geojson
