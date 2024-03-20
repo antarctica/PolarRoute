@@ -311,8 +311,8 @@ class RoutePlanner:
 
             adjusted_point = _adjust_waypoints(point, self.mesh['cellboxes'])
             
-            waypoints_df['Long'][idx] = adjusted_point.x
-            waypoints_df['Lat'][idx] = adjusted_point.y
+            waypoints_df.loc[idx, 'Long'] = adjusted_point.x
+            waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
         
         source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
         des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
@@ -406,7 +406,7 @@ class RoutePlanner:
             if len(indices) > 1:
                 raise Exception('Waypoint lies in multiple cell boxes. Please check mesh ! ')
             else:
-                wpts['index'].loc[idx] = int(indices[0])
+                wpts.loc[idx, 'index'] = int(indices[0])
 
         self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
         self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
