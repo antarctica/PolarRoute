@@ -10,6 +10,7 @@ from tqdm import tqdm
 from shapely import wkt, Point, LineString, STRtree, Polygon
 import geopandas as gpd
 import logging
+from io import StringIO  
 
 # Squelching SettingWithCopyWarning 
 pd.options.mode.chained_assignment = None
@@ -413,7 +414,7 @@ class RoutePlanner:
         self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
 
         # ==== Printing Configuration and Information
-        self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
+        self.mesh['waypoints'] =  pd.read_json(StringIO(self.mesh['waypoints']))
 
         # # ===== Running the route planner for the given information
         # if ("dijkstra_only" in self.config) and self.config['dijkstra_only']:
