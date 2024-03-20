@@ -11,9 +11,8 @@ from shapely import wkt, Point, LineString, STRtree, Polygon
 import geopandas as gpd
 import logging
 
-# from pandas.core.common import SettingWithCopyWarning
-# warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
-# pd.options.mode.chained_assignment = None
+# Squelching SettingWithCopyWarning 
+pd.options.mode.chained_assignment = None
 
 from polar_route.crossing import NewtonianDistance
 from polar_route.crossing_smoothing import Smoothing,PathValues,find_edge
