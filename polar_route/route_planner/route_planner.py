@@ -233,8 +233,7 @@ class RoutePlanner:
             cellbox_indx = -1
             # source_wp.print_routing_table()
             for node_id in source_wp.routing_table.keys():
-                is_accessible = not self.cellboxes_lookup[str(node_id)].agg_data ['inaccessible']
-                if not source_wp.is_visited(str(node_id)) and source_wp.get_obj(node_id, self.config['objective_function'])< min_obj and is_accessible:
+                if not source_wp.is_visited(str(node_id)) and source_wp.get_obj(node_id, self.config['objective_function']) < min_obj:
                     min_obj = source_wp.get_obj( node_id, self.config['objective_function'])
                     cellbox_indx = node_id
             return str(cellbox_indx)
