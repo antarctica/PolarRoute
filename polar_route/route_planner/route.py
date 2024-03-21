@@ -150,7 +150,7 @@ class Route:
         traveltime, distance = self._traveltime_in_cell(x, y, su, sv, ssp)
         print("WP_correction>>> tt >> ", traveltime)
         print("WP_correction>>> distance >> ", distance)
-        # traveltime = unit_time(traveltime, self.conf['time_unit'])
+        traveltime = unit_time(traveltime, self.conf['time_unit'])
         print("case >> ", case)
 
         # update segment and its metrics
