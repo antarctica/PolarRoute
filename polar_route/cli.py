@@ -2,6 +2,7 @@ import argparse
 import json
 import inspect
 import logging
+import pandas as pd
 import geopandas as gpd
 
 from meshiphi.mesh_generation.mesh_builder import MeshBuilder
@@ -139,64 +140,26 @@ def optimise_routes_cli():
                     config_arg=True, mesh_arg=True ,waypoints_arg= True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
-    rp = RoutePlanner(args.mesh.name, args.config.name, args.waypoints.name)
+    rp = RoutePlanner(args.mesh.name, args.config.name)
     
     output_file = args.output
-    output_file_strs = output_file.split('.')
-    
+
     logging.info("Calculating dijkstra routes")
-    rp.compute_routes()
-    info_dijkstra = rp.to_json()
-    
-    
-    if args.dijkstra:
-        # Form a unique name for the dijkstra output
-        dijkstra_output_file_strs = output_file_strs
-        dijkstra_output_file_strs[0] += '_dijkstra'
-        
-        dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
-        logging.info(f"\tOutputting dijkstra path to {dijkstra_output_file}")
-        with open(dijkstra_output_file, 'w+') as fp:
-            json.dump(info_dijkstra, fp, indent=4)
-        # Create GeoJSON filename
-        if args.path_geojson:
-            dijkstra_output_file_strs[-1] = 'geojson'
-            dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
-            logging.info(f"\tExtracting standalone dijkstra path GeoJSON to {dijkstra_output_file}")
-            with open(dijkstra_output_file, 'w+') as fp:
-                json.dump(info_dijkstra['paths'], fp, indent=4)
-    
-    logging.info("Calculating smoothed routes")
-    rp.compute_smoothed_routes()
-    info = rp.to_json()
-    # Resetting output file str in case dijkstra output run
-    output_file = args.output
-    output_file_strs = output_file.split('.')
-    logging.info(f"\tOutputting smoothed path to {output_file}")
+    routes = rp.compute_routes(args.waypoints.name)
+
+    waypoints_df = pd.read_csv(args.waypoints.name)
+
+    mesh_json = json.load(args.mesh)
+
+    logging.info(routes[0].to_json())
+
+    mesh_json['waypoints'] = waypoints_df.to_dict()
+    mesh_json['paths'] = routes[0].to_json()["paths"]
+
+    info = mesh_json
+    logging.info(f"\tOutputting route to {output_file}")
     with open(output_file, 'w+') as fp:
         json.dump(info, fp, indent=4)
-    if args.path_geojson:
-        # Create GeoJSON filename
-        output_file_strs[-1] = 'geojson'
-        output_file = '.'.join(output_file_strs)
-        logging.info(f"\tExtracting standalone path GeoJSON to {output_file}")
-        with open(output_file, 'w+') as fp:
-                json.dump(info['paths'], fp, indent=4)
-    # If want charttracker formatted csv
-    if args.chart_tracker:
-        # Extract each route as csv string
-        route_name = 'PolarRoute' if args.chart_tracker == True else args.chart_tracker
-        csv_strs = rp.to_charttracker_csv(route_name=route_name)
-        # Format output filename
-        output_file_strs[-1] = 'csv'
-        output_file_strs.insert(1,'r0')
-        # For each path generated, write to csv with unique name
-        for i, csv_str in enumerate(csv_strs):
-            output_file_strs[1] = f'r{i}'
-            output_file = '.'.join(output_file_strs)
-            logging.info(f"\tOutputting ChartTracker CSV to {output_file}")
-            with open(output_file, 'w+') as fp:
-                fp.write(csv_str)
         
 @timed_call
 def extract_routes_cli():
