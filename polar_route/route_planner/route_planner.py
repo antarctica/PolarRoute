@@ -194,10 +194,14 @@ class RoutePlanner:
                         # print (">>> s_wp_indx >>>", s_wp)
                         # print (">>> e_wp_indx >>>", e_wp_indx)
                         routing_info = s_wp.get_routing_info(e_wp_indx)
-                        route_segments.insert(0, routing_info.get_path())  # insert segments at the front of the list as we are moving from e_wp to s_wp
-                        cases.insert(0,
-                                     (self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup[routing_info.get_node_index()],
-                                                                                       self.cellboxes_lookup[e_wp_indx])))
+                        # Insert segments at the front of the list as we are moving from e_wp to s_wp
+                        route_segments.insert(0, routing_info.get_path())
+                        neighbour_case = (self.env_mesh.neighbour_graph.get_neighbour_case(
+                            self.cellboxes_lookup[routing_info.get_node_index()],
+                            self.cellboxes_lookup[e_wp_indx]))
+                        # Add case twice to cover travel to/from crossing point
+                        for x in range(2):
+                            cases.insert(0, neighbour_case)
                         e_wp_indx = routing_info.get_node_index()
                         print("route segments >> ", route_segments[0][0].to_str())
                    
