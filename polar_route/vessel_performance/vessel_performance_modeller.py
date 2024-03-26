@@ -117,7 +117,6 @@ class VesselPerformanceModeller:
         Returns:
             neighbours (list): List of IDs of neighbouring cells
         """
-        print(type(cell_id))
         neighbours = []
         direction_obj = Direction()
         for direction in direction_obj.__dict__.values():
