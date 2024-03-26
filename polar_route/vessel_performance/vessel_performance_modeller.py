@@ -108,13 +108,19 @@ class VesselPerformanceModeller:
                 neighbours = [self.env_mesh.get_cellbox(nn) for nn in neighbour_nodes]
                 acc_neighbours = [n for n in neighbours if not n.agg_data['inaccessible']]
 
-    def get_all_neighbours(self, cellbox_indx):
+    def get_all_neighbours(self, cell_id):
         """
-        Returns a list of all neighbouring cell ids
+        Method to get a list of all neighbouring cell ids for a particular cell within the environmental mesh
+
+        Args:
+            cell_id (str): Cell ID to find the neighbours around
+        Returns:
+            neighbours (list): List of IDs of neighbouring cells
         """
+        print(type(cell_id))
         neighbours = []
         direction_obj = Direction()
         for direction in direction_obj.__dict__.values():
-            neighbours.extend(self.env_mesh.neighbour_graph.get_neighbours(cellbox_indx, str(direction)))
+            neighbours.extend(self.env_mesh.neighbour_graph.get_neighbours(cell_id, str(direction)))
 
         return neighbours
