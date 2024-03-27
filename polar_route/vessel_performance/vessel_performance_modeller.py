@@ -97,8 +97,9 @@ class VesselPerformanceModeller:
             neighbours = [self.env_mesh.get_cellbox(nn) for nn in neighbour_nodes]
             # Only interested in splitting accessible neighbours
             acc_neighbours = [n for n in neighbours if not n.agg_data['inaccessible']]
-            # Assume aspect ratios match and compare widths
-            while any(neighbour.boundary.get_width() > in_cb.boundary.get_width() for neighbour in acc_neighbours):
+            # Split neighbouring cells until size matches the inaccessible cell
+            while any(neighbour.boundary.get_width() > in_cb.boundary.get_width() or
+                      neighbour.boundary.get_height() > in_cb.boundary.get_height() for neighbour in acc_neighbours):
                 # Split all larger neighbours
                 for neighbour in acc_neighbours:
                     if neighbour.boundary.get_width() > in_cb.boundary.get_width():
