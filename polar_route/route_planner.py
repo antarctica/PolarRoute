@@ -544,7 +544,7 @@ class RoutePlanner:
                         path['geometry']['type'] = "LineString"
                         path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1, :])+wpt_b_loc))
                         # Ensure all coordinates are in domain -180:180
-                        path_points[:,0] = np.array([longitude_domain(x) for x in path_points[:,0]])
+                        path_points[:,0] = longitude_domain(path_points[:,0])
                         path['geometry']['coordinates'] = path_points.tolist()
 
                         path['properties'] = {}
@@ -790,7 +790,7 @@ class RoutePlanner:
             pv             = PathValues()
             path_info      = pv.objective_function(sf.aps,sf.start_waypoint,sf.end_waypoint)
             # Ensure all coordinates are in domain -180:180
-            path_info['path'][:,0] = np.array([longitude_domain(x) for x in path_info['path'][:,0]])
+            path_info['path'][:,0] = longitude_domain(path_info['path'][:,0])
             variables      = path_info['variables']
             TravelTimeLegs = variables['traveltime']['path_values']
             DistanceLegs   = variables['distance']['path_values'] 
