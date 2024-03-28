@@ -10,14 +10,17 @@ from tqdm import tqdm
 from shapely import wkt, Point, LineString, STRtree, Polygon
 import geopandas as gpd
 import logging
+from io import StringIO  
 
-from pandas.core.common import SettingWithCopyWarning
-warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+# Squelching SettingWithCopyWarning 
+pd.options.mode.chained_assignment = None
 
 from polar_route.crossing import NewtonianDistance
 from polar_route.crossing_smoothing import Smoothing,PathValues,find_edge
 from polar_route.config_validation.config_validator import validate_route_config
 from polar_route.config_validation.config_validator import validate_waypoints
+from meshiphi import Boundary
+from meshiphi.utils import longitude_domain
 
 def _flattenCases(id,mesh):
     neighbour_case = []
@@ -134,11 +137,10 @@ def _mesh_boundary_polygon(mesh):
     lat_max = mesh['config']['mesh_info']['region']['lat_max']+tiny_value
     long_min = mesh['config']['mesh_info']['region']['long_min']-tiny_value
     long_max = mesh['config']['mesh_info']['region']['long_max']+tiny_value
-    p1 = Point([long_min, lat_min])
-    p2 = Point([long_min, lat_max])
-    p3 = Point([long_max, lat_max])
-    p4 = Point([long_max, lat_min])
-    return Polygon([p1,p2,p3,p4])
+
+    bounds = Boundary([lat_min, lat_max], [long_min, long_max])
+
+    return bounds.to_polygon()
 
 def _adjust_waypoints(point, cellboxes, max_distance=5):
     '''
@@ -311,8 +313,8 @@ class RoutePlanner:
 
             adjusted_point = _adjust_waypoints(point, self.mesh['cellboxes'])
             
-            waypoints_df['Long'][idx] = adjusted_point.x
-            waypoints_df['Lat'][idx] = adjusted_point.y
+            waypoints_df.loc[idx, 'Long'] = adjusted_point.x
+            waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
         
         source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
         des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
@@ -406,14 +408,14 @@ class RoutePlanner:
             if len(indices) > 1:
                 raise Exception('Waypoint lies in multiple cell boxes. Please check mesh ! ')
             else:
-                wpts['index'].loc[idx] = int(indices[0])
+                wpts.loc[idx, 'index'] = int(indices[0])
 
         self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
         self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
         self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
 
         # ==== Printing Configuration and Information
-        self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
+        self.mesh['waypoints'] =  pd.read_json(StringIO(self.mesh['waypoints']))
 
         # # ===== Running the route planner for the given information
         # if ("dijkstra_only" in self.config) and self.config['dijkstra_only']:
@@ -541,6 +543,8 @@ class RoutePlanner:
                         path['geometry'] = {}
                         path['geometry']['type'] = "LineString"
                         path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1, :])+wpt_b_loc))
+                        # Ensure all coordinates are in domain -180:180
+                        path_points[:,0] = longitude_domain(path_points[:,0])
                         path['geometry']['coordinates'] = path_points.tolist()
 
                         path['properties'] = {}
@@ -671,7 +675,7 @@ class RoutePlanner:
         wpts = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(self.end_waypoints)]
         
         # Initialising zero traveltime at the source location
-        source_index = int(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt_name]['index'])
+        source_index = int(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt_name]['index'].iloc[0])
 
         for vrbl in self.config['path_variables']:
             self.dijkstra_info[wpt_name].loc[source_index, 'shortest_{}'.format(vrbl)] = 0.0
@@ -785,6 +789,8 @@ class RoutePlanner:
             # Given a smoothed route path now determine the along path parameters.
             pv             = PathValues()
             path_info      = pv.objective_function(sf.aps,sf.start_waypoint,sf.end_waypoint)
+            # Ensure all coordinates are in domain -180:180
+            path_info['path'][:,0] = longitude_domain(path_info['path'][:,0])
             variables      = path_info['variables']
             TravelTimeLegs = variables['traveltime']['path_values']
             DistanceLegs   = variables['distance']['path_values'] 
