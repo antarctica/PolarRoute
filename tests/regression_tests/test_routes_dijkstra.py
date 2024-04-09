@@ -40,7 +40,15 @@ TEST_ROUTES = [
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_60lat_n.json',
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_80lat_s.json',
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_80lat_n.json',
-    './example_routes/dijkstra/crossing_point/diagonal/diagonal_0lat.json'
+    './example_routes/dijkstra/crossing_point/diagonal/diagonal_0lat.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_20lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_20lat_n.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_40lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_40lat_n.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_60lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_60lat_n.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_80lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_80lat_n.json'
 ]
 
 def setup_module():
