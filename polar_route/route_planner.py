@@ -329,11 +329,14 @@ class RoutePlanner:
         self.dijkstra_info = {}
 
 
-        self.mesh = self._zero_currents(self.mesh)
+
 
 
 
         # ====== Loading Mesh & Neighbour Graph ======
+        # Zeroing currents if vectors names are not defined or zero_currents is defined
+        self.mesh = self._zero_currents(self.mesh)
+
         # Formatting the Mesh and Neighbour Graph to the right form
         self.neighbour_graph = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
@@ -359,7 +362,6 @@ class RoutePlanner:
         # ======= Sea-Ice Concentration ======
         if 'SIC' not in self.neighbour_graph:
             self.neighbour_graph['SIC'] = 0.0
-
 
 
         # ====== Objective Function Information ======
@@ -447,13 +449,25 @@ class RoutePlanner:
             Output:
                 mesh (JSON) - MeshiPhi Mesh Corrected
         '''
-        if 'zero_currents' in self.config:
+
+        # Zeroing currents if both vectors are defined and zeroed
+        if ('zero_currents' in self.config) and ("vector_names" in self.config):
             if self.config['zero_currents']:
                 logging.info('Zero Currents for Mesh !')
                 for idx,cell in enumerate(mesh['cellboxes']):
                     cell[self.config['vector_names'][0]] = 0.0
                     cell[self.config['vector_names'][1]] = 0.0
                     mesh['cellboxes'][idx] = cell
+
+        # If no vectors are defined then add zero currents to mesh
+        if 'vector_names' not in self.config:
+            self.config['vector_names'] = ['Vector_x','Vector_y']
+            logging.info('No vector_names defined in config. Zeroing currents in mesh !')
+            for idx,cell in enumerate(mesh['cellboxes']):
+                cell[self.config['vector_names'][0]] = 0.0
+                cell[self.config['vector_names'][1]] = 0.0
+                mesh['cellboxes'][idx] = cell    
+            
         return mesh
 
 

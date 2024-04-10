@@ -28,3 +28,4 @@ testing.ipynb
 docs/build/*
 dev_venv/*
 *.ipynb
+*.log
