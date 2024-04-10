@@ -48,7 +48,8 @@ TEST_ROUTES = [
     './example_routes/dijkstra/crossing_point/vertical/vertical_60lat_s.json',
     './example_routes/dijkstra/crossing_point/vertical/vertical_60lat_n.json',
     './example_routes/dijkstra/crossing_point/vertical/vertical_80lat_s.json',
-    './example_routes/dijkstra/crossing_point/vertical/vertical_80lat_n.json'
+    './example_routes/dijkstra/crossing_point/vertical/vertical_80lat_n.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_split.json'
 ]
 
 def setup_module():
