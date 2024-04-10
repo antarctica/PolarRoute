@@ -330,7 +330,15 @@ class RoutePlanner:
         self.smoothed_paths = None
         self.dijkstra_info = {}
 
+
+
+
+
+
         # ====== Loading Mesh & Neighbour Graph ======
+        # Zeroing currents if vectors names are not defined or zero_currents is defined
+        self.mesh = self._zero_currents(self.mesh)
+
         # Formatting the Mesh and Neighbour Graph to the right form
         self.neighbour_graph = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
@@ -356,6 +364,7 @@ class RoutePlanner:
         # ======= Sea-Ice Concentration ======
         if 'SIC' not in self.neighbour_graph:
             self.neighbour_graph['SIC'] = 0.0
+
 
         # ====== Objective Function Information ======
         #  Checking if objective function is in the dijkstra            
@@ -433,6 +442,35 @@ class RoutePlanner:
         # else:
         #     self.output = output
 
+    def _zero_currents(self,mesh):
+        '''
+            Applying zero currents to mesh
+
+            Input 
+                mesh (JSON) - MeshiPhi Mesh input
+            Output:
+                mesh (JSON) - MeshiPhi Mesh Corrected
+        '''
+
+        # Zeroing currents if both vectors are defined and zeroed
+        if ('zero_currents' in self.config) and ("vector_names" in self.config):
+            if self.config['zero_currents']:
+                logging.info('Zero Currents for Mesh !')
+                for idx,cell in enumerate(mesh['cellboxes']):
+                    cell[self.config['vector_names'][0]] = 0.0
+                    cell[self.config['vector_names'][1]] = 0.0
+                    mesh['cellboxes'][idx] = cell
+
+        # If no vectors are defined then add zero currents to mesh
+        if 'vector_names' not in self.config:
+            self.config['vector_names'] = ['Vector_x','Vector_y']
+            logging.info('No vector_names defined in config. Zeroing currents in mesh !')
+            for idx,cell in enumerate(mesh['cellboxes']):
+                cell[self.config['vector_names'][0]] = 0.0
+                cell[self.config['vector_names'][1]] = 0.0
+                mesh['cellboxes'][idx] = cell    
+            
+        return mesh
 
 
     def to_json(self):
@@ -816,6 +854,8 @@ class RoutePlanner:
             SmoothedPath['properties']['distance']   = list(DistanceLegs)
             SmoothedPath['properties']['speed']      = list(SpeedLegs)
             SmoothedPaths += [SmoothedPath]
+
+            logging.info('{} iterations'.format(sf.jj))
 
         geojson['type'] = "FeatureCollection"
         geojson['features'] = SmoothedPaths
