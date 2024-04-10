@@ -69,7 +69,6 @@ class VesselPerformanceModeller:
             Returns:
                 j_mesh (dict): a dictionary representation of the modified mesh.
         """
-
         j_mesh = self.env_mesh.to_json()
         j_mesh['config']['vessel_info'] = self.config
         return j_mesh
