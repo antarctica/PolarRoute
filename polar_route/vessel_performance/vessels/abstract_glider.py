@@ -52,7 +52,7 @@ class AbstractGlider(AbstractVessel):
         access_values = dict()
 
         # Exclude cells due to land or ice
-        access_values['land']    = self.land(cellbox)
+        access_values['land'] = self.land(cellbox)
         access_values['shallow'] = self.shallow(cellbox)
         access_values['ext_ice'] = self.extreme_ice(cellbox)
 

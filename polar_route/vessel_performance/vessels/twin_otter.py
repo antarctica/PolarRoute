@@ -26,7 +26,7 @@ class TwinOtter(AbstractPlane):
 
     def model_speed(self, cellbox):
         """
-            Method to determine the maximum speed that the glider can traverse the given cell
+            Method to determine the maximum speed that the twin-otter can traverse the given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh

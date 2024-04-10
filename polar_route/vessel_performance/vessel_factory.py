@@ -24,8 +24,8 @@ class VesselFactory:
                                              "min_depth"]),
                                "Slocum": (SlocumGlider, ["max_speed", "unit", "max_ice_conc", "min_depth"]),
                                "BoatyMcBoatFace": (BoatyMcBoatFace, ["max_speed", "unit", "max_ice_conc", "min_depth"]),
-                               "TwinOtter": (TwinOtter, ["max_speed", "unit"]),
-                               "Windracer": (Windracer, ["max_speed", "unit","max_ice_conc", "min_depth"]),
+                               "TwinOtter": (TwinOtter, ["max_speed", "unit", "max_elevation"]),
+                               "Windracer": (Windracer, ["max_speed", "unit","max_ice_conc", "max_elevation"]),
                                "example_ship": (ExampleShip, ["max_speed", "unit", "beam", "hull_type", "force_limit",
                                                               "max_ice_conc", "min_depth"])
                                }

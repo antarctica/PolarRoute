@@ -6,7 +6,7 @@ import logging
 
 class AbstractPlane(AbstractVessel):
     """
-        Abstract class to model the performance of an underwater glider
+        Abstract class to model the performance of a plane
     """
     def __init__(self, params):
         """
@@ -17,14 +17,14 @@ class AbstractPlane(AbstractVessel):
         logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
         self.max_speed      = self.vessel_params['max_speed']
         self.speed_unit     = self.vessel_params['unit']
-        self.max_elevation  = -1 * self.vessel_params['min_depth']
+        self.max_elevation  = self.vessel_params['min_elevation']
         self.max_ice        = self.vessel_params['max_ice_conc']
         self.excluded_zones = self.vessel_params.get('excluded_zones')
 
 
     def model_performance(self, cellbox):
         """
-            Method to determine the performance characteristics for the underwater glider
+            Method to determine the performance characteristics for a plane
 
             Args:
                     cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -40,7 +40,7 @@ class AbstractPlane(AbstractVessel):
 
     def model_accessibility(self, cellbox):
         """
-            Method to determine if a given cell is accessible to the underwater glider
+            Method to determine if a given cell is accessible to the plane
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -53,8 +53,7 @@ class AbstractPlane(AbstractVessel):
 
         # Exclude cells due to land or ice
         
-        access_values['shallow'] = self.shallow(cellbox)
-        access_values['ext_ice'] = self.extreme_ice(cellbox)
+        access_values['elevation_max'] = self.elevation_max(cellbox)
 
         # Exclude any other cell types specified in config
         if self.excluded_zones is not None:
@@ -62,8 +61,7 @@ class AbstractPlane(AbstractVessel):
                 access_values[zone] = cellbox.agg_data[zone]
 
         access_values['inaccessible'] = any(access_values.values())
-
-        access_values['land']    = self.land(cellbox)
+        access_values['land']         = self.land(cellbox)
 
         return access_values
 
@@ -84,30 +82,17 @@ class AbstractPlane(AbstractVessel):
 
         return land
 
-    def shallow(self, cellbox):
+    def elevation_max(self, cellbox):
         """
-            Method to determine if the water in a cell is too shallow for a glider based on configured minimum depth
+            Method to determine if the altitude in a cell is too high for a plane based on configured maximum elevation
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
-                shallow (bool): boolean that is True if the cell is too shallow for a glider
+                elevation_max (bool): boolean that is True if the cell is too elevation_max for a glider
         """
-        shallow = False
-        return shallow
-
-    def extreme_ice(self, cellbox):
-        """
-            Method to determine if a cell is inaccessible based on configured max ice concentration
-
-            Args:
-                cellbox (AggregatedCellBox): input cell from environmental mesh
-
-            Returns:
-                ext_ice (bool): boolean that is True if the cell is inaccessible due to ice
-        """
-        ext_ice = False
-        return ext_ice
+        elevation_max = False
+        return elevation_max
 
     @abstractmethod
     def model_speed(self, cellbox: AggregatedCellBox):
