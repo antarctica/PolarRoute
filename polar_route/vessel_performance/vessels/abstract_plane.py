@@ -17,7 +17,7 @@ class AbstractPlane(AbstractVessel):
         logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
         self.max_speed      = self.vessel_params['max_speed']
         self.speed_unit     = self.vessel_params['unit']
-        self.max_elevation  = self.vessel_params['min_elevation']
+        self.max_elevation  = self.vessel_params['max_elevation']
         self.max_ice        = self.vessel_params['max_ice_conc']
         self.excluded_zones = self.vessel_params.get('excluded_zones')
 
