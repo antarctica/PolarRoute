@@ -1,9 +1,9 @@
 __version__ = "0.4.0"
 __description__ = "PolarRoute: Long-distance maritime polar route planning taking into account complex changing environmental conditions"
 __license__ = "MIT"
-__author__ = "Jonathan Smith, Samuel Hall, George Coombs, Harrison Abbot, Ayat Fekry, James Byrne, Michael Thorne, Maria Fox"
-__email__ = "polarroute@bas.ac.uk"
-__copyright__ = "2022-2023, BAS AI Lab"
+__author__ = "Jonathan Smith, Samuel Hall, George Coombs, Ayat Fekry, Harrison Abbot - Software Developers\n Samuel Hall - Technical Lead\n Maria Fox - Project Manager\n Jonathan Smith - Codebase Champion"
+__email__ = "amop@bas.ac.uk"
+__copyright__ = "2022-, BAS AI Lab"
 
 # Wrapped in try-except so that setup.py can import polar_route without crashing due to dependency errors
 try:
