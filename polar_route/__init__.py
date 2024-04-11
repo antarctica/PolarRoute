@@ -1,4 +1,4 @@
-__version__ = "0.4.0"
+__version__ = "0.3.12"
 __description__ = "PolarRoute: Long-distance maritime polar route planning taking into account complex changing environmental conditions"
 __license__ = "MIT"
 __author__ = "Autonomous Marine Operations Planning (AMOP) Team, AI Lab, British Antarctic Survey"

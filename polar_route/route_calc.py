@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import pandas as pd
 import geopandas as gpd
-from shapely import wkt, distance
+from shapely import wkt
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
 from polar_route.utils import gpx_route_import
 
@@ -76,12 +76,7 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     su = cellbox[vector_x]
     sv = cellbox[vector_y]
     ssp = cellbox[speed][idx] * (1000 / (60 * 60))
-    try:
-        traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
-    except:
-        traveltime=0
-        distance=0
-
+    traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
     return traveltime, distance
 
 
@@ -274,26 +269,28 @@ def order_track(df, track_points):
 
     # Loop through crossing points to order them into a track along the route
     while pathing:
-        start_point_segment = track_points['startPoints'].iloc[track_id]
-        end_point_segment = track_points['endPoints'].iloc[track_id]
-        path_point.append(start_point_segment)
-        cell_ids.append(track_points['cellID'].iloc[track_id])
+        try:
+            start_point_segment = track_points['startPoints'].iloc[track_id]
+            end_point_segment = track_points['endPoints'].iloc[track_id]
+            path_point.append(start_point_segment)
+            cell_ids.append(track_points['cellID'].iloc[track_id])
 
-        if len(track_points['midPoints'].iloc[track_id]) != 0:
-            for midpnt in track_points['midPoints'].iloc[track_id]:
-                path_point.append(midpnt)
-                cell_ids.append(track_points['cellID'].iloc[track_id])
+            if len(track_points['midPoints'].iloc[track_id]) != 0:
+                for midpnt in track_points['midPoints'].iloc[track_id]:
+                    path_point.append(midpnt)
+                    cell_ids.append(track_points['cellID'].iloc[track_id])
 
-        if  distance(end_point_segment,end_point) < 0.05:
+            if end_point_segment == end_point:
+                pathing = False
+            track_id = np.where(track_points['startPoints'] == end_point_segment)[0][0]
+        except IndexError:
             pathing = False
-        else:
-            track_id     = np.argmin([distance(entry,end_point_segment) for entry in track_points['startPoints']])
-            track_misfit = min([distance(entry,end_point_segment) for entry in track_points['startPoints']])
-            if track_misfit >= 0.05:
-                raise Exception('Path Segmentment not adding - ID={},Misfit={},distance from end={}'.format(track_id,track_misfit,distance(end_point_segment,end_point)))
+            path_point.append(end_point_segment)
+            cell_ids.append('NaN')
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
     return user_track
+
 
 def route_calc(route_file, mesh_file):
     """

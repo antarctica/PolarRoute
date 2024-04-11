@@ -152,7 +152,7 @@ def optimise_routes_cli():
     if args.dijkstra:
         # Form a unique name for the dijkstra output
         dijkstra_output_file_strs = output_file_strs
-        dijkstra_output_file_strs[-2] += '_dijkstra'
+        dijkstra_output_file_strs[0] += '_dijkstra'
         
         dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
         logging.info(f"\tOutputting dijkstra path to {dijkstra_output_file}")
