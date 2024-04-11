@@ -3,8 +3,9 @@ import logging
 import numpy as np
 import pandas as pd
 import geopandas as gpd
-from shapely import wkt
+from shapely import wkt, distance
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
+from polar_route.utils import gpx_route_import
 
 
 # Define ordering of cases in array data
@@ -75,7 +76,12 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     su = cellbox[vector_x]
     sv = cellbox[vector_y]
     ssp = cellbox[speed][idx] * (1000 / (60 * 60))
-    traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
+    try:
+        traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
+    except:
+        traveltime=0
+        distance=0
+
     return traveltime, distance
 
 
@@ -133,6 +139,7 @@ def load_route(route_file):
             to_wp (str) Name of end waypoint
 
     """
+    logging.info(f"Loading route from: {route_file}")
     # Loading route from csv file
     if route_file[-3:] == "csv":
         df = pd.read_csv(route_file)
@@ -150,10 +157,22 @@ def load_route(route_file):
         df = pd.DataFrame()
         df['Long'] = longs
         df['Lat'] = lats
+    elif route_file[-3:] == "gpx":
+        route_json = gpx_route_import(route_file)
+        route_coords = route_json['features'][0]['geometry']['coordinates']
+        to_wp = route_json['features'][0]['properties']['to']
+        from_wp = route_json['features'][0]['properties']['from']
+        longs = [c[0] for c in route_coords]
+        lats = [c[1] for c in route_coords]
+        df = pd.DataFrame()
+        df['Long'] = longs
+        df['Lat'] = lats
     else:
-        logging.warning("Invalid route input! Please supply either a csv or geojson file with the route waypoints.")
+        logging.warning("Invalid route input! Please supply either a csv, gpx or geojson file with the route waypoints.")
         return None
 
+    logging.info(f"Route start waypoint: {from_wp}")
+    logging.info(f"Route end waypoint: {to_wp}")
     logging.debug(f"Route has {len(df)} waypoints")
     df['id'] = 1
     df['order'] = np.arange(len(df))
@@ -170,6 +189,7 @@ def load_mesh(mesh_file):
         Returns:
             mesh (GeoDataFrame): Mesh in GeoDataFrame format
     """
+    logging.info(f"Loading mesh from: {mesh_file}")
     # Loading mesh information
     with open(mesh_file, 'r') as fp:
         info = json.load(fp)
@@ -254,28 +274,26 @@ def order_track(df, track_points):
 
     # Loop through crossing points to order them into a track along the route
     while pathing:
-        try:
-            start_point_segment = track_points['startPoints'].iloc[track_id]
-            end_point_segment = track_points['endPoints'].iloc[track_id]
-            path_point.append(start_point_segment)
-            cell_ids.append(track_points['cellID'].iloc[track_id])
+        start_point_segment = track_points['startPoints'].iloc[track_id]
+        end_point_segment = track_points['endPoints'].iloc[track_id]
+        path_point.append(start_point_segment)
+        cell_ids.append(track_points['cellID'].iloc[track_id])
 
-            if len(track_points['midPoints'].iloc[track_id]) != 0:
-                for midpnt in track_points['midPoints'].iloc[track_id]:
-                    path_point.append(midpnt)
-                    cell_ids.append(track_points['cellID'].iloc[track_id])
+        if len(track_points['midPoints'].iloc[track_id]) != 0:
+            for midpnt in track_points['midPoints'].iloc[track_id]:
+                path_point.append(midpnt)
+                cell_ids.append(track_points['cellID'].iloc[track_id])
 
-            if end_point_segment == end_point:
-                pathing = False
-            track_id = np.where(track_points['startPoints'] == end_point_segment)[0][0]
-        except IndexError:
+        if  distance(end_point_segment,end_point) < 0.05:
             pathing = False
-            path_point.append(end_point_segment)
-            cell_ids.append('NaN')
+        else:
+            track_id     = np.argmin([distance(entry,end_point_segment) for entry in track_points['startPoints']])
+            track_misfit = min([distance(entry,end_point_segment) for entry in track_points['startPoints']])
+            if track_misfit >= 0.05:
+                raise Exception('Path Segmentment not adding - ID={},Misfit={},distance from end={}'.format(track_id,track_misfit,distance(end_point_segment,end_point)))
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
     return user_track
-
 
 def route_calc(route_file, mesh_file):
     """
@@ -326,8 +344,13 @@ def route_calc(route_file, mesh_file):
         # Check for inaccessible cells on user defined route
         if cell_box['inaccessible']:
             logging.warning(f"This route crosses an inaccessible cell! Cell located at Lat: {cell_box['cy']} "
-                         f"Long: {cell_box['cx']}. Please reroute around it.")
-            return None
+                         f"Long: {cell_box['cx']}")
+            logging.info("Trying with speed and fuel from previous cells, reroute for more accurate results")
+            i = 0
+            # Go back along path to find previous accessible cell
+            while cell_box['inaccessible']:
+                i += 1
+                cell_box = mesh.iloc[user_track['CellID'].iloc[idx-i]]
 
         traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
                                                    vector_y='vC', case=case)

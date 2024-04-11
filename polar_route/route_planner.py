@@ -7,18 +7,20 @@ import copy, json, ast, warnings
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from shapely import wkt
-from shapely.geometry.polygon import Point
+from shapely import wkt, Point, LineString, STRtree, Polygon
 import geopandas as gpd
 import logging
+from io import StringIO  
 
-from pandas.core.common import SettingWithCopyWarning
-warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+# Squelching SettingWithCopyWarning 
+pd.options.mode.chained_assignment = None
 
 from polar_route.crossing import NewtonianDistance
 from polar_route.crossing_smoothing import Smoothing,PathValues,find_edge
 from polar_route.config_validation.config_validator import validate_route_config
 from polar_route.config_validation.config_validator import validate_waypoints
+from meshiphi import Boundary
+from meshiphi.utils import longitude_domain
 
 def _flattenCases(id,mesh):
     neighbour_case = []
@@ -123,10 +125,65 @@ def _pandas_dataframe_str(input):
             raise Exception("Unable to load '{}', please check path name".format(input))
     return output
 
+def _mesh_boundary_polygon(mesh):
+    '''
+    Creates a polygon from the mesh boundary
+    '''
 
+    # Defining a tiny value
+    tiny_value = 1e-10
 
+    lat_min = mesh['config']['mesh_info']['region']['lat_min']-tiny_value
+    lat_max = mesh['config']['mesh_info']['region']['lat_max']+tiny_value
+    long_min = mesh['config']['mesh_info']['region']['long_min']-tiny_value
+    long_max = mesh['config']['mesh_info']['region']['long_max']+tiny_value
 
+    bounds = Boundary([lat_min, lat_max], [long_min, long_max])
 
+    return bounds.to_polygon()
+
+def _adjust_waypoints(point, cellboxes, max_distance=5):
+    '''
+    Moves waypoint to closest accessible cellbox if it isn't already in one
+    Allows up to 5 degrees flexibility by default
+    '''
+    # Extract cellboxes from mesh
+    cbs = gpd.GeoDataFrame.from_records(cellboxes)
+    # Prune inaccessible waypoints from search
+    cbs = cbs[cbs['inaccessible'] == False]
+    # Find nearest cellbox to point that is accessible
+    tree = STRtree(wkt.loads(cbs['geometry']))
+    nearest_cb = cbs.iloc[tree.nearest(point)]
+    cb_polygon = wkt.loads(nearest_cb['geometry'])
+    
+    if point.within(cb_polygon):
+        logging.debug(f'({point.y},{point.x}) in accessible cellbox')
+        return point
+    else:
+        logging.debug(f'({point.y},{point.x}) not in accessible cellbox')
+        # Create a line between CB centre and point
+        cb_centre = Point([nearest_cb['cx'],nearest_cb['cy']])
+        connecting_line = LineString([point, cb_centre])
+        # Extract segment of line inside the accessible cellbox    
+        intersecting_line = connecting_line.intersection(cb_polygon)
+        
+        # Put limit on how far it's allowed to adjust waypoint
+        distance_away = connecting_line.length - intersecting_line.length
+        if distance_away > max_distance:
+            logging.info(f'Waypoint too far from accessible cellbox!')
+            return point
+        
+        # Find where it meets the cellbox boundary
+        boundary_point = connecting_line.intersection(cb_polygon.exterior)
+        # Draw a small circle around it
+        buffered_point = boundary_point.buffer(intersecting_line.length*1e-3)
+        # Find point along line that intersects circle
+        adjusted_point = buffered_point.exterior.intersection(intersecting_line)
+        # Interior point is now a point inside the cellbox 
+        # that is not on the boundary
+        logging.info(f'({point.y},{point.x}) not accessible cellbox')
+        logging.info(f'Adjusted to ({adjusted_point.y},{adjusted_point.x})')
+        return adjusted_point
 class RoutePlanner:
     """
         ---
@@ -243,6 +300,22 @@ class RoutePlanner:
         self.mesh             = _json_str(mesh)
         self.config           = _json_str(config)
         waypoints_df          = _pandas_dataframe_str(waypoints)
+
+        mesh_boundary = _mesh_boundary_polygon(self.mesh)
+        # Move waypoint to closest accessible cellbox if it isn't in one already
+        for idx, row in waypoints_df.iterrows():
+            point = Point([row['Long'], row['Lat']])
+            # Only allow waypoints within an existing mesh
+            assert(point.within(mesh_boundary)), \
+                f"Waypoint {row['Name']} outside of mesh boundary! {point}"
+            
+        
+
+            adjusted_point = _adjust_waypoints(point, self.mesh['cellboxes'])
+            
+            waypoints_df.loc[idx, 'Long'] = adjusted_point.x
+            waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
+        
         source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
         des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
 
@@ -257,7 +330,15 @@ class RoutePlanner:
         self.smoothed_paths = None
         self.dijkstra_info = {}
 
+
+
+
+
+
         # ====== Loading Mesh & Neighbour Graph ======
+        # Zeroing currents if vectors names are not defined or zero_currents is defined
+        self.mesh = self._zero_currents(self.mesh)
+
         # Formatting the Mesh and Neighbour Graph to the right form
         self.neighbour_graph = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
         self.neighbour_graph['geometry'] = self.neighbour_graph['geometry'].apply(wkt.loads)
@@ -278,12 +359,12 @@ class RoutePlanner:
         # ====== Speed Function Checking ======
         # Checking if Speed defined in file
         if 'speed' not in self.neighbour_graph:
-            print(self.neighbour_graph.columns)
             raise Exception('Vessel Speed not in the mesh information ! Please run vessel performance')
         
         # ======= Sea-Ice Concentration ======
         if 'SIC' not in self.neighbour_graph:
             self.neighbour_graph['SIC'] = 0.0
+
 
         # ====== Objective Function Information ======
         #  Checking if objective function is in the dijkstra            
@@ -319,7 +400,6 @@ class RoutePlanner:
 
         # ====== Waypoints ======
         self.mesh['waypoints'] = waypoints_df
-
         # Initialising Waypoints positions and cell index
         wpts = self.mesh['waypoints']
         wpts['index'] = np.nan
@@ -337,14 +417,14 @@ class RoutePlanner:
             if len(indices) > 1:
                 raise Exception('Waypoint lies in multiple cell boxes. Please check mesh ! ')
             else:
-                wpts['index'].loc[idx] = int(indices[0])
+                wpts.loc[idx, 'index'] = int(indices[0])
 
         self.mesh['waypoints'] = wpts[~wpts['index'].isnull()]
         self.mesh['waypoints']['index'] = self.mesh['waypoints']['index'].astype(int)
         self.mesh['waypoints'] =  self.mesh['waypoints'].to_json()
 
         # ==== Printing Configuration and Information
-        self.mesh['waypoints'] =  pd.read_json(self.mesh['waypoints'])
+        self.mesh['waypoints'] =  pd.read_json(StringIO(self.mesh['waypoints']))
 
         # # ===== Running the route planner for the given information
         # if ("dijkstra_only" in self.config) and self.config['dijkstra_only']:
@@ -362,6 +442,35 @@ class RoutePlanner:
         # else:
         #     self.output = output
 
+    def _zero_currents(self,mesh):
+        '''
+            Applying zero currents to mesh
+
+            Input 
+                mesh (JSON) - MeshiPhi Mesh input
+            Output:
+                mesh (JSON) - MeshiPhi Mesh Corrected
+        '''
+
+        # Zeroing currents if both vectors are defined and zeroed
+        if ('zero_currents' in self.config) and ("vector_names" in self.config):
+            if self.config['zero_currents']:
+                logging.info('Zero Currents for Mesh !')
+                for idx,cell in enumerate(mesh['cellboxes']):
+                    cell[self.config['vector_names'][0]] = 0.0
+                    cell[self.config['vector_names'][1]] = 0.0
+                    mesh['cellboxes'][idx] = cell
+
+        # If no vectors are defined then add zero currents to mesh
+        if 'vector_names' not in self.config:
+            self.config['vector_names'] = ['Vector_x','Vector_y']
+            logging.info('No vector_names defined in config. Zeroing currents in mesh !')
+            for idx,cell in enumerate(mesh['cellboxes']):
+                cell[self.config['vector_names'][0]] = 0.0
+                cell[self.config['vector_names'][1]] = 0.0
+                mesh['cellboxes'][idx] = cell    
+            
+        return mesh
 
 
     def to_json(self):
@@ -373,6 +482,70 @@ class RoutePlanner:
         output_json = json.loads(json.dumps(mesh))
         del mesh
         return output_json
+    
+    def to_charttracker_csv(self, route_name='PolarRoutePath'):
+        '''
+            Outputting route to chart tracker csv file
+        '''
+        def dd_to_dmm(dd, axis):    
+            '''
+            Converts decimal degrees to dmm formatted string
+            '''
+            if dd >= 0:
+                degs, mins = divmod(dd,1)
+                cardinal_dir = 'E' if axis == 'long' else 'N'
+            else:
+                degs, mins = divmod(-dd, 1)
+                cardinal_dir = 'W' if axis == 'long' else 'S'
+            return f"{int(degs)}-{60*mins:.3f}'{cardinal_dir}"
+        
+        def get_bearing(lat1, long1, lat2, long2):
+            '''
+            Calculates bearing of travel from lat/long pairs
+            '''
+            dlon = long2-long1
+            x = np.cos(np.radians(lat2)) * np.sin(np.radians(dlon))
+            y = np.cos(np.radians(lat1)) * np.sin(np.radians(lat2)) - \
+                np.sin(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.cos(np.radians(dlon))
+            bearing = np.arctan2(x,y)
+            return np.degrees(bearing)
+        
+        # For each path, generate a csv string and add to list
+        path_csvs = []
+        for path_num, path in enumerate(self.smoothed_paths['features']):
+            header = f"Route Name:,{route_name}_{path_num}\n" + \
+                      "Way Point,Position,,Radius,Reach,ROT,XTD,SPD,RL/GC,Leg,Disance(NM),,ETA\n" + \
+                      "ID,LAT,LON,,,,,,,,To WPT,TOTAL\n"
+            # Turn coords into DMM format
+            coords = np.array(path['geometry']['coordinates'])
+            long = [dd_to_dmm(long, 'long') for long in coords[:,0]]
+            lat = [dd_to_dmm(lat, 'lat') for lat in coords[:,1]]
+            # Distance column
+            cumulative_distance = np.array(path['properties']['distance']) * 0.000539957 # In nautical miles  
+            distance = np.diff(cumulative_distance)
+            # Waypoint names
+            wps = [f'WP{i}' for i in range(len(cumulative_distance))]
+            leg = get_bearing(coords[:,1][:-1], coords[:,0][:-1],
+                            coords[:,1][1:], coords[:,0][1:])%360
+            eta = path['properties']['traveltime']
+            # Construct table with information
+            path_df = pd.DataFrame({'ID':wps,
+                                      'LAT':lat,
+                                      'LON':long,
+                                      'Radius':'',
+                                      'Reach':'',
+                                      'ROT':'',
+                                      'XTD':'',
+                                      'SPD':'',
+                                      'RL/GC':'RL',
+                                      'Leg':np.concatenate((leg, [np.nan])),
+                                      'To WPT':np.concatenate(([np.nan],distance)),
+                                      'TOTAL': cumulative_distance})
+            # Combine to one string and add to list of strs
+            csv_str = header + path_df.to_csv()
+            path_csvs += [csv_str]
+        # Return list of csv strings with each smoothed path
+        return path_csvs
 
     def _dijkstra_paths(self, start_waypoints, end_waypoints):
         """
@@ -408,6 +581,8 @@ class RoutePlanner:
                         path['geometry'] = {}
                         path['geometry']['type'] = "LineString"
                         path_points = (np.array(wpt_a_loc+list(np.array(graph['pathPoints'].loc[wpt_b_index])[:-1, :])+wpt_b_loc))
+                        # Ensure all coordinates are in domain -180:180
+                        path_points[:,0] = longitude_domain(path_points[:,0])
                         path['geometry']['coordinates'] = path_points.tolist()
 
                         path['properties'] = {}
@@ -538,7 +713,7 @@ class RoutePlanner:
         wpts = self.mesh['waypoints'][self.mesh['waypoints']['Name'].isin(self.end_waypoints)]
         
         # Initialising zero traveltime at the source location
-        source_index = int(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt_name]['index'])
+        source_index = int(self.mesh['waypoints'][self.mesh['waypoints']['Name'] == wpt_name]['index'].iloc[0])
 
         for vrbl in self.config['path_variables']:
             self.dijkstra_info[wpt_name].loc[source_index, 'shortest_{}'.format(vrbl)] = 0.0
@@ -652,6 +827,8 @@ class RoutePlanner:
             # Given a smoothed route path now determine the along path parameters.
             pv             = PathValues()
             path_info      = pv.objective_function(sf.aps,sf.start_waypoint,sf.end_waypoint)
+            # Ensure all coordinates are in domain -180:180
+            path_info['path'][:,0] = longitude_domain(path_info['path'][:,0])
             variables      = path_info['variables']
             TravelTimeLegs = variables['traveltime']['path_values']
             DistanceLegs   = variables['distance']['path_values'] 
@@ -677,6 +854,8 @@ class RoutePlanner:
             SmoothedPath['properties']['distance']   = list(DistanceLegs)
             SmoothedPath['properties']['speed']      = list(SpeedLegs)
             SmoothedPaths += [SmoothedPath]
+
+            logging.info('{} iterations'.format(sf.jj))
 
         geojson['type'] = "FeatureCollection"
         geojson['features'] = SmoothedPaths
