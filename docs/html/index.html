@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Welcome to the PolarRoute Manual Pages &mdash; polar_route 0.3.10 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=e7531570"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="1. Background" href="sections/Code_overview.html" /> 
+    <link rel="next" title="1. Installation" href="sections/Installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,16 +44,16 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="sections/Code_overview.html">1. Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html">2. Command Line Interface Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html#python-examples">3. Python Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Command_line_interface.html">4. Command Line Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Vehicle_specifics.html">7. Methods - Vessel Performance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Route_calculation.html">8. Methods - Route Calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Route_optimisation.html">9. Methods - Route Planner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html">10. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Code_overview.html">7. Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Vehicle_specifics.html">8. Methods - Vessel Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Route_calculation.html">9. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Route_optimisation.html">10. Methods - Route Planner</a></li>
 </ul>
 
         </div>
@@ -80,11 +83,12 @@
   <section id="welcome-to-the-polarroute-manual-pages">
 <h1>Welcome to the PolarRoute Manual Pages<a class="headerlink" href="#welcome-to-the-polarroute-manual-pages" title="Permalink to this heading"></a></h1>
 <p>PolarRoute is a tool for the optimisation of routes for maritime vehicles travelling in polar waters.
-It leverages <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>; a package designed to
+It depends on <a class="reference external" href="https://github.com/antarctica/MeshiPhi">MeshiPhi</a>; a package designed to
 discretise the world from heterogeneous data sources (follow link for more details and docs).
-This software package has been developed by the <strong>British Antarctic Survey</strong> (BAS), primarily for the
-optimisation of polar routes for the BAS research vessel RRS Sir David Attenborough, though it is applicable
+This software package has been developed by the <strong>British Antarctic Survey</strong> (BAS). It was originally designed primarily for the
+optimisation of polar routes for the BAS research vessel RRS Sir David Attenborough, however it is applicable
 to any vessel (e.g. AUVs). The software is written in Python and is open source.</p>
+<p>Plotting functionality for the outputs of PolarRoute is provided by the <a class="reference external" href="https://github.com/antarctica/GeoPlot">GeoPlot</a> package, also developed at BAS.</p>
 <p>For more information on the project, please visit the <a class="reference external" href="https://www.bas.ac.uk/project/autonomous-marine-operations-planning/">PolarRoute website</a>
 and follow our <a class="reference external" href="https://github.com/antarctica/PolarRoute">GitHub repository</a>.</p>
 <div class="admonition note">
@@ -95,28 +99,33 @@ Please contact the developers for more information.</p>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sections/Code_overview.html">1. Background</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/Code_overview.html#code-overview">1.1. Code Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Code_overview.html#code-structure">1.2. Code Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Installation.html">1. Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections/Installation.html#installing-polarroute">1.1. Installing PolarRoute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Installation.html#installing-geoplot">1.2. Installing GeoPlot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Installation.html#installing-gdal-optional">1.3. Installing GDAL (Optional)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Installation.html">2. Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/Installation.html#installing-polarroute">2.1. Installing PolarRoute</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Installation.html#installing-gdal">2.2. Installing GDAL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html">2. Command Line Interface Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#empty-mesh-example">2.1. Empty Mesh Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#synthetic-data-example">2.2. Synthetic Data Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#real-data-example">2.3. Real Data Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sections/ipython_notebooks.html">3. Python &amp; iPython Notebooks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/ipython_notebooks.html#simulating-a-vessel-in-a-digital-environment">3.1. Simulating a Vessel in a Digital Environment</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/ipython_notebooks.html#route-optimisation">3.2. Route Optimisation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html#python-examples">3. Python Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#creating-the-digital-environment">3.1. Creating the digital environment.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#simulating-a-vessel-in-a-digital-environment">3.2. Simulating a Vessel in a Digital Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#route-optimisation">3.3. Route Optimisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#visualising-outputs">3.4. Visualising Outputs</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Command_line_interface.html">4. Command Line Interface</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#add-vehicle">4.1. add_vehicle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#resimulate-vehicle">4.2. resimulate_vehicle</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#optimise-routes">4.3. optimise_routes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#calculate-route">4.4. calculate_route</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#extract-routes">4.5. extract_routes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#plotting">4.6. Plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#create-mesh">4.1. create_mesh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#add-vehicle">4.2. add_vehicle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#resimulate-vehicle">4.3. resimulate_vehicle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#optimise-routes">4.4. optimise_routes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#calculate-route">4.5. calculate_route</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#extract-routes">4.6. extract_routes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Command_line_interface.html#plotting">4.7. Plotting</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sections/Configuration/Configuration_overview.html">5. Configuration Overview</a><ul>
@@ -129,31 +138,30 @@ Please contact the developers for more information.</p>
 <li class="toctree-l2"><a class="reference internal" href="sections/Outputs.html#the-route-json-file">6.2. The Route.json file</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Vehicle_specifics.html">7. Methods - Vessel Performance</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#vessel-overview">7.1. Vessel Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessel_performance_modeller">7.2. Vessel Performance Modeller</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessel_factory">7.3. Vessel Factory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.abstract_vessel">7.4. Abstract Vessel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.abstract_ship">7.5. Abstract Ship</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.SDA">7.6. SDA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.abstract_glider">7.7. Abstract Glider</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.slocum">7.8. Slocum Glider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Code_overview.html">7. Background</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections/Code_overview.html#code-overview">7.1. Code Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Code_overview.html#code-structure">7.2. Code Structure</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Route_calculation.html">8. Methods - Route Calculation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/Route_calculation.html#route-calculation-overview">8.1. Route Calculation Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Route_calculation.html#module-polar_route.route_calc">8.2. Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Vehicle_specifics.html">8. Methods - Vessel Performance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#vessel-overview">8.1. Vessel Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessel_performance_modeller">8.2. Vessel Performance Modeller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessel_factory">8.3. Vessel Factory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.abstract_vessel">8.4. Abstract Vessel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.abstract_ship">8.5. Abstract Ship</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.SDA">8.6. SDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.abstract_glider">8.7. Abstract Glider</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Vehicle_specifics.html#module-polar_route.vessel_performance.vessels.slocum">8.8. Slocum Glider</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Route_optimisation.html">9. Methods - Route Planner</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/Route_optimisation.html#route-optimisation-overview">9.1. Route Optimisation Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Route_optimisation.html#route-optimisation-modules">9.2. Route Optimisation Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Route_calculation.html">9. Methods - Route Calculation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections/Route_calculation.html#route-calculation-overview">9.1. Route Calculation Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Route_calculation.html#module-polar_route.route_calc">9.2. Route Calculation</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="sections/Examples.html">10. Examples of running code</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#example-1-antarctica-processing-all-stages-of-route-planner">10.1. Example 1 - Antarctica Processing all stages of route planner</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#example-2-dijkstra-vs-smooth-paths">10.2. Example 2 - Dijkstra vs smooth paths</a></li>
-<li class="toctree-l2"><a class="reference internal" href="sections/Examples.html#example-2-variations-of-vehicle-properties-on-route-paths">10.3. Example 2 - Variations of Vehicle Properties on Route Paths</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections/Route_optimisation.html">10. Methods - Route Planner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections/Route_optimisation.html#route-optimisation-overview">10.1. Route Optimisation Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sections/Route_optimisation.html#route-optimisation-modules">10.2. Route Optimisation Modules</a></li>
 </ul>
 </li>
 </ul>
@@ -164,7 +172,7 @@ Please contact the developers for more information.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="sections/Code_overview.html" class="btn btn-neutral float-right" title="1. Background" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sections/Installation.html" class="btn btn-neutral float-right" title="1. Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

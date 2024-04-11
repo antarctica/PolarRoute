@@ -2,7 +2,7 @@
     "region": {
         "lat_min": -80,
         "lat_max": -40,
-        "long_min": -130,
+        "long_min": -120,
         "long_max": 0,
         "start_time": "TODAY - 4",
         "end_time": "TODAY - 1",
@@ -42,23 +42,23 @@
                 "splitting_conditions": [
                     {
                         "SIC": {
-                            "threshold": 1,
-                            "upper_bound": 1,
-                            "lower_bound": 0
+                            "threshold": 5,
+                            "upper_bound": 0.92,
+                            "lower_bound": 0.08
                         }
                     },
                     {
                         "SIC": {
                             "threshold": 35,
-                            "upper_bound": 1,
-                            "lower_bound": 0
+                            "upper_bound": 0.92,
+                            "lower_bound": 0.08
                         }
                     },
                     {
                         "SIC": {
                             "threshold": 80,
-                            "upper_bound": 1,
-                            "lower_bound": 0
+                            "upper_bound": 0.92,
+                            "lower_bound": 0.08
                         }
                     }
                 ],

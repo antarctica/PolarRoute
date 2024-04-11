@@ -158,6 +158,7 @@ def optimise_routes_cli():
 
     info = mesh_json
     logging.info(f"\tOutputting route to {output_file}")
+
     with open(output_file, 'w+') as fp:
         json.dump(info, fp, indent=4)
         

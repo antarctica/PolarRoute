@@ -12,7 +12,7 @@ The vessel performance mesh is an extension to an environmental mesh created by 
 `MeshiPhi <https://github.com/antarctica/MeshiPhi>`_ library.
 Once a discrete mesh environment is created, it is then passed to the vessel performance modeller
 which applies transformations which are specific to a given vehicle. These vehicle specific values 
-are then encoded into the mesh json object and passed down-stream to the route planner.
+are then encoded into the mesh json object and passed downstream to the route planner.
 
 ::
 
@@ -33,13 +33,13 @@ are then encoded into the mesh json object and passed down-stream to the route p
     To make use of the full range of vessel performance transformations, a Mesh should be constructed with
     the following attributes:
 
-    * elevation (available via data_loaders: *gebco*, *bsose_depth*)
-    * SIC (available via data_loaders: *amsr*, *bsose_sic*, *baltic_sic*, *icenet*, *modis*)
-    * thickness (available via data_loaders: *thickness*)
-    * density (available via data_loaders: *density*)
-    * u10, v10 (available via data_loaders: *era5_wind*)
+    * elevation (available via dataloaders: *gebco*, *bsose_depth*)
+    * SIC (available via dataloaders: *amsr*, *bsose_sic*, *baltic_sic*, *icenet*, *modis*, *visual_iced*)
+    * thickness (available via dataloaders: *thickness*)
+    * density (available via dataloaders: *density*)
+    * u10, v10 (available via dataloaders: *era5_wind*)
 
-    see section **Dataloader Overview** for more information on data_loaders
+    see section **Dataloader Overview** in the `MeshiPhi docs <https://antarctica.github.io/MeshiPhi/>`_ for more information on dataloaders
 
     The vessel performance modeller will still run without these attributes but will assign default values from the
     configuration file where any data is missing.
@@ -71,9 +71,9 @@ as outputs to the processing stage. Descriptions of the structure of the two out
 waypoints
 =========
 
-An entry in the json including all the information of the waypoints defined by the user from the `waypoints_path` 
-file. It may be the case that ot all waypoints would have been used in the route construction, but all waypoints 
-are returned to this entry. The structure of the entry follows:
+An entry in the json including all the information about the waypoints defined by the user in the `waypoints.csv`
+file. It may be the case that not all waypoints would have been used in the route construction, but all waypoints
+that are defined can be found in this entry. The structure of the entry is as follows:
 
 :: 
 
@@ -98,7 +98,7 @@ are returned to this entry. The structure of the entry follows:
 
 where each of the values represent the following: 
 
-* **<Name>** : The waypoint name defined by user
+* **<Name>** : The waypoint name defined by the user
     * **0**  : The name of waypoint for index row '0'
     * **1**  : The name of waypoint for index row '1' etc
 * **<Lat>** : The latitude of the waypoints in WGS84
@@ -119,7 +119,7 @@ waypoints_dataframe = pd.DataFrame(waypoints)
 =====
 paths
 =====
-An entry in the json, in a geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:
+An entry in the json, in geojson format, including all the routes constructed between the user defined waypoints. The structure of this entry is as follows:
 
 :: 
 
@@ -155,17 +155,17 @@ An entry in the json, in a geojson format, including all the routes constructed 
     }\n
 
 
-where the output takes a GeoJSON standard form (more infor given at https://geojson.org) given by: 
+where the output takes a GeoJSON standard form (more info at https://geojson.org) given by:
 
 
 * **<features>** : A list of the features representing each of the separate routes constructed
     * **geometry**  : The positioning of the route locations
         * **coordinates**  : A list of the Lat,Long position of all the route points
     * **<properties>** : A list of meta-information about the route
-        * **from**  : Starting waypoint of route
-        * **to**  : Ending waypoint of route
-        * **traveltime** : A list of float values representing the cumulative travel time along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
-        * **fuel** : A list of float values representing the cumulative fuel along the route. This entry was originally defined as a output in the configuration file by the `path_variables` definition.
+        * **from**  : Start waypoint of route
+        * **to**  : End waypoint of route
+        * **traveltime** : A list of float values representing the cumulative travel time along the route. This entry was originally defined as an output in the configuration file by the `path_variables` definition.
+        * **fuel** : A list of float values representing the cumulative fuel along the route. This entry was originally defined as an output in the configuration file by the `path_variables` definition.
         * **times** : A list of strings representing UTC Datetimes of the route points, given that the route started from `start_time` given in the configuration file.
 
 

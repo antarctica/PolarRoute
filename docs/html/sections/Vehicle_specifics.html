@@ -1,25 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7. Methods - Vessel Performance &mdash; polar_route 0.3.10 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <title>8. Methods - Vessel Performance &mdash; polar_route 0.3.10 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=e7531570"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="8. Methods - Route Calculation" href="Route_calculation.html" />
-    <link rel="prev" title="6. Outputs - Data Types" href="Outputs.html" /> 
+    <link rel="next" title="9. Methods - Route Calculation" href="Route_calculation.html" />
+    <link rel="prev" title="7. Background" href="Code_overview.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,15 +45,16 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">1. Background</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Installation.html">2. Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ipython_notebooks.html">3. Python &amp; iPython Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">1. Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">2. Command Line Interface Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html#python-examples">3. Python Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Command_line_interface.html">4. Command Line Interface</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Configuration/Configuration_overview.html">5. Configuration Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Outputs.html">6. Outputs - Data Types</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">7. Methods - Vessel Performance</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#vessel-overview">7.1. Vessel Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_performance_modeller">7.2. Vessel Performance Modeller</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="Code_overview.html">7. Background</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">8. Methods - Vessel Performance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#vessel-overview">8.1. Vessel Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_performance_modeller">8.2. Vessel Performance Modeller</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.__init__"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller.model_accessibility"><code class="docutils literal notranslate"><span class="pre">VesselPerformanceModeller.model_accessibility()</span></code></a></li>
@@ -60,14 +64,14 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_factory">7.3. Vessel Factory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessel_factory">8.3. Vessel Factory</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessel_factory.VesselFactory"><code class="docutils literal notranslate"><span class="pre">VesselFactory</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessel_factory.VesselFactory.get_vessel"><code class="docutils literal notranslate"><span class="pre">VesselFactory.get_vessel()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.abstract_vessel">7.4. Abstract Vessel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.abstract_vessel">8.4. Abstract Vessel</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel"><code class="docutils literal notranslate"><span class="pre">AbstractVessel</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractVessel.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel.model_accessibility"><code class="docutils literal notranslate"><span class="pre">AbstractVessel.model_accessibility()</span></code></a></li>
@@ -76,7 +80,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_ship">7.5. Abstract Ship</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_ship">8.5. Abstract Ship</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip"><code class="docutils literal notranslate"><span class="pre">AbstractShip</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractShip.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip.extreme_ice"><code class="docutils literal notranslate"><span class="pre">AbstractShip.extreme_ice()</span></code></a></li>
@@ -87,7 +91,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.SDA">7.6. SDA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.SDA">8.6. SDA</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA"><code class="docutils literal notranslate"><span class="pre">SDA</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.__init__"><code class="docutils literal notranslate"><span class="pre">SDA.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.SDA.SDA.invert_resistance"><code class="docutils literal notranslate"><span class="pre">SDA.invert_resistance()</span></code></a></li>
@@ -98,7 +102,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_glider">7.7. Abstract Glider</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.abstract_glider">8.7. Abstract Glider</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider"><code class="docutils literal notranslate"><span class="pre">AbstractGlider</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.__init__"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider.extreme_ice"><code class="docutils literal notranslate"><span class="pre">AbstractGlider.extreme_ice()</span></code></a></li>
@@ -110,7 +114,7 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.slocum">7.8. Slocum Glider</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-polar_route.vessel_performance.vessels.slocum">8.8. Slocum Glider</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider"><code class="docutils literal notranslate"><span class="pre">SlocumGlider</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider.__init__"><code class="docutils literal notranslate"><span class="pre">SlocumGlider.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider.model_battery"><code class="docutils literal notranslate"><span class="pre">SlocumGlider.model_battery()</span></code></a></li>
@@ -121,9 +125,8 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">8. Methods - Route Calculation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">9. Methods - Route Planner</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Examples.html">10. Examples of running code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_calculation.html">9. Methods - Route Calculation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Route_optimisation.html">10. Methods - Route Planner</a></li>
 </ul>
 
         </div>
@@ -140,7 +143,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active"><span class="section-number">7. </span>Methods - Vessel Performance</li>
+      <li class="breadcrumb-item active"><span class="section-number">8. </span>Methods - Vessel Performance</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/sections/Vehicle_specifics.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -151,9 +154,9 @@
            <div itemprop="articleBody">
              
   <section id="methods-vessel-performance">
-<span id="vessel-performance"></span><h1><span class="section-number">7. </span>Methods - Vessel Performance<a class="headerlink" href="#methods-vessel-performance" title="Permalink to this heading"></a></h1>
+<span id="vessel-performance"></span><h1><span class="section-number">8. </span>Methods - Vessel Performance<a class="headerlink" href="#methods-vessel-performance" title="Permalink to this heading"></a></h1>
 <section id="vessel-overview">
-<h2><span class="section-number">7.1. </span>Vessel Overview<a class="headerlink" href="#vessel-overview" title="Permalink to this heading"></a></h2>
+<h2><span class="section-number">8.1. </span>Vessel Overview<a class="headerlink" href="#vessel-overview" title="Permalink to this heading"></a></h2>
 <p>All of the functionality that relates to the specific vehicle traversing our meshed environment model is contained within the vessel_performance directory.
 This directory contains a <cite>VesselPerformanceModeller</cite> class that initialises one of the vessel classes in <cite>vessels</cite> and uses this to determine which cells
 in a given mesh are inaccessible for that particular vessel and what its performance will be in each of the accessible cells.</p>
@@ -172,7 +175,7 @@ The latter two quantities are derived from the former.</span><a class="headerlin
 </figure>
 </section>
 <section id="module-polar_route.vessel_performance.vessel_performance_modeller">
-<span id="vessel-performance-modeller"></span><h2><span class="section-number">7.2. </span>Vessel Performance Modeller<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_performance_modeller" title="Permalink to this heading"></a></h2>
+<span id="vessel-performance-modeller"></span><h2><span class="section-number">8.2. </span>Vessel Performance Modeller<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_performance_modeller" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessel_performance_modeller.</span></span><span class="sig-name descname"><span class="pre">VesselPerformanceModeller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_mesh_json</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vessel_config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessel_performance_modeller.VesselPerformanceModeller" title="Permalink to this definition"></a></dt>
@@ -224,7 +227,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessel_factory">
-<span id="vessel-factory"></span><h2><span class="section-number">7.3. </span>Vessel Factory<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_factory" title="Permalink to this heading"></a></h2>
+<span id="vessel-factory"></span><h2><span class="section-number">8.3. </span>Vessel Factory<a class="headerlink" href="#module-polar_route.vessel_performance.vessel_factory" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessel_factory.VesselFactory">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessel_factory.</span></span><span class="sig-name descname"><span class="pre">VesselFactory</span></span><a class="headerlink" href="#polar_route.vessel_performance.vessel_factory.VesselFactory" title="Permalink to this definition"></a></dt>
@@ -250,7 +253,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.abstract_vessel">
-<span id="abstract-vessel"></span><h2><span class="section-number">7.4. </span>Abstract Vessel<a class="headerlink" href="#module-polar_route.vessel_performance.abstract_vessel" title="Permalink to this heading"></a></h2>
+<span id="abstract-vessel"></span><h2><span class="section-number">8.4. </span>Abstract Vessel<a class="headerlink" href="#module-polar_route.vessel_performance.abstract_vessel" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.abstract_vessel.AbstractVessel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.abstract_vessel.</span></span><span class="sig-name descname"><span class="pre">AbstractVessel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.abstract_vessel.AbstractVessel" title="Permalink to this definition"></a></dt>
@@ -304,7 +307,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessels.abstract_ship">
-<span id="abstract-ship"></span><h2><span class="section-number">7.5. </span>Abstract Ship<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.abstract_ship" title="Permalink to this heading"></a></h2>
+<span id="abstract-ship"></span><h2><span class="section-number">8.5. </span>Abstract Ship<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.abstract_ship" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessels.abstract_ship.AbstractShip">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessels.abstract_ship.</span></span><span class="sig-name descname"><span class="pre">AbstractShip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessels.abstract_ship.AbstractShip" title="Permalink to this definition"></a></dt>
@@ -391,7 +394,7 @@ the mesh accordingly.</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessels.SDA">
-<span id="sda"></span><h2><span class="section-number">7.6. </span>SDA<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.SDA" title="Permalink to this heading"></a></h2>
+<span id="sda"></span><h2><span class="section-number">8.6. </span>SDA<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.SDA" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessels.SDA.SDA">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessels.SDA.</span></span><span class="sig-name descname"><span class="pre">SDA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessels.SDA.SDA" title="Permalink to this definition"></a></dt>
@@ -485,7 +488,7 @@ research and supply ship, the RRS Sir David Attenborough (SDA)</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessels.abstract_glider">
-<span id="abstract-glider"></span><h2><span class="section-number">7.7. </span>Abstract Glider<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.abstract_glider" title="Permalink to this heading"></a></h2>
+<span id="abstract-glider"></span><h2><span class="section-number">8.7. </span>Abstract Glider<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.abstract_glider" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessels.abstract_glider.</span></span><span class="sig-name descname"><span class="pre">AbstractGlider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessels.abstract_glider.AbstractGlider" title="Permalink to this definition"></a></dt>
@@ -583,7 +586,7 @@ research and supply ship, the RRS Sir David Attenborough (SDA)</p>
 
 </section>
 <section id="module-polar_route.vessel_performance.vessels.slocum">
-<span id="slocum-glider"></span><h2><span class="section-number">7.8. </span>Slocum Glider<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.slocum" title="Permalink to this heading"></a></h2>
+<span id="slocum-glider"></span><h2><span class="section-number">8.8. </span>Slocum Glider<a class="headerlink" href="#module-polar_route.vessel_performance.vessels.slocum" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="polar_route.vessel_performance.vessels.slocum.SlocumGlider">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">polar_route.vessel_performance.vessels.slocum.</span></span><span class="sig-name descname"><span class="pre">SlocumGlider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.vessel_performance.vessels.slocum.SlocumGlider" title="Permalink to this definition"></a></dt>
@@ -641,8 +644,8 @@ research and supply ship, the RRS Sir David Attenborough (SDA)</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="Outputs.html" class="btn btn-neutral float-left" title="6. Outputs - Data Types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="Route_calculation.html" class="btn btn-neutral float-right" title="8. Methods - Route Calculation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Code_overview.html" class="btn btn-neutral float-left" title="7. Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Route_calculation.html" class="btn btn-neutral float-right" title="9. Methods - Route Calculation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
