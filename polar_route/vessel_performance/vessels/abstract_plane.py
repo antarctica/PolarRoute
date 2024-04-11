@@ -97,7 +97,7 @@ class AbstractPlane(AbstractVessel):
     @abstractmethod
     def model_speed(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the maximum speed that the glider can traverse the given cell
+            Method to determine the maximum speed that the plane can traverse the given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -110,7 +110,7 @@ class AbstractPlane(AbstractVessel):
     @abstractmethod
     def model_fuel(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the battery consumption rate of the glider in a given cell
+            Method to determine the fuel consumption rate of the plane in a given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh

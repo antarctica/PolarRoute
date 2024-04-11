@@ -5,13 +5,13 @@ import logging
 
 class Windracer(AbstractUAV):
     """
-        Vessel class with methods specifically designed to model the performance of the Twin Otter
+        Vessel class with methods specifically designed to model the performance of the Windracers Ultra UAV
 
         https://windracers.com/drones/
 
         Cruising Speed - 135 km/hr
         Usage    - 350w
-       Duration - 12+ flight duraction
+        Duration - 12+ flight duration
     """
     def __init__(self, params):
         """
@@ -23,7 +23,7 @@ class Windracer(AbstractUAV):
 
     def model_speed(self, cellbox):
         """
-            Method to determine the maximum speed that the windracer can traverse the given cell
+            Method to determine the maximum speed that the UAV can traverse the given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -37,7 +37,7 @@ class Windracer(AbstractUAV):
 
     def model_battery(self, cellbox):
         """
-            Method to determine the rate of fuel usage in a given cell in gallons/day
+            Method to determine the rate of power usage in a given cell in Watts
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh

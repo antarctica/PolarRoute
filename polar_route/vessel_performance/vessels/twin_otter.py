@@ -40,7 +40,7 @@ class TwinOtter(AbstractPlane):
 
     def model_fuel(self, cellbox):
         """
-            Method to determine the rate of fuel usage in a given cell in gallons/day
+            Method to determine the rate of fuel usage in a given cell in tonnes/day
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh

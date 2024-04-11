@@ -6,7 +6,7 @@ import logging
 
 class AbstractALR(AbstractVessel):
     """
-        Abstract class to model the performance of an underwater glider
+        Abstract class to model the performance of the Autosub Long-Range (ALR)
     """
     def __init__(self, params):
         """
@@ -24,7 +24,7 @@ class AbstractALR(AbstractVessel):
 
     def model_performance(self, cellbox):
         """
-            Method to determine the performance characteristics for the underwater glider
+            Method to determine the performance characteristics for the ALR
 
             Args:
                     cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -40,7 +40,7 @@ class AbstractALR(AbstractVessel):
 
     def model_accessibility(self, cellbox):
         """
-            Method to determine if a given cell is accessible to the underwater glider
+            Method to determine if a given cell is accessible to the ALR
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -85,12 +85,12 @@ class AbstractALR(AbstractVessel):
 
     def shallow(self, cellbox):
         """
-            Method to determine if the water in a cell is too shallow for a glider based on configured minimum depth
+            Method to determine if the water in a cell is too shallow for an ALR based on configured minimum depth
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
             Returns:
-                shallow (bool): boolean that is True if the cell is too shallow for a glider
+                shallow (bool): boolean that is True if the cell is too shallow for an ALR
         """
         if 'elevation' not in cellbox.agg_data:
             logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is too shallow")
@@ -122,7 +122,7 @@ class AbstractALR(AbstractVessel):
     @abstractmethod
     def model_speed(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the maximum speed that the glider can traverse the given cell
+            Method to determine the maximum speed that the ALR can traverse the given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -135,7 +135,7 @@ class AbstractALR(AbstractVessel):
     @abstractmethod
     def model_battery(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the battery consumption rate of the glider in a given cell
+            Method to determine the battery consumption rate of the ALR in a given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh

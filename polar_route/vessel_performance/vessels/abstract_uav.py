@@ -6,7 +6,7 @@ import logging
 
 class AbstractUAV(AbstractVessel):
     """
-        Abstract class to model the performance of an underwater glider
+        Abstract class to model the performance of a UAV
     """
     def __init__(self, params):
         """
@@ -24,7 +24,7 @@ class AbstractUAV(AbstractVessel):
 
     def model_performance(self, cellbox):
         """
-            Method to determine the performance characteristics for the underwater glider
+            Method to determine the performance characteristics for the UAV
 
             Args:
                     cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -40,7 +40,7 @@ class AbstractUAV(AbstractVessel):
 
     def model_accessibility(self, cellbox):
         """
-            Method to determine if a given cell is accessible to the underwater glider
+            Method to determine if a given cell is accessible to the UAV
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -86,7 +86,7 @@ class AbstractUAV(AbstractVessel):
 
     def shallow(self, cellbox):
         """
-            Method to determine if the water in a cell is too shallow for a glider based on configured minimum depth
+            Method to determine if the water in a cell is too shallow for a UAV based on configured minimum depth
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -112,7 +112,7 @@ class AbstractUAV(AbstractVessel):
     @abstractmethod
     def model_speed(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the maximum speed that the glider can traverse the given cell
+            Method to determine the maximum speed that the UAV can traverse the given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
@@ -125,7 +125,7 @@ class AbstractUAV(AbstractVessel):
     @abstractmethod
     def model_battery(self, cellbox: AggregatedCellBox):
         """
-            Method to determine the battery consumption rate of the glider in a given cell
+            Method to determine the battery consumption rate of the UAV in a given cell
 
             Args:
                 cellbox (AggregatedCellBox): input cell from environmental mesh
