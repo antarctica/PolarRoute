@@ -50,10 +50,10 @@ Sometimes the cache needs to be cleared for internal links to update. If facing 
 rm -r docs/html/.doctrees/
 ```
 ## Developers
-Autonomous Marine Operations Planning (AMOP) Team, AI Lab, British Antarctic Survey
+Jonathan Smith, Samuel Hall, George Coombs, James Byrne,  Michael Thorne, Maria Fox, Harrison Abbot, Ayat Fekry
 
 ## Collaboration
-We are currently assessing the best practice for collaboration on the codebase, until then please contact [amop@bas.ac.uk](amop@bas.ac.uk) for further info.
+We are currently assessing the best practice for collaboration on the codebase, until then please contact [polarroute@bas.ac.uk](polarroute@bas.ac.uk) for further info.
 
 ## License
 This software is licensed under a MIT license, but request users cite our publication.  
