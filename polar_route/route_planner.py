@@ -301,7 +301,7 @@ class RoutePlanner:
         # Load in the current cell structure & Optimisation Info̦
         self.mesh             = _json_str(mesh)
         self.config           = _json_str(config)
-        self.waypoints_df          = _pandas_dataframe_str(waypoints)
+        self.waypoints_df = _pandas_dataframe_str(waypoints)
 
         #Splitting around waypoints
         self._splitting_around_waypoints()
