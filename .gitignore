@@ -14,7 +14,10 @@ TestingNotebook.ipynb
 /venv/
 /data/
 /resources/
+/debugging/
 *.output.*json
+*output.vessel*
+*output.route*
 setup.cfg
 pip.sh
 datastore

@@ -21,6 +21,8 @@ from polar_route.config_validation.config_validator import validate_route_config
 from polar_route.config_validation.config_validator import validate_waypoints
 from meshiphi import Boundary
 from meshiphi.utils import longitude_domain
+from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
+
 
 def _flattenCases(id,mesh):
     neighbour_case = []
@@ -299,11 +301,14 @@ class RoutePlanner:
         # Load in the current cell structure & Optimisation Info̦
         self.mesh             = _json_str(mesh)
         self.config           = _json_str(config)
-        waypoints_df          = _pandas_dataframe_str(waypoints)
+        self.waypoints_df          = _pandas_dataframe_str(waypoints)
+
+        #Splitting around waypoints
+        self._splitting_around_waypoints()
 
         mesh_boundary = _mesh_boundary_polygon(self.mesh)
         # Move waypoint to closest accessible cellbox if it isn't in one already
-        for idx, row in waypoints_df.iterrows():
+        for idx, row in self.waypoints_df.iterrows():
             point = Point([row['Long'], row['Lat']])
             # Only allow waypoints within an existing mesh
             assert(point.within(mesh_boundary)), \
@@ -313,11 +318,11 @@ class RoutePlanner:
 
             adjusted_point = _adjust_waypoints(point, self.mesh['cellboxes'])
             
-            waypoints_df.loc[idx, 'Long'] = adjusted_point.x
-            waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
+            self.waypoints_df.loc[idx, 'Long'] = adjusted_point.x
+            self.waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
         
-        source_waypoints_df   = waypoints_df[waypoints_df['Source'] == "X"]
-        des_waypoints_df      = waypoints_df[waypoints_df['Destination'] == "X"]
+        source_waypoints_df   = self.waypoints_df[self.waypoints_df['Source'] == "X"]
+        des_waypoints_df      = self.waypoints_df[self.waypoints_df['Destination'] == "X"]
 
         self.source_waypoints = list(source_waypoints_df['Name'])
         self.end_waypoints    = list(des_waypoints_df['Name'])
@@ -399,7 +404,7 @@ class RoutePlanner:
             self.mesh['cellboxes'] = cbxs.to_dict('records')
 
         # ====== Waypoints ======
-        self.mesh['waypoints'] = waypoints_df
+        self.mesh['waypoints'] = self.waypoints_df
         # Initialising Waypoints positions and cell index
         wpts = self.mesh['waypoints']
         wpts['index'] = np.nan
@@ -426,21 +431,22 @@ class RoutePlanner:
         # ==== Printing Configuration and Information
         self.mesh['waypoints'] =  pd.read_json(StringIO(self.mesh['waypoints']))
 
-        # # ===== Running the route planner for the given information
-        # if ("dijkstra_only" in self.config) and self.config['dijkstra_only']:
-        #     self.compute_routes()
-        # else:
-        #     self.compute_routes()
-        #     self.compute_smoothed_routes()
+    def _splitting_around_waypoints(self):
+        """
+            Applying splitting around waypoints if this is defined in config. This is applied
+            inplace.
+            Appied to terms:
+                self.mesh         - MeshiPhi Vehicle Mesh in JSON format  
+                self.config       - PolarRoute config file
+                self.waypoints_df - Pandas DataFrame of Waypoint locations
 
-
-        # # === Saving file to output or saving it to variable output
-        # output = self.to_json()
-        # if ('output' in self.config) and (type(self.config['output']) == str):
-        #     with open(self.config['output'], 'w') as f:
-        #         json.dump(output,f)
-        # else:
-        #     self.output = output
+        """
+        if ('waypoint_splitting' in self.config) and (self.config['waypoint_splitting']):
+            logging.info(' Splitting around waypoints !')
+            msh = EnvironmentMesh.load_from_json(self.mesh)
+            wps_points = [(entry['Lat'],entry['Long']) for _,entry in self.waypoints_df.iterrows()]
+            msh.split_points(wps_points)
+            self.mesh = msh.to_json()
 
     def _zero_currents(self,mesh):
         '''
