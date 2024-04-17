@@ -54,7 +54,15 @@ TEST_ROUTES = [
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar.json',
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar_split.json',
     './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar.json',
-    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_split.json'
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_split.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_offset_source.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar_offset_source.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_offset_source.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_offset_source.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_offset_destination.json'
 ]
 
 def setup_module():
