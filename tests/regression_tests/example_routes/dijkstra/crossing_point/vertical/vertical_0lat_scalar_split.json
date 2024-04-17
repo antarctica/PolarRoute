@@ -1,0 +1,448 @@
+{
+    "config": {
+        "mesh_info": {
+            "region": {
+                "lat_min": -2.5,
+                "lat_max": 2.5,
+                "long_min": -2.5,
+                "long_max": 2.5,
+                "start_time": "2024-04-04",
+                "end_time": "2024-04-05",
+                "cell_width": 5.0,
+                "cell_height": 2.5
+            },
+            "data_sources": [
+                {
+                    "loader": "vector_grf",
+                    "params": {
+                        "data_name": "uC,vC",
+                        "min": 0,
+                        "max": 0,
+                        "seed": 1,
+                        "dataloader_name": "vector_grf",
+                        "downsample_factors": [
+                            1,
+                            1
+                        ],
+                        "aggregate_type": "MEAN",
+                        "min_dp": 5,
+                        "in_proj": "EPSG:4326",
+                        "out_proj": "EPSG:4326",
+                        "x_col": "lat",
+                        "y_col": "long",
+                        "size": 512,
+                        "alpha": 3,
+                        "vec_x": "uC",
+                        "vec_y": "vC",
+                        "fast_reprojection": false
+                    }
+                },
+                {
+                    "loader": "gradient",
+                    "params": {
+                        "data_name": "SIC",
+                        "value_fill_types": "parent",
+                        "nx": 21,
+                        "ny": 21,
+                        "vertical": true,
+                        "multiplier": 100,
+                        "splitting_conditions": [
+                            {
+                                "SIC": {
+                                    "threshold": 60,
+                                    "upper_bound": 1.0,
+                                    "lower_bound": 0.0,
+                                    "split_lock": false
+                                }
+                            }
+                        ],
+                        "dataloader_name": "gradient",
+                        "min_dp": 5,
+                        "downsample_factors": [
+                            1,
+                            1
+                        ],
+                        "aggregate_type": "MEAN",
+                        "in_proj": "EPSG:4326",
+                        "out_proj": "EPSG:4326",
+                        "x_col": "lat",
+                        "y_col": "long",
+                        "fast_reprojection": false
+                    }
+                },
+                {
+                    "loader": "gradient",
+                    "params": {
+                        "data_name": "density",
+                        "value_fill_types": "parent",
+                        "nx": 21,
+                        "ny": 21,
+                        "vertical": true,
+                        "multiplier": 1000,
+                        "dataloader_name": "gradient",
+                        "min_dp": 5,
+                        "downsample_factors": [
+                            1,
+                            1
+                        ],
+                        "aggregate_type": "MEAN",
+                        "in_proj": "EPSG:4326",
+                        "out_proj": "EPSG:4326",
+                        "x_col": "lat",
+                        "y_col": "long",
+                        "fast_reprojection": false
+                    }
+                },
+                {
+                    "loader": "gradient",
+                    "params": {
+                        "data_name": "thickness",
+                        "value_fill_types": "parent",
+                        "nx": 21,
+                        "ny": 21,
+                        "vertical": true,
+                        "multiplier": 1,
+                        "dataloader_name": "gradient",
+                        "min_dp": 5,
+                        "downsample_factors": [
+                            1,
+                            1
+                        ],
+                        "aggregate_type": "MEAN",
+                        "in_proj": "EPSG:4326",
+                        "out_proj": "EPSG:4326",
+                        "x_col": "lat",
+                        "y_col": "long",
+                        "fast_reprojection": false
+                    }
+                }
+            ],
+            "splitting": {
+                "split_depth": 1,
+                "minimum_datapoints": 5
+            }
+        },
+        "vessel_info": {
+            "vessel_type": "SDA",
+            "max_speed": 26.5,
+            "unit": "km/hr",
+            "beam": 24.0,
+            "hull_type": "slender",
+            "force_limit": 96634.5,
+            "max_ice_conc": 80,
+            "min_depth": 10
+        },
+        "route_info": {
+            "objective_function": "traveltime",
+            "path_variables": [
+                "fuel",
+                "traveltime"
+            ],
+            "vector_names": [
+                "uC",
+                "vC"
+            ],
+            "zero_currents": false,
+            "variable_speed": true,
+            "time_unit": "days",
+            "early_stopping_criterion": true,
+            "save_dijkstra_graphs": false,
+            "smooth_path": {
+                "max_iteration_number": 300,
+                "minimum_difference": 0.002
+            }
+        }
+    },
+    "cellboxes": [
+        {
+            "geometry": "POLYGON ((-2.5 -2.5, -2.5 0, 2.5 0, 2.5 -2.5, -2.5 -2.5))",
+            "cx": 0.0,
+            "cy": -1.25,
+            "dcx": 2.5,
+            "dcy": 1.25,
+            "uC": 0.0,
+            "vC": 0.0,
+            "SIC": 27.5,
+            "density": 275.0,
+            "thickness": 0.275,
+            "id": "0",
+            "land": false,
+            "ext_ice": false,
+            "inaccessible": false,
+            "speed": [
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5
+            ],
+            "ice resistance": 2776.8478205542074,
+            "resistance": [
+                2776.8478205542074,
+                2776.8478205542074,
+                2776.8478205542074,
+                2776.8478205542074,
+                2776.8478205542074,
+                2776.8478205542074,
+                2776.8478205542074,
+                2776.8478205542074
+            ],
+            "fuel": [
+                27.76496690461541,
+                27.76496690461541,
+                27.76496690461541,
+                27.76496690461541,
+                27.76496690461541,
+                27.76496690461541,
+                27.76496690461541,
+                27.76496690461541
+            ]
+        },
+        {
+            "geometry": "POLYGON ((-2.5 1.25, -2.5 2.5, 0 2.5, 0 1.25, -2.5 1.25))",
+            "cx": -1.25,
+            "cy": 1.875,
+            "dcx": 1.25,
+            "dcy": 0.625,
+            "uC": 0.0,
+            "vC": 0.0,
+            "SIC": 90.0,
+            "density": 900.0,
+            "thickness": 0.9,
+            "id": "2",
+            "land": false,
+            "ext_ice": true,
+            "inaccessible": true
+        },
+        {
+            "geometry": "POLYGON ((0 1.25, 0 2.5, 2.5 2.5, 2.5 1.25, 0 1.25))",
+            "cx": 1.25,
+            "cy": 1.875,
+            "dcx": 1.25,
+            "dcy": 0.625,
+            "uC": 0.0,
+            "vC": 0.0,
+            "SIC": 90.0,
+            "density": 900.0,
+            "thickness": 0.9,
+            "id": "3",
+            "land": false,
+            "ext_ice": true,
+            "inaccessible": true
+        },
+        {
+            "geometry": "POLYGON ((-2.5 0, -2.5 1.25, 0 1.25, 0 0, -2.5 0))",
+            "cx": -1.25,
+            "cy": 0.625,
+            "dcx": 1.25,
+            "dcy": 0.625,
+            "uC": 0.0,
+            "vC": 0.0,
+            "SIC": 65.0,
+            "density": 650.0,
+            "thickness": 0.65,
+            "id": "4",
+            "land": false,
+            "ext_ice": false,
+            "inaccessible": false,
+            "speed": [
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966
+            ],
+            "ice resistance": 96634.49999999997,
+            "resistance": [
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997
+            ],
+            "fuel": [
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895
+            ]
+        },
+        {
+            "geometry": "POLYGON ((0 0, 0 1.25, 2.5 1.25, 2.5 0, 0 0))",
+            "cx": 1.25,
+            "cy": 0.625,
+            "dcx": 1.25,
+            "dcy": 0.625,
+            "uC": 0.0,
+            "vC": 0.0,
+            "SIC": 65.0,
+            "density": 650.0,
+            "thickness": 0.65,
+            "id": "5",
+            "land": false,
+            "ext_ice": false,
+            "inaccessible": false,
+            "speed": [
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966,
+                15.859906569541966
+            ],
+            "ice resistance": 96634.49999999997,
+            "resistance": [
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997,
+                96634.49999999997
+            ],
+            "fuel": [
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895,
+                45.63363158372895
+            ]
+        }
+    ],
+    "neighbour_graph": {
+        "0": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [],
+            "-1": [],
+            "-2": [],
+            "-3": [],
+            "-4": [
+                4,
+                5
+            ]
+        },
+        "4": {
+            "1": [],
+            "2": [
+                5
+            ],
+            "3": [],
+            "4": [
+                0
+            ],
+            "-1": [],
+            "-2": [],
+            "-3": [],
+            "-4": []
+        },
+        "5": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [
+                0
+            ],
+            "-1": [],
+            "-2": [
+                4
+            ],
+            "-3": [],
+            "-4": []
+        }
+    },
+    "waypoints": {
+        "Name": {
+            "0": "Source",
+            "1": "Destination"
+        },
+        "Lat": {
+            "0": -1.25,
+            "1": 0.625
+        },
+        "Long": {
+            "0": 0.0,
+            "1": -1.25
+        },
+        "Source": {
+            "0": "X",
+            "1": " "
+        },
+        "Destination": {
+            "0": null,
+            "1": "X"
+        },
+        "index": {
+            "0": 0,
+            "1": 4
+        }
+    },
+    "paths": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            0.0,
+                            -1.25
+                        ],
+                        [
+                            -1.0073242506234124,
+                            0.0
+                        ],
+                        [
+                            -1.25,
+                            0.625
+                        ]
+                    ]
+                },
+                "properties": {
+                    "name": "Route Path - Source to Destination",
+                    "from": "Source",
+                    "to": "Destination",
+                    "CellIndices": [
+                        0,
+                        4
+                    ],
+                    "traveltime": [
+                        0.28106534196161287,
+                        0.47724546061954365
+                    ],
+                    "cases": [
+                        -4,
+                        -4
+                    ],
+                    "fuel": [
+                        7.803769917598594,
+                        16.756181176486837
+                    ],
+                    "total_fuel": 16.756181176486837,
+                    "total_traveltime": 0.47724546061954365
+                }
+            }
+        ]
+    }
+}
