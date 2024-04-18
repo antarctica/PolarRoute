@@ -21,7 +21,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
-# location of test files to be recalcaulted for regression testing
+# location of test files to be recalculated for regression testing
 TEST_ROUTES = [
     './example_routes/dijkstra/fuel/gaussian_random_field.json',
     './example_routes/dijkstra/fuel/checkerboard.json',
@@ -62,7 +62,9 @@ TEST_ROUTES = [
     './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_offset_source.json',
     './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_offset_destination.json',
     './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_offset_source.json',
-    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_offset_destination.json'
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_split4.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_split4.json'
 ]
 
 def setup_module():
@@ -108,7 +110,7 @@ def calculate_dijkstra_route(config, mesh):
     # Initial set up
     waypoints   = extract_waypoints(mesh)
     
-    # Calculate dijskstra route
+    # Calculate dijkstra route
     rp = RoutePlanner(mesh, config, waypoints)
     rp.compute_routes()
     
