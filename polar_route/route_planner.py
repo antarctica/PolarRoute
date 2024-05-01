@@ -343,6 +343,7 @@ class RoutePlanner:
         # ====== Loading Mesh & Neighbour Graph ======
         # Zeroing currents if vectors names are not defined or zero_currents is defined
         self.mesh = self._zero_currents(self.mesh)
+        self.mesh = self._fixed_speed(self.mesh)
 
         # Formatting the Mesh and Neighbour Graph to the right form
         self.neighbour_graph = pd.DataFrame(self.mesh['cellboxes']).set_index('id')
@@ -477,7 +478,38 @@ class RoutePlanner:
                 mesh['cellboxes'][idx] = cell    
             
         return mesh
+    
+    def _fixed_speed(self,mesh):
+        '''
+            Applying max speed for all cellboxes that are accessible
 
+            Input 
+                mesh (JSON) - MeshiPhi Mesh input
+            Output:
+                mesh (JSON) - MeshiPhi Mesh Corrected
+        '''
+
+        # Zeroing currents if both vectors are defined and zeroed
+        if ('fixed_speed' in self.config):
+            if self.config['fixed_speed']:
+                logging.info('Setting all speeds max speed for Mesh !')
+                max_speed = mesh['config']['vessel_info']['max_speed']
+                for idx,cell in enumerate(mesh['cellboxes']):
+                    # print(cell.keys())
+                    if 'speed' in cell.keys():
+                        cell['speed'] = [max_speed,
+                                        max_speed,
+                                        max_speed,
+                                        max_speed,
+                                        max_speed,
+                                        max_speed,
+                                        max_speed,
+                                        max_speed]
+                        mesh['cellboxes'][idx] = cell
+                    else:
+                        continue
+        
+        return mesh
 
     def to_json(self):
         '''
