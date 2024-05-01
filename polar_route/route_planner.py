@@ -303,7 +303,7 @@ class RoutePlanner:
         self.config           = _json_str(config)
         self.waypoints_df = _pandas_dataframe_str(waypoints)
 
-        #Splitting around waypoints
+        # #Splitting around waypoints
         self._splitting_around_waypoints()
 
         mesh_boundary = _mesh_boundary_polygon(self.mesh)
@@ -447,7 +447,9 @@ class RoutePlanner:
             msh = EnvironmentMesh.load_from_json(self.mesh)
             wps_points = [(entry['Lat'],entry['Long']) for _,entry in self.waypoints_df.iterrows()]
             msh.split_points(wps_points)
-            self.mesh = msh.to_json()
+            mesh = msh.to_json()
+            self.mesh['cellboxes'] = mesh['cellboxes']
+            self.mesh['neighbour_graph'] = mesh['neighbour_graph']
 
     def _zero_currents(self,mesh):
         '''
@@ -516,6 +518,7 @@ class RoutePlanner:
             Outputting the information in JSON format
         '''
         mesh = copy.copy(self.mesh)
+        mesh['route_info'] = self.config
         mesh['waypoints'] = mesh['waypoints'].to_dict()
         output_json = json.loads(json.dumps(mesh))
         del mesh
