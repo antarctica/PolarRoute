@@ -30,6 +30,47 @@ TEST_ROUTES = [
     # './example_routes/dijkstra/time/checkerboard.json',
     # './example_routes/dijkstra/time/great_circle_forward.json',
     # './example_routes/dijkstra/time/great_circle_reverse.json',
+    './example_routes/dijkstra/fuel/checkerboard.json',
+    './example_routes/dijkstra/fuel/great_circle_forward.json',
+    './example_routes/dijkstra/fuel/great_circle_reverse.json',
+    './example_routes/dijkstra/time/gaussian_random_field.json',
+    './example_routes/dijkstra/time/checkerboard.json',
+    './example_routes/dijkstra/time/great_circle_forward.json',
+    './example_routes/dijkstra/time/great_circle_reverse.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_20lat_s.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_20lat_n.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_40lat_s.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_40lat_n.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_60lat_s.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_60lat_n.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_80lat_s.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_80lat_n.json',
+    './example_routes/dijkstra/crossing_point/diagonal/diagonal_0lat.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_20lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_20lat_n.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_40lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_40lat_n.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_60lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_60lat_n.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_80lat_s.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_80lat_n.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_split.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_split.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar_split.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_split.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_offset_source.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar_offset_source.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_scalar_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_offset_source.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_offset_source.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_scalar_offset_destination.json',
+    './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat_split4.json',
+    './example_routes/dijkstra/crossing_point/vertical/vertical_0lat_split4.json'
 ]
 
 def setup_module():
@@ -74,7 +115,7 @@ def calculate_dijkstra_route(config, mesh):
 
     # Initial set up
     waypoints   = extract_waypoints(mesh)
-    
+
     # Calculate dijskstra route
     rp = RoutePlanner(mesh, config )
     routes = rp.compute_routes(waypoints)
