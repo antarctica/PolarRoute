@@ -1047,23 +1047,13 @@ class Smoothing:
         end   = cell_b['SIC']
         max_new = new_cell['SIC']
 
-        percentage_diff1  = (max_new-start)
-        percentage_diff2  = (max_new-end)
-        if (percentage_diff1*100 <= self.blocked_sic*start) or (percentage_diff2*100 <= self.blocked_sic*end):
+        percentage_diff1  = (max_new-start)*100
+        percentage_diff2  = (max_new-end)*100
+        if (percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end):
             return False
         else:
             return True
-
-        # start = cell_a['speed'][0]
-        # end   = cell_b['speed'][0]
-        # max_new = new_cell['speed'][0]
-
-        # percentage_diff1  = (max_new-start)
-        # percentage_diff2  = (max_new-end)
-        # if (percentage_diff1*100 >= self.blocked_sic*start) or (percentage_diff2*100 >= self.blocked_sic*end):
-        #     return False
-        # else:
-        #     return True 
+    
 
     def clip(self,cell_a,cell_b,case,x):
         '''

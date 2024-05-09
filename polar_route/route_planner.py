@@ -335,11 +335,6 @@ class RoutePlanner:
         self.smoothed_paths = None
         self.dijkstra_info = {}
 
-
-
-
-
-
         # ====== Loading Mesh & Neighbour Graph ======
         # Zeroing currents if vectors names are not defined or zero_currents is defined
         self.mesh = self._zero_currents(self.mesh)
@@ -518,7 +513,7 @@ class RoutePlanner:
             Outputting the information in JSON format
         '''
         mesh = copy.copy(self.mesh)
-        mesh['route_info'] = self.config
+        mesh['config']['route_info'] = self.config
         mesh['waypoints'] = mesh['waypoints'].to_dict()
         output_json = json.loads(json.dumps(mesh))
         del mesh
