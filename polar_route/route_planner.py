@@ -133,10 +133,10 @@ def _mesh_boundary_polygon(mesh):
     # Defining a tiny value
     tiny_value = 1e-10
 
-    lat_min = mesh['config']['mesh_info']['region']['lat_min']-tiny_value
-    lat_max = mesh['config']['mesh_info']['region']['lat_max']+tiny_value
-    long_min = mesh['config']['mesh_info']['region']['long_min']-tiny_value
-    long_max = mesh['config']['mesh_info']['region']['long_max']+tiny_value
+    lat_min = mesh['config']['mesh_info']['region']['lat_min']+tiny_value
+    lat_max = mesh['config']['mesh_info']['region']['lat_max']-tiny_value
+    long_min = mesh['config']['mesh_info']['region']['long_min']+tiny_value
+    long_max = mesh['config']['mesh_info']['region']['long_max']-tiny_value
 
     bounds = Boundary([lat_min, lat_max], [long_min, long_max])
 
