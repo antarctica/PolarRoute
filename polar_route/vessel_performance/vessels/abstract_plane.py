@@ -91,7 +91,11 @@ class AbstractPlane(AbstractVessel):
             Returns:
                 elevation_max (bool): boolean that is True if the cell is too elevation_max for a glider
         """
-        elevation_max = False
+        if 'elevation' not in cellbox.agg_data:
+            logging.warning(f"No elevation data in cell {cellbox.id}, cannot determine if it is too high")
+        else:
+            elevation_max = cellbox.agg_data['elevation'] > self.max_elevation
+
         return elevation_max
 
     @abstractmethod
