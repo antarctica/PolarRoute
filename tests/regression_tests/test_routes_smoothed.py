@@ -33,7 +33,12 @@ TEST_ROUTES = [
     './example_routes/smoothed/crossing_point/horizontal/horizontal_80latn_smooth.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_80lats_smooth.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_boundary_smooth.json',
-    './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_corner_smooth.json'
+    './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_corner_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_0lat_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_80latn_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_80lats_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_0lat_boundary_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_0lat_corner_smooth.json'
 ]
 
 # Pairing old and new outputs
