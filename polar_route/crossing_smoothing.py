@@ -1049,12 +1049,11 @@ class Smoothing:
 
         percentage_diff1  = (max_new-start)*100
         percentage_diff2  = (max_new-end)*100
-
-        if (percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end) or (max_new<=self.blocked_sic):
+        if (percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end) or max_new<=self.blocked_sic:
             return False
         else:
             return True
-                
+    
 
     def clip(self,cell_a,cell_b,case,x):
         '''
