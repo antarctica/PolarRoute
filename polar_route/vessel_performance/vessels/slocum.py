@@ -15,9 +15,9 @@ class SlocumGlider(AbstractGlider):
 
         super().__init__(params)
         # Coefficients from fit to figures provided by Alex
-        speed_coefficients = np.array([4.44444444, -0.5555555499999991])
+        speed_coefficients    = np.array([4.44444444, -0.5555555499999991])
         self.speed_polynomial = np.poly1d(speed_coefficients)
-        depth_coefficients = np.array([0.001, 2])
+        depth_coefficients    = np.array([0.001, 2])
         self.depth_polynomial = np.poly1d(depth_coefficients)
 
     def model_speed(self, cellbox):

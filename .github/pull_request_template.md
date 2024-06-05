@@ -22,7 +22,7 @@ This includes a collection of test files which should be run according to which 
 >
 > The files which have been changed during this PR can be listed using the command
 
-    git diff --name-only 0.4.x
+    git diff --name-only 0.5.x
 
 - [ ] My changes require one or more test files to be updated for all regression tests to pass.   
 
@@ -38,6 +38,6 @@ This includes a collection of test files which should be run according to which 
 - [ ] I have commented my code, particularly in hard-to-understand areas.  
 - [ ] I have updated the documentation of the codebase where required.  
 - [ ] My changes generate no new warnings.   
-- [ ] My PR has been made to the `0.4.x` branch (**DO NOT SUBMIT A PR TO MAIN**)  
+- [ ] My PR has been made to the `0.5.x` branch (**DO NOT SUBMIT A PR TO MAIN**)  
 
    
