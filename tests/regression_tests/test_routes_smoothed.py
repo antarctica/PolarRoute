@@ -28,7 +28,17 @@ TEST_ROUTES = [
     './example_routes/smoothed/time/gaussian_random_field.json',
     './example_routes/smoothed/time/checkerboard.json',
     './example_routes/smoothed/time/great_circle_forward.json',
-    './example_routes/smoothed/time/great_circle_reverse.json'
+    './example_routes/smoothed/time/great_circle_reverse.json',
+    './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_smooth.json',
+    './example_routes/smoothed/crossing_point/horizontal/horizontal_80latn_smooth.json',
+    './example_routes/smoothed/crossing_point/horizontal/horizontal_80lats_smooth.json',
+    './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_boundary_smooth.json',
+    './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_corner_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_0lat_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_80latn_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_80lats_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_0lat_boundary_smooth.json',
+    './example_routes/smoothed/crossing_point/vertical/vertical_0lat_corner_smooth.json'
 ]
 
 # Pairing old and new outputs
@@ -69,8 +79,8 @@ def calculate_smoothed_route(config, mesh):
 
     # Initial set up
     waypoints   = extract_waypoints(mesh)
-    
-    # Calculate dijkstra route
+
+    # Calculate smoothed route
     rp = RoutePlanner(mesh, config, waypoints)
     rp.compute_routes()
     rp.compute_smoothed_routes()
