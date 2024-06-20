@@ -3,7 +3,6 @@
     environmental mesh between a series of user defined waypoints
 """
 
-import json
 import warnings
 import numpy as np
 import pandas as pd
@@ -181,7 +180,7 @@ class RoutePlanner:
         
         for i, s_wp in enumerate(start_waypoints):
                 
-                s_wp.print_routing_table()
+                s_wp.log_routing_table()
                 route_segments = []
                 e_wp = end_waypoints[i]
                 e_wp_indx = e_wp.get_cellbox_indx()
@@ -191,8 +190,8 @@ class RoutePlanner:
                    route = Route([Segment(s_wp, e_wp)], s_wp.get_name(), e_wp.get_name(), self.config)
                 else:
                     while s_wp.get_cellbox_indx() != e_wp_indx:
-                        # print (">>> s_wp_indx >>>", s_wp)
-                        # print (">>> e_wp_indx >>>", e_wp_indx)
+                        # logging.debug(">>> s_wp_indx >>>", s_wp)
+                        # logging.debug(">>> e_wp_indx >>>", e_wp_indx)
                         routing_info = s_wp.get_routing_info(e_wp_indx)
                         # Insert segments at the front of the list as we are moving from e_wp to s_wp
                         route_segments.insert(0, routing_info.get_path())
@@ -203,21 +202,23 @@ class RoutePlanner:
                         for x in range(2):
                             cases.insert(0, neighbour_case)
                         e_wp_indx = routing_info.get_node_index()
-                        print("route segments >> ", route_segments[0][0].to_str())
+                        logging.debug("route segments >> ", route_segments[0][0].to_str())
                    
                     route_segments = list(itertools.chain.from_iterable(route_segments))
                     route = Route(route_segments, s_wp.get_name(), e_wp.get_name(), self.config)
                     route.set_cases(cases)
-                # correct the first and last segment
+                # Correct the first and last segment
                     for s in route_segments:
-                        print(">>>|S|>>>> ", s.to_str())
-                print(route.segments[0].get_start_wp().get_cellbox_indx())
-                
-                route._waypoint_correction(self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()], s_wp, route.segments[0].get_end_wp(),  0)
+                        logging.debug(">>>|S|>>>> ", s.to_str())
+                logging.debug(route.segments[0].get_start_wp().get_cellbox_indx())
+
+                route.waypoint_correction(self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()],
+                                          s_wp, route.segments[0].get_end_wp(), 0)
                 if len(route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and destination are within the same cellbox
-                    route._waypoint_correction(self.cellboxes_lookup[route.segments[-1].get_end_wp().get_cellbox_indx()], e_wp, route.segments[-1].get_start_wp(), -1)
+                    route.waypoint_correction(self.cellboxes_lookup[route.segments[-1].get_end_wp().get_cellbox_indx()],
+                                              e_wp, route.segments[-1].get_start_wp(), -1)
                 routes.append(route)
-                print(route.to_json())
+                logging.debug(route.to_json())
                 
         return routes
 
@@ -231,7 +232,6 @@ class RoutePlanner:
         def find_min_objective(source_wp):
             min_obj = np.inf
             cellbox_indx = -1
-            # source_wp.print_routing_table()
             for node_id in source_wp.routing_table.keys():
                 if not source_wp.is_visited(str(node_id)) and source_wp.get_obj(node_id, self.config['objective_function']) < min_obj:
                     min_obj = source_wp.get_obj( node_id, self.config['objective_function'])
@@ -251,11 +251,11 @@ class RoutePlanner:
                             source_wp.update_routing_table(str(neighbour), RoutingInfo(_id, edges))
                 
         # # Updating Dijkstra as long as all the waypoints are not visited or for full graph
-        print(">>>> src >>>> ", wp.get_cellbox_indx())
-        print(">>>> end_wp >>>> ", end_wps[0].get_cellbox_indx())
+        logging.debug(">>>> src >>>> ", wp.get_cellbox_indx())
+        logging.debug(">>>> end_wp >>>> ", end_wps[0].get_cellbox_indx())
         while not wp.is_all_visited():
             min_obj_indx = find_min_objective(wp)  # Determining the index of the minimum objective function that has not been visited
-            print("min_obj >>> ", min_obj_indx )
+            logging.debug("min_obj >>> ", min_obj_indx )
             
             consider_neighbours(wp, min_obj_indx)
             wp.visit(min_obj_indx)
@@ -271,8 +271,8 @@ class RoutePlanner:
         # create segments and set their travel time based on the returned 3 points and the remaining obj accordingly(travel_time * node speed/fuel), and return
         s1 = Segment(Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]), Waypoint(crossing_points[1], crossing_points[0], cellbox_indx=node_id))
         s1.set_travel_time(traveltime[0])
-        # print (">>> travel time >> ", traveltime)
-        #fill segment metrics
+        # logging.debug(">>> travel time >> ", traveltime)
+        # fill segment metrics
         s1.set_fuel(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
         s1.set_distance(s1.get_travel_time() * unit_speed(self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)], self.config ['unit_shipspeed']))
         s2 = Segment( Waypoint(crossing_points[1], crossing_points[0], cellbox_indx=neighbour_id), Waypoint.load_from_cellbox(self.cellboxes_lookup[neighbour_id]))
@@ -307,7 +307,7 @@ class RoutePlanner:
             logging.info('--- Processing Waypoint = {}'.format(wp.get_name()))
             self._dijkstra(wp, end_wps)
 
-        print(">>> dijkstra done ...")
+        logging.info("Dijkstra routing done...")
         # Using Dijkstra Graph compute path and meta information to all end_waypoints
         return self._dijkstra_paths(src_wps, end_wps)  # returning the constructed routes
     
@@ -329,7 +329,7 @@ class RoutePlanner:
                 Returns:
                     selected (int): the id of the selected cellbox
             """
-            print(">>> selecting cellbox ...")
+            logging.debug(">>> selecting cellbox for waypoint on boundary...")
             if (self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]],
                                                                 self.cellboxes_lookup [ids[1]]) in
                     [Direction.east, Direction.north_east, Direction.north]):
@@ -381,37 +381,38 @@ class RoutePlanner:
                 raise ValueError(f"Unable to load '{waypoints}', please check path name")
 
 
-if __name__ == '__main__':
-
-      config = None
-    #   mesh_file = "../tests/regression_tests/example_routes/dijkstra/time/checkerboard.json"
-      mesh_file = "add_vehicle.output.json"
-      
-
-    #   mesh_file = "grf_reprojection.json"
-      wp_file = "../tests/unit_tests/resources/waypoint/waypoints_2.csv"
-      route_conf = "../tests/unit_tests/resources/waypoint/route_config.json"
-      route_planner= None
-      vessel_mesh = None
-      with open(mesh_file, "r") as mesh_json:
-          #config = json.load(mesh_json)['config']
-          vessel_mesh =  json.load(mesh_json)
-      #mesh_json = MeshBuilder(config).build_environmental_mesh().to_json()
-    #   mesh_json = json.load(mesh_json)
-      
-
-    #   vp = VesselPerformanceModeller(mesh_json, config['vessel_info'])
-    #   vp.model_accessibility()
-    #   vp.model_performance()
-    #   info = vp.to_json()
-    #   json.dump(info, open('vessel_mesh.json', "w"), indent=4)
-    #   with open(route_conf, "r") as config_file:
-    #       config = json.load(config_file)
-    #   route_planner= RoutePlanner("vessel_mesh.json", route_conf)
-      route_planner = RoutePlanner(mesh_file, route_conf)
-    # #   src, dest = route_planner._load_waypoints(wp_file)
-    # #   route_planner._validate_wps(src)
-    # #   route_planner._validate_wps(dest)
-    #   routes = route_planner.compute_routes(vessel_mesh['waypoints'])
-      routes = route_planner.compute_routes(wp_file)
-      print(routes[0].to_json())
+# if __name__ == '__main__':
+#
+#       import json
+#       config = None
+#     #   mesh_file = "../tests/regression_tests/example_routes/dijkstra/time/checkerboard.json"
+#       mesh_file = "add_vehicle.output.json"
+#
+#
+#     #   mesh_file = "grf_reprojection.json"
+#       wp_file = "../tests/unit_tests/resources/waypoint/waypoints_2.csv"
+#       route_conf = "../tests/unit_tests/resources/waypoint/route_config.json"
+#       route_planner= None
+#       vessel_mesh = None
+#       with open(mesh_file, "r") as mesh_json:
+#           #config = json.load(mesh_json)['config']
+#           vessel_mesh =  json.load(mesh_json)
+#       #mesh_json = MeshBuilder(config).build_environmental_mesh().to_json()
+#     #   mesh_json = json.load(mesh_json)
+#
+#
+#     #   vp = VesselPerformanceModeller(mesh_json, config['vessel_info'])
+#     #   vp.model_accessibility()
+#     #   vp.model_performance()
+#     #   info = vp.to_json()
+#     #   json.dump(info, open('vessel_mesh.json', "w"), indent=4)
+#     #   with open(route_conf, "r") as config_file:
+#     #       config = json.load(config_file)
+#     #   route_planner= RoutePlanner("vessel_mesh.json", route_conf)
+#       route_planner = RoutePlanner(mesh_file, route_conf)
+#     # #   src, dest = route_planner._load_waypoints(wp_file)
+#     # #   route_planner._validate_wps(src)
+#     # #   route_planner._validate_wps(dest)
+#     #   routes = route_planner.compute_routes(vessel_mesh['waypoints'])
+#       routes = route_planner.compute_routes(wp_file)
+#       print(routes[0].to_json())

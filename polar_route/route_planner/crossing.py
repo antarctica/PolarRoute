@@ -1,8 +1,8 @@
 """
-    The python package `crossing` implements the optimisation for the crossing point for the Dijkstra path
-    construction. The package is separated into two classes `NewtonianDistance` and `NewtonianCurve`.
+    The python package `crossing` implements the optimisation of the crossing point for the Dijkstra path
+    construction using the `NewtonianDistance` class.
     In the section below we will go through, stage by stage, how the crossing point is determined and the methods
-    used within the classes.
+    used within the class.
 """
 import numpy as np
 import logging
@@ -461,14 +461,12 @@ class NewtonianDistance:
         elif abs(self.case)==1 or abs(self.case)==3:
             travel_time, cross_points, cell_points = self._corner()
         else:
-            print('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.\
+            logging.debug('---> Issue with cell (Xsc,Ysc)={:.2f};{:.2f}'.\
                 format(self.source_cellbox.get_bounds().getcx(),self.source_cellbox.get_bounds().getcy()))
 
             travel_time  = [np.inf, np.inf]
             cross_points = [np.nan, np.nan]
             cell_points  = [np.nan, np.nan]
-        # print (">> CellPoints >>", cell_points )
-        # print (">> CrossPoints >>", cross_points )
 
-        print(">> TravelTime >>", travel_time )
+        logging.debug(f"NewtonianDistance.value >> TravelTime >> {travel_time}" )
         return travel_time, cross_points, cell_points, self.case

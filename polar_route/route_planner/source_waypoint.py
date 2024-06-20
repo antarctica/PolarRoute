@@ -40,7 +40,6 @@ class SourceWaypoint(Waypoint):
         return str(indx) in self.visited_nodes
     
     def is_all_visited(self):
-        # print ("visited >>> ", self.visited_nodes)
         for wp in self.end_wps:
             if str(wp.get_cellbox_indx()) not  in self.visited_nodes:
                 return False
@@ -51,12 +50,12 @@ class SourceWaypoint(Waypoint):
             self.routing_table[_id] = RoutingInfo(-1, None) # indicating inaccessible node and returns infinity obj
         return self.routing_table[_id]
 
-    def print_routing_table(self):
+    def log_routing_table(self):
         logging.debug(f'Routing table of {self.cellbox_indx} source waypoint:')
         for x in self.routing_table.keys():
             logging.debug(f"To {x}, through node_idx: {self.routing_table[x].get_node_index()}")
 
-    def print_detailed_routing_info(self):
+    def log_detailed_routing_info(self):
         logging.debug(f'Routing table of {self.cellbox_indx} source waypoint:')
         for x in self.routing_table.keys():
             logging.debug(f"To {x}, through node_idx: {self.routing_table[x].get_node_index()}")
@@ -65,8 +64,6 @@ class SourceWaypoint(Waypoint):
                 logging.debug(s.to_str())
 
     def get_obj(self, node_indx, obj):
-        # print (self.node_indx)
-        # print (self.path)
         if node_indx not in self.routing_table.keys(): # this info means inaccessible node so the obj is infinity
             return np.inf
         

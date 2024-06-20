@@ -1,12 +1,12 @@
+import logging
 import numpy as np
 from polar_route.utils import case_from_angle, unit_time, unit_speed
 
 
 class Route:
     """
-        class that represents a route from a start to end waypoints
+        Class that represents a route from a start to an end waypoint
         Attributes:
-
             segments (list<Segment>): a list of Segment object that constitutes the entire route
             name (String) (optional): string representing the route name
             _from (string): the name of the source waypoint
@@ -124,16 +124,16 @@ class Route:
         traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
         if traveltime < 0:
             traveltime = np.inf
-       # print ("dist in cell >>> ", dist)
+
         return traveltime, dist
     
-    def _waypoint_correction(self, cellbox, wp, cp, indx):
+    def waypoint_correction(self, cellbox, wp, cp, indx):
         """
             Determine within cell parameters for a source and end point on the edge
         """
-        # case = -1
-        print(">> wp >>", wp.to_point())
-        print(">> cp >>", cp.to_point())
+
+        logging.debug(f"WP_correction >> wp >> {wp.to_point()}")
+        logging.debug(f"WP_correction >> cp >> {cp.to_point()}")
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
         # x = self._dist_around_globe(cp.get_longitude(),wp.get_longitude())*m_long*np.cos(wp.get_latitude()*(np.pi/180))
@@ -146,19 +146,18 @@ class Route:
         su  = cellbox.agg_data['uC']
         sv  =  cellbox.agg_data['vC']
         ssp = unit_speed(cellbox.agg_data['speed'][case], self.conf['unit_shipspeed'])
-        print(case, x, y, su, sv, ssp)
         traveltime, distance = self._traveltime_in_cell(x, y, su, sv, ssp)
-        print("WP_correction>>> tt >> ", traveltime)
-        print("WP_correction>>> distance >> ", distance)
+        logging.debug(f"WP_correction >> tt >> {traveltime}")
+        logging.debug(f"WP_correction >> distance >> {distance}")
+        logging.debug(f"WP_correction >> case >> {case}")
         traveltime = unit_time(traveltime, self.conf['time_unit'])
-        print("case >> ", case)
 
         # update segment and its metrics
-     
         self.segments[indx].set_waypoint(indx, wp)
         self.segments[indx].set_travel_time(traveltime)
         self.segments[indx].set_distance(distance)
         self.segments[indx].set_fuel(cellbox.agg_data['fuel'][case] * traveltime)
+        logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][case] * traveltime}")
 
     def _dist_around_globe(self, sp, cp):
         a1 = np.sign(cp-sp)*(np.max([sp,cp])-np.min([sp,cp]))
