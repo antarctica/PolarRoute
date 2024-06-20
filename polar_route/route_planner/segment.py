@@ -65,7 +65,16 @@ class Segment:
         return[[self.start_wp.get_longitude(), self.start_wp.get_latitude()], [self.end_wp.get_longitude(), self.end_wp.get_latitude()]]
     
     def get_variable(self, variable):
-        return getattr(self, variable)
+        """
+        Returns the value of the specified variable for the segment
+        Args:
+            variable (str): the name of the variable to get the value of
+
+        Returns:
+            val: the value of the input variable
+        """
+        val = getattr(self, variable)
+        return val
 
     def get_start_wp(self):
         return self.start_wp

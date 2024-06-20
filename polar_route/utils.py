@@ -282,15 +282,24 @@ def setup_logging(func,
     return wrapper
 
 
-def _json_str(input):
-    if type(input) is dict:
-        output = input
-    elif type(input) is str:
+def json_str(input_json):
+    """
+    Normalise input for classes and functions that take in json, return dict whether a dict or path is given as input.
+    Args:
+        input_json (dict or str):
+
+    Returns:
+        output (dict)
+
+    """
+    if type(input_json) is dict:
+        output = input_json
+    elif type(input_json) is str:
         try:
-            with open(input, 'r') as f:
+            with open(input_json, 'r') as f:
                 output = json.load(f)
         except:
-            raise ValueError("Unable to load '{}', please check path name".format(input))
+            raise ValueError("Unable to load '{}', please check path name".format(input_json))
     return output
 
 
