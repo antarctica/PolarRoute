@@ -1,5 +1,5 @@
 """
-    This section of the codebase is used for construction of routes using the
+    This module is used for construction of routes using the
     environmental mesh between a series of user defined waypoints
 """
 
@@ -10,6 +10,7 @@ from shapely import wkt, Point, LineString, STRtree, Polygon
 import geopandas as gpd
 import logging
 import itertools
+import copy
 from pandas.core.common import SettingWithCopyWarning
 
 from polar_route.route_planner.route import Route
@@ -100,7 +101,7 @@ class RoutePlanner:
 
         Attributes:
             env_mesh (EnvironmentMesh): mesh object that contains the mesh's cellboxes information and neighbour graph
-            cost_func (func): Crossing point cost function for Dijkstra Path creation
+            cost_func (func): Crossing point cost function for Dijkstra Route creation
             config (Json): JSON object that contains the attributes required for the route construction. 
             src_wps (list<SourceWaypoint>): a list of the source waypoints that contains all of the dijkstra routing
             information to reuse this information for routes with the same source waypoint
@@ -126,7 +127,8 @@ class RoutePlanner:
                         "time_unit" (string),\n
                     }\n
 
-                cost_func (func): Crossing point cost function for Dijkstra Path creation. For development purposes only!
+                cost_func (func): Crossing point cost function for Dijkstra route construction. For development purposes
+                                  only!
         """
         # Load mesh json from file or dict and initialise EnvironmentMesh object
         mesh_json = json_str(mesh_file)
@@ -165,22 +167,26 @@ class RoutePlanner:
                                  for i in range(len(self.env_mesh.agg_cellboxes))}
         # ====== Defining the cost function ======
         self.cost_func = cost_func
-        # Case indices
-        self.src_wps = []
 
-    def _dijkstra_paths(self, start_waypoints, end_waypoints):
+        # Define attributes
+        self.src_wps = []
+        self.routes_dijkstra = []
+        self.routes_smoothed = []
+
+    def _dijkstra_routes(self, start_waypoints, end_waypoints):
         """
             Hidden function. Given internal variables and start and end waypoints this function
             returns a list of routes
 
             Args:
-                start_waypoints (list<Waypoint>): list of the start waypoint
-                end_waypoints (list<Waypoint>): list of the end waypoint 
+                start_waypoints (list<Waypoint>): list of start waypoints
+                end_waypoints (list<Waypoint>): list of end waypoints
             Return:
-                routes(list<Route>): list of the constructed routes
+                routes (list<Route>): list of the constructed routes
         """
         routes = []
-        
+
+        # Loop over all source waypoints
         for i, s_wp in enumerate(start_waypoints):
                 
                 s_wp.log_routing_table()
@@ -189,7 +195,9 @@ class RoutePlanner:
                 e_wp_indx = e_wp.get_cellbox_indx()
                 cases = []
 
-                if s_wp.get_cellbox_indx() == e_wp_indx: # path should be a straight line within the same cellbox
+                # Handle case where route starts and ends in the same cell
+                if s_wp.get_cellbox_indx() == e_wp_indx:
+                   # Route should be a straight line within the same cellbox
                    route = Route([Segment(s_wp, e_wp)], s_wp.get_name(), e_wp.get_name(), self.config)
                 else:
                     while s_wp.get_cellbox_indx() != e_wp_indx:
@@ -210,14 +218,16 @@ class RoutePlanner:
                     route_segments = list(itertools.chain.from_iterable(route_segments))
                     route = Route(route_segments, s_wp.get_name(), e_wp.get_name(), self.config)
                     route.set_cases(cases)
-                # Correct the first and last segment
                     for s in route_segments:
                         logging.debug(">>>|S|>>>> ", s.to_str())
                 logging.debug(route.segments[0].get_start_wp().get_cellbox_indx())
 
+                # Correct the first and last segment of the route
                 route.waypoint_correction(self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()],
                                           s_wp, route.segments[0].get_end_wp(), 0)
-                if len(route.segments) >1:  # make sure we have more one segment as we might have only one segment if the src and destination are within the same cellbox
+                # Check we have more one segment before correcting the last segment,
+                # as we might have only one segment if the src and destination waypoints are within the same cellbox
+                if len(route.segments) > 1:
                     route.waypoint_correction(self.cellboxes_lookup[route.segments[-1].get_end_wp().get_cellbox_indx()],
                                               e_wp, route.segments[-1].get_start_wp(), -1)
                 routes.append(route)
@@ -292,7 +302,7 @@ class RoutePlanner:
             case (int): the case of the transition from node_id to neighbour_id
 
         Returns:
-            neighbour_segments (list<Segment>): a list of segments that form the legs of the path from node_id to neighbour_id
+            neighbour_segments (list<Segment>): a list of segments that form the legs of the route from node_id to neighbour_id
 
         """
         direction = [1, 2, 3, 4, -1, -2, -3, -4]
@@ -352,8 +362,11 @@ class RoutePlanner:
             self._dijkstra(wp, end_wps)
 
         logging.info("Dijkstra routing complete...")
-        # Using Dijkstra Graph compute path and meta information to all end_waypoints
-        return self._dijkstra_paths(src_wps, end_wps)  # returning the constructed routes
+        # Using Dijkstra graph compute route and meta information to all end_waypoints
+        routes = self._dijkstra_routes(src_wps, end_wps)
+        self.routes_dijkstra = routes
+        # Returning the constructed routes
+        return routes
     
     def _validate_wps(self, wps):
         """
@@ -432,7 +445,7 @@ class RoutePlanner:
                         for index, dest in dest_waypoints_df.iterrows()]
             return  src_wps, dest_wps
         except FileNotFoundError:
-            raise ValueError(f"Unable to load '{waypoints}', please check path name")
+            raise ValueError(f"Unable to load '{waypoints}', please check file path provided")
 
 
 # if __name__ == '__main__':

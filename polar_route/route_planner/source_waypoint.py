@@ -56,6 +56,12 @@ class SourceWaypoint(Waypoint):
         return str(indx) in self.visited_nodes
     
     def is_all_visited(self):
+        """
+        Check if all associated destination waypoints have been visited
+        Returns:
+            True if all have been visited and False if not
+
+        """
         for wp in self.end_wps:
             if str(wp.get_cellbox_indx()) not  in self.visited_nodes:
                 return False

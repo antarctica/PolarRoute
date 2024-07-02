@@ -11,6 +11,8 @@ class Route:
             name (String) (optional): string representing the route name
             _from (string): the name of the source waypoint
             _to (string): the name of the destination waypoint
+            conf (dict): the associated route config
+            cases (list): a list of all cases along the route
 
     """
 
@@ -82,7 +84,10 @@ class Route:
         return [ sum(metrics [0:i+1]) for i in range(len(metrics))]
 
     def set_cases(self, cases):
-          self.cases = cases
+        """
+            Sets the cases attribute for the route to the given value
+        """
+        self.cases = cases
 
     def to_csv(self):
         """
@@ -129,7 +134,14 @@ class Route:
     
     def waypoint_correction(self, cellbox, wp, cp, indx):
         """
-            Determine within cell parameters for a source and end point on the edge
+            Determine within cell parameters for the source and end point waypoint when away from cell centre and
+            update the relevant segment
+
+            Args:
+                cellbox (AggregatedCellBox): the cellbox to do the waypoint correction within
+                wp (Waypoint): the source or end waypoint
+                cp (Waypoint): the crossing point that the route enters or leaves the cell by
+                indx (int): the index of the segment along the route
         """
 
         logging.debug(f"WP_correction >> wp >> {wp.to_point()}")
@@ -139,10 +151,8 @@ class Route:
         # x = self._dist_around_globe(cp.get_longitude(),wp.get_longitude())*m_long*np.cos(wp.get_latitude()*(np.pi/180))
         x = (cp.get_longitude() - wp.get_longitude()) * m_long * np.cos(wp.get_latitude() * (np.pi / 180))
         y = (cp.get_latitude() - wp.get_latitude()) * m_lat
-        if indx == 0:
-            case = case_from_angle(wp.to_point(), cp.to_point())
-        else: 
-            case = case_from_angle(cp.to_point(), wp.to_point())
+        # Select case with matching index
+        case = self.cases[indx]
         su  = cellbox.agg_data['uC']
         sv  =  cellbox.agg_data['vC']
         ssp = unit_speed(cellbox.agg_data['speed'][case], self.conf['unit_shipspeed'])
