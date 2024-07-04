@@ -221,7 +221,11 @@ class PathValues:
     
     def _rhumb_line_distance(self,start_waypoint,end_waypoint):
         '''
-            Defining the rhumbline distance
+            Defining the rhumbline distance from a given waypoint start and end point
+
+            Inputs:
+                start_waypoints - (list([Long,lat])) Start Waypoint location with long lat
+                end_waypoints - (list([Long,lat])) End Waypoint location with long lat
         '''
 
         # Defining a corrected distance based on rhumb lines
