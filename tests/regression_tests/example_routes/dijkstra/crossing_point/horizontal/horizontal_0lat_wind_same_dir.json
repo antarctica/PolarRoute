@@ -330,30 +330,27 @@
                     ]
                 },
                 "properties": {
+                    "name": "Route Path - Source to Destination",
                     "from": "Source",
                     "to": "Destination",
+                    "CellIndices": [
+                        0,
+                        1
+                    ],
                     "traveltime": [
-                        0.0,
                         0.4375825471698114,
                         0.8751650943396228
                     ],
-                    "total_traveltime": 0.8751650943396228,
+                    "cases": [
+                        2,
+                        2
+                    ],
                     "fuel": [
-                        0.0,
-                        12.018112508005858,
-                        24.036225016011716
+                        20.40407067638738,
+                        40.80814135277476
                     ],
-                    "total_fuel": 24.036225016011716,
-                    "distance": [
-                        0.0,
-                        278302.5,
-                        556605.0
-                    ],
-                    "speed": [
-                        0.0,
-                        26.5,
-                        26.5
-                    ]
+                    "total_fuel": 40.80814135277476,
+                    "total_traveltime": 0.8751650943396228
                 }
             }
         ]
