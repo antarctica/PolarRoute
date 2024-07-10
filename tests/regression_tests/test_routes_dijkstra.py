@@ -24,10 +24,12 @@ LOGGER.setLevel(logging.INFO)
 # location of test files to be recalculated for regression testing
 TEST_ROUTES = [
     './example_routes/dijkstra/fuel/gaussian_random_field.json',
+    './example_routes/dijkstra/fuel/gaussian_random_field_waypointsplitting.json',
     './example_routes/dijkstra/fuel/checkerboard.json',
     './example_routes/dijkstra/fuel/great_circle_forward.json',
     './example_routes/dijkstra/fuel/great_circle_reverse.json',
     './example_routes/dijkstra/time/gaussian_random_field.json',
+    './example_routes/dijkstra/time/gaussian_random_field_waypointsplitting.json',
     './example_routes/dijkstra/time/checkerboard.json',
     './example_routes/dijkstra/time/great_circle_forward.json',
     './example_routes/dijkstra/time/great_circle_reverse.json',

@@ -219,6 +219,32 @@ class PathValues:
             traveltime = np.inf
         return self._unit_time(traveltime), dist
     
+    def _rhumb_line_distance(self,start_waypoint,end_waypoint):
+        '''
+            Defining the rhumbline distance from a given waypoint start and end point
+
+            Inputs:
+                start_waypoints - (list([Long,lat])) Start Waypoint location with long lat
+                end_waypoints - (list([Long,lat])) End Waypoint location with long lat
+        '''
+
+        # Defining a corrected distance based on rhumb lines
+        Xs,Ys  = start_waypoint
+        Xe,Ye  = end_waypoint
+
+        R = 6371.1*1000.
+        dY_corrected = np.log(np.tan((np.pi/4) + (Ye*(np.pi/180))/2)/np.tan((np.pi/4) + (Ys*(np.pi/180))/2))
+        dX =  (Xe-Xs)*(np.pi/180)
+        dY =  (Ye-Ys)*(np.pi/180)
+        if dY_corrected==0 and dY==0:
+            q = np.cos(Ye*(np.pi/180))
+        else:
+            q = dY/dY_corrected
+
+        distance = np.sqrt(dY**2 + (q**2)*(dX**2))*R
+        return distance
+
+
     def _waypoint_correction(self,path_requested_variables,source_graph,Wp,Cp):
         '''
             Applies an in-cell correction to a path segments to determine 'path_requested_variables'
@@ -247,7 +273,8 @@ class PathValues:
         Su  = source_graph['Vector_x']
         Sv  = source_graph['Vector_y']
         Ssp = self._unit_speed(source_graph['speed'][case])
-        traveltime, distance = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+        traveltime, _ = self._traveltime_in_cell(x,y,Su,Sv,Ssp)
+        distance = self._rhumb_line_distance(Wp,Cp)
 
         # Given the traveltime and distance between the two waypoints
         # determine the path related variables (e.g. fuel usage, traveltime)
@@ -1049,12 +1076,11 @@ class Smoothing:
 
         percentage_diff1  = (max_new-start)*100
         percentage_diff2  = (max_new-end)*100
-
-        if (percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end) or (max_new<=self.blocked_sic):
+        if (percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end) or max_new<=self.blocked_sic:
             return False
         else:
             return True
-                
+    
 
     def clip(self,cell_a,cell_b,case,x):
         '''
