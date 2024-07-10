@@ -9,8 +9,8 @@ class Route:
         Attributes:
             segments (list<Segment>): a list of Segment object that constitutes the entire route
             name (String) (optional): string representing the route name
-            _from (string): the name of the source waypoint
-            _to (string): the name of the destination waypoint
+            from_wp (string): the name of the source waypoint
+            to_wp (string): the name of the destination waypoint
             conf (dict): the associated route config
             cases (list): a list of all cases along the route
 
@@ -20,8 +20,8 @@ class Route:
         self.segments = segments
         if name is None:
             self.name = 'Route Path - {} to {}'.format(_from, _to)
-        self._from = _from
-        self._to = _to
+        self.from_wp = _from
+        self.to_wp = _to
         self.cases = []
         self.conf = conf
     
@@ -60,8 +60,8 @@ class Route:
         path['geometry']['coordinates'] =  self.get_points()
         path['properties'] = {}
         path['properties']['name'] = self.name
-        path['properties']['from'] = self._from
-        path['properties']['to'] = self._to
+        path['properties']['from'] = self.from_wp
+        path['properties']['to'] = self.to_wp
 
         cell_indices  = []
         for seg in self.segments:

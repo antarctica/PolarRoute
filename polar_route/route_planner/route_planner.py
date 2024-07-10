@@ -19,9 +19,11 @@ from polar_route.route_planner.waypoint import Waypoint
 from polar_route.route_planner.segment import Segment
 from polar_route.route_planner.routing_info import RoutingInfo
 from polar_route.route_planner.crossing import NewtonianDistance
+from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues
 from polar_route.utils import json_str, unit_speed
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
+from meshiphi.utils import longitude_domain
 
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
@@ -85,6 +87,70 @@ def _adjust_waypoints(point, cellboxes, max_distance=5):
         logging.info(f'Adjusted to ({adjusted_point.y},{adjusted_point.x})')
         return adjusted_point
 
+
+def _initialise_dijkstra_graph(dijkstra_graph):
+    """
+        Initialising dijkstra graph information in a standard form
+
+        Args:
+            dijkstra_graph (pd.dataframe) - Pandas dataframe of the dijkstra graph construction
+
+        Outputs:
+            dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
+                                         Each entry is a dictionary of the cellbox environmental and dijkstra information.
+
+    """
+
+    dijkstra_graph_dict = {}
+    for idx,cell in dijkstra_graph.iterrows():
+        dijkstra_graph_dict[cell.name] = {}
+        dijkstra_graph_dict[cell.name]['id'] = cell.name
+        for key in cell.keys():
+            entry = cell[key]
+            if type(entry) == list:
+                entry = np.array(entry)
+            dijkstra_graph_dict[cell.name][key] = entry
+    return  dijkstra_graph_dict
+
+
+def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
+    """
+        Initialising dijkstra route info a standard path form
+
+        Args:
+            dijkstra_graph (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
+                                    Each entry is a dictionary of the cellbox environmental and dijkstra information.
+
+            dijkstra_route (dict) - Dictionary of a GeoJSON entry for the dijkstra route
+
+        Outputs:
+            aps (list, [find_edge, ...]) - A list of adjacent cell pairs where each entry is of type find_edge including information on
+                                        .crossing, .case, .start, and .end see 'find_edge' for more information
+    """
+
+    org_path_points = np.array(dijkstra_route['geometry']['coordinates'])
+    org_cell_indices = np.array(dijkstra_route['properties']['CellIndices'])
+    org_cell_cases= np.array(dijkstra_route['properties']['cases'])
+
+    # -- Generating a dataframe of the case information --
+    points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
+    cell_indices = np.concatenate([[org_cell_indices[0]], [org_cell_indices[0]], org_cell_indices[1:-1:2],
+                                  [org_cell_indices[-1]], [org_cell_indices[-1]]])
+    cell_cases = np.concatenate([[org_cell_cases[0]], [org_cell_cases[0]], org_cell_cases[1:-1:2], [org_cell_cases[-1]],
+                                 [org_cell_cases[-1]]])
+
+    cell_dijk    = [dijkstra_graph[ii] for ii in cell_indices]
+    cells  = cell_dijk[1:-1]
+    cases  = cell_cases[1:-1]
+    aps = []
+    for ii in range(len(cells)-1):
+        aps += [FindEdge(cells[ii],cells[ii+1],cases[ii+1])]
+
+    # #-- Setting some backend information
+    start_waypoint = points[0,:]
+    end_waypoint   = points[-1,:]
+
+    return aps, start_waypoint,end_waypoint
 
 class RoutePlanner:
     """
@@ -354,7 +420,7 @@ class RoutePlanner:
             raise ValueError('Invalid waypoints. Inaccessible source waypoints')
 
         logging.info('============= Dijkstra Route Creation ============')
-        logging.info(f' - Objective = {self.config['objective_function']} ')
+        logging.info(f" - Objective = {self.config['objective_function']}")
         if len(end_wps) == 0:
             end_wps= [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes] # full graph, use all the cellboxes ids as destination
         for wp in src_wps:
@@ -367,19 +433,101 @@ class RoutePlanner:
         self.routes_dijkstra = routes
         # Returning the constructed routes
         return routes
-    
+
+    def compute_smoothed_routes(self, blocked_metric='SIC'):
+        """
+            Uses the previously constructed Dijkstra routes and smooths them to remove mesh features
+            `paths` will be updated in the output JSON
+        """
+
+        # ====== Routes info =======
+        # Check whether any Dijkstra routes exist before running smoothing
+        if len(self.routes_dijkstra) == 0:
+            raise Exception('Smoothed routes not constructed as there were no Dijkstra routes created')
+        routes = copy.deepcopy(self.routes_dijkstra)
+
+        # ====== Determining route info ======
+        # Get smoothing parameters from config or set default values
+        max_iterations = self.config.get('smoothing_max_iterations', 2000)
+        blocked_sic = self.config.get('smoothing_blocked_sic', 10.0)
+        merge_separation = self.config.get('smoothing_merge_separation', 1e-3)
+        converged_sep = self.config.get('smoothing_converged_sep', 1e-3)
+
+        logging.info('========= Determining Smoothed Routes ===========\n')
+        geojson = {}
+        smoothed_routes = []
+
+        for route in routes:
+            logging.info('---Smoothing {}'.format(route['properties']['name']))
+            route_json = route.to_json()
+            source_wp_name = route_json.from_wp
+            end_wp_name = route_json.to_wp
+
+            initialised_dijkstra_graph = {}
+            adjacent_pairs = route.segments
+
+            #TODO Confirm equivalent of self.dijkstra_info and self.adjacent_pairs
+
+            sf = Smoothing(initialised_dijkstra_graph,
+                           adjacent_pairs,
+                           source_wp_name,end_wp_name,
+                           blocked_metric=blocked_metric,
+                           max_iterations=max_iterations,
+                           blocked_sic = blocked_sic,
+                           merge_separation=merge_separation,
+                           converged_sep=converged_sep)
+
+            sf.forward()
+
+            # ------ Smoothed Route Values -----
+            # Given a smoothed route now determine the parameters along the route.
+            pv = PathValues()
+            path_info = pv.objective_function(sf.aps, sf.start_waypoint, sf.end_waypoint)
+            # Ensure all coordinates are in domain -180:180
+            path_info['path'][:, 0] = longitude_domain(path_info['path'][:, 0])
+            variables = path_info['variables']
+            travel_time_legs = variables['traveltime']['path_values']
+            distance_legs = variables['distance']['path_values']
+            fuel_legs = variables['fuel']['path_values']
+            speed_legs = variables['speed']['path_values']
+
+            # ------ Saving Output in a standard form to be saved ------
+            smoothed_route = dict()
+            smoothed_route['type'] = 'Feature'
+            smoothed_route['geometry'] = {}
+            smoothed_route['geometry']['type'] = "LineString"
+            smoothed_route['geometry']['coordinates'] = path_info['path'].tolist()
+            smoothed_route['properties'] = {}
+            smoothed_route['properties']['from'] = route['properties']['from']
+            smoothed_route['properties']['to'] = route['properties']['to']
+            smoothed_route['properties']['traveltime'] = list(travel_time_legs)
+            smoothed_route['properties']['total_traveltime'] = smoothed_route['properties']['traveltime'][-1]
+            smoothed_route['properties']['fuel'] = list(fuel_legs)
+            smoothed_route['properties']['total_fuel'] = smoothed_route['properties']['fuel'][-1]
+            smoothed_route['properties']['distance'] = list(distance_legs)
+            smoothed_route['properties']['speed'] = list(speed_legs)
+            smoothed_routes += [smoothed_route]
+
+            logging.info('{} iterations'.format(sf.jj))
+
+        geojson['type'] = "FeatureCollection"
+        geojson['features'] = smoothed_routes
+        self.routes_smoothed = geojson
+        return self.routes_smoothed
+
     def _validate_wps(self, wps):
         """
-                Determines if the provided waypoint list contains valid (both lie within the bounds of the env mesh).
+                Determines if the provided waypoint list contains valid waypoints (i.e. both lie within the bounds of
+                 the env mesh).
                 Args:
-                    wps (list<Waypoint>): list of waypoint object that encapsulates lat and long information
+                    wps (list<Waypoint>): list of waypoint objects that encapsulates lat and long information
                 Returns:
-                   Wps (list<Waypoint>): list of waypoint object that encapsulates lat and long information after
-                   removing the invalid waypoints
+                   Wps (list<Waypoint>): list of waypoint objects that encapsulates lat and long information after
+                   removing any invalid waypoints
         """
         def select_cellbox(ids):
             """
-            In case a WP lies on the border of 2 cellboxes,  this method applies the selection criteria between the
+            In case a WP lies on the border of 2 cellboxes, this method applies the selection criteria between the
             cellboxes (the current criteria is to select the north-east cellbox).
                 Args:
                     ids([int]): list contains the touching cellboxes ids
