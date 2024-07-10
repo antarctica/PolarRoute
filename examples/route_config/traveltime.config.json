@@ -12,6 +12,7 @@
     "variable_speed": true,
     "time_unit": "days",
     "early_stopping_criterion": true,
+    "waypoints_splitting": false,
     "save_dijkstra_graphs": true,
     "smooth_path": {
         "max_iteration_number": 1000,
