@@ -1,0 +1,265 @@
+{
+    "config": {
+        "mesh_info": {
+            "region": {
+                "lat_min": -2.5,
+                "lat_max": 2.5,
+                "long_min": -2.5,
+                "long_max": 2.5,
+                "start_time": "2024-04-04",
+                "end_time": "2024-04-05",
+                "cell_width": 5.0,
+                "cell_height": 2.5
+            },
+            "data_sources": [
+                {
+                    "loader": "vector_grf",
+                    "params": {
+                        "data_name": "uC,vC",
+                        "min": 0,
+                        "max": 0,
+                        "seed": 1,
+                        "dataloader_name": "vector_grf",
+                        "downsample_factors": [
+                            1,
+                            1
+                        ],
+                        "aggregate_type": "MEAN",
+                        "min_dp": 5,
+                        "in_proj": "EPSG:4326",
+                        "out_proj": "EPSG:4326",
+                        "x_col": "lat",
+                        "y_col": "long",
+                        "size": 512,
+                        "alpha": 3,
+                        "vec_x": "uC",
+                        "vec_y": "vC",
+                        "fast_reprojection": false
+                    }
+                }
+            ],
+            "splitting": {
+                "split_depth": 0,
+                "minimum_datapoints": 5
+            }
+        },
+        "vessel_info": {
+            "vessel_type": "SDA",
+            "max_speed": 10,
+            "unit": "km/hr",
+            "beam": 1.0,
+            "hull_type": "slender",
+            "force_limit": 1.0,
+            "max_ice_conc": 0.0,
+            "min_depth": 0.5
+        },
+        "route_info": {
+            "objective_function": "traveltime",
+            "path_variables": [
+                "fuel",
+                "traveltime"
+            ],
+            "vector_names": [
+                "uC",
+                "vC"
+            ],
+            "zero_currents": false,
+            "variable_speed": true,
+            "time_unit": "days",
+            "early_stopping_criterion": true,
+            "save_dijkstra_graphs": false,
+            "smooth_path": {
+                "max_iteration_number": 300,
+                "minimum_difference": 0.002
+            }
+        }
+    },
+    "cellboxes": [
+        {
+            "geometry": "POLYGON ((-2.5 -2.5, -2.5 0, 2.5 0, 2.5 -2.5, -2.5 -2.5))",
+            "cx": 0.0,
+            "cy": -1.25,
+            "dcx": 2.5,
+            "dcy": 1.25,
+            "uC": 0.0,
+            "vC": 0.0,
+            "id": "0",
+            "land": false,
+            "ext_ice": false,
+            "inaccessible": false,
+            "speed": [
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10
+            ],
+            "resistance": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "fuel": [
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792
+            ]
+        },
+        {
+            "geometry": "POLYGON ((-2.5 0, -2.5 2.5, 2.5 2.5, 2.5 0, -2.5 0))",
+            "cx": 0.0,
+            "cy": 1.25,
+            "dcx": 2.5,
+            "dcy": 1.25,
+            "uC": 0.0,
+            "vC": 0.0,
+            "id": "1",
+            "land": false,
+            "ext_ice": false,
+            "inaccessible": false,
+            "speed": [
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10,
+                10
+            ],
+            "resistance": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "fuel": [
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792,
+                8.65320792
+            ]
+        }
+    ],
+    "neighbour_graph": {
+        "0": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [],
+            "-1": [],
+            "-2": [],
+            "-3": [],
+            "-4": [
+                1
+            ]
+        },
+        "1": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [
+                0
+            ],
+            "-1": [],
+            "-2": [],
+            "-3": [],
+            "-4": []
+        }
+    },
+    "waypoints": {
+        "Name": {
+            "0": "Source",
+            "1": "Destination"
+        },
+        "Lat": {
+            "0": 1.25,
+            "1": -1.25
+        },
+        "Long": {
+            "0": 0,
+            "1": 0
+        },
+        "Source": {
+            "0": "X",
+            "1": " "
+        },
+        "Destination": {
+            "0": null,
+            "1": "X"
+        },
+        "index": {
+            "0": 1,
+            "1": 0
+        }
+    },
+    "paths": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            0.0,
+                            1.25
+                        ],
+                        [
+                            0.0,
+                            0.0
+                        ],
+                        [
+                            0.0,
+                            -1.25
+                        ]
+                    ]
+                },
+                "properties": {
+                    "name": "Route Path - Source to Destination",
+                    "from": "Source",
+                    "to": "Destination",
+                    "CellIndices": [
+                        1,
+                        0
+                    ],
+                    "traveltime": [
+                        0.5801354166666667,
+                        1.1602708333333334
+                    ],
+                    "cases": [
+                        4,
+                        4
+                    ],
+                    "fuel": [
+                        5.0200323821725,
+                        10.040064764345
+                    ],
+                    "total_fuel": 10.040064764345,
+                    "total_traveltime": 1.1602708333333334
+                }
+            }
+        ]
+    }
+}
