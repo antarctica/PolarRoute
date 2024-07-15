@@ -303,6 +303,17 @@ def json_str(input_json):
     return output
 
 
+def pandas_dataframe_str(input):
+    if (type(input) is dict) or (type(input) is pd.core.frame.DataFrame):
+        output = input
+    elif type(input) is str:
+        try:
+            output = pd.read_csv(input)
+        except:
+            raise Exception("Unable to load '{}', please check path name".format(input))
+    return output
+
+
 def case_from_angle( start,end):
         """
             Determine the direction of travel between two points in the same cell and return the associated case

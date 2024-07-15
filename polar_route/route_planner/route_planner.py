@@ -20,7 +20,7 @@ from polar_route.route_planner.segment import Segment
 from polar_route.route_planner.routing_info import RoutingInfo
 from polar_route.route_planner.crossing import NewtonianDistance
 from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues
-from polar_route.utils import json_str, unit_speed
+from polar_route.utils import json_str, unit_speed, pandas_dataframe_str
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
 from meshiphi.utils import longitude_domain
@@ -196,8 +196,14 @@ class RoutePlanner:
                 cost_func (func): Crossing point cost function for Dijkstra route construction. For development purposes
                                   only!
         """
-        # Load mesh json from file or dict and initialise EnvironmentMesh object
+        # Load mesh json from file or dict
         mesh_json = json_str(mesh_file)
+
+        # Zeroing currents if vectors names are not defined or zero_currents is defined
+        mesh_json = self._zero_currents(mesh_json)
+        mesh_json = self._fixed_speed(mesh_json)
+
+        # Initialise EnvironmentMesh object
         self.env_mesh = EnvironmentMesh.load_from_json(mesh_json)
 
         # Load config and set speed units
@@ -238,6 +244,83 @@ class RoutePlanner:
         self.src_wps = []
         self.routes_dijkstra = []
         self.routes_smoothed = []
+
+    def _splitting_around_waypoints(self, waypoints_df):
+        """
+            Applying splitting around waypoints if this is defined in config. This is applied
+            inplace.
+            Args:
+                waypoints_df(pd.DataFrame): Pandas DataFrame of Waypoint locations
+            Appied to terms:
+                self.config - PolarRoute config file
+                self.env_mesh - The EnvironmentalMesh object for the relevant mesh
+
+        """
+        if ('waypoint_splitting' in self.config) and (self.config['waypoint_splitting']):
+            logging.info(' Splitting around waypoints !')
+            wps_points = [(entry['Lat'], entry['Long']) for _, entry in self.waypoints_df.iterrows()]
+            self.env_mesh.split_points(wps_points)
+
+    def _zero_currents(self, mesh):
+        """
+            Applying zero currents to mesh
+
+            Input
+                mesh (JSON) - MeshiPhi Mesh input
+            Output:
+                mesh (JSON) - MeshiPhi Mesh Corrected
+        """
+
+        # Zeroing currents if both vectors are defined and zeroed
+        if ('zero_currents' in self.config) and ("vector_names" in self.config):
+            if self.config['zero_currents']:
+                logging.info('Zero Currents for Mesh !')
+                for idx, cell in enumerate(mesh['cellboxes']):
+                    cell[self.config['vector_names'][0]] = 0.0
+                    cell[self.config['vector_names'][1]] = 0.0
+                    mesh['cellboxes'][idx] = cell
+
+        # If no vectors are defined then add zero currents to mesh
+        if 'vector_names' not in self.config:
+            self.config['vector_names'] = ['Vector_x', 'Vector_y']
+            logging.info('No vector_names defined in config. Zeroing currents in mesh !')
+            for idx, cell in enumerate(mesh['cellboxes']):
+                cell[self.config['vector_names'][0]] = 0.0
+                cell[self.config['vector_names'][1]] = 0.0
+                mesh['cellboxes'][idx] = cell
+
+        return mesh
+
+    def _fixed_speed(self, mesh):
+        """
+            Applying max speed for all cellboxes that are accessible
+
+            Input
+                mesh (JSON) - MeshiPhi Mesh input
+            Output:
+                mesh (JSON) - MeshiPhi Mesh Corrected
+        """
+
+        # Setting speed to a fixed value if specified in the config
+        if ('fixed_speed' in self.config):
+            if self.config['fixed_speed']:
+                logging.info('Setting all speeds max speed for Mesh!')
+                max_speed = mesh['config']['vessel_info']['max_speed']
+                for idx, cell in enumerate(mesh['cellboxes']):
+                    if 'speed' in cell.keys():
+                        cell['speed'] = [max_speed,
+                                         max_speed,
+                                         max_speed,
+                                         max_speed,
+                                         max_speed,
+                                         max_speed,
+                                         max_speed,
+                                         max_speed]
+                        mesh['cellboxes'][idx] = cell
+                    else:
+                        continue
+
+        return mesh
 
     def _dijkstra_routes(self, start_waypoints, end_waypoints):
         """
@@ -410,6 +493,8 @@ class RoutePlanner:
             Returns:
                 routes (List<Route>): a list of the computed routes     
         """
+        # Split around waypoints if specified in the config
+        self._splitting_around_waypoints(pandas_dataframe_str(waypoints))
         # Load source and destination waypoints
         src_wps, end_wps =  self._load_waypoints(waypoints)
         # Waypoint validation, TODO: replace with validate_waypoints function in the future
