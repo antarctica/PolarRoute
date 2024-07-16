@@ -358,6 +358,11 @@ class RoutePlanner:
                         neighbour_case = (self.env_mesh.neighbour_graph.get_neighbour_case(
                             self.cellboxes_lookup[routing_info.get_node_index()],
                             self.cellboxes_lookup[e_wp_indx]))
+                        # If no neighbour case found try global mesh method for cells touching anti-meridian
+                        if neighbour_case == 0:
+                            neighbour_case = (self.env_mesh.neighbour_graph.get_global_mesh_neighbour_case(
+                                self.cellboxes_lookup[routing_info.get_node_index()],
+                                self.cellboxes_lookup[e_wp_indx]))
                         # Add case twice to cover travel to/from crossing point
                         for x in range(2):
                             cases.insert(0, neighbour_case)

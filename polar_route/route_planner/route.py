@@ -1,6 +1,7 @@
 import logging
 import numpy as np
 from polar_route.utils import case_from_angle, unit_time, unit_speed
+from meshiphi.utils import longitude_domain
 
 
 class Route:
@@ -57,7 +58,7 @@ class Route:
         path['type'] = "Feature"
         path['geometry'] = {}
         path['geometry']['type'] = "LineString"    
-        path['geometry']['coordinates'] =  self.get_points()
+        path['geometry']['coordinates'] =  longitude_domain(self.get_points())
         path['properties'] = {}
         path['properties']['name'] = self.name
         path['properties']['from'] = self.from_wp
