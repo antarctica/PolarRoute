@@ -103,4 +103,3 @@ class Segment:
     def to_str(self):
         return (f"[ {self.start_wp.get_longitude()}, {self.start_wp.get_latitude()} ]"
                 f" [{self.end_wp.get_longitude()}, {self.end_wp.get_latitude()}]")
-    
