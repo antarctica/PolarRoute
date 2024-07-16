@@ -21,6 +21,7 @@ from polar_route.route_planner.routing_info import RoutingInfo
 from polar_route.route_planner.crossing import NewtonianDistance
 from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues
 from polar_route.utils import json_str, unit_speed, pandas_dataframe_str
+from meshiphi import Boundary
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
 from meshiphi.utils import longitude_domain
@@ -28,20 +29,22 @@ from meshiphi.utils import longitude_domain
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 
-# Functions for flexible waypoints, TODO update to work with refactored code
+# Functions for flexible waypoints
 def _mesh_boundary_polygon(mesh):
     """
-        Creates a polygon from the mesh boundary
+    Creates a polygon from the mesh boundary
     """
-    lat_min = mesh['config']['mesh_info']['region']['lat_min']
-    lat_max = mesh['config']['mesh_info']['region']['lat_max']
-    long_min = mesh['config']['mesh_info']['region']['long_min']
-    long_max = mesh['config']['mesh_info']['region']['long_max']
-    p1 = Point([long_min, lat_min])
-    p2 = Point([long_min, lat_max])
-    p3 = Point([long_max, lat_max])
-    p4 = Point([long_max, lat_min])
-    return Polygon([p1,p2,p3,p4])
+    # Defining a tiny value
+    tiny_value = 1e-10
+
+    lat_min = mesh['config']['mesh_info']['region']['lat_min']-tiny_value
+    lat_max = mesh['config']['mesh_info']['region']['lat_max']+tiny_value
+    long_min = mesh['config']['mesh_info']['region']['long_min']-tiny_value
+    long_max = mesh['config']['mesh_info']['region']['long_max']+tiny_value
+
+    bounds = Boundary([lat_min, lat_max], [long_min, long_max])
+
+    return bounds.to_polygon()
 
 
 def _adjust_waypoints(point, cellboxes, max_distance=5):
@@ -498,10 +501,24 @@ class RoutePlanner:
             Returns:
                 routes (List<Route>): a list of the computed routes     
         """
+        waypoints_df = pandas_dataframe_str(waypoints)
         # Split around waypoints if specified in the config
-        self._splitting_around_waypoints(pandas_dataframe_str(waypoints))
+        self._splitting_around_waypoints(waypoints_df)
+
+        # Move waypoint to closest accessible cellbox if it isn't in one already
+        mesh_boundary = _mesh_boundary_polygon(self.env_mesh.to_json())
+        for idx, row in waypoints_df.iterrows():
+            point = Point([row['Long'], row['Lat']])
+            # Only allow waypoints within an existing mesh
+            assert (point.within(mesh_boundary)), \
+                f"Waypoint {row['Name']} outside of mesh boundary! {point}"
+            adjusted_point = _adjust_waypoints(point, self.env_mesh.to_json()['cellboxes'])
+
+            waypoints_df.loc[idx, 'Long'] = adjusted_point.x
+            waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
+
         # Load source and destination waypoints
-        src_wps, end_wps =  self._load_waypoints(waypoints)
+        src_wps, end_wps =  self._load_waypoints(waypoints_df)
         # Waypoint validation, TODO: replace with validate_waypoints function in the future
         src_wps = self._validate_wps(src_wps)
         end_wps =  self._validate_wps(end_wps)
