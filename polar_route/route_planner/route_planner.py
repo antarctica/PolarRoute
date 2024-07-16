@@ -199,16 +199,16 @@ class RoutePlanner:
         # Load mesh json from file or dict
         mesh_json = json_str(mesh_file)
 
+        # Load config and set speed units
+        self.config = json_str(config_file)
+        self.config['unit_shipspeed'] = mesh_json['config']['vessel_info']['unit']
+
         # Zeroing currents if vectors names are not defined or zero_currents is defined
         mesh_json = self._zero_currents(mesh_json)
         mesh_json = self._fixed_speed(mesh_json)
 
         # Initialise EnvironmentMesh object
         self.env_mesh = EnvironmentMesh.load_from_json(mesh_json)
-
-        # Load config and set speed units
-        self.config = json_str(config_file)
-        self.config['unit_shipspeed'] = mesh_json['config']['vessel_info']['unit']
 
         # Validate config and mesh TODO replace with function from config_validation
         mandatory_fields = ["objective_function", "path_variables", "vector_names", "time_unit"]
@@ -258,7 +258,7 @@ class RoutePlanner:
         """
         if ('waypoint_splitting' in self.config) and (self.config['waypoint_splitting']):
             logging.info(' Splitting around waypoints !')
-            wps_points = [(entry['Lat'], entry['Long']) for _, entry in self.waypoints_df.iterrows()]
+            wps_points = [(entry['Lat'], entry['Long']) for _, entry in waypoints_df.iterrows()]
             self.env_mesh.split_points(wps_points)
 
     def _zero_currents(self, mesh):
