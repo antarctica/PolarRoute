@@ -81,8 +81,17 @@ class Route:
         return output
 
     def _accumulate_metric(self, metric):
+        """
+        Finds the cumulative sum over the given metric for the route
+        Args:
+            metric (str): The name of the metric
+
+        Returns:
+            metric_cumul (list): List of cumulative values for the metric at each segment along the route
+        """
         metrics = [getattr(seg, metric) for seg in self.segments]
-        return [ sum(metrics [0:i+1]) for i in range(len(metrics))]
+        metric_cumul = [sum(metrics [0:i+1]) for i in range(len(metrics))]
+        return metric_cumul
 
     def set_cases(self, cases):
         """
@@ -149,7 +158,6 @@ class Route:
         logging.debug(f"WP_correction >> cp >> {cp.to_point()}")
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
-        # x = self._dist_around_globe(cp.get_longitude(),wp.get_longitude())*m_long*np.cos(wp.get_latitude()*(np.pi/180))
         x = (cp.get_longitude() - wp.get_longitude()) * m_long * np.cos(wp.get_latitude() * (np.pi / 180))
         y = (cp.get_latitude() - wp.get_latitude()) * m_lat
         # Select case with matching index
@@ -181,6 +189,9 @@ class Route:
         return a   
 
     def get_points(self):
+        """
+            Gets a list of points along the route
+        """
         points = []
         if len(self.segments) > 0:
             points.append(self.segments[0].get_start_wp().to_point())
