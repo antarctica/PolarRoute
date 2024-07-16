@@ -67,7 +67,7 @@ def _adjust_waypoints(point, cellboxes, max_distance=5):
     else:
         logging.debug(f'({point.y},{point.x}) not in accessible cellbox')
         # Create a line between CB centre and point
-        cb_centre = Point([nearest_cb['cx'],nearest_cb['cy']])
+        cb_centre = Point([nearest_cb['cx'], nearest_cb['cy']])
         connecting_line = LineString([point, cb_centre])
         # Extract segment of line inside the accessible cellbox    
         intersecting_line = connecting_line.intersection(cb_polygon)
@@ -701,40 +701,3 @@ class RoutePlanner:
             return  src_wps, dest_wps
         except FileNotFoundError:
             raise ValueError(f"Unable to load '{waypoints}', please check file path provided")
-
-
-# if __name__ == '__main__':
-#
-#       import json
-#       config = None
-#     #   mesh_file = "../tests/regression_tests/example_routes/dijkstra/time/checkerboard.json"
-#       mesh_file = "add_vehicle.output.json"
-#
-#
-#     #   mesh_file = "grf_reprojection.json"
-#       wp_file = "../tests/unit_tests/resources/waypoint/waypoints_2.csv"
-#       route_conf = "../tests/unit_tests/resources/waypoint/route_config.json"
-#       route_planner= None
-#       vessel_mesh = None
-#       with open(mesh_file, "r") as mesh_json:
-#           #config = json.load(mesh_json)['config']
-#           vessel_mesh =  json.load(mesh_json)
-#       #mesh_json = MeshBuilder(config).build_environmental_mesh().to_json()
-#     #   mesh_json = json.load(mesh_json)
-#
-#
-#     #   vp = VesselPerformanceModeller(mesh_json, config['vessel_info'])
-#     #   vp.model_accessibility()
-#     #   vp.model_performance()
-#     #   info = vp.to_json()
-#     #   json.dump(info, open('vessel_mesh.json', "w"), indent=4)
-#     #   with open(route_conf, "r") as config_file:
-#     #       config = json.load(config_file)
-#     #   route_planner= RoutePlanner("vessel_mesh.json", route_conf)
-#       route_planner = RoutePlanner(mesh_file, route_conf)
-#     # #   src, dest = route_planner._load_waypoints(wp_file)
-#     # #   route_planner._validate_wps(src)
-#     # #   route_planner._validate_wps(dest)
-#     #   routes = route_planner.compute_routes(vessel_mesh['waypoints'])
-#       routes = route_planner.compute_routes(wp_file)
-#       print(routes[0].to_json())
