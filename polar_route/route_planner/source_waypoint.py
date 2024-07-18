@@ -28,7 +28,7 @@ class SourceWaypoint(Waypoint):
         self.visited_nodes = []
         self.routing_table = dict()
         # add routing information to itself, empty list of segments as distance = 0
-        self.routing_table[self.cellbox_indx] = RoutingInfo (self.cellbox_indx, [])
+        self.routing_table[self.cellbox_indx] = RoutingInfo(self.cellbox_indx, [])
 
     def update_routing_table(self, indx, routing_info):
         """
@@ -63,7 +63,7 @@ class SourceWaypoint(Waypoint):
 
         """
         for wp in self.end_wps:
-            if str(wp.get_cellbox_indx()) not  in self.visited_nodes:
+            if str(wp.get_cellbox_indx()) not in self.visited_nodes:
                 return False
         return True
 
@@ -82,7 +82,7 @@ class SourceWaypoint(Waypoint):
         for x in self.routing_table.keys():
             logging.debug(f"To {x}, through node_idx: {self.routing_table[x].get_node_index()}")
             logging.debug("using segments >> ")
-            for s in self.routing_table [x].get_path():
+            for s in self.routing_table[x].get_path():
                 logging.debug(s.to_str())
 
     def get_obj(self, node_indx, obj):
@@ -104,13 +104,13 @@ class SourceWaypoint(Waypoint):
         obj_value = 0
         # Sum segment values recursively until the source waypoint is reached
         for segment in self.routing_table[node_indx].get_path():
-            obj_value +=  getattr(segment, obj)
+            obj_value += getattr(segment, obj)
 
         through_indx = self.routing_table[node_indx].node_indx
         # Search recursively and sum up the remaining segments until we reach the source waypoint
-        while through_indx!= self.cellbox_indx:
+        while through_indx != self.cellbox_indx:
                 for segment in self.routing_table[through_indx].get_path():
-                        obj_value +=  getattr(segment, obj)   
+                        obj_value += getattr(segment, obj)
                 through_indx = self.routing_table[through_indx].node_indx 
  
         return obj_value

@@ -42,7 +42,7 @@ class Route:
         """
             Goes through the route segments and calculates the entire route's fuel usage
         """
-        return  sum(seg.get_fuel() for seg in self.segments)
+        return sum(seg.get_fuel() for seg in self.segments)
       
     def to_json(self):
         """
@@ -57,20 +57,20 @@ class Route:
         path_variables = self.conf['path_variables']
         path['type'] = "Feature"
         path['geometry'] = {}
-        path['geometry']['type'] = "LineString"    
-        path['geometry']['coordinates'] =  longitude_domain(self.get_points())
+        path['geometry']['type'] = "LineString"
+        path['geometry']['coordinates'] = longitude_domain(self.get_points())
         path['properties'] = {}
         path['properties']['name'] = self.name
         path['properties']['from'] = self.from_wp
         path['properties']['to'] = self.to_wp
 
-        cell_indices  = []
+        cell_indices = []
         for seg in self.segments:
             cell_indices.append(seg.start_wp.get_cellbox_indx())
            # cell_indices.append(segment.end_wp.get_cellbox_indx())
         # path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]]) ???
         path['properties']['CellIndices'] = cell_indices
-        path['properties']['traveltime']  = self._accumulate_metric('traveltime')
+        path['properties']['traveltime'] = self._accumulate_metric('traveltime')
         path['properties']['cases'] = self.cases
         for variable in path_variables: 
              path['properties'][variable] = self._accumulate_metric(variable)
@@ -90,7 +90,7 @@ class Route:
             metric_cumul (list): List of cumulative values for the metric at each segment along the route
         """
         metrics = [getattr(seg, metric) for seg in self.segments]
-        metric_cumul = [sum(metrics [0:i+1]) for i in range(len(metrics))]
+        metric_cumul = [sum(metrics[0:i+1]) for i in range(len(metrics))]
         return metric_cumul
 
     def set_cases(self, cases):
@@ -117,10 +117,10 @@ class Route:
         """
             Determine the traveltime within a cell
         """
-        dist  = np.sqrt(xdist**2 + ydist**2)
-        cval  = np.sqrt(u**2 + v**2)
+        dist = np.sqrt(xdist**2 + ydist**2)
+        cval = np.sqrt(u**2 + v**2)
 
-        dotprod  = xdist*u + ydist*v
+        dotprod = xdist*u + ydist*v
         diffsqrs = s**2 - cval**2
 
         # if (dotprod**2 + diffsqrs*(dist**2) < 0)
@@ -129,7 +129,7 @@ class Route:
                 return np.inf
                 #raise Exception(' ')
             else:
-                if ((dist**2)/(2*dotprod))  <0:
+                if ((dist**2)/(2*dotprod)) < 0:
                     return np.inf
                     #raise Exception(' ')
                 else:
@@ -156,14 +156,14 @@ class Route:
 
         logging.debug(f"WP_correction >> wp >> {wp.to_point()}")
         logging.debug(f"WP_correction >> cp >> {cp.to_point()}")
-        m_long  = 111.321*1000
-        m_lat   = 111.386*1000
+        m_long = 111.321*1000
+        m_lat = 111.386*1000
         x = (cp.get_longitude() - wp.get_longitude()) * m_long * np.cos(wp.get_latitude() * (np.pi / 180))
         y = (cp.get_latitude() - wp.get_latitude()) * m_lat
         # Select case with matching index
         case = self.cases[indx]
-        su  = cellbox.agg_data['uC']
-        sv  =  cellbox.agg_data['vC']
+        su = cellbox.agg_data['uC']
+        sv = cellbox.agg_data['vC']
         ssp = unit_speed(cellbox.agg_data['speed'][case], self.conf['unit_shipspeed'])
         traveltime, distance = self._traveltime_in_cell(x, y, su, sv, ssp)
         logging.debug(f"WP_correction >> tt >> {traveltime}")
@@ -186,7 +186,7 @@ class Route:
         indx = np.argmin(abs(np.array(dist)))
 
         a = dist[indx]
-        return a   
+        return a
 
     def get_points(self):
         """

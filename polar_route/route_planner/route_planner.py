@@ -37,10 +37,10 @@ def _mesh_boundary_polygon(mesh):
     # Defining a tiny value
     tiny_value = 1e-10
 
-    lat_min = mesh['config']['mesh_info']['region']['lat_min']-tiny_value
-    lat_max = mesh['config']['mesh_info']['region']['lat_max']+tiny_value
-    long_min = mesh['config']['mesh_info']['region']['long_min']-tiny_value
-    long_max = mesh['config']['mesh_info']['region']['long_max']+tiny_value
+    lat_min = mesh['config']['mesh_info']['region']['lat_min'] - tiny_value
+    lat_max = mesh['config']['mesh_info']['region']['lat_max'] + tiny_value
+    long_min = mesh['config']['mesh_info']['region']['long_min'] - tiny_value
+    long_max = mesh['config']['mesh_info']['region']['long_max'] + tiny_value
 
     bounds = Boundary([lat_min, lat_max], [long_min, long_max])
 
@@ -69,7 +69,7 @@ def _adjust_waypoints(point, cellboxes, max_distance=5):
         # Create a line between CB centre and point
         cb_centre = Point([nearest_cb['cx'], nearest_cb['cy']])
         connecting_line = LineString([point, cb_centre])
-        # Extract segment of line inside the accessible cellbox    
+        # Extract segment of line inside the accessible cellbox
         intersecting_line = connecting_line.intersection(cb_polygon)
         
         # Put limit on how far it's allowed to adjust waypoint
@@ -113,7 +113,7 @@ def _initialise_dijkstra_graph(dijkstra_graph):
             if type(entry) == list:
                 entry = np.array(entry)
             dijkstra_graph_dict[cell.name][key] = entry
-    return  dijkstra_graph_dict
+    return dijkstra_graph_dict
 
 
 def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
@@ -136,22 +136,22 @@ def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
     org_cell_cases= np.array(dijkstra_route['properties']['cases'])
 
     # -- Generating a dataframe of the case information --
-    points      = np.concatenate([org_path_points[0,:][None,:],org_path_points[1:-1:2],org_path_points[-1,:][None,:]])
+    points      = np.concatenate([org_path_points[0,:][None,:], org_path_points[1:-1:2], org_path_points[-1,:][None,:]])
     cell_indices = np.concatenate([[org_cell_indices[0]], [org_cell_indices[0]], org_cell_indices[1:-1:2],
                                   [org_cell_indices[-1]], [org_cell_indices[-1]]])
     cell_cases = np.concatenate([[org_cell_cases[0]], [org_cell_cases[0]], org_cell_cases[1:-1:2], [org_cell_cases[-1]],
                                  [org_cell_cases[-1]]])
 
-    cell_dijk    = [dijkstra_graph[ii] for ii in cell_indices]
-    cells  = cell_dijk[1:-1]
-    cases  = cell_cases[1:-1]
+    cell_dijk = [dijkstra_graph[ii] for ii in cell_indices]
+    cells = cell_dijk[1:-1]
+    cases = cell_cases[1:-1]
     aps = []
-    for ii in range(len(cells)-1):
-        aps += [FindEdge(cells[ii],cells[ii+1],cases[ii+1])]
+    for ii in range(len(cells) - 1):
+        aps += [FindEdge(cells[ii],cells[ii+1], cases[ii+1])]
 
     # #-- Setting some backend information
     start_waypoint = points[0,:]
-    end_waypoint   = points[-1,:]
+    end_waypoint = points[-1,:]
 
     return aps, start_waypoint,end_waypoint
 
@@ -221,7 +221,7 @@ class RoutePlanner:
         # Check that the provided mesh has vector information (ex. current)
         self.vector_names = self.config['vector_names']
         for name in self.vector_names: 
-             if  name not in self.env_mesh.agg_cellboxes[0].agg_data :
+             if name not in self.env_mesh.agg_cellboxes[0].agg_data :
                  raise ValueError(f'The env mesh cellboxes do not have {name} data and it is a prerequisite for the '
                                   f'route planner!')
         # Check for SIC data, used in smoothed route construction
@@ -232,7 +232,7 @@ class RoutePlanner:
         if 'speed' not in self.env_mesh.agg_cellboxes[0].agg_data:
             raise ValueError('Vessel speed not in the mesh information! Please run vessel performance')
         
-        #  Check if objective function is in the environment mesh (e.g. speed)
+        # Check if objective function is in the environment mesh (e.g. speed)
         if self.config['objective_function'] != 'traveltime':
             if self.config['objective_function'] not in self.env_mesh.agg_cellboxes[0].agg_data:
                 raise ValueError(f"Objective Function '{self.config['objective_function']}' requires the mesh cellboxes"
@@ -427,14 +427,14 @@ class RoutePlanner:
                 _id (str): index of the cell to get the neighbours for
 
             """
-            neighbour_map = self.env_mesh.neighbour_graph.get_neighbour_map(_id)  # neighbours and cases for node _id
+            neighbour_map = self.env_mesh.neighbour_graph.get_neighbour_map(_id) # neighbours and cases for node _id
             for case, neighbours in neighbour_map.items():
                 if len(neighbours) !=0:
-                  for neighbour in neighbours:  
+                  for neighbour in neighbours:
                      if not source_wp.is_visited(neighbour): # skip visited nodes to avoid cycles
                         edges = self._neighbour_cost(_id, str(neighbour), int(case))
                         edges_cost = sum(segment.get_variable(self.config['objective_function']) for segment in edges)
-                        new_cost =  source_wp.get_obj( _id, self.config['objective_function']) + edges_cost
+                        new_cost = source_wp.get_obj( _id, self.config['objective_function']) + edges_cost
                         if new_cost < source_wp.get_obj(str(neighbour), self.config['objective_function']):
                             source_wp.update_routing_table(str(neighbour), RoutingInfo(_id, edges))
                 
@@ -442,7 +442,7 @@ class RoutePlanner:
         logging.debug(">>>> src >>>> ", wp.get_cellbox_indx())
         logging.debug(">>>> end_wp >>>> ", end_wps[0].get_cellbox_indx())
         while not wp.is_all_visited():
-            # Determine the index of the cell  with the minimum objective function cost that has not yet been visited
+            # Determine the index of the cell with the minimum objective function cost that has not yet been visited
             min_obj_indx = find_min_objective(wp)
             logging.debug("min_obj >>> ", min_obj_indx )
             
@@ -465,8 +465,8 @@ class RoutePlanner:
         direction = [1, 2, 3, 4, -1, -2, -3, -4]
 
         # Applying Newton distance to determine crossing point between node and its neighbour
-        cost_func    = self.cost_func(node_id, neighbour_id, self.cellboxes_lookup, case=case,
-                                          unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
+        cost_func = self.cost_func(node_id, neighbour_id, self.cellboxes_lookup, case=case,
+                                    unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points,cell_points,case = cost_func.value()
 
@@ -481,12 +481,12 @@ class RoutePlanner:
         s1.set_travel_time(traveltime[0])
         s1.set_fuel(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
         s1.set_distance(s1.get_travel_time() * unit_speed(self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)],
-                                                          self.config ['unit_shipspeed']))
+                                                          self.config['unit_shipspeed']))
 
         s2.set_travel_time(traveltime[1])
         s2.set_fuel( s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
         s2.set_distance(s2.get_travel_time() * unit_speed(self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)],
-                                                          self.config ['unit_shipspeed']))
+                                                          self.config['unit_shipspeed']))
 
         neighbour_segments = [s1,s2]
 
@@ -499,7 +499,7 @@ class RoutePlanner:
                 waypoints (String/Dataframe): DataFrame that contains source and destination waypoints info or a string
                 pointing to the path of a csv file that contains this info
             Returns:
-                routes (List<Route>): a list of the computed routes     
+                routes (List<Route>): a list of the computed routes
         """
         waypoints_df = pandas_dataframe_str(waypoints)
         # Split around waypoints if specified in the config
@@ -518,11 +518,11 @@ class RoutePlanner:
             waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
 
         # Load source and destination waypoints
-        src_wps, end_wps =  self._load_waypoints(waypoints_df)
+        src_wps, end_wps = self._load_waypoints(waypoints_df)
         # Waypoint validation, TODO: replace with validate_waypoints function in the future
         src_wps = self._validate_wps(src_wps)
-        end_wps =  self._validate_wps(end_wps)
-        src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps]   # creating SourceWaypoint objects
+        end_wps = self._validate_wps(end_wps)
+        src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps] # creating SourceWaypoint objects
         if len(src_wps) == 0:
             raise ValueError('Invalid waypoints. Inaccessible source waypoints')
 
@@ -642,8 +642,8 @@ class RoutePlanner:
                     selected (int): the id of the selected cellbox
             """
             logging.debug(">>> selecting cellbox for waypoint on boundary...")
-            if (self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup [ids[0]],
-                                                                self.cellboxes_lookup [ids[1]]) in
+            if (self.env_mesh.neighbour_graph.get_neighbour_case(self.cellboxes_lookup[ids[0]],
+                                                                self.cellboxes_lookup[ids[1]]) in
                     [Direction.east, Direction.north_east, Direction.north]):
                 return ids[1]
             return ids[0]
@@ -653,7 +653,7 @@ class RoutePlanner:
             wp_id = []
             for indx in range(len(self.env_mesh.agg_cellboxes)):
                 if (self.env_mesh.agg_cellboxes[indx].contains_point(wp.get_latitude(), wp.get_longitude())
-                        and not self.env_mesh.agg_cellboxes[indx].agg_data ['inaccessible']):
+                        and not self.env_mesh.agg_cellboxes[indx].agg_data['inaccessible']):
                     wp_id. append(self.env_mesh.agg_cellboxes[indx].get_id())
                     wp.set_cellbox_indx(str(self.env_mesh.agg_cellboxes[indx].get_id()))
             if len(wp_id) == 0:
@@ -690,7 +690,7 @@ class RoutePlanner:
             waypoints_df = waypoints
             if isinstance(waypoints, dict):
                 waypoints_df = pd.DataFrame.from_dict(waypoints)
-            if  isinstance(waypoints, str):
+            if isinstance(waypoints, str):
                  waypoints_df = pd.read_csv(waypoints)
             source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
             dest_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
@@ -698,6 +698,6 @@ class RoutePlanner:
                        for index, source in source_waypoints_df.iterrows()]
             dest_wps = [Waypoint(lat=dest['Lat'], long=dest['Long'], name=dest['Name'])
                         for index, dest in dest_waypoints_df.iterrows()]
-            return  src_wps, dest_wps
+            return src_wps, dest_wps
         except FileNotFoundError:
             raise ValueError(f"Unable to load '{waypoints}', please check file path provided")

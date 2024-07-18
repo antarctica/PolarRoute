@@ -30,12 +30,12 @@ class RoutingInfo:
         return self.node_indx
     
     def get_obj(self, obj):
-        if self.node_indx == -1:  # this info means inaccessible node so the obj is infinity
+        if self.node_indx == -1: # this info means inaccessible node so the obj is infinity
             return np.inf
         
-        obj_value =0
+        obj_value = 0
         for segment in self.path:
-            obj_value +=  getattr(segment, obj) # this should be recursive until the source wp
+            obj_value += getattr(segment, obj) # this should be recursive until the source wp
  
         return obj_value
     
