@@ -90,33 +90,28 @@ def _adjust_waypoints(point, cellboxes, max_distance=5):
         logging.info(f'Adjusted to ({adjusted_point.y},{adjusted_point.x})')
         return adjusted_point
 
-
-def _initialise_dijkstra_graph(dijkstra_graph):
+def flatten_cases(cell_id, neighbour_graph):
     """
-        Initialising dijkstra graph information in a standard form
-
+        Identifies the cases with neighbours around a given cell and gets the ids of those neighbouring cells
         Args:
-            dijkstra_graph (pd.dataframe) - Pandas dataframe of the dijkstra graph construction
+            cell_id (str): The id of the cell to find the neighbours for
+            neighbour_graph(dict): The neighbour graph of the mesh
 
-        Outputs:
-            dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
-                                         Each entry is a dictionary of the cellbox environmental and dijkstra information.
-
+        Returns:
+            neighbour_case (list): A list of neighbouring case directions
+            neighbour_indx (list): A list of neighbouring cell indices
     """
-
-    dijkstra_graph_dict = {}
-    for idx,cell in dijkstra_graph.iterrows():
-        dijkstra_graph_dict[cell.name] = {}
-        dijkstra_graph_dict[cell.name]['id'] = cell.name
-        for key in cell.keys():
-            entry = cell[key]
-            if type(entry) == list:
-                entry = np.array(entry)
-            dijkstra_graph_dict[cell.name][key] = entry
-    return dijkstra_graph_dict
+    neighbour_case = []
+    neighbour_indx = []
+    neighbours = neighbour_graph[cell_id]
+    for case in neighbours.keys():
+        for neighbour in neighbours[case]:
+            neighbour_case.append(int(case))
+            neighbour_indx.append(int(neighbour))
+    return neighbour_case, neighbour_indx
 
 
-def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
+def initialise_dijkstra_route(dijkstra_graph, dijkstra_route):
     """
         Initialising dijkstra route info a standard path form
 
@@ -429,7 +424,7 @@ class RoutePlanner:
             """
             neighbour_map = self.env_mesh.neighbour_graph.get_neighbour_map(_id) # neighbours and cases for node _id
             for case, neighbours in neighbour_map.items():
-                if len(neighbours) !=0:
+                if len(neighbours) != 0:
                   for neighbour in neighbours:
                      if not source_wp.is_visited(neighbour): # skip visited nodes to avoid cycles
                         edges = self._neighbour_cost(_id, str(neighbour), int(case))
@@ -444,7 +439,7 @@ class RoutePlanner:
         while not wp.is_all_visited():
             # Determine the index of the cell with the minimum objective function cost that has not yet been visited
             min_obj_indx = find_min_objective(wp)
-            logging.debug("min_obj >>> ", min_obj_indx )
+            logging.debug("min_obj >>> ", min_obj_indx)
             
             consider_neighbours(wp, min_obj_indx)
             wp.visit(min_obj_indx)
@@ -468,7 +463,7 @@ class RoutePlanner:
         cost_func = self.cost_func(node_id, neighbour_id, self.cellboxes_lookup, case=case,
                                     unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
         # Updating the Dijkstra graph with the new information
-        traveltime, crossing_points,cell_points,case = cost_func.value()
+        traveltime, crossing_points, cell_points, case = cost_func.value()
 
         # Create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel)
         s1 = Segment(Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]), Waypoint(crossing_points[1],
@@ -505,7 +500,7 @@ class RoutePlanner:
         # Split around waypoints if specified in the config
         self._splitting_around_waypoints(waypoints_df)
 
-        # Move waypoint to closest accessible cellbox if it isn't in one already
+        # Move waypoint to the closest accessible cellbox, if it isn't in one already
         mesh_boundary = _mesh_boundary_polygon(self.env_mesh.to_json())
         for idx, row in waypoints_df.iterrows():
             point = Point([row['Long'], row['Lat']])
@@ -572,8 +567,8 @@ class RoutePlanner:
             route_json = route.to_json()['paths']['features'][0]
             logging.info('---Smoothing {}'.format(route_json['properties']['name']))
 
-            initialised_dijkstra_graph = {}
-            adjacent_pairs, source_wp, end_wp = _initialise_dijkstra_route(neighbour_graph, route_json)
+            initialised_dijkstra_graph = self.initialise_dijkstra_graph(cellboxes, neighbour_graph, route)
+            adjacent_pairs, source_wp, end_wp = initialise_dijkstra_route(initialised_dijkstra_graph, route_json)
 
             sf = Smoothing(initialised_dijkstra_graph,
                            adjacent_pairs,
@@ -621,6 +616,51 @@ class RoutePlanner:
         geojson['features'] = smoothed_routes
         self.routes_smoothed = geojson
         return self.routes_smoothed
+
+    def initialise_dijkstra_graph(self, cellboxes, neighbour_graph, route):
+        """
+            Initialising dijkstra graph information in a standard form used for the smoothing
+
+            Args:
+                cellboxes (list): list of cells with environmental and vessel performance info
+                neighbour_graph (dict): neighbour graph for the mesh
+                route (Route): Route object for the route to be smoothed
+
+            Outputs:
+                dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
+                                             Each entry is a dictionary of the cellbox environmental and dijkstra information.
+
+        """
+        dijkstra_graph_dict = dict()
+        path_variables = route.conf['path_variables']
+        for idx, cell in enumerate(cellboxes):
+            cell_id = cell['id']
+            dijkstra_graph_dict[cell_id] = cell
+            cases, neighbour_index = flatten_cases(cell_id, neighbour_graph)
+            dijkstra_graph_dict[cell_id]['case'] = np.array(cases)
+            dijkstra_graph_dict[cell_id]['neighbourIndex'] = np.array(neighbour_index)
+            neighbour_travel_legs = []
+            neighbour_crossing_points = []
+            for i, neighbour in enumerate(neighbour_index):
+                cost_func = self.cost_func(cell_id, str(neighbour), self.cellboxes_lookup, case=cases[i],
+                                           unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
+                traveltime, crossing_points, cell_points, case = cost_func.value()
+                neighbour_travel_legs.append(traveltime)
+                neighbour_crossing_points.append(crossing_points)
+            dijkstra_graph_dict[cell_id]['neighbourTravelLegs'] = np.array(neighbour_travel_legs)
+            dijkstra_graph_dict[cell_id]['neighbourCrossingPoints'] = np.array(neighbour_crossing_points)
+            dijkstra_graph_dict[cell_id]['pathPoints'] = route.get_points()
+            for variable in path_variables:
+                dijkstra_graph_dict[cell_id][f'path_{variable}'] = np.array(route.accumulate_metric(variable))
+            if idx == 0:
+                dijkstra_graph_dict[cell_id]['pathIndex'] = np.array([0])
+                prev_cell = cell_id
+            else:
+                dijkstra_graph_dict[cell_id]['pathIndex'] = np.append(dijkstra_graph_dict[prev_cell]['pathIndex'], idx)
+                prev_cell = cell_id
+
+
+        return dijkstra_graph_dict
 
     def _validate_wps(self, wps):
         """

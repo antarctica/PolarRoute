@@ -70,10 +70,10 @@ class Route:
            # cell_indices.append(segment.end_wp.get_cellbox_indx())
         # path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]]) ???
         path['properties']['CellIndices'] = cell_indices
-        path['properties']['traveltime'] = self._accumulate_metric('traveltime')
+        path['properties']['traveltime'] = self.accumulate_metric('traveltime')
         path['properties']['cases'] = self.cases
         for variable in path_variables: 
-             path['properties'][variable] = self._accumulate_metric(variable)
+             path['properties'][variable] = self.accumulate_metric(variable)
              path['properties']['total_' + variable] = path['properties'][variable][-1]
 
         path['properties']['total_traveltime'] = path['properties']['traveltime'][-1]
@@ -82,7 +82,7 @@ class Route:
         output['paths'] = geojson
         return output
 
-    def _accumulate_metric(self, metric):
+    def accumulate_metric(self, metric):
         """
         Finds the cumulative sum over the given metric for the route
         Args:
