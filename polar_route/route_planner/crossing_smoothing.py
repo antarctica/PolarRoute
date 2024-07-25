@@ -196,7 +196,7 @@ class PathValues:
                 return np.inf
                 #raise Exception(' ')
             else:
-                if ((dist**2)/(2 * dotprod))  <0:
+                if ((dist**2)/(2 * dotprod))  < 0:
                     return np.inf
                     #raise Exception(' ')
                 else:
@@ -383,7 +383,7 @@ class Smoothing:
 
         for key in self.dijkstra_graph.keys():
             cell = self.dijkstra_graph[key]
-            if len(cell['neighbourTravelLegs'])>0:
+            if len(cell['neighbourTravelLegs']) > 0:
                 accessible_edges = np.where(np.isfinite(np.sum(cell['neighbourTravelLegs'], axis=1)))[0]
                 cell['case'] = cell['case'][accessible_edges]
                 cell['neighbourIndex'] = cell['neighbourIndex'][accessible_edges]
@@ -450,20 +450,21 @@ class Smoothing:
                 else:
                     dY = (F/dF)
                 if iter_number != 0:
-                    improving =  (abs(dY)>_epsilon) or (abs(dY) > _epsilon*(X1*X2) and (abs(dY)/iter_number) > _epsilon)
+                    improving =  (abs(dY) > _epsilon) or (abs(dY) > _epsilon*(X1*X2)
+                                                          and (abs(dY)/iter_number) > _epsilon)
                 else:
                     improving = True
                 y0  -= dY
-                iter_number+=1
+                iter_number += 1
 
                 if iter_number > 100 and try_num == 1:
                     y0 = Y*x/(x+a)
-                    try_num+=1
+                    try_num += 1
                 if (iter_number > 200) and 2 <= try_num < 10:
-                    try_num+=1
-                    iter_number-=100
+                    try_num += 1
+                    iter_number -= 100
                     if Y < 0:
-                        if v2>v1:
+                        if v2 > v1:
                             y0 = (try_num - 2) * Y
                         else:
                             y0 = (try_num - 3) * -Y
@@ -630,7 +631,7 @@ class Smoothing:
 
             while improving:
                 F, dF, X1, X2  = f(y0,x,a,Y,u1,v1,u2,v2,speed_s,speed_e,R,λ,θ,ψ)
-                if (F==0) or (dF==0):
+                if (F == 0) or (dF == 0):
                     dY = 0
                 else:
                     dY = (F/dF)
@@ -639,13 +640,13 @@ class Smoothing:
                 else:
                     improving = True
                 y0  -= dY
-                iter_number+=1
+                iter_number += 1
 
-                if iter_number>100 and try_num == 1:
+                if iter_number > 100 and try_num == 1:
                     y0 = Y*x/(x+a)
-                    try_num+=1
-                if (iter_number > 200) and try_num== 2:
-                    try_num+=1
+                    try_num += 1
+                if (iter_number > 200) and try_num == 2:
+                    try_num += 1
                     if Y < 0:
                         if v2 > v1:
                             y0 = Y
@@ -928,7 +929,7 @@ class Smoothing:
         v_connections = set(cell_a_neighbours).intersection(cell_b_neighbours)
         if len(v_connections) != 0:
             if len(v_connections) == 1:
-                return list(v_connections),[add_case_a,-add_case_b]
+                return list(v_connections), [add_case_a, -add_case_b]
 
         # Determining possible u-connections
         for cell_a_neighbour in cell_a_neighbours:
@@ -936,7 +937,7 @@ class Smoothing:
             _connections = set(_possible_cell['neighbourIndex']).intersection(cell_b_neighbours)
             if len(_connections) == 1 and (abs(add_case_a) == abs(add_case_b)):
                u_connections = [cell_a_neighbour,list(_connections)[0]]
-               return list(u_connections),[add_case_a,case,-add_case_b]
+               return list(u_connections), [add_case_a, case, -add_case_b]
 
         return None, None
 
@@ -957,7 +958,7 @@ class Smoothing:
                 additional_indices (list) - A list of possible cell dictionary info. None if no index added.
                 additional_cases (list) - A list of the cases connecting the additional cell indices. None if no index added.
         """
-        add_indices,add_cases = self._neighbour_indices(cell_a,cell_b,case,add_case_a,add_case_b)
+        add_indices, add_cases = self._neighbour_indices(cell_a, cell_b, case, add_case_a, add_case_b)
 
         if add_indices is None:
             return None, add_cases
@@ -965,7 +966,7 @@ class Smoothing:
         else:
             return [self.dijkstra_graph[ii] for ii in add_indices], add_cases
 
-    def nearest_neighbour(self,start,end,case,x):
+    def nearest_neighbour(self, start, end, case, x):
         """
             Returns the cell in the mesh that shares a boundary with cellA and has an edge on the line that extends the common
             boundary of cellA and cellB (and on which the point x lies) in the direction of x.
@@ -982,8 +983,8 @@ class Smoothing:
                 additional_cases (list) - A list of the cases connecting the additional cell indices. None if no index added.
         """
         # Determine the neighbour cases if any
-        target_a_case,target_b_case = self._neighbour_case(start,end,x,case)   
-        add_indices,add_edges = self._neighbour_cells(start,end,case,target_a_case,target_b_case)
+        target_a_case, target_b_case = self._neighbour_case(start, end, x, case)
+        add_indices, add_edges = self._neighbour_cells(start, end, case, target_a_case, target_b_case)
 
         return add_indices, add_edges
 
@@ -1020,7 +1021,8 @@ class Smoothing:
 
         percentage_diff1  = (max_new-start)*100
         percentage_diff2  = (max_new-end)*100
-        if (percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end) or max_new<=self.blocked_sic:
+        if ((percentage_diff1 <= self.blocked_sic*start) or (percentage_diff2 <= self.blocked_sic*end)
+                or max_new <= self.blocked_sic):
             return False
         else:
             return True
@@ -1098,7 +1100,7 @@ class Smoothing:
         #Approximate great-circle to 50000 point and determine point with closest misfit
         _lonlats     = np.array(self._g.npts(fp_lon, fp_lat, lp_lon, lp_lat,50000))
         mp_lat_misfit = _lonlats[:,0] - mp_lon
-        mp_lat_diff   = _lonlats[np.argmin(abs(mp_lat_misfit)),1] - mp_lat
+        mp_lat_diff   = _lonlats[np.argmin(abs(mp_lat_misfit)), 1] - mp_lat
 
         # #Straight Line Connecting points
         # mp_line = ((lp_lat-fp_lat)/(lp_lon-fp_lon))*(mp_lon-fp_lon) + fp_lat
@@ -1138,7 +1140,7 @@ class Smoothing:
             return None, None
 
         # Determining the additional cell to include
-        add_indices,add_edges = self._neighbour_cells(cell_a, cell_b, case, target_a_case, target_b_case)
+        add_indices, add_edges = self._neighbour_cells(cell_a, cell_b, case, target_a_case, target_b_case)
 
         return add_indices, add_edges
 
@@ -1159,7 +1161,7 @@ class Smoothing:
 
         distance = np.sqrt(((sp_lon-ep_lon)*111.321)**2 + ((sp_lat-ep_lat)*111.386)**2)
 
-        #azimuth1, azimuth2, distance = self._g.inv(sp_lon, sp_lat, ep_lon, ep_lat)
+        # azimuth1, azimuth2, distance = self._g.inv(sp_lon, sp_lat, ep_lon, ep_lat)
         return distance
 
     def previous_vs(self, edge_a, edge_b, midpoint_prime):
