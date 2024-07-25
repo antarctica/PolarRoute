@@ -144,19 +144,24 @@ def optimise_routes_cli():
     
     output_file = args.output
 
-    logging.info("Calculating dijkstra routes")
-    routes = rp.compute_routes(args.waypoints.name)
+    logging.info("Calculating Dijkstra routes")
+    mesh_json = json.load(args.mesh)
+    dijkstra_routes = rp.compute_routes(args.waypoints.name)
+
+    if args.dijkstra:
+        routes = dijkstra_routes
+        mesh_json['paths'] = routes[0].to_json()["paths"]
+    else:
+        smoothed_routes = rp.compute_smoothed_routes()
+        mesh_json['paths'] = smoothed_routes
 
     waypoints_df = pd.read_csv(args.waypoints.name)
 
-    mesh_json = json.load(args.mesh)
-
     mesh_json['waypoints'] = waypoints_df.to_dict()
-    mesh_json['paths'] = routes[0].to_json()["paths"]
     mesh_json['config']['route_info'] = rp.config
 
     info = mesh_json
-    logging.info(f"\tOutputting route to {output_file}")
+    logging.info(f"\tOutputting route(s) to {output_file}")
 
     with open(output_file, 'w+') as fp:
         json.dump(info, fp, indent=4)

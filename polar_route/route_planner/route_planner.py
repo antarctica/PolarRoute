@@ -564,20 +564,20 @@ class RoutePlanner:
         geojson = {}
         smoothed_routes = []
 
+        mesh_json = self.env_mesh.to_json()
+        neighbour_graph = mesh_json['neighbour_graph']
+        cellboxes = mesh_json['cellboxes']
+
         for route in routes:
             logging.info('---Smoothing {}'.format(route['properties']['name']))
             route_json = route.to_json()
-            source_wp_name = route_json.from_wp
-            end_wp_name = route_json.to_wp
 
             initialised_dijkstra_graph = {}
-            adjacent_pairs = route.segments
-
-            #TODO Confirm equivalent of self.dijkstra_info and self.adjacent_pairs
+            adjacent_pairs, source_wp, end_wp = _initialise_dijkstra_route(neighbour_graph, route_json)
 
             sf = Smoothing(initialised_dijkstra_graph,
                            adjacent_pairs,
-                           source_wp_name,end_wp_name,
+                           source_wp, end_wp,
                            blocked_metric=blocked_metric,
                            max_iterations=max_iterations,
                            blocked_sic = blocked_sic,
