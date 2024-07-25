@@ -81,12 +81,12 @@ def calculate_smoothed_route(config, mesh):
     waypoints   = extract_waypoints(mesh)
 
     # Calculate smoothed route
-    rp = RoutePlanner(mesh, config, waypoints)
-    rp.compute_routes()
-    rp.compute_smoothed_routes()
+    rp = RoutePlanner(mesh, config)
+    dijkstra_route = rp.compute_routes(waypoints)
+    smoothed_route = rp.compute_smoothed_routes()
     
     # Generate json to compare to old output
-    new_route = rp.to_json()
+    new_route = smoothed_route
 
     end = time.perf_counter()
     LOGGER.info(f'Route smoothed in {end - start} seconds')
