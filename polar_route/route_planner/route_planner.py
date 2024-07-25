@@ -137,7 +137,7 @@ def initialise_dijkstra_route(dijkstra_graph, dijkstra_route):
     cell_cases = np.concatenate([[org_cell_cases[0]], [org_cell_cases[0]], org_cell_cases[1:-1:2], [org_cell_cases[-1]],
                                  [org_cell_cases[-1]]])
 
-    cell_dijk = [dijkstra_graph[ii] for ii in cell_indices]
+    cell_dijk = [dijkstra_graph[int(ii)] for ii in cell_indices]
     cells = cell_dijk[1:-1]
     cases = cell_cases[1:-1]
     aps = []
@@ -600,8 +600,8 @@ class RoutePlanner:
             smoothed_route['geometry']['type'] = "LineString"
             smoothed_route['geometry']['coordinates'] = path_info['path'].tolist()
             smoothed_route['properties'] = {}
-            smoothed_route['properties']['from'] = route['properties']['from']
-            smoothed_route['properties']['to'] = route['properties']['to']
+            smoothed_route['properties']['from'] = route_json['properties']['from']
+            smoothed_route['properties']['to'] = route_json['properties']['to']
             smoothed_route['properties']['traveltime'] = list(travel_time_legs)
             smoothed_route['properties']['total_traveltime'] = smoothed_route['properties']['traveltime'][-1]
             smoothed_route['properties']['fuel'] = list(fuel_legs)
@@ -634,15 +634,18 @@ class RoutePlanner:
         dijkstra_graph_dict = dict()
         path_variables = route.conf['path_variables']
         for idx, cell in enumerate(cellboxes):
-            cell_id = cell['id']
+            cell_id = int(cell['id'])
             dijkstra_graph_dict[cell_id] = cell
-            cases, neighbour_index = flatten_cases(cell_id, neighbour_graph)
+            dijkstra_graph_dict[cell_id]['id'] = cell_id
+            dijkstra_graph_dict[cell_id]['Vector_x'] = dijkstra_graph_dict[cell_id].pop(self.config['vector_names'][0])
+            dijkstra_graph_dict[cell_id]['Vector_y'] = dijkstra_graph_dict[cell_id].pop(self.config['vector_names'][1])
+            cases, neighbour_index = flatten_cases(str(cell_id), neighbour_graph)
             dijkstra_graph_dict[cell_id]['case'] = np.array(cases)
             dijkstra_graph_dict[cell_id]['neighbourIndex'] = np.array(neighbour_index)
             neighbour_travel_legs = []
             neighbour_crossing_points = []
             for i, neighbour in enumerate(neighbour_index):
-                cost_func = self.cost_func(cell_id, str(neighbour), self.cellboxes_lookup, case=cases[i],
+                cost_func = self.cost_func(str(cell_id), str(neighbour), self.cellboxes_lookup, case=cases[i],
                                            unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
                 traveltime, crossing_points, cell_points, case = cost_func.value()
                 neighbour_travel_legs.append(traveltime)
