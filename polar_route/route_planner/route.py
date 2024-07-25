@@ -74,7 +74,9 @@ class Route:
         path['properties']['cases'] = self.cases
         for variable in path_variables: 
              path['properties'][variable] = self._accumulate_metric(variable)
+             path['properties']['total_' + variable] = path['properties'][variable][-1]
 
+        path['properties']['total_traveltime'] = path['properties']['traveltime'][-1]
         paths.append(path)
         geojson['features'] = paths
         output['paths'] = geojson

@@ -151,10 +151,9 @@ def optimise_routes_cli():
 
     mesh_json = json.load(args.mesh)
 
-    logging.info(routes[0].to_json())
-
     mesh_json['waypoints'] = waypoints_df.to_dict()
     mesh_json['paths'] = routes[0].to_json()["paths"]
+    mesh_json['config']['route_info'] = rp.config
 
     info = mesh_json
     logging.info(f"\tOutputting route to {output_file}")
