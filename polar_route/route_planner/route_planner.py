@@ -147,13 +147,13 @@ def _initialise_dijkstra_route(dijkstra_graph,dijkstra_route):
     cases = cell_cases[1:-1]
     aps = []
     for ii in range(len(cells) - 1):
-        aps += [FindEdge(cells[ii],cells[ii+1], cases[ii+1])]
+        aps += [FindEdge(cells[ii], cells[ii+1], cases[ii+1])]
 
     # #-- Setting some backend information
     start_waypoint = points[0,:]
     end_waypoint = points[-1,:]
 
-    return aps, start_waypoint,end_waypoint
+    return aps, start_waypoint, end_waypoint
 
 class RoutePlanner:
     """
@@ -254,7 +254,7 @@ class RoutePlanner:
             inplace.
             Args:
                 waypoints_df(pd.DataFrame): Pandas DataFrame of Waypoint locations
-            Appied to terms:
+            Applied to terms:
                 self.config - PolarRoute config file
                 self.env_mesh - The EnvironmentalMesh object for the relevant mesh
 
@@ -277,7 +277,7 @@ class RoutePlanner:
         # Zeroing currents if both vectors are defined and zeroed
         if ('zero_currents' in self.config) and ("vector_names" in self.config):
             if self.config['zero_currents']:
-                logging.info('Zero Currents for Mesh !')
+                logging.info('Zero Currents set in config for this mesh!')
                 for idx, cell in enumerate(mesh['cellboxes']):
                     cell[self.config['vector_names'][0]] = 0.0
                     cell[self.config['vector_names'][1]] = 0.0
@@ -305,9 +305,9 @@ class RoutePlanner:
         """
 
         # Setting speed to a fixed value if specified in the config
-        if ('fixed_speed' in self.config):
+        if 'fixed_speed' in self.config:
             if self.config['fixed_speed']:
-                logging.info('Setting all speeds max speed for Mesh!')
+                logging.info('Setting all speeds to max speed for this  mesh!')
                 max_speed = mesh['config']['vessel_info']['max_speed']
                 for idx, cell in enumerate(mesh['cellboxes']):
                     if 'speed' in cell.keys():
@@ -569,8 +569,8 @@ class RoutePlanner:
         cellboxes = mesh_json['cellboxes']
 
         for route in routes:
-            logging.info('---Smoothing {}'.format(route['properties']['name']))
-            route_json = route.to_json()
+            route_json = route.to_json()['paths']['features'][0]
+            logging.info('---Smoothing {}'.format(route_json['properties']['name']))
 
             initialised_dijkstra_graph = {}
             adjacent_pairs, source_wp, end_wp = _initialise_dijkstra_route(neighbour_graph, route_json)
