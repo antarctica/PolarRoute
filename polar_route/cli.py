@@ -150,7 +150,7 @@ def optimise_routes_cli():
 
     if args.dijkstra:
         routes = dijkstra_routes
-        mesh_json['paths'] = routes[0].to_json()["paths"]
+        mesh_json['paths'] = routes[0].to_json()
     else:
         smoothed_routes = rp.compute_smoothed_routes()
         mesh_json['paths'] = smoothed_routes

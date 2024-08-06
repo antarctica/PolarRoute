@@ -86,7 +86,8 @@ def calculate_smoothed_route(config, mesh):
     smoothed_route = rp.compute_smoothed_routes()
     
     # Generate json to compare to old output
-    new_route = smoothed_route
+    new_route = mesh
+    new_route['paths'] = smoothed_route
 
     end = time.perf_counter()
     LOGGER.info(f'Route smoothed in {end - start} seconds')

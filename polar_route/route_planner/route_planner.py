@@ -564,7 +564,7 @@ class RoutePlanner:
         cellboxes = mesh_json['cellboxes']
 
         for route in routes:
-            route_json = route.to_json()['paths']['features'][0]
+            route_json = route.to_json()['features'][0]
             logging.info('---Smoothing {}'.format(route_json['properties']['name']))
 
             initialised_dijkstra_graph = self.initialise_dijkstra_graph(cellboxes, neighbour_graph, route)
@@ -634,8 +634,12 @@ class RoutePlanner:
         dijkstra_graph_dict = dict()
         path_variables = route.conf['path_variables']
         for idx, cell in enumerate(cellboxes):
+            if cell['inaccessible']:
+                continue
             cell_id = int(cell['id'])
             dijkstra_graph_dict[cell_id] = cell
+            if 'SIC' not in cell:
+                dijkstra_graph_dict[cell_id]['SIC'] = 0.0
             dijkstra_graph_dict[cell_id]['id'] = cell_id
             dijkstra_graph_dict[cell_id]['Vector_x'] = dijkstra_graph_dict[cell_id].pop(self.config['vector_names'][0])
             dijkstra_graph_dict[cell_id]['Vector_y'] = dijkstra_graph_dict[cell_id].pop(self.config['vector_names'][1])

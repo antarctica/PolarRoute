@@ -143,11 +143,12 @@ def calculate_dijkstra_route(config, mesh):
     waypoints   = extract_waypoints(mesh)
 
     # Calculate dijkstra route
-    rp = RoutePlanner(mesh, config )
+    rp = RoutePlanner(mesh, config)
     routes = rp.compute_routes(waypoints)
     
     # Generate json to compare to old output
-    new_route = routes[0].to_json()
+    new_route = mesh
+    new_route['paths'] = routes[0].to_json()
 
     end = time.perf_counter()
     LOGGER.info(f'Route calculated in {end - start} seconds')

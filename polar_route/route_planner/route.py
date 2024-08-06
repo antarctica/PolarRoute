@@ -79,8 +79,8 @@ class Route:
         path['properties']['total_traveltime'] = path['properties']['traveltime'][-1]
         paths.append(path)
         geojson['features'] = paths
-        output['paths'] = geojson
-        return output
+
+        return geojson
 
     def accumulate_metric(self, metric):
         """
