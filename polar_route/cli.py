@@ -69,10 +69,10 @@ def get_args(
                         action = "store_true",
                         help="Output dijkstra paths")
         
-        ap.add_argument("--chart_tracker",
+        ap.add_argument("--chart_track",
                         default=False,
                         action = "store",
-                        help="Output the calculated paths as CSV readable by ChartTracker")
+                        help="Output the calculated paths as CSV readable by Chart Track")
 
     return ap.parse_args()
 
@@ -140,31 +140,78 @@ def optimise_routes_cli():
                     config_arg=True, mesh_arg=True ,waypoints_arg= True)
     logging.info("{} {}".format(inspect.stack()[0][3][:-4], version))
 
+    logging.info("Initialising Route Planner")
+    # Initialise the route planner
     rp = RoutePlanner(args.mesh.name, args.config.name)
-    
+
+    # Define output from args
     output_file = args.output
+    output_file_strs = output_file.split('.')
+
+    # Load mesh json and add route config + waypoints
+    mesh_json = json.load(args.mesh)
+    mesh_json['config']['route_info'] = rp.config
+    waypoints_df = pd.read_csv(args.waypoints.name)
+    mesh_json['waypoints'] = waypoints_df.to_dict()
 
     logging.info("Calculating Dijkstra routes")
-    mesh_json = json.load(args.mesh)
     dijkstra_routes = rp.compute_routes(args.waypoints.name)
 
+    # Optionally save the dijkstra output in a separate file
     if args.dijkstra:
-        routes = dijkstra_routes
-        mesh_json['paths'] = routes[0].to_json()
-    else:
-        smoothed_routes = rp.compute_smoothed_routes()
-        mesh_json['paths'] = smoothed_routes
+        info_dijkstra = mesh_json
+        info_dijkstra['paths'] = dijkstra_routes[0].to_json()
 
-    waypoints_df = pd.read_csv(args.waypoints.name)
+        # Form a unique name for the dijkstra output
+        dijkstra_output_file_strs = output_file_strs
+        dijkstra_output_file_strs[-2] += '_dijkstra'
+        dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
 
-    mesh_json['waypoints'] = waypoints_df.to_dict()
-    mesh_json['config']['route_info'] = rp.config
+        logging.info(f"\tOutputting dijkstra path to {dijkstra_output_file}")
+        with open(dijkstra_output_file, 'w+') as fp:
+            json.dump(info_dijkstra, fp, indent=4)
+
+        # Create GeoJSON filename
+        if args.path_geojson:
+            dijkstra_output_file_strs[-1] = 'geojson'
+            dijkstra_output_file = '.'.join(dijkstra_output_file_strs)
+            logging.info(f"\tExtracting standalone dijkstra path GeoJSON to {dijkstra_output_file}")
+            with open(dijkstra_output_file, 'w+') as fp:
+                json.dump(info_dijkstra['paths'], fp, indent=4)
+
+    logging.info("Calculating smoothed routes")
+    smoothed_routes = rp.compute_smoothed_routes()
 
     info = mesh_json
-    logging.info(f"\tOutputting route(s) to {output_file}")
+    info['paths'] = smoothed_routes
 
+    logging.info(f"\tOutputting smoothed route(s) to {output_file}")
     with open(output_file, 'w+') as fp:
         json.dump(info, fp, indent=4)
+
+    # Optional output of smoothed route to standalone GeoJSON file
+    if args.path_geojson:
+        # Create GeoJSON filename
+        output_file_strs[-1] = 'geojson'
+        output_file = '.'.join(output_file_strs)
+        logging.info(f"\tExtracting standalone path GeoJSON to {output_file}")
+        with open(output_file, 'w+') as fp:
+                json.dump(info['paths'], fp, indent=4)
+
+    # Optional output of Chart Track formatted csv
+    if args.chart_track:
+        # Extract each route as csv string
+        csv_strs = [to_chart_track_csv(r) for r in smoothed_routes['features']]
+        # Format output filename
+        output_file_strs[-1] = 'csv'
+        output_file_strs.insert(1,'r0')
+        # For each path generated, write to csv with unique name
+        for i, csv_str in enumerate(csv_strs):
+            output_file_strs[1] = f'r{i}'
+            output_file = '.'.join(output_file_strs)
+            logging.info(f"\tOutputting ChartTracker CSV to {output_file}")
+            with open(output_file, 'w+') as fp:
+                fp.write(csv_str)
         
 @timed_call
 def extract_routes_cli():
