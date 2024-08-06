@@ -132,8 +132,11 @@ def _mesh_boundary_polygon(mesh):
     Creates a polygon from the mesh boundary
     '''
 
-    # Defining a tiny value
-    tiny_value = 1e-10
+    # Defining a tiny value, zero if global mesh
+    if mesh['config']['mesh_info']['region']['long_min'] == -180 or mesh['config']['mesh_info']['region']['long_max'] == 180:
+        tiny_value = 0
+    else:
+        tiny_value = 1e-10
 
     lat_min = mesh['config']['mesh_info']['region']['lat_min']-tiny_value
     lat_max = mesh['config']['mesh_info']['region']['lat_max']+tiny_value
