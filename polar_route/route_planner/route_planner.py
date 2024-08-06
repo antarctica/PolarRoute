@@ -29,13 +29,16 @@ from meshiphi.utils import longitude_domain
 warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
 
-# Functions for flexible waypoints
 def _mesh_boundary_polygon(mesh):
     """
     Creates a polygon from the mesh boundary
     """
-    # Defining a tiny value
-    tiny_value = 1e-10
+    # Defining a tiny value, zero if global mesh
+    if (mesh['config']['mesh_info']['region']['long_min'] == -180 or
+            mesh['config']['mesh_info']['region']['long_max'] == 180):
+        tiny_value = 0
+    else:
+        tiny_value = 1e-10
 
     lat_min = mesh['config']['mesh_info']['region']['lat_min'] - tiny_value
     lat_max = mesh['config']['mesh_info']['region']['lat_max'] + tiny_value
@@ -47,6 +50,7 @@ def _mesh_boundary_polygon(mesh):
     return bounds.to_polygon()
 
 
+# Functions for flexible waypoints
 def _adjust_waypoints(point, cellboxes, max_distance=5):
     """
         Moves waypoint to the closest accessible cellbox if it isn't already in one. Allows up to 5 degrees flexibility
@@ -89,6 +93,7 @@ def _adjust_waypoints(point, cellboxes, max_distance=5):
         logging.info(f'({point.y},{point.x}) not accessible cellbox')
         logging.info(f'Adjusted to ({adjusted_point.y},{adjusted_point.x})')
         return adjusted_point
+
 
 def flatten_cases(cell_id, neighbour_graph):
     """
@@ -149,6 +154,7 @@ def initialise_dijkstra_route(dijkstra_graph, dijkstra_route):
     end_waypoint = points[-1,:]
 
     return aps, start_waypoint, end_waypoint
+
 
 class RoutePlanner:
     """
