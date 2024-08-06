@@ -149,7 +149,6 @@ def compare_cell_indices(route_a, route_b):
     cid_a = extract_path(route_a)['properties']['CellIndices']
     cid_b = extract_path(route_b)['properties']['CellIndices']
 
-    # TODO: Revert this and work out why the index type is different
     cid_a = [int(a) for a in cid_a]
     cid_b = [int(b) for b in cid_b]
 
