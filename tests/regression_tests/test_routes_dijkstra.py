@@ -109,7 +109,7 @@ def route_pair(request):
     Creates a pair of JSON objects, one newly generated, one as old reference
     Args:
         request (fixture): 
-            fixture object including list of jsons of fuel optimised routes
+            fixture object including list of jsons of optimised routes
 
     Returns:
         list: [reference json, new json]
@@ -129,13 +129,14 @@ def route_pair(request):
 # Generating new outputs
 def calculate_dijkstra_route(config, mesh):
     """
-    Calculates the fuel-optimised route, with dijkstra but no smoothing
+    Calculates the optimised route, with dijkstra but no smoothing
 
     Args:
-        route_filename (str): Filename of regression test route
+        config (dict): the route config
+        mesh (dict): the reference mesh (including routes and waypoints)
 
     Returns:
-        json: New route output
+        new_route (dict): new route output
     """
     start = time.perf_counter()
 
