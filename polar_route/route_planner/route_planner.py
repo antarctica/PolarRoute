@@ -6,7 +6,7 @@
 import warnings
 import numpy as np
 import pandas as pd
-from shapely import wkt, Point, LineString, STRtree, Polygon
+from shapely import wkt, Point, LineString, STRtree
 import geopandas as gpd
 import logging
 import itertools
@@ -222,11 +222,11 @@ class RoutePlanner:
         # Check that the provided mesh has vector information (ex. current)
         self.vector_names = self.config['vector_names']
         for name in self.vector_names: 
-             if name not in self.env_mesh.agg_cellboxes[0].agg_data :
+             if name not in self.env_mesh.agg_cellboxes[0].agg_data:
                  raise ValueError(f'The env mesh cellboxes do not have {name} data and it is a prerequisite for the '
                                   f'route planner!')
         # Check for SIC data, used in smoothed route construction
-        if 'SIC' not in self.env_mesh.agg_cellboxes[0].agg_data :
+        if 'SIC' not in self.env_mesh.agg_cellboxes[0].agg_data:
             logging.debug('The environment mesh does not have SIC data')
         
         # Check if speed is defined in the environment mesh
@@ -414,7 +414,7 @@ class RoutePlanner:
             min_obj = np.inf
             cellbox_indx = -1
             for node_id in source_wp.routing_table.keys():
-                if (not source_wp.is_visited(str(node_id)) and
+                if (not source_wp.is_visited(node_id) and
                         source_wp.get_obj(node_id, self.config['objective_function']) < min_obj):
                     min_obj = source_wp.get_obj(node_id, self.config['objective_function'])
                     cellbox_indx = str(node_id)
@@ -511,7 +511,7 @@ class RoutePlanner:
         for idx, row in waypoints_df.iterrows():
             point = Point([row['Long'], row['Lat']])
             # Only allow waypoints within an existing mesh
-            assert (point.within(mesh_boundary)), \
+            assert point.within(mesh_boundary), \
                 f"Waypoint {row['Name']} outside of mesh boundary! {point}"
             adjusted_point = _adjust_waypoints(point, self.env_mesh.to_json()['cellboxes'])
 
@@ -530,7 +530,7 @@ class RoutePlanner:
         logging.info('============= Dijkstra Route Creation ============')
         logging.info(f" - Objective = {self.config['objective_function']}")
         if len(end_wps) == 0:
-            end_wps= [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes] # full graph, use all the cellboxes ids as destination
+            end_wps = [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes] # full graph, use all the cellboxes ids as destination
         for wp in src_wps:
             logging.info('--- Processing Waypoint = {}'.format(wp.get_name()))
             self._dijkstra(wp, end_wps)
@@ -570,7 +570,7 @@ class RoutePlanner:
         cellboxes = mesh_json['cellboxes']
 
         for route in routes:
-            route_json = route.to_json()['features'][0]
+            route_json = route.to_json()
             logging.info('---Smoothing {}'.format(route_json['properties']['name']))
 
             initialised_dijkstra_graph = self.initialise_dijkstra_graph(cellboxes, neighbour_graph, route)

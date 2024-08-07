@@ -148,7 +148,8 @@ def calculate_dijkstra_route(config, mesh):
     
     # Generate json to compare to old output
     new_route = mesh
-    new_route['paths'] = routes[0].to_json()
+    new_route['paths'] = {"type": "FeatureCollection", "features": []}
+    new_route['paths']['features'] = [r.to_json() for r in routes]
 
     end = time.perf_counter()
     LOGGER.info(f'Route calculated in {end - start} seconds')

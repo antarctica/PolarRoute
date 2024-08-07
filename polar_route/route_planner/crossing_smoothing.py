@@ -98,7 +98,7 @@ class PathValues:
                                    'datetime':{'processing':'cumsum'},
                                    'cell_index':{'processing':None},
                                    'fuel':{'processing':'cumsum'}}
-        self.path_requested_variables = {} #self.config['Route_Info']['path_variables']
+        self.path_requested_variables = {} # self.config['route_info']['path_variables']
         self.path_requested_variables.update(required_path_variables)
 
         self.unit_shipspeed='km/hr'
@@ -190,15 +190,12 @@ class PathValues:
         dotprod  = xdist*U + ydist*V
         diffsqrs = S**2 - cval**2
 
-        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
         if diffsqrs == 0.0:
             if dotprod == 0.0:
                 return np.inf
-                #raise Exception(' ')
             else:
                 if ((dist**2)/(2 * dotprod))  < 0:
                     return np.inf
-                    #raise Exception(' ')
                 else:
                     traveltime = dist * dist / (2 * dotprod)
                     return traveltime
@@ -210,7 +207,7 @@ class PathValues:
 
     def _rhumb_line_distance(self,start_waypoint,end_waypoint):
         """
-            Defining the rhumbline distance from a given waypoint start and end point
+            Defining the rhumb line distance from a given waypoint start and end point
 
             Inputs:
                 start_waypoints - (list([Long,lat])) Start Waypoint location with long lat
@@ -524,8 +521,8 @@ class Smoothing:
             X1  = np.sqrt(D1**2 + C1*(zl**2 + y**2))
             X2  = np.sqrt(D2**2 + C2*(zr**2 + (Y-y)**2))
 
-            dzr = -a*np.sin(ψ)/(2*R)#-zr*np.sin(ψ)/R
-            dzl = -x*np.sin(θ)/(2*R)#-zl*np.sin(θ)/R
+            dzr = -a*np.sin(ψ)/(2*R) #-zr*np.sin(ψ)/R
+            dzl = -x*np.sin(θ)/(2*R) #-zl*np.sin(θ)/R
 
             dD1 = dzl*u1 + v1
             dD2 = dzr*u2 - v2
@@ -870,7 +867,7 @@ class Smoothing:
             vmax = np.min([smax, emax])
 
             # Point lies on the boundary connecting up the
-            #two adjacent cell pairs, the start and end cell.
+            # two adjacent cell pairs, the start and end cell.
             if (x[0] >= vmin) and (x[0] <= vmax):
                 return None, None
 
@@ -982,7 +979,7 @@ class Smoothing:
                 additional_indices (list) - A list of possible cell dictionary info. None if no index added.
                 additional_cases (list) - A list of the cases connecting the additional cell indices. None if no index added.
         """
-        # Determine the neighbour cases if any
+        # Determine the neighbour cases, if any
         target_a_case, target_b_case = self._neighbour_case(start, end, x, case)
         add_indices, add_edges = self._neighbour_cells(start, end, case, target_a_case, target_b_case)
 
@@ -1097,17 +1094,17 @@ class Smoothing:
         mp_lon, mp_lat = midpoint
         lp_lon, lp_lat = lastpoint
 
-        #Approximate great-circle to 50000 point and determine point with closest misfit
+        # Approximate great-circle to 50000 point and determine point with closest misfit
         _lonlats     = np.array(self._g.npts(fp_lon, fp_lat, lp_lon, lp_lat,50000))
         mp_lat_misfit = _lonlats[:,0] - mp_lon
         mp_lat_diff   = _lonlats[np.argmin(abs(mp_lat_misfit)), 1] - mp_lat
 
-        # #Straight Line Connecting points
+        # Straight Line Connecting points
         # mp_line = ((lp_lat-fp_lat)/(lp_lon-fp_lon))*(mp_lon-fp_lon) + fp_lat
         # mp_lat_diff = mp_line-mp_lat
        
         # Using the initial case identify the new cell to introduce. Return to after doing
-        #nearest neighbour section
+        # nearest neighbour section
         if case == 1:
             if mp_lat_diff > 0:
                 target_a_case = -4

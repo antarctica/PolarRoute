@@ -91,11 +91,11 @@ def resimulate_vehicle_cli():
     mesh_json = json.load(args.mesh)
     mesh_config = mesh_json['config']['mesh_info']
 
-    # Rebuilding mesh, since pruned CB's don't exist in input file
+    # Rebuilding mesh, since pruned cell boxes don't exist in input file
     rebuilt_mesh = MeshBuilder(mesh_config).build_environmental_mesh()
     rebuilt_mesh_json = rebuilt_mesh.to_json()
 
-    # Resimulating vessel
+    # Re-simulating vessel
     vessel_config = mesh_json['config']['vessel_info']
     vp = VesselPerformanceModeller(rebuilt_mesh_json, vessel_config)
     vp.model_accessibility()
@@ -160,7 +160,8 @@ def optimise_routes_cli():
     # Optionally save the dijkstra output in a separate file
     if args.dijkstra:
         info_dijkstra = mesh_json
-        info_dijkstra['paths'] = dijkstra_routes[0].to_json()
+        info_dijkstra['paths'] = {"type": "FeatureCollection", "features": []}
+        info_dijkstra['paths']['features'] = [dr.to_json() for dr in dijkstra_routes]
 
         # Form a unique name for the dijkstra output
         dijkstra_output_file_strs = output_file_strs
@@ -204,7 +205,7 @@ def optimise_routes_cli():
         csv_strs = [to_chart_track_csv(r) for r in smoothed_routes['features']]
         # Format output filename
         output_file_strs[-1] = 'csv'
-        output_file_strs.insert(1,'r0')
+        output_file_strs.insert(1, 'r0')
         # For each path generated, write to csv with unique name
         for i, csv_str in enumerate(csv_strs):
             output_file_strs[1] = f'r{i}'

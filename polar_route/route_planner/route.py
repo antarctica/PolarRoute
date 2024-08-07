@@ -1,6 +1,8 @@
 import logging
+import json
 import numpy as np
-from polar_route.utils import case_from_angle, unit_time, unit_speed
+import geopandas as gpd
+from polar_route.utils import unit_time, unit_speed
 from meshiphi.utils import longitude_domain
 
 
@@ -43,44 +45,6 @@ class Route:
             Goes through the route segments and calculates the entire route's fuel usage
         """
         return sum(seg.get_fuel() for seg in self.segments)
-      
-    def to_json(self):
-        """
-            Converts the constructed route into geojson format
-        """
-        output = dict()
-        geojson = dict()
-        path = dict()
-        paths = list()
-
-        geojson['type'] = "FeatureCollection"
-        path_variables = self.conf['path_variables']
-        path['type'] = "Feature"
-        path['geometry'] = {}
-        path['geometry']['type'] = "LineString"
-        path['geometry']['coordinates'] = longitude_domain(self.get_points())
-        path['properties'] = {}
-        path['properties']['name'] = self.name
-        path['properties']['from'] = self.from_wp
-        path['properties']['to'] = self.to_wp
-
-        cell_indices = []
-        for seg in self.segments:
-            cell_indices.append(seg.start_wp.get_cellbox_indx())
-           # cell_indices.append(segment.end_wp.get_cellbox_indx())
-        # path_indices = np.array([cellIndices[0]] + list(np.repeat(cellIndices[1:-1], 2)) + [cellIndices[-1]]) ???
-        path['properties']['CellIndices'] = cell_indices
-        path['properties']['traveltime'] = self.accumulate_metric('traveltime')
-        path['properties']['cases'] = self.cases
-        for variable in path_variables: 
-             path['properties'][variable] = self.accumulate_metric(variable)
-             path['properties']['total_' + variable] = path['properties'][variable][-1]
-
-        path['properties']['total_traveltime'] = path['properties']['traveltime'][-1]
-        paths.append(path)
-        geojson['features'] = paths
-
-        return geojson
 
     def accumulate_metric(self, metric):
         """
@@ -100,20 +64,77 @@ class Route:
             Sets the cases attribute for the route to the given value
         """
         self.cases = cases
+      
+    def to_json(self):
+        """
+            Converts the constructed route into json format
+        """
+        route = dict()
+
+        path_variables = self.conf['path_variables']
+        route['type'] = "Feature"
+        route['geometry'] = {}
+        route['geometry']['type'] = "LineString"
+        route['geometry']['coordinates'] = longitude_domain(self.get_points())
+        route['properties'] = {}
+        route['properties']['name'] = self.name
+        route['properties']['from'] = self.from_wp
+        route['properties']['to'] = self.to_wp
+
+        cell_indices = []
+        for seg in self.segments:
+            cell_indices.append(seg.start_wp.get_cellbox_indx())
+
+        route['properties']['CellIndices'] = cell_indices
+        route['properties']['traveltime'] = self.accumulate_metric('traveltime')
+        route['properties']['cases'] = self.cases
+        for variable in path_variables: 
+             route['properties'][variable] = self.accumulate_metric(variable)
+             route['properties']['total_' + variable] = route['properties'][variable][-1]
+
+        route['properties']['total_traveltime'] = route['properties']['traveltime'][-1]
+
+        return route
+
+    def to_geojson(self):
+        """
+            Converts the constructed route into geojson format
+        """
+        geojson = {"type": "FeatureCollection", "features": []}
+        geojson['features'].append(self.to_json())
+
+        return geojson
 
     def to_csv(self):
         """
            Converts the constructed route into csv format
         """
+        # TODO Decide on an output format for this method or remove
+        raise NotImplementedError
 
     def to_gpx(self):
         """
-           Converts the constructed route into gpx format
+           Converts the constructed route into a geo-dataframe with fields matching gpx format
         """
+        route = self.to_json()
+        gdf = gpd.GeoDataFrame.from_features([route])
+        return gdf
+
     def save(self, file_path):
         """
-           Saves the constructed route to the given file location
+           Saves the constructed route to the given file location in the given format
         """
+        logging.info(f"Saving route to {file_path}")
+        file_path_strs = file_path.split('.')
+
+        if file_path_strs[-1] in ["json", "geojson"]:
+            with open(file_path, 'w') as f:
+                json.dump(self.to_geojson(), f)
+        elif file_path_strs[-1] == 'gpx':
+            gdf = self.to_gpx()
+            gdf['geometry'].to_file(file_path, "GPX")
+        else:
+            raise ValueError('Provide a path with a supported file extension: "json", "gpx"')
 
     def _traveltime_in_cell(self, xdist, ydist, u, v, s):
         """
@@ -125,15 +146,12 @@ class Route:
         dotprod = xdist*u + ydist*v
         diffsqrs = s**2 - cval**2
 
-        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
         if diffsqrs == 0.0:
             if dotprod == 0.0:
                 return np.inf
-                #raise Exception(' ')
             else:
                 if ((dist**2)/(2*dotprod)) < 0:
                     return np.inf
-                    #raise Exception(' ')
                 else:
                     traveltime = dist * dist / (2 * dotprod)
                     return traveltime
