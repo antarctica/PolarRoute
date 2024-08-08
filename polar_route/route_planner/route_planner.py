@@ -219,28 +219,29 @@ class RoutePlanner:
         # Initialise EnvironmentMesh object
         self.env_mesh = EnvironmentMesh.load_from_json(mesh_json)
 
+        self.cellboxes_lookup = {str(self.env_mesh.agg_cellboxes[i].get_id()): self.env_mesh.agg_cellboxes[i]
+                                 for i in range(len(self.env_mesh.agg_cellboxes))}
+
         # Check that the provided mesh has vector information (ex. current)
         self.vector_names = self.config['vector_names']
         for name in self.vector_names: 
-             if name not in self.env_mesh.agg_cellboxes[0].agg_data:
+             if not any(name in cb.agg_data for cb in self.cellboxes_lookup.values()):
                  raise ValueError(f'The env mesh cellboxes do not have {name} data and it is a prerequisite for the '
                                   f'route planner!')
         # Check for SIC data, used in smoothed route construction
-        if 'SIC' not in self.env_mesh.agg_cellboxes[0].agg_data:
+        if not any('SIC' in cb.agg_data for cb in self.cellboxes_lookup.values()):
             logging.debug('The environment mesh does not have SIC data')
         
         # Check if speed is defined in the environment mesh
-        if 'speed' not in self.env_mesh.agg_cellboxes[0].agg_data:
+        if not any('speed' in cb.agg_data for cb in self.cellboxes_lookup.values()):
             raise ValueError('Vessel speed not in the mesh information! Please run vessel performance')
         
         # Check if objective function is in the environment mesh (e.g. speed)
         if self.config['objective_function'] != 'traveltime':
-            if self.config['objective_function'] not in self.env_mesh.agg_cellboxes[0].agg_data:
+            if not any(self.config['objective_function'] in cb.agg_data for cb in self.cellboxes_lookup.values()):
                 raise ValueError(f"Objective Function '{self.config['objective_function']}' requires the mesh cellboxes"
                                  f" to have '{self.config['objective_function']}' in the aggregated data")
 
-        self.cellboxes_lookup = {str(self.env_mesh.agg_cellboxes[i].get_id()): self.env_mesh.agg_cellboxes[i]
-                                 for i in range(len(self.env_mesh.agg_cellboxes))}
         # ====== Defining the cost function ======
         self.cost_func = cost_func
 
