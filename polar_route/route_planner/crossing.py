@@ -59,14 +59,14 @@ class NewtonianDistance:
             parameters.
 
             Args:
-                node_id():
-                neighbour_id():
-                cellboxes:
-                case:
-                unit_shipspeed:
-                time_unit:
-                maxiter:
-                optimizer_tol:
+                node_id (str): the id of the initial cellbox
+                neighbour_id (str): the id of the neighbouring cellbox
+                cellboxes (dict): a dictionary with all cellboxes in the mesh indexed by their ids
+                case (int): the case between the cellboxes
+                unit_shipspeed (str): the speed unit to use
+                time_unit (str): the time unit to use
+                maxiter (int): the maximum number of iterations for the optimisation
+                optimizer_tol (float): the tolerance value for the optimisation
         """
         # Cell information
         self.source_cellbox = cellboxes [node_id]
@@ -84,7 +84,6 @@ class NewtonianDistance:
                                           self.unit_shipspeed)
 
         self.case = case
-
 
         # Optimisation Information
         self.maxiter = maxiter
