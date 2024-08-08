@@ -655,7 +655,8 @@ class RoutePlanner:
         """
         dijkstra_graph_dict = dict()
         path_variables = route.conf['path_variables']
-        for idx, cell in enumerate(cellboxes):
+        idx = 0
+        for cell in cellboxes:
             if cell['inaccessible']:
                 continue
             cell_id = int(cell['id'])
@@ -687,6 +688,7 @@ class RoutePlanner:
             else:
                 dijkstra_graph_dict[cell_id]['pathIndex'] = np.append(dijkstra_graph_dict[prev_cell]['pathIndex'], idx)
                 prev_cell = cell_id
+            idx += 1
 
 
         return dijkstra_graph_dict
