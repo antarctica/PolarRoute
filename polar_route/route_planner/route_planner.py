@@ -11,7 +11,6 @@ import geopandas as gpd
 import logging
 import itertools
 import copy
-from pandas.core.common import SettingWithCopyWarning
 
 from polar_route.route_planner.route import Route
 from polar_route.route_planner.source_waypoint import SourceWaypoint
@@ -28,7 +27,8 @@ from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
 from meshiphi.utils import longitude_domain
 
-warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+# Squelching SettingWithCopyWarning
+pd.options.mode.chained_assignment = None
 
 
 def _mesh_boundary_polygon(mesh):
