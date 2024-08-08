@@ -22,7 +22,7 @@ class Route:
     def __init__(self, segments, _from, _to, conf, name=None):
         self.segments = segments
         if name is None:
-            self.name = 'Route Path - {} to {}'.format(_from, _to)
+            self.name = 'Route - {} to {}'.format(_from, _to)
         self.from_wp = _from
         self.to_wp = _to
         self.cases = []

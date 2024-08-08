@@ -20,6 +20,8 @@ from polar_route.route_planner.segment import Segment
 from polar_route.route_planner.routing_info import RoutingInfo
 from polar_route.route_planner.crossing import NewtonianDistance
 from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues
+from polar_route.config_validation.config_validator import validate_route_config
+from polar_route.config_validation.config_validator import validate_waypoints
 from polar_route.utils import json_str, unit_speed, pandas_dataframe_str
 from meshiphi import Boundary
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
@@ -200,11 +202,14 @@ class RoutePlanner:
                 cost_func (func): Crossing point cost function for Dijkstra route construction. For development purposes
                                   only!
         """
+        # Load and validate input config
+        self.config = json_str(config_file)
+        validate_route_config(self.config)
+
         # Load mesh json from file or dict
         mesh_json = json_str(mesh_file)
 
-        # Load config and set speed units
-        self.config = json_str(config_file)
+        # Set speed units from config
         self.config['unit_shipspeed'] = mesh_json['config']['vessel_info']['unit']
 
         # Zeroing currents if vectors names are not defined or zero_currents is defined
@@ -214,11 +219,6 @@ class RoutePlanner:
         # Initialise EnvironmentMesh object
         self.env_mesh = EnvironmentMesh.load_from_json(mesh_json)
 
-        # Validate config and mesh TODO replace with function from config_validation
-        mandatory_fields = ["objective_function", "path_variables", "vector_names", "time_unit"]
-        for field in mandatory_fields: 
-            if field not in self.config:
-                 raise ValueError(f'missing configuration: {field} should be set in the provided configuration')
         # Check that the provided mesh has vector information (ex. current)
         self.vector_names = self.config['vector_names']
         for name in self.vector_names: 
@@ -278,7 +278,7 @@ class RoutePlanner:
         # Zeroing currents if both vectors are defined and zeroed
         if ('zero_currents' in self.config) and ("vector_names" in self.config):
             if self.config['zero_currents']:
-                logging.info('Zero Currents set in config for this mesh!')
+                logging.info('Zero currents set in config for this mesh!')
                 for idx, cell in enumerate(mesh['cellboxes']):
                     cell[self.config['vector_names'][0]] = 0.0
                     cell[self.config['vector_names'][1]] = 0.0
@@ -503,6 +503,8 @@ class RoutePlanner:
                 routes (List<Route>): a list of the computed routes
         """
         waypoints_df = pandas_dataframe_str(waypoints)
+        # Validate input waypoints format
+        validate_waypoints(waypoints_df)
         # Split around waypoints if specified in the config
         self._splitting_around_waypoints(waypoints_df)
 
@@ -520,10 +522,12 @@ class RoutePlanner:
 
         # Load source and destination waypoints
         src_wps, end_wps = self._load_waypoints(waypoints_df)
-        # Waypoint validation, TODO: replace with validate_waypoints function in the future
+        # Waypoint validation for route planning
         src_wps = self._validate_wps(src_wps)
         end_wps = self._validate_wps(end_wps)
-        src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps] # creating SourceWaypoint objects
+
+        # Create SourceWaypoint objects
+        src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps]
         if len(src_wps) == 0:
             raise ValueError('Invalid waypoints. Inaccessible source waypoints')
 
@@ -571,7 +575,7 @@ class RoutePlanner:
 
         for route in routes:
             route_json = route.to_json()
-            logging.info('---Smoothing {}'.format(route_json['properties']['name']))
+            logging.info('--- Smoothing {}'.format(route_json['properties']['name']))
 
             initialised_dijkstra_graph = self.initialise_dijkstra_graph(cellboxes, neighbour_graph, route)
             adjacent_pairs, source_wp, end_wp = initialise_dijkstra_route(initialised_dijkstra_graph, route_json)
@@ -616,7 +620,7 @@ class RoutePlanner:
             smoothed_route['properties']['speed'] = list(speed_legs)
             smoothed_routes += [smoothed_route]
 
-            logging.info('{} iterations'.format(sf.jj))
+            logging.info('Smoothing complete in {} iterations'.format(sf.jj))
 
         geojson['type'] = "FeatureCollection"
         geojson['features'] = smoothed_routes
