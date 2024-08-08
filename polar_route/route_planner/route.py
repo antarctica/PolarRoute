@@ -2,6 +2,7 @@ import logging
 import json
 import numpy as np
 import geopandas as gpd
+from polar_route.route_planner.crossing import traveltime_in_cell
 from polar_route.utils import unit_time, unit_speed
 from meshiphi.utils import longitude_domain
 
@@ -136,32 +137,6 @@ class Route:
         else:
             raise ValueError('Provide a path with a supported file extension: "json", "gpx"')
 
-    def _traveltime_in_cell(self, xdist, ydist, u, v, s):
-        """
-            Determine the traveltime within a cell
-        """
-        dist = np.sqrt(xdist**2 + ydist**2)
-        cval = np.sqrt(u**2 + v**2)
-
-        dotprod = xdist*u + ydist*v
-        diffsqrs = s**2 - cval**2
-
-        if diffsqrs == 0.0:
-            if dotprod == 0.0:
-                return np.inf
-            else:
-                if ((dist**2)/(2*dotprod)) < 0:
-                    return np.inf
-                else:
-                    traveltime = dist * dist / (2 * dotprod)
-                    return traveltime
-
-        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
-        if traveltime < 0:
-            traveltime = np.inf
-
-        return traveltime, dist
-    
     def waypoint_correction(self, cellbox, wp, cp, indx):
         """
             Determine within cell parameters for the source and end point waypoint when away from cell centre and
@@ -185,7 +160,7 @@ class Route:
         su = cellbox.agg_data['uC']
         sv = cellbox.agg_data['vC']
         ssp = unit_speed(cellbox.agg_data['speed'][case], self.conf['unit_shipspeed'])
-        traveltime, distance = self._traveltime_in_cell(x, y, su, sv, ssp)
+        traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp, tt_dist=True)
         logging.debug(f"WP_correction >> tt >> {traveltime}")
         logging.debug(f"WP_correction >> distance >> {distance}")
         logging.debug(f"WP_correction >> case >> {case}")
@@ -197,16 +172,6 @@ class Route:
         self.segments[indx].set_distance(distance)
         self.segments[indx].set_fuel(cellbox.agg_data['fuel'][case] * traveltime)
         logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][case] * traveltime}")
-
-    def _dist_around_globe(self, sp, cp):
-        a1 = np.sign(cp-sp)*(np.max([sp,cp])-np.min([sp,cp]))
-        a2 = -(360-(np.max([sp,cp])-np.min([sp,cp])))*np.sign(cp-sp)
-
-        dist = [a1, a2]
-        indx = np.argmin(abs(np.array(dist)))
-
-        a = dist[indx]
-        return a
 
     def get_points(self):
         """

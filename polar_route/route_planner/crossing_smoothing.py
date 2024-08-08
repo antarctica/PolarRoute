@@ -1,6 +1,8 @@
 import numpy as np
 import pyproj
 import logging
+from polar_route.route_planner.crossing import traveltime_in_cell
+from polar_route.utils import unit_time, unit_speed, case_from_angle
 
 
 def _dist_around_globe(start_point,crossing_point):
@@ -21,6 +23,32 @@ def _dist_around_globe(start_point,crossing_point):
 
     a = dist[indx]
     return a
+
+
+def _rhumb_line_distance(start_waypoint, end_waypoint):
+    """
+        Defining the rhumb line distance from a given waypoint start and end point
+
+        Inputs:
+            start_waypoints - (list([Long,lat])) Start Waypoint location with long lat
+            end_waypoints - (list([Long,lat])) End Waypoint location with long lat
+    """
+
+    # Defining a corrected distance based on rhumb lines
+    x_s, y_s  = start_waypoint
+    x_e, y_e  = end_waypoint
+
+    r = 6371.1*1000.
+    dy_corrected = np.log(np.tan((np.pi/4) + (y_e * (np.pi/180)) / 2) / np.tan((np.pi/4) + (y_s * (np.pi/180)) / 2))
+    dx = (x_e - x_s) * (np.pi / 180)
+    dy = (y_e - y_s) * (np.pi / 180)
+    if dy_corrected==0 and dy==0:
+        q = np.cos(y_e * (np.pi / 180))
+    else:
+        q = dy/dy_corrected
+
+    distance = np.sqrt(dy**2 + (q**2)*(dx**2))*r
+    return distance
 
 
 class FindEdge:
@@ -104,131 +132,6 @@ class PathValues:
         self.unit_shipspeed='km/hr'
         self.unit_time='days'
 
-    def _unit_speed(self, val):
-        """
-            Applying unit speed for an input type.
-
-            Input:
-                val (float) - Input speed in m/s
-            Output:
-                val (float) - Output speed in unit type unit_shipspeed
-        """
-        if self.unit_shipspeed == 'km/hr':
-            val = val*(1000/(60*60))
-        if self.unit_shipspeed == 'knots':
-            val = (val*0.51)
-        return val
-
-    def _unit_time(self, val):
-        """
-            Applying unit time for an input type.
-
-            Input:
-                val (float) - Input time in s
-            Output:
-                val (float) - Output time in unit type unit_time
-        """
-        if self.unit_time == 'days':
-            val = val / (60 * 60 * 24)
-        elif self.unit_time == 'hr':
-            val = val / (60 * 60)
-        elif self.unit_time == 'min':
-            val = val / 60.
-        elif self.unit_time == 's':
-            val = val
-        return val
-
-    def _case_from_angle(self, start, end):
-        """
-            Determine the direction of travel between two points in the same cell and return the associated case
-
-            Args:
-                start (list): the coordinates of the start point within the cell
-                end (list):  the coordinates of the end point within the cell
-
-            Returns:
-                case (int): the case to use to select variable values from a list
-        """
-        direct_vec = [end[0]-start[0], end[1]-start[1]]
-        direct_ang = np.degrees(np.arctan2(direct_vec[0], direct_vec[1]))
-
-        case = None
-
-        if -22.5 <= direct_ang < 22.5:
-            case = -4
-        elif 22.5 <= direct_ang < 67.5:
-            case = 1
-        elif 67.5 <= direct_ang < 112.5:
-            case = 2
-        elif 112.5 <= direct_ang < 157.5:
-            case = 3
-        elif 157.5 <= abs(direct_ang) <= 180:
-            case = 4
-        elif -67.5 <= direct_ang < -22.5:
-            case = -3
-        elif -112.5 <= direct_ang < -67.5:
-            case = -2
-        elif -157.5 <= direct_ang < -112.5:
-            case = -1
-
-        return case
-    
-    def _traveltime_in_cell(self, xdist, ydist, U, V, S):
-        """
-            Determine the traveltime within cell
-
-            Inputs:
-                xdist (float) - Longitude distance between two points in km
-                ydist (float) - Latitude distance between two points in km
-                U (float) - U-Component for the forcing vector
-                V (float) - V-Component for the forcing vector
-                S (float) - Speed of the vehicle
-        """
-        dist  = np.sqrt(xdist**2 + ydist**2)
-        cval  = np.sqrt(U**2 + V**2)
-
-        dotprod  = xdist*U + ydist*V
-        diffsqrs = S**2 - cval**2
-
-        if diffsqrs == 0.0:
-            if dotprod == 0.0:
-                return np.inf
-            else:
-                if ((dist**2)/(2 * dotprod))  < 0:
-                    return np.inf
-                else:
-                    traveltime = dist * dist / (2 * dotprod)
-                    return traveltime
-
-        traveltime = (np.sqrt(dotprod**2 + (dist**2) * diffsqrs) - dotprod) / diffsqrs
-        if traveltime < 0:
-            traveltime = np.inf
-        return self._unit_time(traveltime), dist
-
-    def _rhumb_line_distance(self,start_waypoint,end_waypoint):
-        """
-            Defining the rhumb line distance from a given waypoint start and end point
-
-            Inputs:
-                start_waypoints - (list([Long,lat])) Start Waypoint location with long lat
-                end_waypoints - (list([Long,lat])) End Waypoint location with long lat
-        """
-
-        # Defining a corrected distance based on rhumb lines
-        Xs,Ys  = start_waypoint
-        Xe,Ye  = end_waypoint
-
-        R = 6371.1*1000.
-        dY_corrected = np.log(np.tan((np.pi/4) + (Ye*(np.pi/180))/2)/np.tan((np.pi/4) + (Ys*(np.pi/180))/2))
-        dX =  (Xe-Xs)*(np.pi/180)
-        dY =  (Ye-Ys)*(np.pi/180)
-        if dY_corrected==0 and dY==0:
-            q = np.cos(Ye*(np.pi/180))
-        else:
-            q = dY/dY_corrected
-
-        distance = np.sqrt(dY**2 + (q**2)*(dX**2))*R
-        return distance
 
     def _waypoint_correction(self, path_requested_variables, source_graph, Wp, Cp):
         """
@@ -251,12 +154,13 @@ class PathValues:
         m_lat   = 111.386*1000
         x = _dist_around_globe(Cp[0], Wp[0]) * m_long * np.cos(Wp[1] * (np.pi/180))
         y = (Cp[1]-Wp[1]) * m_lat
-        case = self._case_from_angle(Cp, Wp)
+        case = case_from_angle(Cp, Wp)
         Su  = source_graph['Vector_x']
         Sv  = source_graph['Vector_y']
-        Ssp = self._unit_speed(source_graph['speed'][case])
-        traveltime, _ = self._traveltime_in_cell(x, y, Su, Sv, Ssp)
-        distance = self._rhumb_line_distance(Wp, Cp)
+        Ssp = unit_speed(source_graph['speed'][case], self.unit_shipspeed)
+        traveltime = traveltime_in_cell(x, y, Su, Sv, Ssp)
+        traveltime = unit_time(traveltime, self.unit_time)
+        distance = _rhumb_line_distance(Wp, Cp)
 
         # Given the traveltime and distance between the two waypoints
         # determine the path related variables (e.g. fuel usage, traveltime)

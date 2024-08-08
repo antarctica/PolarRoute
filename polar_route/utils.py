@@ -314,7 +314,7 @@ def pandas_dataframe_str(input):
     return output
 
 
-def case_from_angle( start,end):
+def case_from_angle(start, end):
         """
             Determine the direction of travel between two points in the same cell and return the associated case
 
@@ -353,7 +353,13 @@ def case_from_angle( start,end):
 
 def unit_time(val, unit):
     """
-        Applying Unit time for a specific input type
+        Converting time from seconds to the given units
+
+        Args:
+            val (float): input time in s
+            unit (str): the unit to convert to
+        Returns:
+            val (float) - output time in the converted units
     """
     if unit == 'days':
         return val/(60*60*24)
@@ -367,16 +373,16 @@ def unit_time(val, unit):
 
 def unit_speed(val, unit):
     """
-        Applying unit speed for an input type.
+        Converting speed from m/s to the given units
 
-        Input:
-            Val (float) - Input speed in m/s
-            unit (strint) - the unit to convert to
-        Output:
-            Val (float) - Output speed in unit type 'unit'
+        Args:
+            val (float): input speed in m/s
+            unit (str): the unit to convert to
+        Returns:
+            val (float) - output speed in unit type 'unit'
 
     """
-    if not isinstance(val,type(None)):
+    if val is not None:
         if unit == 'km/hr':
             val = val*(1000/(60*60))
         if unit == 'knots':

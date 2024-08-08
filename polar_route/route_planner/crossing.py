@@ -6,23 +6,65 @@
 """
 import numpy as np
 import logging
+from polar_route.utils import unit_time, unit_speed
 np.seterr(divide='ignore', invalid='ignore')
 
 
+def traveltime_in_cell(xdist, ydist, u, v, s, tt_dist=None):
+    """
+        Determine the traveltime within a cell
+
+        Args:
+            xdist (float): Longitude distance between two points in km
+            ydist (float): Latitude distance between two points in km
+            u (float): U-Component for the forcing vector
+            v (float): V-Component for the forcing vector
+            s (float): Speed of the vehicle
+            tt_dist (bool): Returns traveltime and distance if true, otherwise just traveltime
+        Returns:
+            traveltime (float): the travel time within the cell
+            dist (float): the distance within the cell
+    """
+    dist = np.sqrt(xdist**2 + ydist**2)
+    cval = np.sqrt(u**2 + v**2)
+
+    dotprod = xdist*u + ydist*v
+    diffsqrs = s**2 - cval**2
+
+    if diffsqrs == 0.0:
+        if dotprod == 0.0:
+            traveltime = np.inf
+        else:
+            if ((dist**2)/(2*dotprod)) < 0:
+                traveltime = np.inf
+            else:
+                traveltime = dist**2/(2*dotprod)
+    else:
+        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
+
+    if traveltime < 0:
+        traveltime = np.inf
+
+    if tt_dist:
+        return traveltime, dist
+    else:
+        return traveltime
+
+
 class NewtonianDistance:
-    def __init__(self, node_id, neighbour_id, cellboxes, case=None, unit_shipspeed='km/hr', unit_time='days',
+    def __init__(self, node_id, neighbour_id, cellboxes, case=None, unit_shipspeed='km/hr', time_unit='days',
                  maxiter=1000, optimizer_tol=1e-3):
         """
             Class that uses the Newton method to find the crossing point between cells based on their environmental
             parameters.
 
             Args:
-                node_id:
-                neighbour_id:
+                node_id():
+                neighbour_id():
                 cellboxes:
                 case:
                 unit_shipspeed:
-                unit_time:
+                time_unit:
                 maxiter:
                 optimizer_tol:
         """
@@ -35,9 +77,11 @@ class NewtonianDistance:
 
         # Inside the code the base units are m/s. Changing the units of the inputs to match
         self.unit_shipspeed = unit_shipspeed
-        self.unit_time = unit_time
-        self.source_speed = self._unit_speed(self.source_cellbox.agg_data['speed'][direction.index(case)])
-        self.neighbour_speed = self._unit_speed(self.neighbour_cellbox.agg_data['speed'][direction.index(case)])
+        self.unit_time = time_unit
+        self.source_speed = unit_speed(self.source_cellbox.agg_data['speed'][direction.index(case)],
+                                       self.unit_shipspeed)
+        self.neighbour_speed = unit_speed(self.neighbour_cellbox.agg_data['speed'][direction.index(case)],
+                                          self.unit_shipspeed)
 
         self.case = case
 
@@ -95,44 +139,7 @@ class NewtonianDistance:
                 t1 = -1
                 t2 = -1
 
-        return y0, self._unit_time(np.array([t1, t2]))
-
-    def _unit_speed(self, val):
-        """
-            Applying unit speed for an input type.
-
-            Input:
-                Val (float) - Input speed in m/s
-            Output:
-                Val (float) - Output speed in unit type unit_shipspeed
-        """
-        if not isinstance(val,type(None)):
-            if self.unit_shipspeed == 'km/hr':
-                val = val*(1000/(60*60))
-            if self.unit_shipspeed == 'knots':
-                val = (val*0.51)
-            return val
-        else:
-            return None
-
-    def _unit_time(self, val):
-        """
-            Applying unit time for an input type.
-
-            Input:
-                Val (float) - Input time in s
-            Output:
-                Val (float) - Output time in unit type unit_time
-        """
-        if self.unit_time == 'days':
-            val = val/(60*60*24.)
-        elif self.unit_time == 'hr':
-            val = val/(60*60.)
-        elif self.unit_time == 'min':
-            val = val/60.
-        elif self.unit_time == 's':
-            val = val
-        return val
+        return y0, unit_time(np.array([t1, t2]), self.unit_time)
 
     def _F(self, y, x, a, Y, u1, v1, u2, v2, s1, s2):
         """
@@ -197,39 +204,6 @@ class NewtonianDistance:
 
         return F, dF, X1, X2, t1, t2
 
-    def _traveltime_in_cell(self, xdist, ydist, U, V, S):
-        """
-            Determines the travel-time within a cell between two points
-
-            Args:
-                xdist (float) - Longitudinal distance in cell in m
-                xdist (float) - Latitudinal distance in cell in m
-                U (float) - Longitudinal component of forcing vector (m/s)
-                V (float) - Latitudinal component of forcing vector (m/s)
-                S (float) - Max speed in cell (m/s)
-        """
-        dist  = np.sqrt(xdist**2 + ydist**2)
-        cval  = np.sqrt(U**2 + V**2)
-
-        dotprod  = xdist*U + ydist*V
-        diffsqrs = S**2 - cval**2
-
-        # if (dotprod**2 + diffsqrs*(dist**2) < 0)
-        if diffsqrs == 0.0:
-            if dotprod == 0.0:
-                return np.inf
-            else:
-                if ((dist**2)/(2*dotprod))  < 0:
-                    return np.inf
-                else:
-                    traveltime = dist * dist / (2 * dotprod)
-                    return traveltime
-
-        traveltime = (np.sqrt(dotprod**2 + (dist**2)*diffsqrs) - dotprod)/diffsqrs
-        if traveltime < 0:
-            traveltime = np.inf
-        return traveltime
-
     def waypoint_correction(self, Wp, Cp):
         """
             Determines the traveltime between two points within a given cell
@@ -244,8 +218,8 @@ class NewtonianDistance:
         Su  = self.source_cellbox.agg_data['uC'] 
         Sv  = self.source_cellbox.agg_data['vC'] 
         Ssp = self.source_speed
-        traveltime = self._traveltime_in_cell(x, y, Su, Sv, Ssp)
-        return self._unit_time(traveltime)
+        traveltime = traveltime_in_cell(x, y, Su, Sv, Ssp)
+        return unit_time(traveltime, self.unit_time)
 
     def _longitude(self):
         """
@@ -430,9 +404,9 @@ class NewtonianDistance:
         cell_points  = [n_cx, n_cy]
 
         # Determining traveltime
-        t1 = self._traveltime_in_cell(dx1, dy1, Su, Sv, Ssp)
-        t2 = self._traveltime_in_cell(dx2, dy2, Nu, Nv, Nsp)
-        travel_time  = self._unit_time(np.array([t1, t2]))
+        t1 = traveltime_in_cell(dx1, dy1, Su, Sv, Ssp)
+        t2 = traveltime_in_cell(dx2, dy2, Nu, Nv, Nsp)
+        travel_time  = unit_time(np.array([t1, t2]), self.unit_time)
 
         if travel_time[0] < 0 or travel_time[1] < 0:
             travel_time  = [np.inf, np.inf]

@@ -467,7 +467,7 @@ class RoutePlanner:
 
         # Applying Newton distance to determine crossing point between node and its neighbour
         cost_func = self.cost_func(node_id, neighbour_id, self.cellboxes_lookup, case=case,
-                                    unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
+                                    unit_shipspeed='km/hr', time_unit=self.config['time_unit'])
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points, cell_points, case = cost_func.value()
 
@@ -660,7 +660,7 @@ class RoutePlanner:
             neighbour_crossing_points = []
             for i, neighbour in enumerate(neighbour_index):
                 cost_func = self.cost_func(str(cell_id), str(neighbour), self.cellboxes_lookup, case=cases[i],
-                                           unit_shipspeed='km/hr', unit_time=self.config['time_unit'])
+                                           unit_shipspeed='km/hr', time_unit=self.config['time_unit'])
                 traveltime, crossing_points, cell_points, case = cost_func.value()
                 neighbour_travel_legs.append(traveltime)
                 neighbour_crossing_points.append(crossing_points)
