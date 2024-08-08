@@ -3,7 +3,6 @@
     environmental mesh between a series of user defined waypoints
 """
 
-import warnings
 import numpy as np
 import pandas as pd
 from shapely import wkt, Point, LineString, STRtree
@@ -342,12 +341,12 @@ class RoutePlanner:
 
         # Loop over all source waypoints
         for i, s_wp in enumerate(start_waypoints):
-                
                 s_wp.log_routing_table()
                 route_segments = []
                 e_wp = end_waypoints[i]
                 e_wp_indx = e_wp.get_cellbox_indx()
                 cases = []
+                no_route_found = False
 
                 # Handle case where route starts and ends in the same cell
                 if s_wp.get_cellbox_indx() == e_wp_indx:
@@ -358,6 +357,11 @@ class RoutePlanner:
                         # logging.debug(">>> s_wp_indx >>>", s_wp)
                         # logging.debug(">>> e_wp_indx >>>", e_wp_indx)
                         routing_info = s_wp.get_routing_info(e_wp_indx)
+                        # If no route found break out of loop and skip this case
+                        if routing_info.get_node_index() == -1:
+                            logging.warning(f'{s_wp.get_name()} to {e_wp.get_name()} - Failed to construct Dijkstra route')
+                            no_route_found = True
+                            break
                         # Insert segments at the front of the list as we are moving from e_wp to s_wp
                         route_segments.insert(0, routing_info.get_path())
                         neighbour_case = (self.env_mesh.neighbour_graph.get_neighbour_case(
@@ -379,6 +383,10 @@ class RoutePlanner:
                     route.set_cases(cases)
                     for s in route_segments:
                         logging.debug(">>>|S|>>>> ", s.to_str())
+
+                if no_route_found:
+                    continue
+
                 logging.debug(route.segments[0].get_start_wp().get_cellbox_indx())
 
                 # Correct the first and last segment of the route
@@ -441,13 +449,16 @@ class RoutePlanner:
                             source_wp.update_routing_table(str(neighbour), RoutingInfo(_id, edges))
                 
         # Updating Dijkstra as long as all the waypoints are not visited or for full graph
-        logging.debug(">>>> src >>>> ", wp.get_cellbox_indx())
-        logging.debug(">>>> end_wp >>>> ", end_wps[0].get_cellbox_indx())
+        logging.debug(f">>>> src >>>> {wp.get_cellbox_indx()}")
+        logging.debug(f">>>> end_wp >>>> {end_wps[0].get_cellbox_indx()}")
         while not wp.is_all_visited():
             # Determine the index of the cell with the minimum objective function cost that has not yet been visited
             min_obj_indx = find_min_objective(wp)
-            logging.debug("min_obj >>> ", min_obj_indx)
-            
+            logging.debug(f"min_obj >>> {min_obj_indx}")
+            # If min_obj_indx is -1 then no route possible and we stop search for this waypoint
+            if min_obj_indx == -1:
+                break
+
             consider_neighbours(wp, min_obj_indx)
             wp.visit(min_obj_indx)
 
