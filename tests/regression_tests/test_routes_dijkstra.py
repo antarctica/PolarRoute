@@ -3,8 +3,7 @@ import pytest
 import time
 
 from polar_route import __version__ as pr_version
-from polar_route import RoutePlanner
-
+from polar_route.route_planner.route_planner import RoutePlanner
 
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
@@ -110,7 +109,7 @@ def route_pair(request):
     Creates a pair of JSON objects, one newly generated, one as old reference
     Args:
         request (fixture): 
-            fixture object including list of jsons of fuel optimised routes
+            fixture object including list of jsons of optimised routes
 
     Returns:
         list: [reference json, new json]
@@ -130,25 +129,28 @@ def route_pair(request):
 # Generating new outputs
 def calculate_dijkstra_route(config, mesh):
     """
-    Calculates the fuel-optimised route, with dijkstra but no smoothing
+    Calculates the optimised route, with dijkstra but no smoothing
 
     Args:
-        route_filename (str): Filename of regression test route
+        config (dict): the route config
+        mesh (dict): the reference mesh (including routes and waypoints)
 
     Returns:
-        json: New route output
+        new_route (dict): new route output
     """
     start = time.perf_counter()
 
     # Initial set up
     waypoints   = extract_waypoints(mesh)
-    
+
     # Calculate dijkstra route
-    rp = RoutePlanner(mesh, config, waypoints)
-    rp.compute_routes()
+    rp = RoutePlanner(mesh, config)
+    routes = rp.compute_routes(waypoints)
     
     # Generate json to compare to old output
-    new_route = rp.to_json()
+    new_route = mesh
+    new_route['paths'] = {"type": "FeatureCollection", "features": []}
+    new_route['paths']['features'] = [r.to_json() for r in routes]
 
     end = time.perf_counter()
     LOGGER.info(f'Route calculated in {end - start} seconds')
