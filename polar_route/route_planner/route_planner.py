@@ -340,14 +340,17 @@ class RoutePlanner:
         routes = []
 
         # Loop over all source waypoints
-        for i, s_wp in enumerate(start_waypoints):
-                s_wp.log_routing_table()
+        for s_wp in start_waypoints:
+            s_wp.log_routing_table()
+            # Loop over all end waypoints
+            for e_wp in end_waypoints:
+                # Don't try to calculate route from waypoint to itself
+                if s_wp.get_name() == e_wp.get_name():
+                    continue
                 route_segments = []
-                e_wp = end_waypoints[i]
                 e_wp_indx = e_wp.get_cellbox_indx()
                 cases = []
                 no_route_found = False
-
                 # Handle case where route starts and ends in the same cell
                 if s_wp.get_cellbox_indx() == e_wp_indx:
                    # Route should be a straight line within the same cellbox
@@ -376,19 +379,18 @@ class RoutePlanner:
                         for x in range(2):
                             cases.insert(0, neighbour_case)
                         e_wp_indx = routing_info.get_node_index()
-                        logging.debug("route segments >> ", route_segments[0][0].to_str())
+                        logging.debug(f"route segments >> {route_segments[0][0].to_str()}")
                    
                     route_segments = list(itertools.chain.from_iterable(route_segments))
                     route = Route(route_segments, s_wp.get_name(), e_wp.get_name(), self.config)
                     route.set_cases(cases)
                     for s in route_segments:
-                        logging.debug(">>>|S|>>>> ", s.to_str())
+                        logging.debug(f">>>|S|>>>> {s.to_str()}")
 
                 if no_route_found:
                     continue
 
                 logging.debug(route.segments[0].get_start_wp().get_cellbox_indx())
-
                 # Correct the first and last segment of the route
                 route.waypoint_correction(self.cellboxes_lookup[route.segments[0].get_start_wp().get_cellbox_indx()],
                                           s_wp, route.segments[0].get_end_wp(), 0)
@@ -449,18 +451,17 @@ class RoutePlanner:
                             source_wp.update_routing_table(str(neighbour), RoutingInfo(_id, edges))
                 
         # Updating Dijkstra as long as all the waypoints are not visited or for full graph
-        logging.debug(f">>>> src >>>> {wp.get_cellbox_indx()}")
-        logging.debug(f">>>> end_wp >>>> {end_wps[0].get_cellbox_indx()}")
-        while not wp.is_all_visited():
-            # Determine the index of the cell with the minimum objective function cost that has not yet been visited
-            min_obj_indx = find_min_objective(wp)
-            logging.debug(f"min_obj >>> {min_obj_indx}")
-            # If min_obj_indx is -1 then no route possible and we stop search for this waypoint
-            if min_obj_indx == -1:
-                break
-
-            consider_neighbours(wp, min_obj_indx)
-            wp.visit(min_obj_indx)
+        for end_wp in end_wps:
+            logging.info(f"Destination waypoint: {end_wp.get_name()}")
+            while not wp.is_visited(end_wp.get_cellbox_indx()) or wp.is_all_visited():
+                # Determine the index of the cell with the minimum objective function cost that has not yet been visited
+                min_obj_indx = find_min_objective(wp)
+                logging.debug(f"min_obj >>> {min_obj_indx}")
+                # If min_obj_indx is -1 then no route possible, and we stop search for this waypoint
+                if min_obj_indx == -1:
+                    break
+                consider_neighbours(wp, min_obj_indx)
+                wp.visit(min_obj_indx)
 
     def _neighbour_cost(self, node_id, neighbour_id, case):
         """
@@ -548,12 +549,12 @@ class RoutePlanner:
         if len(end_wps) == 0:
             end_wps = [Waypoint.load_from_cellbox(cellbox) for cellbox in self.env_mesh.agg_cellboxes] # full graph, use all the cellboxes ids as destination
         for wp in src_wps:
-            logging.info('--- Processing Waypoint = {}'.format(wp.get_name()))
+            logging.info('--- Processing Source Waypoint = {}'.format(wp.get_name()))
             self._dijkstra(wp, end_wps)
 
-        logging.info("Dijkstra routing complete...")
         # Using Dijkstra graph compute route and meta information to all end_waypoints
         routes = self._dijkstra_routes(src_wps, end_wps)
+        logging.info("Dijkstra routing complete...")
         self.routes_dijkstra = routes
         # Returning the constructed routes
         return routes
@@ -577,7 +578,7 @@ class RoutePlanner:
         merge_separation = self.config.get('smoothing_merge_separation', 1e-3)
         converged_sep = self.config.get('smoothing_converged_sep', 1e-3)
 
-        logging.info('========= Determining Smoothed Routes ===========\n')
+        logging.info('========= Determining Smoothed Routes ===========')
         geojson = {}
         smoothed_routes = []
 
@@ -664,8 +665,8 @@ class RoutePlanner:
             if 'SIC' not in cell:
                 dijkstra_graph_dict[cell_id]['SIC'] = 0.0
             dijkstra_graph_dict[cell_id]['id'] = cell_id
-            dijkstra_graph_dict[cell_id]['Vector_x'] = dijkstra_graph_dict[cell_id].pop(self.config['vector_names'][0])
-            dijkstra_graph_dict[cell_id]['Vector_y'] = dijkstra_graph_dict[cell_id].pop(self.config['vector_names'][1])
+            dijkstra_graph_dict[cell_id]['Vector_x'] = dijkstra_graph_dict[cell_id][self.config['vector_names'][0]]
+            dijkstra_graph_dict[cell_id]['Vector_y'] = dijkstra_graph_dict[cell_id][self.config['vector_names'][1]]
             cases, neighbour_index = flatten_cases(str(cell_id), neighbour_graph)
             dijkstra_graph_dict[cell_id]['case'] = np.array(cases)
             dijkstra_graph_dict[cell_id]['neighbourIndex'] = np.array(neighbour_index)
@@ -689,7 +690,6 @@ class RoutePlanner:
                 dijkstra_graph_dict[cell_id]['pathIndex'] = np.append(dijkstra_graph_dict[prev_cell]['pathIndex'], idx)
                 prev_cell = cell_id
             idx += 1
-
 
         return dijkstra_graph_dict
 
