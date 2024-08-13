@@ -29,6 +29,7 @@ TEST_ROUTES = [
     './example_routes/smoothed/time/checkerboard.json',
     './example_routes/smoothed/time/great_circle_forward.json',
     './example_routes/smoothed/time/great_circle_reverse.json',
+    './example_routes/smoothed/time/multi_waypoint_blocked.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_smooth.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_80latn_smooth.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_80lats_smooth.json',

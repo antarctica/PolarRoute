@@ -32,6 +32,7 @@ TEST_ROUTES = [
     './example_routes/dijkstra/time/checkerboard.json',
     './example_routes/dijkstra/time/great_circle_forward.json',
     './example_routes/dijkstra/time/great_circle_reverse.json',
+    './example_routes/dijkstra/time/multi_waypoint_blocked.json',
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_0lat.json',
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_20lat_s.json',
     './example_routes/dijkstra/crossing_point/horizontal/horizontal_20lat_n.json',
