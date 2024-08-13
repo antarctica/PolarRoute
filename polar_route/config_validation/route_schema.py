@@ -18,6 +18,7 @@ route_schema = {
         "time_unit": {"type": "string",
                       "enum": ["days","hours","seconds"]},
         "early_stopping_criterion":{"type": "boolean"},
+        "adjust_waypoints":{"type": "boolean"},
         "zero_currents": {"type": "boolean"},
         "smoothing_blocked_sic": {"type": "number"},
         "smoothing_max_iterations": {"type": "integer"},

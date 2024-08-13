@@ -205,6 +205,10 @@ class RoutePlanner:
         self.config = json_str(config_file)
         validate_route_config(self.config)
 
+        # Only switch off waypoint adjustment if specified in config
+        if 'adjust_waypoints' not in self.config:
+            self.config['adjust_waypoints'] = True
+
         # Load mesh json from file or dict
         mesh_json = json_str(mesh_file)
 
@@ -528,10 +532,15 @@ class RoutePlanner:
             # Only allow waypoints within an existing mesh
             assert point.within(mesh_boundary), \
                 f"Waypoint {row['Name']} outside of mesh boundary! {point}"
-            adjusted_point = _adjust_waypoints(point, self.env_mesh.to_json()['cellboxes'])
+            if self.config['adjust_waypoints']:
+                logging.debug("Adjusting waypoints in inaccessible cells to nearest accessible location")
+                adjusted_point = _adjust_waypoints(point, self.env_mesh.to_json()['cellboxes'])
 
-            waypoints_df.loc[idx, 'Long'] = adjusted_point.x
-            waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
+                waypoints_df.loc[idx, 'Long'] = adjusted_point.x
+                waypoints_df.loc[idx, 'Lat'] = adjusted_point.y
+            else:
+                logging.debug("Skipping waypoint adjustment")
+
 
         # Load source and destination waypoints
         src_wps, end_wps = self._load_waypoints(waypoints_df)
