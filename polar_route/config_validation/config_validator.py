@@ -97,7 +97,7 @@ def validate_waypoints(waypoints):
     else:
         # Otherwise, can't deal with it
         raise TypeError(
-            f"Expected 'str' or 'dict', instead got '{type(waypoints)}'"
+            f"Expected 'str' or 'DataFrame', instead got '{type(waypoints)}'"
             )
     # Assert that all the required columns exist
     assert(all(col in waypoints_df.columns for col in waypoints_columns)), \

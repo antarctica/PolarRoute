@@ -520,6 +520,9 @@ class RoutePlanner:
                 routes (List<Route>): a list of the computed routes
         """
         waypoints_df = pandas_dataframe_str(waypoints)
+        # Handle common issues with case/whitespace in Source/Destination fields
+        waypoints_df['Source'] = [s.strip().upper() if type(s) == str else np.nan for s in waypoints_df['Source']]
+        waypoints_df['Destination'] = [s.strip().upper() if type(s) == str else np.nan for s in waypoints_df['Destination']]
         # Validate input waypoints format
         validate_waypoints(waypoints_df)
         # Split around waypoints if specified in the config
