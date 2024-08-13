@@ -2,6 +2,7 @@ import argparse
 import json
 import inspect
 import logging
+import fiona
 import pandas as pd
 import geopandas as gpd
 
@@ -13,6 +14,7 @@ from polar_route.vessel_performance.vessel_performance_modeller import VesselPer
 from polar_route.route_planner.route_planner import RoutePlanner
 from polar_route.route_calc import route_calc
 
+fiona.drvsupport.supported_drivers['KML'] = 'rw' # enable KML support which is disabled by default
 
 @setup_logging
 def get_args(
@@ -62,17 +64,27 @@ def get_args(
         ap.add_argument("-p", "--path_geojson",
                         default=False,
                         action = "store_true",
-                        help="Output the calculated paths as GeoJSON")
+                        help="Output the routes in a GeoJSON file")
 
         ap.add_argument("-d", "--dijkstra",
                         default=False,
                         action = "store_true",
-                        help="Output dijkstra paths")
+                        help="Output dijkstra paths in a separate file")
         
         ap.add_argument("--chart_track",
                         default=False,
                         action = "store",
-                        help="Output the calculated paths as CSV readable by Chart Track")
+                        help="Output the routes as CSV files readable by Chart Track")
+
+        ap.add_argument( "--path_gpx",
+                        default=False,
+                        action="store_true",
+                        help="Output the routes as GPX files")
+
+        ap.add_argument( "--path_kml",
+                        default=False,
+                        action="store_true",
+                        help="Output the routes as KML files")
 
     return ap.parse_args()
 
@@ -199,6 +211,28 @@ def optimise_routes_cli():
         with open(output_file, 'w+') as fp:
                 json.dump(info['paths'], fp, indent=4)
 
+    # Optional output of smoothed route(s) to standalone KML file(s)
+    if args.path_kml:
+        logging.info(f"\tExtracting standalone path(s) to KML file(s)")
+        for route in smoothed_routes['features']:
+            from_wp = route["properties"]["from"].replace(" ", "_")
+            to_wp = route["properties"]["to"].replace(" ", "_")
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + ".kml"
+            gdf = gpd.GeoDataFrame.from_features([route])
+            logging.info(f"Saving route to {route_output_str}")
+            gdf['geometry'].to_file(route_output_str, "KML")
+
+    # Optional output of smoothed route(s) to standalone GPX file(s)
+    if args.path_gpx:
+        logging.info(f"\tExtracting standalone path(s) to GPX file(s)")
+        for route in smoothed_routes['features']:
+            from_wp = route["properties"]["from"].replace(" ", "_")
+            to_wp = route["properties"]["to"].replace(" ", "_")
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + ".gpx"
+            gdf = gpd.GeoDataFrame.from_features([route])
+            logging.info(f"Saving route to {route_output_str}")
+            gdf['geometry'].to_file(route_output_str, "GPX")
+
     # Optional output of Chart Track formatted csv
     if args.chart_track:
         # Extract each route as csv string
@@ -247,7 +281,6 @@ def extract_routes_cli():
             with open(route_output_str, "w") as f:
                 json.dump(geojson_output, f, indent=4)
 
-
     elif output_file_strs[-1] == "gpx":
         logging.info("Extracting routes in gpx format")
         for route in routes:
@@ -257,6 +290,17 @@ def extract_routes_cli():
             gdf = gpd.GeoDataFrame.from_features([route])
             logging.info(f"Saving route to {route_output_str}")
             gdf['geometry'].to_file(route_output_str, "GPX")
+
+    elif output_file_strs[-1] == "kml":
+        logging.info("Extracting routes in kml format")
+        for route in routes:
+            from_wp = route["properties"]["from"].replace(" ", "_")
+            to_wp = route["properties"]["to"].replace(" ", "_")
+            route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + ".kml"
+            gdf = gpd.GeoDataFrame.from_features([route])
+            logging.info(f"Saving route to {route_output_str}")
+            gdf['geometry'].to_file(route_output_str, "KML")
+
     elif output_file_strs[-1] == "csv":
         logging.info("Extracting routes in ChartTrack csv format")
         for route in routes:
