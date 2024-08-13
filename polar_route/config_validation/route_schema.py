@@ -4,10 +4,7 @@ route_schema = {
             "objective_function",
             "path_variables",
             "vector_names",
-            "variable_speed",
-            "time_unit",
-            "early_stopping_criterion",
-            "zero_currents"
+            "time_unit"
         ],
     "additionalProperties": True,
     "properties": {
@@ -18,10 +15,10 @@ route_schema = {
                          "items":{"type":"string"},
                          "minItems": 2,
                          "maxItems": 2},
-        "variable_speed": {"type":"boolean"},
         "time_unit": {"type": "string",
                       "enum": ["days","hours","seconds"]},
         "early_stopping_criterion":{"type": "boolean"},
+        "adjust_waypoints":{"type": "boolean"},
         "zero_currents": {"type": "boolean"},
         "smoothing_blocked_sic": {"type": "number"},
         "smoothing_max_iterations": {"type": "integer"},

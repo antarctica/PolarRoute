@@ -149,7 +149,10 @@ def compare_cell_indices(route_a, route_b):
     cid_a = extract_path(route_a)['properties']['CellIndices']
     cid_b = extract_path(route_b)['properties']['CellIndices']
 
-    np.testing.assert_array_equal(cid_a, cid_b, 
+    cid_a = [int(a) for a in cid_a]
+    cid_b = [int(b) for b in cid_b]
+
+    np.testing.assert_array_equal(cid_a, cid_b,
                                   err_msg='Difference in "cell_indices"')
 
 def compare_cases(route_a, route_b):

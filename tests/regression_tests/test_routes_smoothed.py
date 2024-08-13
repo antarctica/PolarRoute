@@ -4,7 +4,7 @@ import time
 
 
 from polar_route import __version__ as pr_version
-from polar_route import RoutePlanner
+from polar_route.route_planner.route_planner import RoutePlanner
 from .route_test_functions import extract_waypoints
 from .route_test_functions import extract_route_info
 
@@ -29,6 +29,7 @@ TEST_ROUTES = [
     './example_routes/smoothed/time/checkerboard.json',
     './example_routes/smoothed/time/great_circle_forward.json',
     './example_routes/smoothed/time/great_circle_reverse.json',
+    './example_routes/smoothed/time/multi_waypoint_blocked.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_0lat_smooth.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_80latn_smooth.json',
     './example_routes/smoothed/crossing_point/horizontal/horizontal_80lats_smooth.json',
@@ -79,14 +80,15 @@ def calculate_smoothed_route(config, mesh):
 
     # Initial set up
     waypoints   = extract_waypoints(mesh)
-    
+
     # Calculate smoothed route
-    rp = RoutePlanner(mesh, config, waypoints)
-    rp.compute_routes()
-    rp.compute_smoothed_routes()
+    rp = RoutePlanner(mesh, config)
+    dijkstra_route = rp.compute_routes(waypoints)
+    smoothed_route = rp.compute_smoothed_routes()
     
     # Generate json to compare to old output
-    new_route = rp.to_json()
+    new_route = mesh
+    new_route['paths'] = smoothed_route
 
     end = time.perf_counter()
     LOGGER.info(f'Route smoothed in {end - start} seconds')
