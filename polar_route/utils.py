@@ -289,29 +289,42 @@ def json_str(input_json):
         input_json (dict or str):
 
     Returns:
-        output (dict)
+        output_json (dict)
 
     """
     if type(input_json) is dict:
-        output = input_json
+        # If dict, assume it's the json content
+        output_json = input_json
     elif type(input_json) is str:
-        try:
-            with open(input_json, 'r') as f:
-                output = json.load(f)
-        except:
-            raise ValueError("Unable to load '{}', please check path name".format(input_json))
-    return output
+        # If str, assume filename
+        with open(input_json, 'r') as f:
+            output_json = json.load(f)
+    else:
+        # Otherwise, can't deal with it
+        raise TypeError(f"Expected 'str' or 'dict', instead got '{type(input_json)}'")
+
+    return output_json
 
 
-def pandas_dataframe_str(input):
-    if (type(input) is dict) or (type(input) is pd.core.frame.DataFrame):
-        output = input
-    elif type(input) is str:
+def pandas_dataframe_str(input_df):
+    """
+    Normalise input for classes and functions that take in pandas dataframes, return a df whether a df or path is given
+    as input.
+    Args:
+        input_df (pd.DataFrame or str):
+
+    Returns:
+        output_df (pd.DataFrame)
+    """
+    if (type(input_df) is dict) or (type(input_df) is pd.core.frame.DataFrame):
+        output_df = input_df
+    elif type(input_df) is str:
         try:
-            output = pd.read_csv(input)
+            output_df = pd.read_csv(input_df)
         except:
-            raise Exception("Unable to load '{}', please check path name".format(input))
-    return output
+            raise Exception("Unable to load '{}', please check path name".format(input_df))
+
+    return output_df
 
 
 def case_from_angle(start, end):
