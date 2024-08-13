@@ -13,6 +13,7 @@ class Segment:
             distance (float): the distance between segment's start and end waypoints
             traveltime (float): the time needed to travel from a segment's start to its end waypoint
             fuel (float): the amount of fuel needed to travel from a segment's start to its end waypoint
+            battery (float): the amount of battery power needed to travel from a segment's start to its end waypoint
     """
 
     def __init__(self, start_wp, end_wp):
@@ -21,6 +22,7 @@ class Segment:
         self.distance = np.inf
         self.traveltime = np.inf
         self.fuel = np.inf
+        self.battery = np.inf
 
     def set_distance(self, distance):
         """
@@ -40,6 +42,12 @@ class Segment:
         """
         self.fuel = fuel
 
+    def set_battery(self, battery):
+        """
+            Setting the segment battery consumption
+        """
+        self.battery = battery
+
     def get_distance(self):
         """
             Returning the segment distance
@@ -56,7 +64,13 @@ class Segment:
         """
             Returning the segment fuel
         """
-        return self.fuel 
+        return self.fuel
+
+    def get_battery(self):
+        """
+            Returning the segment battery consumption
+        """
+        return self.battery
     
     def get_points(self):
         """

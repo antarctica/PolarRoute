@@ -457,7 +457,7 @@ class RoutePlanner:
         # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         for end_wp in end_wps:
             logging.info(f"Destination waypoint: {end_wp.get_name()}")
-            while not wp.is_visited(end_wp.get_cellbox_indx()) or wp.is_all_visited():
+            while not wp.is_visited(end_wp.get_cellbox_indx()):
                 # Determine the index of the cell with the minimum objective function cost that has not yet been visited
                 min_obj_indx = find_min_objective(wp)
                 logging.debug(f"min_obj >>> {min_obj_indx}")
@@ -497,12 +497,19 @@ class RoutePlanner:
 
         # Fill segment metrics
         s1.set_travel_time(traveltime[0])
-        s1.set_fuel(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
+        if 'fuel' in self.config['path_variables']:
+            s1.set_fuel(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
+        if 'battery' in self.config['path_variables']:
+            s1.set_battery(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['battery'][direction.index(case)])
         s1.set_distance(s1.get_travel_time() * unit_speed(self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)],
                                                           self.config['unit_shipspeed']))
 
         s2.set_travel_time(traveltime[1])
-        s2.set_fuel( s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
+        if 'fuel' in self.config['path_variables']:
+            s2.set_fuel(s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
+        if 'battery' in self.config['path_variables']:
+            s1.set_battery(
+                s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['battery'][direction.index(case)])
         s2.set_distance(s2.get_travel_time() * unit_speed(self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)],
                                                           self.config['unit_shipspeed']))
 
@@ -618,14 +625,13 @@ class RoutePlanner:
 
             # ------ Smoothed Route Values -----
             # Given a smoothed route now determine the parameters along the route.
-            pv = PathValues()
+            pv = PathValues(self.config['path_variables'])
             path_info = pv.objective_function(sf.aps, sf.start_waypoint, sf.end_waypoint)
             # Ensure all coordinates are in domain -180:180
             path_info['path'][:, 0] = longitude_domain(path_info['path'][:, 0])
             variables = path_info['variables']
             travel_time_legs = variables['traveltime']['path_values']
             distance_legs = variables['distance']['path_values']
-            fuel_legs = variables['fuel']['path_values']
             speed_legs = variables['speed']['path_values']
 
             # ------ Saving Output in a standard form to be saved ------
@@ -639,10 +645,18 @@ class RoutePlanner:
             smoothed_route['properties']['to'] = route_json['properties']['to']
             smoothed_route['properties']['traveltime'] = list(travel_time_legs)
             smoothed_route['properties']['total_traveltime'] = smoothed_route['properties']['traveltime'][-1]
-            smoothed_route['properties']['fuel'] = list(fuel_legs)
-            smoothed_route['properties']['total_fuel'] = smoothed_route['properties']['fuel'][-1]
             smoothed_route['properties']['distance'] = list(distance_legs)
             smoothed_route['properties']['speed'] = list(speed_legs)
+
+            if 'fuel' in self.config['path_variables']:
+                fuel_legs = variables['fuel']['path_values']
+                smoothed_route['properties']['fuel'] = list(fuel_legs)
+                smoothed_route['properties']['total_fuel'] = smoothed_route['properties']['fuel'][-1]
+            if 'battery' in self.config['path_variables']:
+                battery_legs = variables['battery']['path_values']
+                smoothed_route['properties']['battery'] = list(battery_legs)
+                smoothed_route['properties']['total_battery'] = smoothed_route['properties']['battery'][-1]
+
             smoothed_routes += [smoothed_route]
 
             logging.info('Smoothing complete in {} iterations'.format(sf.jj))

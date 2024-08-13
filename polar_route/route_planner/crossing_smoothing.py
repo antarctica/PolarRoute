@@ -118,16 +118,21 @@ class PathValues:
         Functions:
             objective_function - For a list of adjacent cell pairs, start and end waypoints compute path attributes
     """
-    def __init__(self):
+    def __init__(self, path_vars):
+        """
+        Args:
+            path_vars: The path variables specified in the route config
+        """
         # Determining the important variables to return for the paths
         required_path_variables = {'distance':{'processing':'cumsum'},
                                    'traveltime':{'processing':'cumsum'},
                                    'speed':{'processing':None},
                                    'datetime':{'processing':'cumsum'},
-                                   'cell_index':{'processing':None},
-                                   'fuel':{'processing':'cumsum'}}
-        self.path_requested_variables = {} # self.config['route_info']['path_variables']
-        self.path_requested_variables.update(required_path_variables)
+                                   'cell_index':{'processing':None}
+                                   }
+        for var in path_vars:
+            required_path_variables[var] = {'processing':'cumsum'}
+        self.path_requested_variables = required_path_variables
 
         self.unit_shipspeed='km/hr'
         self.unit_time='days'

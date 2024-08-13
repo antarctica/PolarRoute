@@ -47,6 +47,12 @@ class Route:
         """
         return sum(seg.get_fuel() for seg in self.segments)
 
+    def get_battery(self):
+        """
+            Goes through the route segments and calculates the entire route's battery usage
+        """
+        return sum(seg.get_battery() for seg in self.segments)
+
     def accumulate_metric(self, metric):
         """
         Finds the cumulative sum over the given metric for the route
@@ -170,8 +176,12 @@ class Route:
         self.segments[indx].set_waypoint(indx, wp)
         self.segments[indx].set_travel_time(traveltime)
         self.segments[indx].set_distance(distance)
-        self.segments[indx].set_fuel(cellbox.agg_data['fuel'][case] * traveltime)
-        logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][case] * traveltime}")
+        if 'fuel' in self.conf['path_variables']:
+            self.segments[indx].set_fuel(cellbox.agg_data['fuel'][case] * traveltime)
+            logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][case] * traveltime}")
+        if 'battery' in self.conf['path_variables']:
+            self.segments[indx].set_fuel(cellbox.agg_data['battery'][case] * traveltime)
+            logging.debug(f"WP_correction >> battery >> {cellbox.agg_data['battery'][case] * traveltime}")
 
     def get_points(self):
         """
