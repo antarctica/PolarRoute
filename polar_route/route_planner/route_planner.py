@@ -564,8 +564,6 @@ class RoutePlanner:
         waypoints_df['Destination'] = [s.strip().upper() if type(s) == str else np.nan for s in waypoints_df['Destination']]
         # Validate input waypoints format
         validate_waypoints(waypoints_df)
-        # Split around waypoints if specified in the config
-        self._splitting_around_waypoints(waypoints_df)
 
         # Move waypoint to the closest accessible cellbox, if it isn't in one already
         mesh_boundary = _mesh_boundary_polygon(self.env_mesh.to_json())
@@ -583,6 +581,8 @@ class RoutePlanner:
             else:
                 logging.debug("Skipping waypoint adjustment")
 
+        # Split around waypoints if specified in the config
+        self._splitting_around_waypoints(waypoints_df)
 
         # Load source and destination waypoints
         src_wps, end_wps = _load_waypoints(waypoints_df)
