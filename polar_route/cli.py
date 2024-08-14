@@ -7,7 +7,7 @@ import geopandas as gpd
 from meshiphi.mesh_generation.mesh_builder import MeshBuilder
 
 from polar_route import __version__ as version
-from polar_route.utils import setup_logging, timed_call, convert_decimal_days, to_chart_track_csv
+from polar_route.utils import setup_logging, timed_call, convert_decimal_days, to_chart_track_csv, extract_geojson_routes
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
 from polar_route.route_planner import RoutePlanner
 from polar_route.route_calc import route_calc
@@ -215,18 +215,23 @@ def extract_routes_cli():
     if route_file.get("type") == "FeatureCollection":
         routes = route_file["features"]
     else:
-        routes = route_file["paths"]["features"]
+        if "paths" in route_file.keys():
+            routes = route_file["paths"]["features"]
+        else:
+            routes = []
+            
+    logging.info(f"{len(routes)} routes found in mesh")
 
     if output_file_strs[-1] in ["json", "geojson"]:
-        logging.info("Extracting routes in geojson format")
-        for route in routes:
-            geojson_wrapper = {"type": "FeatureCollection",
-                               "features": []}
+        geojson_outputs = extract_geojson_routes(route_file)
+        # For each route extracted
+        for geojson_output in geojson_outputs:
+            route = geojson_output['features'][0]
+            # Generate filename from route
             from_wp = route["properties"]["from"].replace(" ", "_")
             to_wp = route["properties"]["to"].replace(" ", "_")
-            geojson_output = geojson_wrapper
-            geojson_output["features"].append(route)
             route_output_str = '.'.join(output_file_strs[:-1]) + "_" + from_wp + to_wp + "." + output_file_strs[-1]
+            
             logging.info(f"Saving route to {route_output_str}")
             with open(route_output_str, "w") as f:
                 json.dump(geojson_output, f, indent=4)
