@@ -486,7 +486,5 @@ def extract_geojson_routes(mesh):
         
         geojson_routes.append(geojson_route)
 
-    logging.info(f"{len(geojson_routes)} routes found in mesh")
-
     # Return list of individual geojson routes
     return geojson_routes

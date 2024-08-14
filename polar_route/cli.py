@@ -220,6 +220,8 @@ def extract_routes_cli():
         else:
             routes = []
             
+    logging.info(f"{len(routes)} routes found in mesh")
+
     if output_file_strs[-1] in ["json", "geojson"]:
         geojson_outputs = extract_geojson_routes(route_file)
         # For each route extracted
