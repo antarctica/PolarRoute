@@ -471,7 +471,10 @@ def extract_geojson_routes(mesh):
     logging.info("Extracting routes in geojson format")
     
     # Extract the computed routes from the mesh
-    routes = mesh["paths"]["features"]
+    if "paths" in mesh.keys():
+        routes = mesh["paths"]["features"]
+    else:
+        routes = []
 
     # Reformat every route to geojson format and append to list
     geojson_routes = []

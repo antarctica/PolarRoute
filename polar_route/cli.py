@@ -215,8 +215,11 @@ def extract_routes_cli():
     if route_file.get("type") == "FeatureCollection":
         routes = route_file["features"]
     else:
-        routes = route_file["paths"]["features"]
-
+        if "paths" in route_file.keys():
+            routes = route_file["paths"]["features"]
+        else:
+            routes = []
+            
     if output_file_strs[-1] in ["json", "geojson"]:
         geojson_outputs = extract_geojson_routes(route_file)
         # For each route extracted
