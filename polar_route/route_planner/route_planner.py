@@ -379,10 +379,12 @@ class RoutePlanner:
             s_wp.log_routing_table()
             # Loop over all end waypoints
             for e_wp in end_waypoints:
-                # Don't try to calculate route from waypoint to itself
+                # Don't try to calculate route between waypoints at the same location
                 if s_wp.equals(e_wp):
-                    logging.info(f"Route from {s_wp.get_name()} to {e_wp.get_name()} not calculated, these waypoints"
-                                 f"are identical")
+                    # No need to log this for the "route" from a waypoint to itself
+                    if s_wp.get_name() != e_wp.get_name():
+                        logging.info(f"Route from {s_wp.get_name()} to {e_wp.get_name()} not calculated, these waypoints"
+                                     f" are identical")
                     continue
                 route_segments = []
                 e_wp_indx = e_wp.get_cellbox_indx()
