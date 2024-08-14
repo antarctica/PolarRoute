@@ -218,7 +218,7 @@ def extract_routes_cli():
         routes = route_file["paths"]["features"]
 
     if output_file_strs[-1] in ["json", "geojson"]:
-        geojson_outputs = extract_geojson_routes(args.mesh)
+        geojson_outputs = extract_geojson_routes(route_file)
         # For each route extracted
         for geojson_output in geojson_outputs:
             route = geojson_output['features'][0]
