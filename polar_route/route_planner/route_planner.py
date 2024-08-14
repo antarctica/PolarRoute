@@ -296,6 +296,9 @@ class RoutePlanner:
             logging.info(' Splitting around waypoints !')
             wps_points = [(entry['Lat'], entry['Long']) for _, entry in waypoints_df.iterrows()]
             self.env_mesh.split_points(wps_points)
+            # Rebuild lookup with new env_mesh
+            self.cellboxes_lookup = {str(self.env_mesh.agg_cellboxes[i].get_id()): self.env_mesh.agg_cellboxes[i]
+                                     for i in range(len(self.env_mesh.agg_cellboxes))}
 
     def _zero_currents(self, mesh):
         """
