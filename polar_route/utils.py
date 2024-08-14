@@ -282,6 +282,7 @@ def setup_logging(func,
         return parsed_args
     return wrapper
 
+
 def _json_str(input):
     if type(input) is dict:
         output = input
@@ -292,6 +293,8 @@ def _json_str(input):
         except:
             raise ValueError("Unable to load '{}', please check path name".format(input))
     return output
+
+
 def case_from_angle( start,end):
         """
             Determine the direction of travel between two points in the same cell and return the associated case
@@ -328,6 +331,7 @@ def case_from_angle( start,end):
 
         return case
 
+
 def unit_time(val , unit):
         '''
             Applying Unit time for a specific input type
@@ -341,6 +345,7 @@ def unit_time(val , unit):
         elif unit == 's':
             return val
         
+
 def unit_speed(val , unit):
         '''
             Applying unit speed for an input type.
@@ -360,6 +365,7 @@ def unit_speed(val , unit):
             return val
         else:
             return None
+
 
 def gpx_route_import(f_name):
     """
@@ -384,6 +390,7 @@ def gpx_route_import(f_name):
     geojson['features'][0]['properties']['to'] = gdf_p['name'].iloc[-1]
 
     return geojson
+
 
 def to_chart_track_csv(route):
     """
@@ -447,3 +454,11 @@ def to_chart_track_csv(route):
     return csv_str
 
 
+def extract_geojson_routes(mesh):
+    """
+    Extract routes in a precomputed mesh in GEOJSON format
+
+    Args:
+        mesh (_type_): _description_
+    """
+    pass
