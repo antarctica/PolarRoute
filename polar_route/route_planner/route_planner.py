@@ -157,6 +157,34 @@ def initialise_dijkstra_route(dijkstra_graph, dijkstra_route):
     return aps, start_waypoint, end_waypoint
 
 
+def _load_waypoints(waypoints):
+    """
+    Load source and destination waypoints from dict or file
+
+    Args:
+        waypoints (dict or str): waypoints dict or path to file to load waypoints from
+
+    Returns:
+        src_wps (list): list of source waypoints
+        dest_wps (list): list of destination waypoints
+    """
+    try:
+        waypoints_df = waypoints
+        if isinstance(waypoints, dict):
+            waypoints_df = pd.DataFrame.from_dict(waypoints)
+        if isinstance(waypoints, str):
+             waypoints_df = pd.read_csv(waypoints)
+        source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
+        dest_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
+        src_wps = [Waypoint(lat=source['Lat'], long=source['Long'], name=source['Name'])
+                   for index, source in source_waypoints_df.iterrows()]
+        dest_wps = [Waypoint(lat=dest['Lat'], long=dest['Long'], name=dest['Name'])
+                    for index, dest in dest_waypoints_df.iterrows()]
+        return src_wps, dest_wps
+    except FileNotFoundError:
+        raise ValueError(f"Unable to load '{waypoints}', please check file path provided")
+
+
 class RoutePlanner:
     """
         RoutePlanner finds the optimal route between a series of waypoints.
@@ -349,7 +377,9 @@ class RoutePlanner:
             # Loop over all end waypoints
             for e_wp in end_waypoints:
                 # Don't try to calculate route from waypoint to itself
-                if s_wp.get_name() == e_wp.get_name():
+                if s_wp.equals(e_wp):
+                    logging.info(f"Route from {s_wp.get_name()} to {e_wp.get_name()} not calculated, these waypoints"
+                                 f"are identical")
                     continue
                 route_segments = []
                 e_wp_indx = e_wp.get_cellbox_indx()
@@ -456,6 +486,8 @@ class RoutePlanner:
                 
         # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         for end_wp in end_wps:
+            if wp.equals(end_wp):
+                continue
             logging.info(f"Destination waypoint: {end_wp.get_name()}")
             while not wp.is_visited(end_wp.get_cellbox_indx()):
                 # Determine the index of the cell with the minimum objective function cost that has not yet been visited
@@ -508,12 +540,12 @@ class RoutePlanner:
         if 'fuel' in self.config['path_variables']:
             s2.set_fuel(s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
         if 'battery' in self.config['path_variables']:
-            s1.set_battery(
-                s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['battery'][direction.index(case)])
+            s2.set_battery(
+                s2.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['battery'][direction.index(case)])
         s2.set_distance(s2.get_travel_time() * unit_speed(self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)],
                                                           self.config['unit_shipspeed']))
 
-        neighbour_segments = [s1,s2]
+        neighbour_segments = [s1, s2]
 
         return neighbour_segments
 
@@ -553,13 +585,14 @@ class RoutePlanner:
 
 
         # Load source and destination waypoints
-        src_wps, end_wps = self._load_waypoints(waypoints_df)
+        src_wps, end_wps = _load_waypoints(waypoints_df)
         # Waypoint validation for route planning
         src_wps = self._validate_wps(src_wps)
         end_wps = self._validate_wps(end_wps)
 
         # Create SourceWaypoint objects
-        src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps]
+        src_wps = [SourceWaypoint(wp, end_wps) for wp in src_wps]
+        self.src_wps.append(src_wps)
         if len(src_wps) == 0:
             raise ValueError('Invalid waypoints. Inaccessible source waypoints')
 
@@ -762,39 +795,3 @@ class RoutePlanner:
                 wp.set_cellbox_indx(str(_id))
 
         return valid_wps
-
-    def get_source_wp(self, src_wp, end_wps):
-        for wp in self.src_wps:
-            if wp.equals(src_wp):
-                wp.set_end_wp(end_wps)
-                return wp
-        wp = SourceWaypoint(src_wp, end_wps)
-        self.src_wps.append(wp)
-        return wp
-    
-    def _load_waypoints(self, waypoints):
-        """
-        Load source and destination waypoints from dict or file
-
-        Args:
-            waypoints (dict or str): waypoints dict or path to file to load waypoints from
-
-        Returns:
-            src_wps (list): list of source waypoints
-            dest_wps (list): list of destination waypoints
-        """
-        try:
-            waypoints_df = waypoints
-            if isinstance(waypoints, dict):
-                waypoints_df = pd.DataFrame.from_dict(waypoints)
-            if isinstance(waypoints, str):
-                 waypoints_df = pd.read_csv(waypoints)
-            source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
-            dest_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
-            src_wps = [Waypoint(lat=source['Lat'], long=source['Long'], name=source['Name'])
-                       for index, source in source_waypoints_df.iterrows()]
-            dest_wps = [Waypoint(lat=dest['Lat'], long=dest['Long'], name=dest['Name'])
-                        for index, dest in dest_waypoints_df.iterrows()]
-            return src_wps, dest_wps
-        except FileNotFoundError:
-            raise ValueError(f"Unable to load '{waypoints}', please check file path provided")
