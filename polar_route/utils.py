@@ -455,10 +455,33 @@ def to_chart_track_csv(route):
 
 
 def extract_geojson_routes(mesh):
-    """
+    """_summary_
+
     Extract routes in a precomputed mesh in GEOJSON format
 
     Args:
-        mesh (_type_): _description_
+        mesh (dict): Precomputed mesh JSON with routes embedded
+        
+    Returns:
+        list: 
+            List of all routes found in mesh. If no routes found, returns 
+            empty list
     """
-    pass
+    
+    logging.info("Extracting routes in geojson format")
+    
+    # Check if input is just a route file or if the routes are nested within a mesh
+    if mesh.get("type") == "FeatureCollection":
+        routes = mesh["features"]
+    else:
+        routes = mesh["paths"]["features"]
+
+    geojson_routes = []
+
+    for route in routes:
+        geojson_route = {"type": "FeatureCollection",
+                            "features": [route]}
+        
+        geojson_routes.append(geojson_route)
+
+    return geojson_routes
