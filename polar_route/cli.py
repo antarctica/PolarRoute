@@ -169,6 +169,12 @@ def optimise_routes_cli():
     logging.info("Calculating Dijkstra routes")
     dijkstra_routes = rp.compute_routes(args.waypoints.name)
 
+    # Update mesh if splitting around waypoints
+    if rp.config.get('waypoint_splitting'):
+        split_mesh = rp.env_mesh.to_json()
+        mesh_json['cellboxes'] = split_mesh['cellboxes']
+        mesh_json['neighbour_graph'] = split_mesh['neighbour_graph']
+
     # Optionally save the dijkstra output in a separate file
     if args.dijkstra:
         info_dijkstra = mesh_json
