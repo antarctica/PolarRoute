@@ -17,10 +17,10 @@ from polar_route.route_planner.waypoint import Waypoint
 from polar_route.route_planner.segment import Segment
 from polar_route.route_planner.routing_info import RoutingInfo
 from polar_route.route_planner.crossing import NewtonianDistance
-from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues
+from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues, _rhumb_line_distance
 from polar_route.config_validation.config_validator import validate_route_config
 from polar_route.config_validation.config_validator import validate_waypoints
-from polar_route.utils import json_str, unit_speed, pandas_dataframe_str
+from polar_route.utils import json_str, unit_speed, pandas_dataframe_str, case_from_angle
 from meshiphi import Boundary
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
@@ -645,7 +645,28 @@ class RoutePlanner:
 
         for route in routes:
             route_json = route.to_json()
-            logging.info('--- Smoothing {}'.format(route_json['properties']['name']))
+
+            # Handle straight line route within same cell
+            if len(route_json['properties']['CellIndices']) == 1:
+                logging.info(f"--- Skipping smoothing for {route_json['properties']['name']}, direct route within a"
+                             f" single cell")
+                # Set and remove some additional info for final output to match smoothed routes
+                start_location = route_json['geometry']['coordinates'][0]
+                end_location = route_json['geometry']['coordinates'][1]
+                route_cell = route_json['properties']['CellIndices'][0]
+                route_case = case_from_angle(start_location, end_location)
+                route_json['properties']['distance'] = [0., _rhumb_line_distance(start_location, end_location)]
+                route_json['properties']['speed'] = [0., self.cellboxes_lookup[route_cell].agg_data['speed'][route_case]]
+                for var in self.config['path_variables']:
+                    route_json['properties'][var].insert(0, 0.)
+                del route_json['properties']['cases']
+                del route_json['properties']['CellIndices']
+                del route_json['properties']['name']
+                # Add straight line route to list of outputs
+                smoothed_routes += [route_json]
+                continue
+
+            logging.info(f"--- Smoothing {route_json['properties']['name']}")
 
             initialised_dijkstra_graph = self.initialise_dijkstra_graph(cellboxes, neighbour_graph, route)
             adjacent_pairs, source_wp, end_wp = initialise_dijkstra_route(initialised_dijkstra_graph, route_json)

@@ -3,7 +3,7 @@ import json
 import numpy as np
 import geopandas as gpd
 from polar_route.route_planner.crossing import traveltime_in_cell
-from polar_route.utils import unit_time, unit_speed
+from polar_route.utils import unit_time, unit_speed, case_from_angle
 from meshiphi.utils import longitude_domain
 
 
@@ -161,8 +161,11 @@ class Route:
         m_lat = 111.386*1000
         x = (cp.get_longitude() - wp.get_longitude()) * m_long * np.cos(wp.get_latitude() * (np.pi / 180))
         y = (cp.get_latitude() - wp.get_latitude()) * m_lat
-        # Select case with matching index
-        case = self.cases[indx]
+        # Select case with matching index or use angle if waypoints are in the same cell
+        if self.cases:
+            case = self.cases[indx]
+        else:
+            case = case_from_angle(wp.to_point(), cp.to_point())
         su = cellbox.agg_data['uC']
         sv = cellbox.agg_data['vC']
         ssp = unit_speed(cellbox.agg_data['speed'][case], self.conf['unit_shipspeed'])
