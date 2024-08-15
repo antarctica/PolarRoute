@@ -429,6 +429,7 @@ def gpx_route_import(f_name):
 
     return geojson
 
+
 def to_chart_track_csv(route):
     """
         Output a route in Chart Track csv format
@@ -489,3 +490,39 @@ def to_chart_track_csv(route):
     # Combine to one string and add to list of strs
     csv_str = header + path_df.to_csv()
     return csv_str
+
+
+def extract_geojson_routes(mesh):
+    """
+    
+    Extract routes in a precomputed mesh in GEOJSON format
+
+    Args:
+        mesh (dict): Precomputed mesh JSON with routes embedded
+        
+    Returns:
+        list: 
+            List of all routes found in mesh. If no routes found, returns 
+            empty list
+    """
+    
+    logging.info("Extracting routes in geojson format")
+    
+    # Extract the computed routes from the mesh
+    if "paths" in mesh.keys():
+        routes = mesh["paths"]["features"]
+    else:
+        routes = []
+
+    # Reformat every route to geojson format and append to list
+    geojson_routes = []
+    for route in routes:
+        # Using FeatureCollection to keep consistent formatting with 
+        # multi-route geojsons
+        geojson_route = {"type": "FeatureCollection",
+                            "features": [route]}
+        
+        geojson_routes.append(geojson_route)
+
+    # Return list of individual geojson routes
+    return geojson_routes
