@@ -82,6 +82,7 @@ class VesselPerformanceModeller:
                 filtered_data = {k: 0. if np.isnan(v) else v for k, v in cellbox.agg_data.items() if type(v) == float}
                 self.env_mesh.update_cellbox(i, filtered_data)
 
+    @timed_call
     def split_neighbouring_cells(self, inaccessible_nodes):
         """
         Method to split any accessible cells that neighbour inaccessible cells until their sizes match
@@ -90,6 +91,7 @@ class VesselPerformanceModeller:
             inaccessible_nodes (list): List of inaccessible nodes to split around
 
         """
+        logging.info("Splitting around inaccessible cells")
         for in_node in inaccessible_nodes:
             in_cb = self.env_mesh.get_cellbox(in_node)
             neighbour_nodes = self.get_all_neighbours(in_node)
