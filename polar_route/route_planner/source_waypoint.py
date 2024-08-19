@@ -10,7 +10,7 @@ class SourceWaypoint(Waypoint):
         other cellboxes and any visited cellboxes)
 
         Attributes:
-            visited_nodes: list<int>: a list contains the indices of the visited nodes
+            visited_nodes: set<int>: a set containing the indices of the visited nodes
             routing_table: dict<cellbox_indx, Routing_Info>: a dict that contains the routing information to reach
             cellbox_indx, works a routing table to reach the different cellboxes from this source waypoint
     """
@@ -25,7 +25,7 @@ class SourceWaypoint(Waypoint):
         super().__init__(source.get_latitude(), source.get_longitude(), name=source.get_name())
         self.cellbox_indx = source.get_cellbox_indx()
         self.end_wps = end_wps
-        self.visited_nodes = []
+        self.visited_nodes = set()
         self.routing_table = dict()
         # add routing information to itself, empty list of segments as distance = 0
         self.routing_table[self.cellbox_indx] = RoutingInfo(self.cellbox_indx, [])
@@ -41,11 +41,11 @@ class SourceWaypoint(Waypoint):
 
     def visit(self, cellbox_indx):
         """
-        Marks the input cellbox as visited by adding its index to the list of visited nodes
+        Marks the input cellbox as visited by adding its index to the set of visited nodes
         Args:
             cellbox_indx (str): the index of the visited cellbox
         """
-        self.visited_nodes.append(cellbox_indx)
+        self.visited_nodes.add(cellbox_indx)
 
     def is_visited(self, indx):
         """
