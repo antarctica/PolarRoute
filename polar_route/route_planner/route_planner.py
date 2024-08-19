@@ -20,7 +20,7 @@ from polar_route.route_planner.crossing import NewtonianDistance
 from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues, _rhumb_line_distance
 from polar_route.config_validation.config_validator import validate_route_config
 from polar_route.config_validation.config_validator import validate_waypoints
-from polar_route.utils import json_str, unit_speed, pandas_dataframe_str, case_from_angle
+from polar_route.utils import json_str, unit_speed, pandas_dataframe_str, case_from_angle, timed_call
 from meshiphi import Boundary
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
@@ -554,6 +554,7 @@ class RoutePlanner:
 
         return neighbour_segments
 
+    @timed_call
     def compute_routes(self, waypoints):
         """
             Computes the Dijkstra routes between waypoints.
@@ -616,6 +617,7 @@ class RoutePlanner:
         # Returning the constructed routes
         return routes
 
+    @timed_call
     def compute_smoothed_routes(self, blocked_metric='SIC'):
         """
             Uses the previously constructed Dijkstra routes and smooths them to remove mesh features
