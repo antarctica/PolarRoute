@@ -186,7 +186,7 @@ extract_routes
 ^^^^^^^^^^^^^^
 
 This command allows individual routes to be extracted from a larger file containing multiple routes. It automatically
-determines the output format from the output filename given. Supported output types are json, geojson, csv and gpx.
+determines the output format from the output filename given. Supported output types are json, geojson, csv, kml and gpx.
 
 ::
 

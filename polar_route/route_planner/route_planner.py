@@ -17,10 +17,10 @@ from polar_route.route_planner.waypoint import Waypoint
 from polar_route.route_planner.segment import Segment
 from polar_route.route_planner.routing_info import RoutingInfo
 from polar_route.route_planner.crossing import NewtonianDistance
-from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues
+from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues, _rhumb_line_distance
 from polar_route.config_validation.config_validator import validate_route_config
 from polar_route.config_validation.config_validator import validate_waypoints
-from polar_route.utils import json_str, unit_speed, pandas_dataframe_str
+from polar_route.utils import json_str, unit_speed, pandas_dataframe_str, case_from_angle, timed_call
 from meshiphi import Boundary
 from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
@@ -157,6 +157,34 @@ def initialise_dijkstra_route(dijkstra_graph, dijkstra_route):
     return aps, start_waypoint, end_waypoint
 
 
+def _load_waypoints(waypoints):
+    """
+    Load source and destination waypoints from dict or file
+
+    Args:
+        waypoints (dict or str): waypoints dict or path to file to load waypoints from
+
+    Returns:
+        src_wps (list): list of source waypoints
+        dest_wps (list): list of destination waypoints
+    """
+    try:
+        waypoints_df = waypoints
+        if isinstance(waypoints, dict):
+            waypoints_df = pd.DataFrame.from_dict(waypoints)
+        if isinstance(waypoints, str):
+             waypoints_df = pd.read_csv(waypoints)
+        source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
+        dest_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
+        src_wps = [Waypoint(lat=source['Lat'], long=source['Long'], name=source['Name'])
+                   for index, source in source_waypoints_df.iterrows()]
+        dest_wps = [Waypoint(lat=dest['Lat'], long=dest['Long'], name=dest['Name'])
+                    for index, dest in dest_waypoints_df.iterrows()]
+        return src_wps, dest_wps
+    except FileNotFoundError:
+        raise ValueError(f"Unable to load '{waypoints}', please check file path provided")
+
+
 class RoutePlanner:
     """
         RoutePlanner finds the optimal route between a series of waypoints.
@@ -252,6 +280,7 @@ class RoutePlanner:
         self.src_wps = []
         self.routes_dijkstra = []
         self.routes_smoothed = []
+        self.neighbour_legs = {}
 
     def _splitting_around_waypoints(self, waypoints_df):
         """
@@ -268,6 +297,9 @@ class RoutePlanner:
             logging.info(' Splitting around waypoints !')
             wps_points = [(entry['Lat'], entry['Long']) for _, entry in waypoints_df.iterrows()]
             self.env_mesh.split_points(wps_points)
+            # Rebuild lookup with new env_mesh
+            self.cellboxes_lookup = {str(self.env_mesh.agg_cellboxes[i].get_id()): self.env_mesh.agg_cellboxes[i]
+                                     for i in range(len(self.env_mesh.agg_cellboxes))}
 
     def _zero_currents(self, mesh):
         """
@@ -348,8 +380,12 @@ class RoutePlanner:
             s_wp.log_routing_table()
             # Loop over all end waypoints
             for e_wp in end_waypoints:
-                # Don't try to calculate route from waypoint to itself
-                if s_wp.get_name() == e_wp.get_name():
+                # Don't try to calculate route between waypoints at the same location
+                if s_wp.equals(e_wp):
+                    # No need to log this for the "route" from a waypoint to itself
+                    if s_wp.get_name() != e_wp.get_name():
+                        logging.info(f"Route from {s_wp.get_name()} to {e_wp.get_name()} not calculated, these waypoints"
+                                     f" are identical")
                     continue
                 route_segments = []
                 e_wp_indx = e_wp.get_cellbox_indx()
@@ -456,8 +492,10 @@ class RoutePlanner:
                 
         # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         for end_wp in end_wps:
+            if wp.equals(end_wp):
+                continue
             logging.info(f"Destination waypoint: {end_wp.get_name()}")
-            while not wp.is_visited(end_wp.get_cellbox_indx()) or wp.is_all_visited():
+            while not wp.is_visited(end_wp.get_cellbox_indx()):
                 # Determine the index of the cell with the minimum objective function cost that has not yet been visited
                 min_obj_indx = find_min_objective(wp)
                 logging.debug(f"min_obj >>> {min_obj_indx}")
@@ -487,6 +525,8 @@ class RoutePlanner:
                                     unit_shipspeed='km/hr', time_unit=self.config['time_unit'])
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points, cell_points, case = cost_func.value()
+        # Save travel time and crossing point values for use in smoothing
+        self.neighbour_legs[node_id+neighbour_id] = (traveltime, crossing_points)
 
         # Create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel)
         s1 = Segment(Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]), Waypoint(crossing_points[1],
@@ -497,19 +537,27 @@ class RoutePlanner:
 
         # Fill segment metrics
         s1.set_travel_time(traveltime[0])
-        s1.set_fuel(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
+        if 'fuel' in self.config['path_variables']:
+            s1.set_fuel(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['fuel'][direction.index(case)])
+        if 'battery' in self.config['path_variables']:
+            s1.set_battery(s1.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['battery'][direction.index(case)])
         s1.set_distance(s1.get_travel_time() * unit_speed(self.cellboxes_lookup[node_id].agg_data['speed'][direction.index(case)],
                                                           self.config['unit_shipspeed']))
 
         s2.set_travel_time(traveltime[1])
-        s2.set_fuel( s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
+        if 'fuel' in self.config['path_variables']:
+            s2.set_fuel(s2.get_travel_time() * self.cellboxes_lookup[neighbour_id].agg_data['fuel'][direction.index(case)])
+        if 'battery' in self.config['path_variables']:
+            s2.set_battery(
+                s2.get_travel_time() * self.cellboxes_lookup[node_id].agg_data['battery'][direction.index(case)])
         s2.set_distance(s2.get_travel_time() * unit_speed(self.cellboxes_lookup[neighbour_id].agg_data['speed'][direction.index(case)],
                                                           self.config['unit_shipspeed']))
 
-        neighbour_segments = [s1,s2]
+        neighbour_segments = [s1, s2]
 
         return neighbour_segments
 
+    @timed_call
     def compute_routes(self, waypoints):
         """
             Computes the Dijkstra routes between waypoints.
@@ -520,10 +568,11 @@ class RoutePlanner:
                 routes (List<Route>): a list of the computed routes
         """
         waypoints_df = pandas_dataframe_str(waypoints)
+        # Handle common issues with case/whitespace in Source/Destination fields
+        waypoints_df['Source'] = [s.strip().upper() if type(s) == str else np.nan for s in waypoints_df['Source']]
+        waypoints_df['Destination'] = [s.strip().upper() if type(s) == str else np.nan for s in waypoints_df['Destination']]
         # Validate input waypoints format
         validate_waypoints(waypoints_df)
-        # Split around waypoints if specified in the config
-        self._splitting_around_waypoints(waypoints_df)
 
         # Move waypoint to the closest accessible cellbox, if it isn't in one already
         mesh_boundary = _mesh_boundary_polygon(self.env_mesh.to_json())
@@ -541,15 +590,18 @@ class RoutePlanner:
             else:
                 logging.debug("Skipping waypoint adjustment")
 
+        # Split around waypoints if specified in the config
+        self._splitting_around_waypoints(waypoints_df)
 
         # Load source and destination waypoints
-        src_wps, end_wps = self._load_waypoints(waypoints_df)
+        src_wps, end_wps = _load_waypoints(waypoints_df)
         # Waypoint validation for route planning
         src_wps = self._validate_wps(src_wps)
         end_wps = self._validate_wps(end_wps)
 
         # Create SourceWaypoint objects
-        src_wps = [self.get_source_wp(wp, end_wps) for wp in src_wps]
+        src_wps = [SourceWaypoint(wp, end_wps) for wp in src_wps]
+        self.src_wps.append(src_wps)
         if len(src_wps) == 0:
             raise ValueError('Invalid waypoints. Inaccessible source waypoints')
 
@@ -568,6 +620,7 @@ class RoutePlanner:
         # Returning the constructed routes
         return routes
 
+    @timed_call
     def compute_smoothed_routes(self, blocked_metric='SIC'):
         """
             Uses the previously constructed Dijkstra routes and smooths them to remove mesh features
@@ -597,7 +650,28 @@ class RoutePlanner:
 
         for route in routes:
             route_json = route.to_json()
-            logging.info('--- Smoothing {}'.format(route_json['properties']['name']))
+
+            # Handle straight line route within same cell
+            if len(route_json['properties']['CellIndices']) == 1:
+                logging.info(f"--- Skipping smoothing for {route_json['properties']['name']}, direct route within a"
+                             f" single cell")
+                # Set and remove some additional info for final output to match smoothed routes
+                start_location = route_json['geometry']['coordinates'][0]
+                end_location = route_json['geometry']['coordinates'][1]
+                route_cell = route_json['properties']['CellIndices'][0]
+                route_case = case_from_angle(start_location, end_location)
+                route_json['properties']['distance'] = [0., _rhumb_line_distance(start_location, end_location)]
+                route_json['properties']['speed'] = [0., self.cellboxes_lookup[route_cell].agg_data['speed'][route_case]]
+                for var in self.config['path_variables']:
+                    route_json['properties'][var].insert(0, 0.)
+                del route_json['properties']['cases']
+                del route_json['properties']['CellIndices']
+                del route_json['properties']['name']
+                # Add straight line route to list of outputs
+                smoothed_routes += [route_json]
+                continue
+
+            logging.info(f"--- Smoothing {route_json['properties']['name']}")
 
             initialised_dijkstra_graph = self.initialise_dijkstra_graph(cellboxes, neighbour_graph, route)
             adjacent_pairs, source_wp, end_wp = initialise_dijkstra_route(initialised_dijkstra_graph, route_json)
@@ -615,14 +689,13 @@ class RoutePlanner:
 
             # ------ Smoothed Route Values -----
             # Given a smoothed route now determine the parameters along the route.
-            pv = PathValues()
+            pv = PathValues(self.config['path_variables'])
             path_info = pv.objective_function(sf.aps, sf.start_waypoint, sf.end_waypoint)
             # Ensure all coordinates are in domain -180:180
             path_info['path'][:, 0] = longitude_domain(path_info['path'][:, 0])
             variables = path_info['variables']
             travel_time_legs = variables['traveltime']['path_values']
             distance_legs = variables['distance']['path_values']
-            fuel_legs = variables['fuel']['path_values']
             speed_legs = variables['speed']['path_values']
 
             # ------ Saving Output in a standard form to be saved ------
@@ -636,10 +709,18 @@ class RoutePlanner:
             smoothed_route['properties']['to'] = route_json['properties']['to']
             smoothed_route['properties']['traveltime'] = list(travel_time_legs)
             smoothed_route['properties']['total_traveltime'] = smoothed_route['properties']['traveltime'][-1]
-            smoothed_route['properties']['fuel'] = list(fuel_legs)
-            smoothed_route['properties']['total_fuel'] = smoothed_route['properties']['fuel'][-1]
             smoothed_route['properties']['distance'] = list(distance_legs)
             smoothed_route['properties']['speed'] = list(speed_legs)
+
+            if 'fuel' in self.config['path_variables']:
+                fuel_legs = variables['fuel']['path_values']
+                smoothed_route['properties']['fuel'] = list(fuel_legs)
+                smoothed_route['properties']['total_fuel'] = smoothed_route['properties']['fuel'][-1]
+            if 'battery' in self.config['path_variables']:
+                battery_legs = variables['battery']['path_values']
+                smoothed_route['properties']['battery'] = list(battery_legs)
+                smoothed_route['properties']['total_battery'] = smoothed_route['properties']['battery'][-1]
+
             smoothed_routes += [smoothed_route]
 
             logging.info('Smoothing complete in {} iterations'.format(sf.jj))
@@ -682,11 +763,16 @@ class RoutePlanner:
             neighbour_travel_legs = []
             neighbour_crossing_points = []
             for i, neighbour in enumerate(neighbour_index):
-                cost_func = self.cost_func(str(cell_id), str(neighbour), self.cellboxes_lookup, case=cases[i],
-                                           unit_shipspeed='km/hr', time_unit=self.config['time_unit'])
-                traveltime, crossing_points, cell_points, case = cost_func.value()
-                neighbour_travel_legs.append(traveltime)
-                neighbour_crossing_points.append(crossing_points)
+                leg_id = str(cell_id) + str(neighbour)
+                if leg_id in self.neighbour_legs:
+                    neighbour_travel_legs.append(self.neighbour_legs[leg_id][0])
+                    neighbour_crossing_points.append(self.neighbour_legs[leg_id][1])
+                else:
+                    cost_func = self.cost_func(str(cell_id), str(neighbour), self.cellboxes_lookup, case=cases[i],
+                                               unit_shipspeed='km/hr', time_unit=self.config['time_unit'])
+                    traveltime, crossing_points, cell_points, case = cost_func.value()
+                    neighbour_travel_legs.append(traveltime)
+                    neighbour_crossing_points.append(crossing_points)
             dijkstra_graph_dict[cell_id]['neighbourTravelLegs'] = np.array(neighbour_travel_legs)
             dijkstra_graph_dict[cell_id]['neighbourCrossingPoints'] = np.array(neighbour_crossing_points)
             dijkstra_graph_dict[cell_id]['pathPoints'] = route.get_points()
@@ -745,39 +831,3 @@ class RoutePlanner:
                 wp.set_cellbox_indx(str(_id))
 
         return valid_wps
-
-    def get_source_wp(self, src_wp, end_wps):
-        for wp in self.src_wps:
-            if wp.equals(src_wp):
-                wp.set_end_wp(end_wps)
-                return wp
-        wp = SourceWaypoint(src_wp, end_wps)
-        self.src_wps.append(wp)
-        return wp
-    
-    def _load_waypoints(self, waypoints):
-        """
-        Load source and destination waypoints from dict or file
-
-        Args:
-            waypoints (dict or str): waypoints dict or path to file to load waypoints from
-
-        Returns:
-            src_wps (list): list of source waypoints
-            dest_wps (list): list of destination waypoints
-        """
-        try:
-            waypoints_df = waypoints
-            if isinstance(waypoints, dict):
-                waypoints_df = pd.DataFrame.from_dict(waypoints)
-            if isinstance(waypoints, str):
-                 waypoints_df = pd.read_csv(waypoints)
-            source_waypoints_df = waypoints_df[waypoints_df['Source'] == "X"]
-            dest_waypoints_df = waypoints_df[waypoints_df['Destination'] == "X"]
-            src_wps = [Waypoint(lat=source['Lat'], long=source['Long'], name=source['Name'])
-                       for index, source in source_waypoints_df.iterrows()]
-            dest_wps = [Waypoint(lat=dest['Lat'], long=dest['Long'], name=dest['Name'])
-                        for index, dest in dest_waypoints_df.iterrows()]
-            return src_wps, dest_wps
-        except FileNotFoundError:
-            raise ValueError(f"Unable to load '{waypoints}', please check file path provided")

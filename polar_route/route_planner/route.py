@@ -3,7 +3,7 @@ import json
 import numpy as np
 import geopandas as gpd
 from polar_route.route_planner.crossing import traveltime_in_cell
-from polar_route.utils import unit_time, unit_speed
+from polar_route.utils import unit_time, unit_speed, case_from_angle
 from meshiphi.utils import longitude_domain
 
 
@@ -46,6 +46,12 @@ class Route:
             Goes through the route segments and calculates the entire route's fuel usage
         """
         return sum(seg.get_fuel() for seg in self.segments)
+
+    def get_battery(self):
+        """
+            Goes through the route segments and calculates the entire route's battery usage
+        """
+        return sum(seg.get_battery() for seg in self.segments)
 
     def accumulate_metric(self, metric):
         """
@@ -155,8 +161,11 @@ class Route:
         m_lat = 111.386*1000
         x = (cp.get_longitude() - wp.get_longitude()) * m_long * np.cos(wp.get_latitude() * (np.pi / 180))
         y = (cp.get_latitude() - wp.get_latitude()) * m_lat
-        # Select case with matching index
-        case = self.cases[indx]
+        # Select case with matching index or use angle if waypoints are in the same cell
+        if self.cases:
+            case = self.cases[indx]
+        else:
+            case = case_from_angle(wp.to_point(), cp.to_point())
         su = cellbox.agg_data['uC']
         sv = cellbox.agg_data['vC']
         ssp = unit_speed(cellbox.agg_data['speed'][case], self.conf['unit_shipspeed'])
@@ -170,8 +179,12 @@ class Route:
         self.segments[indx].set_waypoint(indx, wp)
         self.segments[indx].set_travel_time(traveltime)
         self.segments[indx].set_distance(distance)
-        self.segments[indx].set_fuel(cellbox.agg_data['fuel'][case] * traveltime)
-        logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][case] * traveltime}")
+        if 'fuel' in self.conf['path_variables']:
+            self.segments[indx].set_fuel(cellbox.agg_data['fuel'][case] * traveltime)
+            logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][case] * traveltime}")
+        if 'battery' in self.conf['path_variables']:
+            self.segments[indx].set_fuel(cellbox.agg_data['battery'][case] * traveltime)
+            logging.debug(f"WP_correction >> battery >> {cellbox.agg_data['battery'][case] * traveltime}")
 
     def get_points(self):
         """

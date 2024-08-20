@@ -1,0 +1,201 @@
+{
+    "config": {
+        "mesh_info": {
+            "region": {
+                "lat_min": -5.0,
+                "lat_max": 5.0,
+                "long_min": -5.0,
+                "long_max": 5.0,
+                "start_time": "2024-04-04",
+                "end_time": "2024-04-05",
+                "cell_width": 10.0,
+                "cell_height": 10.0
+            },
+            "data_sources": [
+                {
+                    "loader": "vector_grf",
+                    "params": {
+                        "data_name": "uC,vC",
+                        "min": 0,
+                        "max": 0,
+                        "seed": 1,
+                        "dataloader_name": "vector_grf",
+                        "downsample_factors": [
+                            1,
+                            1
+                        ],
+                        "aggregate_type": "MEAN",
+                        "min_dp": 5,
+                        "in_proj": "EPSG:4326",
+                        "out_proj": "EPSG:4326",
+                        "x_col": "lat",
+                        "y_col": "long",
+                        "size": 512,
+                        "alpha": 3,
+                        "vec_x": "uC",
+                        "vec_y": "vC",
+                        "fast_reprojection": false
+                    }
+                }
+            ],
+            "splitting": {
+                "split_depth": 0,
+                "minimum_datapoints": 5
+            }
+        },
+        "vessel_info": {
+            "vessel_type": "SDA",
+            "max_speed": 26.5,
+            "unit": "km/hr",
+            "beam": 24.0,
+            "hull_type": "slender",
+            "force_limit": 96634.5,
+            "max_ice_conc": 80,
+            "min_depth": 10,
+            "max_wave": 8.0,
+            "excluded_zones": [
+                "offshore_platforms"
+            ]
+        },
+        "route_info": {
+            "objective_function": "traveltime",
+            "path_variables": [
+                "fuel",
+                "traveltime"
+            ],
+            "vector_names": [
+                "uC",
+                "vC"
+            ],
+            "zero_currents": false,
+            "variable_speed": true,
+            "time_unit": "days",
+            "early_stopping_criterion": true,
+            "save_dijkstra_graphs": false,
+            "smooth_path": {
+                "max_iteration_number": 300,
+                "minimum_difference": 0.002
+            },
+            "adjust_waypoints": true,
+            "unit_shipspeed": "km/hr"
+        }
+    },
+    "cellboxes": [
+        {
+            "geometry": "POLYGON ((-5 -5, -5 5, 5 5, 5 -5, -5 -5))",
+            "cx": 0.0,
+            "cy": 0.0,
+            "dcx": 5.0,
+            "dcy": 5.0,
+            "uC": 0.0,
+            "vC": 0.0,
+            "land": false,
+            "ext_ice": false,
+            "ext_waves": false,
+            "inaccessible": false,
+            "speed": [
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5,
+                26.5
+            ],
+            "resistance": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "fuel": [
+                27.3186897,
+                27.3186897,
+                27.3186897,
+                27.3186897,
+                27.3186897,
+                27.3186897,
+                27.3186897,
+                27.3186897
+            ],
+            "id": "0"
+        }
+    ],
+    "neighbour_graph": {
+        "0": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [],
+            "-1": [],
+            "-2": [],
+            "-3": [],
+            "-4": []
+        }
+    },
+    "waypoints": {
+        "Name": {
+            "0": "Waypoint 1",
+            "1": "Waypoint 2"
+        },
+        "Lat": {
+            "0": 0.0,
+            "1": 1.0
+        },
+        "Long": {
+            "0": 0.0,
+            "1": 1.0
+        },
+        "Source": {
+            "0": "X",
+            "1": " "
+        },
+        "Destination": {
+            "0": NaN,
+            "1": "X"
+        }
+    },
+    "paths": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [
+                        [
+                            0.0,
+                            0.0
+                        ],
+                        [
+                            1.0,
+                            1.0
+                        ]
+                    ]
+                },
+                "properties": {
+                    "name": "Route - Waypoint 1 to Waypoint 2",
+                    "from": "Waypoint 1",
+                    "to": "Waypoint 2",
+                    "CellIndices": [
+                        "0"
+                    ],
+                    "traveltime": [
+                        0.24760634689467634
+                    ],
+                    "cases": [],
+                    "fuel": [
+                        6.764280958566221
+                    ],
+                    "total_fuel": 6.764280958566221,
+                    "total_traveltime": 0.24760634689467634
+                }
+            }
+        ]
+    }
+}
