@@ -526,7 +526,7 @@ class RoutePlanner:
         # Updating the Dijkstra graph with the new information
         traveltime, crossing_points, cell_points, case = cost_func.value()
         # Save travel time and crossing point values for use in smoothing
-        self.neighbour_legs[node_id+neighbour_id] = (traveltime, crossing_points)
+        self.neighbour_legs[node_id+"to"+neighbour_id] = (traveltime, crossing_points)
 
         # Create segments and set their travel time based on the returned 3 points and the remaining obj accordingly (travel_time * node speed/fuel)
         s1 = Segment(Waypoint.load_from_cellbox(self.cellboxes_lookup[node_id]), Waypoint(crossing_points[1],
@@ -763,7 +763,7 @@ class RoutePlanner:
             neighbour_travel_legs = []
             neighbour_crossing_points = []
             for i, neighbour in enumerate(neighbour_index):
-                leg_id = str(cell_id) + str(neighbour)
+                leg_id = str(cell_id) + "to" + str(neighbour)
                 if leg_id in self.neighbour_legs:
                     neighbour_travel_legs.append(self.neighbour_legs[leg_id][0])
                     neighbour_crossing_points.append(self.neighbour_legs[leg_id][1])
