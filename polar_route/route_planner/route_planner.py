@@ -395,6 +395,7 @@ class RoutePlanner:
                 if s_wp.get_cellbox_indx() == e_wp_indx:
                    # Route should be a straight line within the same cellbox
                    route = Route([Segment(s_wp, e_wp)], s_wp.get_name(), e_wp.get_name(), self.config)
+                   route.source_waypoint = s_wp
                 else:
                     while s_wp.get_cellbox_indx() != e_wp_indx:
                         # logging.debug(">>> s_wp_indx >>>", s_wp)
@@ -423,6 +424,7 @@ class RoutePlanner:
                    
                     route_segments = list(itertools.chain.from_iterable(route_segments))
                     route = Route(route_segments, s_wp.get_name(), e_wp.get_name(), self.config)
+                    route.source_waypoint = s_wp
                     route.set_cases(cases)
                     for s in route_segments:
                         logging.debug(f">>>|S|>>>> {s.to_str()}")
@@ -778,12 +780,7 @@ class RoutePlanner:
             dijkstra_graph_dict[cell_id]['pathPoints'] = route.get_points()
             for variable in path_variables:
                 dijkstra_graph_dict[cell_id][f'path_{variable}'] = np.array(route.accumulate_metric(variable))
-            if idx == 0:
-                dijkstra_graph_dict[cell_id]['pathIndex'] = np.array([0])
-                prev_cell = cell_id
-            else:
-                dijkstra_graph_dict[cell_id]['pathIndex'] = np.append(dijkstra_graph_dict[prev_cell]['pathIndex'], idx)
-                prev_cell = cell_id
+            dijkstra_graph_dict[cell_id]['pathIndex'] = route.source_waypoint.get_routing_info(str(cell_id)).get_path_nodes()
             idx += 1
 
         return dijkstra_graph_dict

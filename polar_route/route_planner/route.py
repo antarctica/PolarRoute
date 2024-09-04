@@ -28,6 +28,7 @@ class Route:
         self.to_wp = _to
         self.cases = []
         self.conf = conf
+        self.source_waypoint = None
     
     def get_distance(self):
         """
