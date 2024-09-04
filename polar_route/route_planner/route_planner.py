@@ -485,12 +485,11 @@ class RoutePlanner:
             for case, neighbours in neighbour_map.items():
                 if len(neighbours) != 0:
                   for neighbour in neighbours:
-                     if not source_wp.is_visited(neighbour): # skip visited nodes to avoid cycles
-                        edges = self._neighbour_cost(_id, str(neighbour), int(case))
-                        edges_cost = sum(segment.get_variable(self.config['objective_function']) for segment in edges)
-                        new_cost = source_wp.get_obj( _id, self.config['objective_function']) + edges_cost
-                        if new_cost < source_wp.get_obj(str(neighbour), self.config['objective_function']):
-                            source_wp.update_routing_table(str(neighbour), RoutingInfo(_id, edges))
+                    edges = self._neighbour_cost(_id, str(neighbour), int(case))
+                    edges_cost = sum(segment.get_variable(self.config['objective_function']) for segment in edges)
+                    new_cost = source_wp.get_obj( _id, self.config['objective_function']) + edges_cost
+                    if new_cost < source_wp.get_obj(str(neighbour), self.config['objective_function']):
+                        source_wp.update_routing_table(str(neighbour), RoutingInfo(_id, edges))
                 
         # Updating Dijkstra as long as all the waypoints are not visited or for full graph
         for end_wp in end_wps:
@@ -747,8 +746,6 @@ class RoutePlanner:
 
         """
         dijkstra_graph_dict = dict()
-        path_variables = route.conf['path_variables']
-        idx = 0
         for cell in cellboxes:
             if cell['inaccessible']:
                 continue
@@ -769,19 +766,10 @@ class RoutePlanner:
                 if leg_id in self.neighbour_legs:
                     neighbour_travel_legs.append(self.neighbour_legs[leg_id][0])
                     neighbour_crossing_points.append(self.neighbour_legs[leg_id][1])
-                else:
-                    cost_func = self.cost_func(str(cell_id), str(neighbour), self.cellboxes_lookup, case=cases[i],
-                                               unit_shipspeed='km/hr', time_unit=self.config['time_unit'])
-                    traveltime, crossing_points, cell_points, case = cost_func.value()
-                    neighbour_travel_legs.append(traveltime)
-                    neighbour_crossing_points.append(crossing_points)
             dijkstra_graph_dict[cell_id]['neighbourTravelLegs'] = np.array(neighbour_travel_legs)
             dijkstra_graph_dict[cell_id]['neighbourCrossingPoints'] = np.array(neighbour_crossing_points)
-            dijkstra_graph_dict[cell_id]['pathPoints'] = route.get_points()
-            for variable in path_variables:
-                dijkstra_graph_dict[cell_id][f'path_{variable}'] = np.array(route.accumulate_metric(variable))
-            dijkstra_graph_dict[cell_id]['pathIndex'] = route.source_waypoint.get_routing_info(str(cell_id)).get_path_nodes()
-            idx += 1
+            # TODO: add option to calculate pathIndex
+            # dijkstra_graph_dict[cell_id]['pathIndex'] = route.source_waypoint.get_routing_info(str(cell_id)).get_path_nodes()
 
         return dijkstra_graph_dict
 
