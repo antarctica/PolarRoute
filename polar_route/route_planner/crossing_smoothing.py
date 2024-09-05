@@ -29,9 +29,12 @@ def _rhumb_line_distance(start_waypoint, end_waypoint):
     """
         Defining the rhumb line distance from a given waypoint start and end point
 
-        Inputs:
-            start_waypoints - (list([Long,lat])) Start Waypoint location with long lat
-            end_waypoints - (list([Long,lat])) End Waypoint location with long lat
+        Args:
+            start_waypoint (list([Long,lat])): Start Waypoint location with long lat
+            end_waypoint (list([Long,lat])): End Waypoint location with long lat
+
+        Returns:
+            distance (float): Calculated rhumb line distance
     """
 
     # Defining a corrected distance based on rhumb lines
@@ -48,13 +51,14 @@ def _rhumb_line_distance(start_waypoint, end_waypoint):
         q = dy/dy_corrected
 
     distance = np.sqrt(dy**2 + (q**2)*(dx**2))*r
+
     return distance
 
 
 class FindEdge:
     """
         Class to return characteristics information about the edge connecting two
-        cells. This information includes.
+        cells. This information includes:
 
         crossing (tuple) - Crossing point (long,lat)
         case (int)       - Case type connecting the two cells
