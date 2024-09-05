@@ -31,8 +31,7 @@ class RoutingInfo:
 
         if len(self.path) > 0:
             points = [seg.get_end_wp().get_cellbox_indx() for seg in self.path]
-            points.insert(0, self.path[0].get_start_wp().get_cellbox_indx())
-
+            
         return points
 
     def get_node_index(self):

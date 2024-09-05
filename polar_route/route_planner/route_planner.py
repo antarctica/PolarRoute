@@ -731,14 +731,15 @@ class RoutePlanner:
         self.routes_smoothed = geojson
         return self.routes_smoothed
 
-    def initialise_dijkstra_graph(self, cellboxes, neighbour_graph, route):
+    def initialise_dijkstra_graph(self, cellboxes, neighbour_graph, route, path_index=False):
         """
             Initialising dijkstra graph information in a standard form used for the smoothing
 
             Args:
-                cellboxes (list): list of cells with environmental and vessel performance info
-                neighbour_graph (dict): neighbour graph for the mesh
+                cellboxes (list): List of cells with environmental and vessel performance info
+                neighbour_graph (dict): Neighbour graph for the mesh
                 route (Route): Route object for the route to be smoothed
+                path_index (bool): Option to generate the pathIndex array that can be used to generate new dijkstra routes
 
             Outputs:
                 dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
@@ -768,8 +769,8 @@ class RoutePlanner:
                     neighbour_crossing_points.append(self.neighbour_legs[leg_id][1])
             dijkstra_graph_dict[cell_id]['neighbourTravelLegs'] = np.array(neighbour_travel_legs)
             dijkstra_graph_dict[cell_id]['neighbourCrossingPoints'] = np.array(neighbour_crossing_points)
-            # TODO: add option to calculate pathIndex
-            # dijkstra_graph_dict[cell_id]['pathIndex'] = route.source_waypoint.get_routing_info(str(cell_id)).get_path_nodes()
+            if path_index:
+                dijkstra_graph_dict[cell_id]['pathIndex'] = route.source_waypoint.get_path_nodes(str(cell_id))
 
         return dijkstra_graph_dict
 
