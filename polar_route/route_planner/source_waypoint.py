@@ -72,6 +72,25 @@ class SourceWaypoint(Waypoint):
             self.routing_table[_id] = RoutingInfo(-1, None) # indicating inaccessible node and returns infinity obj
         return self.routing_table[_id]
 
+    def get_path_nodes(self, _id):
+        """
+        Gets all nodes on the path from the source waypoint to the node at _id
+        """
+        if _id not in self.routing_table.keys():
+            return []
+        else:
+            node_id = _id
+            path_index = list()
+            while node_id != self.cellbox_indx:
+                node_indices = self.routing_table[node_id].get_path_nodes()
+                path_index.insert(0, node_indices[1])
+                node_id = node_indices[0]
+
+            path_index.insert(0, self.cellbox_indx)
+
+
+            return path_index
+
     def log_routing_table(self):
         logging.debug(f'Routing table of {self.cellbox_indx} source waypoint:')
         for x in self.routing_table.keys():

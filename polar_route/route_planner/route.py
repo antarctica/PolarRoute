@@ -28,6 +28,7 @@ class Route:
         self.to_wp = _to
         self.cases = []
         self.conf = conf
+        self.source_waypoint = None
     
     def get_distance(self):
         """
@@ -154,7 +155,7 @@ class Route:
                 cp (Waypoint): the crossing point that the route enters or leaves the cell by
                 indx (int): the index of the segment along the route
         """
-
+        direction = [1, 2, 3, 4, -1, -2, -3, -4]
         logging.debug(f"WP_correction >> wp >> {wp.to_point()}")
         logging.debug(f"WP_correction >> cp >> {cp.to_point()}")
         m_long = 111.321*1000
@@ -180,11 +181,11 @@ class Route:
         self.segments[indx].set_travel_time(traveltime)
         self.segments[indx].set_distance(distance)
         if 'fuel' in self.conf['path_variables']:
-            self.segments[indx].set_fuel(cellbox.agg_data['fuel'][case] * traveltime)
-            logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][case] * traveltime}")
+            self.segments[indx].set_fuel(cellbox.agg_data['fuel'][direction.index(case)] * traveltime)
+            logging.debug(f"WP_correction >> fuel >> {cellbox.agg_data['fuel'][direction.index(case)] * traveltime}")
         if 'battery' in self.conf['path_variables']:
-            self.segments[indx].set_fuel(cellbox.agg_data['battery'][case] * traveltime)
-            logging.debug(f"WP_correction >> battery >> {cellbox.agg_data['battery'][case] * traveltime}")
+            self.segments[indx].set_fuel(cellbox.agg_data['battery'][direction.index(case)] * traveltime)
+            logging.debug(f"WP_correction >> battery >> {cellbox.agg_data['battery'][direction.index(case)] * traveltime}")
 
     def get_points(self):
         """

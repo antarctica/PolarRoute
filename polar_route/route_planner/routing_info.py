@@ -22,7 +22,18 @@ class RoutingInfo:
             Returns the associated path
         """
         return self.path
-    
+
+    def get_path_nodes(self):
+        """
+            Gets a list of nodes visited along the associated path
+        """
+        points = []
+
+        if len(self.path) > 0:
+            points = [seg.get_end_wp().get_cellbox_indx() for seg in self.path]
+            
+        return points
+
     def get_node_index(self):
         """
             Returns the associated node index
