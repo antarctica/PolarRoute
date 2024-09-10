@@ -113,15 +113,15 @@ As a table:
 +------------------+---------------+---------------+---------+---------------+
 | Name             | Lat           | Long          | Source  | Destination   |
 +==================+===============+===============+=========+===============+
-| Halley           | -75.26722     | -27.21694     |         | X             |
+| Halley           | -75.267       | -27.216       |         | X             |
 +------------------+---------------+---------------+---------+---------------+
-| Rothera          | -68.3892      | -95.2436      |         |               |
+| Rothera          | -67.617       | -68.047       |         |               |
 +------------------+---------------+---------------+---------+---------------+
-| South Georgia    | -54.87916667  | -37.26416667  | X       |               |
+| South Georgia    | -54.141       | -36.094       | X       |               |
 +------------------+---------------+---------------+---------+---------------+
-| Falklands        | -55.63472222  | -64.88        |         |               |
+| Falklands        | -51.953       | -57.969       |         |               |
 +------------------+---------------+---------------+---------+---------------+
-| Elephant Island  | -60.54722222  | -55.18138889  |         |               |
+| Elephant Island  | -60.977       | -55.078       |         |               |
 +------------------+---------------+---------------+---------+---------------+
 
 In .csv format:
@@ -129,15 +129,15 @@ In .csv format:
 ::
 
     Name,Lat,Long,Source,Destination
-    Halley,-75.26722,-27.21694,,X
-    Rothera,-68.3892,-95.2436,,
-    South Georgia,-54.87916667,-37.26416667,X,
-    Falklands,-55.63472222,-64.88,,
-    Elephant Island,-60.54722222,-55.18138889,,
+    Halley,-75.267,-27.216,,X
+    Rothera,-67.617,-68.047 ,,
+    South Georgia,-54.141,-36.094,X,
+    Falklands,-51.953,-57.969,,
+    Elephant Island,-60.977,-55.078,,
 
 Additional waypoints may be added by extending the *waypoints.csv* file. Which waypoints are navigated between is determined by
 adding an **X** in either the *Source* or *Destination* columns. When processed, the route planner will create routes from all
-waypoints marked with an **X** in the source column to all waypoints marked with a **X** in the *destination* column. 
+waypoints marked with an **X** in the *Source* column to all waypoints marked with a **X** in the *Destination* column.
 
 optional arguments are
 
