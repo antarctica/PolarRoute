@@ -26,6 +26,8 @@ from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
 from meshiphi.utils import longitude_domain
 
+from run_glider_routes import mesh_json
+
 # Squelching SettingWithCopyWarning
 pd.options.mode.chained_assignment = None
 
@@ -282,6 +284,7 @@ class RoutePlanner:
 
         # Define attributes
         self.src_wps = []
+        self.waypoints_df = []
         self.routes_dijkstra = []
         self.routes_smoothed = []
         self.neighbour_legs = {}
@@ -583,6 +586,8 @@ class RoutePlanner:
         # Validate input waypoints format
         validate_waypoints(waypoints_df)
 
+        self.waypoints_df = waypoints_df
+
         # Move waypoint to the closest accessible cellbox, if it isn't in one already
         mesh_boundary = _mesh_boundary_polygon(self.env_mesh.to_json())
         for idx, row in waypoints_df.iterrows():
@@ -827,3 +832,25 @@ class RoutePlanner:
                 wp.set_cellbox_indx(str(_id))
 
         return valid_wps
+
+    def to_json(self):
+        """
+        Output all information from the RoutePlanner object in json format
+
+        Returns:
+            output_json (dict): the full mesh and route information in json format
+
+        """
+        output_json = self.env_mesh.to_json()
+        output_json['config']['route_info'] = self.config
+        output_json['waypoints'] = self.waypoints_df.to_dict()
+
+        if self.routes_smoothed:
+            output_json['paths'] = self.routes_smoothed
+        elif self.routes_dijkstra:
+            output_json['paths'] = {"type": "FeatureCollection", "features": []}
+            output_json['paths']['features'] = [dr.to_json() for dr in self.routes_dijkstra]
+        else:
+            output_json['paths'] = []
+
+        return output_json
