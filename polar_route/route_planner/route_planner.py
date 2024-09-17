@@ -26,8 +26,6 @@ from meshiphi.mesh_generation.environment_mesh import EnvironmentMesh
 from meshiphi.mesh_generation.direction import Direction
 from meshiphi.utils import longitude_domain
 
-from run_glider_routes import mesh_json
-
 # Squelching SettingWithCopyWarning
 pd.options.mode.chained_assignment = None
 
