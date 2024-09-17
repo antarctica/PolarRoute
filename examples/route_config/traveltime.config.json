@@ -1,21 +1,9 @@
 {
     "objective_function": "traveltime",
     "path_variables": [
-        "fuel",
-        "traveltime"
+      "fuel",
+      "traveltime"
     ],
-    "vector_names": [
-        "uC",
-        "vC"
-    ],
-    "zero_currents": false,
-    "variable_speed": true,
-    "time_unit": "days",
-    "early_stopping_criterion": true,
-    "waypoints_splitting": false,
-    "save_dijkstra_graphs": true,
-    "smooth_path": {
-        "max_iteration_number": 1000,
-        "minimum_difference": 0.0005
-    }
+    "vector_names": ["uC","vC"]
 }
+  
