@@ -1,5 +1,5 @@
 """
-    This module is used for construction of routes using the
+    This module is used for construction of routes within an
     environmental mesh between a series of user defined waypoints
 """
 
@@ -98,7 +98,8 @@ def _adjust_waypoints(point, cellboxes, max_distance=5):
 
 def flatten_cases(cell_id, neighbour_graph):
     """
-        Identifies the cases with neighbours around a given cell and gets the ids of those neighbouring cells
+        Identifies the cases with neighbours around a given cell and gets the ids of those neighbouring cells.
+
         Args:
             cell_id (str): The id of the cell to find the neighbours for
             neighbour_graph(dict): The neighbour graph of the mesh
@@ -119,17 +120,18 @@ def flatten_cases(cell_id, neighbour_graph):
 
 def initialise_dijkstra_route(dijkstra_graph, dijkstra_route):
     """
-        Initialising dijkstra route info a standard path form
+        Initialising dijkstra route into a standard form used for smoothing
 
         Args:
-            dijkstra_graph (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
+            dijkstra_graph (dict): Dictionary comprising dijkstra graph with keys based on cellbox id.
                                     Each entry is a dictionary of the cellbox environmental and dijkstra information.
 
-            dijkstra_route (dict) - Dictionary of a GeoJSON entry for the dijkstra route
+            dijkstra_route (dict): Dictionary of a GeoJSON entry for the dijkstra route
 
-        Outputs:
-            aps (list, [find_edge, ...]) - A list of adjacent cell pairs where each entry is of type find_edge including information on
-                                        .crossing, .case, .start, and .end see 'find_edge' for more information
+        Returns:
+            aps (list<FindEdge>): A list of adjacent cell pairs where each entry is of type FindEdge including
+                                  information on .crossing, .case, .start, and .end (see 'find_edge' for more information)
+
     """
 
     org_path_points = np.array(dijkstra_route['geometry']['coordinates'])
@@ -190,11 +192,9 @@ class RoutePlanner:
         RoutePlanner finds the optimal route between a series of waypoints.
         The routes are constructed in a two stage process:
 
-        compute_routes: uses a mesh based Dijkstra method to determine the optimal routes 
-                        between a series of waypoint.
+        **compute_routes**: Uses a mesh based Dijkstra method to determine the optimal routes between a series of waypoints.
 
-        compute_smoothed_routes: smooths the output of compute_routes using information from the environmental mesh
-                                to determine mesh independent optimal routes
+        **compute_smoothed_routes**: Smooths the output of **compute_routes** using information from the environmental mesh to determine mesh independent optimal routes.
 
         ---
 
@@ -203,7 +203,8 @@ class RoutePlanner:
             cost_func (func): Crossing point cost function for Dijkstra Route creation
             config (Json): JSON object that contains the attributes required for the route construction. 
             src_wps (list<SourceWaypoint>): a list of the source waypoints that contains all of the dijkstra routing
-            information to reuse this information for routes with the same source waypoint
+                                            information to reuse this information for routes with the same source
+                                            waypoint
 
         ---
     """
@@ -220,10 +221,9 @@ class RoutePlanner:
                     Sections required for the route construction are as follows\n
                     \n
                     {\n
-                        "objective_function": (string) currently either 'traveltime' or 'fuel',\n
+                        "objective_function": (string) currently either 'traveltime', 'battery' or 'fuel',\n
                         "path_variables": list of (string),\n
                         "vector_names": list of (string),\n
-                        "time_unit" (string),\n
                     }\n
 
                 cost_func (func): Crossing point cost function for Dijkstra route construction. For development purposes
@@ -236,6 +236,10 @@ class RoutePlanner:
         # Only switch off waypoint adjustment if specified in config
         if 'adjust_waypoints' not in self.config:
             self.config['adjust_waypoints'] = True
+
+        # Set default time unit if not specified in config
+        if 'adjust_waypoints' not in self.config:
+            self.config['time_unit'] = "days"
 
         # Load mesh json from file or dict
         mesh_json = json_str(mesh_file)
@@ -278,6 +282,7 @@ class RoutePlanner:
 
         # Define attributes
         self.src_wps = []
+        self.waypoints_df = []
         self.routes_dijkstra = []
         self.routes_smoothed = []
         self.neighbour_legs = {}
@@ -286,11 +291,12 @@ class RoutePlanner:
         """
             Applying splitting around waypoints if this is defined in config. This is applied
             inplace.
+
             Args:
-                waypoints_df(pd.DataFrame): Pandas DataFrame of Waypoint locations
+                waypoints_df (pd.DataFrame): Pandas DataFrame of Waypoint locations
             Applied to terms:
-                self.config - PolarRoute config file
-                self.env_mesh - The EnvironmentalMesh object for the relevant mesh
+                self.config (dict): PolarRoute config file\n
+                self.env_mesh (EnvironmentMesh): The EnvironmentMesh object for the relevant mesh
 
         """
         if ('waypoint_splitting' in self.config) and (self.config['waypoint_splitting']):
@@ -305,10 +311,10 @@ class RoutePlanner:
         """
             Applying zero currents to mesh
 
-            Input
-                mesh (JSON) - MeshiPhi Mesh input
-            Output:
-                mesh (JSON) - MeshiPhi Mesh Corrected
+            Args:
+                mesh (JSON): MeshiPhi Mesh input
+            Returns:
+                mesh (JSON): MeshiPhi Mesh Corrected
         """
 
         # Zeroing currents if both vectors are defined and zeroed
@@ -335,16 +341,16 @@ class RoutePlanner:
         """
             Applying max speed for all cellboxes that are accessible
 
-            Input
-                mesh (JSON) - MeshiPhi Mesh input
-            Output:
-                mesh (JSON) - MeshiPhi Mesh Corrected
+            Args:
+                mesh (JSON): MeshiPhi Mesh input
+            Returns:
+                mesh (JSON): MeshiPhi Mesh Corrected
         """
 
         # Setting speed to a fixed value if specified in the config
         if 'fixed_speed' in self.config:
             if self.config['fixed_speed']:
-                logging.info('Setting all speeds to max speed for this  mesh!')
+                logging.info('Setting all speeds to max speed for this mesh!')
                 max_speed = mesh['config']['vessel_info']['max_speed']
                 for idx, cell in enumerate(mesh['cellboxes']):
                     if 'speed' in cell.keys():
@@ -449,6 +455,7 @@ class RoutePlanner:
     def _dijkstra(self, wp, end_wps):
         """
             Runs Dijkstra's algorithm across the whole of the domain
+
             Args:
                 wp (SourceWaypoint): object contains the lat, long information of the source waypoint
                 end_wps(List(Waypoint)): a list of the end waypoints
@@ -510,6 +517,7 @@ class RoutePlanner:
         """
         Determines the neighbour cost when travelling from the cell at node_id to the cell at neighbour_id given the
         specified case.
+
         Args:
             node_id (str): the id of the initial cellbox
             neighbour_id (str): the id of the neighbouring cellbox
@@ -562,9 +570,10 @@ class RoutePlanner:
     def compute_routes(self, waypoints):
         """
             Computes the Dijkstra routes between waypoints.
+
             Args: 
                 waypoints (String/Dataframe): DataFrame that contains source and destination waypoints info or a string
-                pointing to the path of a csv file that contains this info
+                                              pointing to the path of a csv file that contains this info
             Returns:
                 routes (List<Route>): a list of the computed routes
         """
@@ -574,6 +583,8 @@ class RoutePlanner:
         waypoints_df['Destination'] = [s.strip().upper() if type(s) == str else np.nan for s in waypoints_df['Destination']]
         # Validate input waypoints format
         validate_waypoints(waypoints_df)
+
+        self.waypoints_df = waypoints_df
 
         # Move waypoint to the closest accessible cellbox, if it isn't in one already
         mesh_boundary = _mesh_boundary_polygon(self.env_mesh.to_json())
@@ -741,8 +752,8 @@ class RoutePlanner:
                 route (Route): Route object for the route to be smoothed
                 path_index (bool): Option to generate the pathIndex array that can be used to generate new dijkstra routes
 
-            Outputs:
-                dijkstra_graph_dict (dict) - Dictionary comprising dijkstra graph with keys based on cellbox id.
+            Returns:
+                dijkstra_graph_dict (dict): Dictionary comprising dijkstra graph with keys based on cellbox id.
                                              Each entry is a dictionary of the cellbox environmental and dijkstra information.
 
         """
@@ -776,13 +787,15 @@ class RoutePlanner:
 
     def _validate_wps(self, wps):
         """
-                Determines if the provided waypoint list contains valid waypoints (i.e. both lie within the bounds of
-                 the env mesh).
-                Args:
-                    wps (list<Waypoint>): list of waypoint objects that encapsulates lat and long information
-                Returns:
-                   Wps (list<Waypoint>): list of waypoint objects that encapsulates lat and long information after
-                   removing any invalid waypoints
+            Determines if the provided waypoint list contains valid waypoints (i.e. both lie within the bounds of
+            the env mesh).
+
+            Args:
+                wps (list<Waypoint>): list of waypoint objects that encapsulates lat and long information
+
+            Returns:
+                Wps (list<Waypoint>): list of waypoint objects that encapsulates lat and long information after
+                removing any invalid waypoints
         """
         def select_cellbox(ids):
             """
@@ -817,3 +830,25 @@ class RoutePlanner:
                 wp.set_cellbox_indx(str(_id))
 
         return valid_wps
+
+    def to_json(self):
+        """
+        Output all information from the RoutePlanner object in json format
+
+        Returns:
+            output_json (dict): the full mesh and route information in json format
+
+        """
+        output_json = self.env_mesh.to_json()
+        output_json['config']['route_info'] = self.config
+        output_json['waypoints'] = self.waypoints_df.to_dict()
+
+        if self.routes_smoothed:
+            output_json['paths'] = self.routes_smoothed
+        elif self.routes_dijkstra:
+            output_json['paths'] = {"type": "FeatureCollection", "features": []}
+            output_json['paths']['features'] = [dr.to_json() for dr in self.routes_dijkstra]
+        else:
+            output_json['paths'] = []
+
+        return output_json

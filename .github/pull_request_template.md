@@ -1,7 +1,7 @@
 # PolarRoute Pull Request Template
 
 Date: <!--- Include date PR was created -->   
-Version Number: <!--- Include version number of PolarRoute the PR will be included in (e.g. 0.1.0 -> 0.1.1) -->   
+Version Number: <!--- Include version number of PolarRoute the PR will be included in (e.g. 1.0 -> 1.1) -->   
  
 ## Description of change
 <!--- Describe your changes in detail -->
@@ -22,7 +22,7 @@ This includes a collection of test files which should be run according to which 
 >
 > The files which have been changed during this PR can be listed using the command
 
-    git diff --name-only 0.6.x
+    git diff --name-only 0.7.x
 
 - [ ] My changes require one or more test files to be updated for all regression tests to pass.   
 
@@ -38,6 +38,6 @@ This includes a collection of test files which should be run according to which 
 - [ ] I have commented my code, particularly in hard-to-understand areas.  
 - [ ] I have updated the documentation of the codebase where required.  
 - [ ] My changes generate no new warnings.   
-- [ ] My PR has been made to the `0.6.x` branch (**DO NOT SUBMIT A PR TO MAIN**)  
+- [ ] My PR has been made to the `0.7.x` branch (**DO NOT SUBMIT A PR TO MAIN**)  
 
    

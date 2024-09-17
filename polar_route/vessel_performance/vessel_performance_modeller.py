@@ -25,6 +25,11 @@ class VesselPerformanceModeller:
 
         self.env_mesh = EnvironmentMesh.load_from_json(env_mesh_json)
         self.config = vessel_config
+
+        # Only switch off neighbour splitting if specified in config
+        if 'neighbour_splitting' not in self.config:
+            self.config['neighbour_splitting'] = True
+
         self.vessel = VesselFactory.get_vessel(vessel_config)
 
         self.filter_nans()
@@ -42,8 +47,9 @@ class VesselPerformanceModeller:
             self.env_mesh.update_cellbox(i, access_values)
         inaccessible_nodes = [c.id for c in self.env_mesh.agg_cellboxes if c.agg_data['inaccessible']]
         logging.info(f"Found {len(inaccessible_nodes)} inaccessible cells in the mesh")
-        # Split any cells that neighbour inaccessible cells to match their size
-        self.split_neighbouring_cells(inaccessible_nodes)
+        if self.config['neighbour_splitting']:
+            # Split any cells that neighbour inaccessible cells to match their size
+            self.split_neighbouring_cells(inaccessible_nodes)
         # Remove inaccessible cells from graph
         for in_node in inaccessible_nodes:
             self.env_mesh.neighbour_graph.remove_node_and_update_neighbours(in_node)

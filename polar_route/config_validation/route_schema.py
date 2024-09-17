@@ -3,8 +3,7 @@ route_schema = {
     "required": [
             "objective_function",
             "path_variables",
-            "vector_names",
-            "time_unit"
+            "vector_names"
         ],
     "additionalProperties": True,
     "properties": {
@@ -17,9 +16,9 @@ route_schema = {
                          "maxItems": 2},
         "time_unit": {"type": "string",
                       "enum": ["days","hours","seconds"]},
-        "early_stopping_criterion":{"type": "boolean"},
         "adjust_waypoints":{"type": "boolean"},
         "zero_currents": {"type": "boolean"},
+        "fixed_speed": {"type": "boolean"},
         "smoothing_blocked_sic": {"type": "number"},
         "smoothing_max_iterations": {"type": "integer"},
         "smoothing_merge_separation": {"type": "number"},

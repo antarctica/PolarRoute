@@ -15,7 +15,7 @@ Route Optimisation Modules
 Route Planner
 *************
 
-.. automodule:: polar_route.route_planner
+.. automodule:: polar_route.route_planner.route_planner
    :members: 
    :private-members:
 
@@ -23,14 +23,14 @@ Route Planner
 Crossing Points
 ***************
 
-.. automodule:: polar_route.crossing
+.. automodule:: polar_route.route_planner.crossing
    :members:
    :private-members:
    
 Crossing Point Smoothing
 ************************
 
-.. automodule:: polar_route.crossing_smoothing
+.. automodule:: polar_route.route_planner.crossing_smoothing
    :members:
    :private-members:
 
