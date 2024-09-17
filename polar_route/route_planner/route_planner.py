@@ -221,10 +221,9 @@ class RoutePlanner:
                     Sections required for the route construction are as follows\n
                     \n
                     {\n
-                        "objective_function": (string) currently either 'traveltime' or 'fuel',\n
+                        "objective_function": (string) currently either 'traveltime', 'battery' or 'fuel',\n
                         "path_variables": list of (string),\n
                         "vector_names": list of (string),\n
-                        "time_unit" (string),\n
                     }\n
 
                 cost_func (func): Crossing point cost function for Dijkstra route construction. For development purposes
@@ -237,6 +236,10 @@ class RoutePlanner:
         # Only switch off waypoint adjustment if specified in config
         if 'adjust_waypoints' not in self.config:
             self.config['adjust_waypoints'] = True
+
+        # Set default time unit if not specified in config
+        if 'adjust_waypoints' not in self.config:
+            self.config['time_unit'] = "days"
 
         # Load mesh json from file or dict
         mesh_json = json_str(mesh_file)
