@@ -279,7 +279,6 @@ class Smoothing:
                 end_waypoint (tuple)            - End Waypoint (long,lat)
 
         """
-        self._initialise_config()
         self.dijkstra_graph = dijkstra_graph
         self.aps = adjacent_pairs
         self.start_waypoint = start_waypoint
@@ -301,11 +300,6 @@ class Smoothing:
                 cell['neighbourTravelLegs'] = cell['neighbourTravelLegs'][accessible_edges]
 
                 self.dijkstra_graph[key] = cell
-
-    def _initialise_config(self):
-        """
-            Initialising configuration information. If None return a list of standards
-        """
 
     def _long_case(self, start, end, case, Sp, Cp, Np):
         """

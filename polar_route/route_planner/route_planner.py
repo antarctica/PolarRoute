@@ -346,7 +346,7 @@ class RoutePlanner:
         # Setting speed to a fixed value if specified in the config
         if 'fixed_speed' in self.config:
             if self.config['fixed_speed']:
-                logging.info('Setting all speeds to max speed for this  mesh!')
+                logging.info('Setting all speeds to max speed for this mesh!')
                 max_speed = mesh['config']['vessel_info']['max_speed']
                 for idx, cell in enumerate(mesh['cellboxes']):
                     if 'speed' in cell.keys():
