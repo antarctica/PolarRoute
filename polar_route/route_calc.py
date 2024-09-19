@@ -6,6 +6,7 @@ import geopandas as gpd
 from shapely import wkt, distance
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
 from polar_route.utils import gpx_route_import
+from polar_route.route_planner.crossing_smoothing import _rhumb_line_distance, _dist_around_globe
 
 
 # Define ordering of cases in array data
@@ -75,13 +76,14 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     # Conversion factors from lat/long degrees to metres
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
-    x = (cp[0] - wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
+    x = _dist_around_globe(cp[0], wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
     y = (cp[1] - wp[1]) * m_lat
     su = cellbox[vector_x]
     sv = cellbox[vector_y]
     ssp = cellbox[speed][idx] * (1000 / (60 * 60))
     try:
-        traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
+        traveltime, _ = traveltime_in_cell(x, y, su, sv, ssp)
+        distance = _rhumb_line_distance(cp, wp)
     except:
         traveltime=0
         distance=0
@@ -289,6 +291,8 @@ def order_track(df, track_points):
                 cell_ids.append(track_points['cellID'].iloc[track_id])
 
         if  distance(end_point_segment,end_point) < 0.05:
+            path_point.append(end_point_segment)
+            cell_ids.append(track_points['cellID'].iloc[track_id])
             pathing = False
         else:
             track_id     = np.argmin([distance(entry,end_point_segment) for entry in track_points['startPoints']])
