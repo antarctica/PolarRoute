@@ -28,24 +28,21 @@ def traveltime_in_cell(xdist, ydist, u, v, s):
     """
 
     dist = np.sqrt(xdist ** 2 + ydist ** 2)
-    cval = np.sqrt(u ** 2 + v ** 2)
+    d_diff = u*ydist - v*xdist
+    discriminant = (ydist**2*d_diff**2) - (dist**2*(d_diff**2 - s**2*xdist**2))
 
-    dotprod = xdist * u + ydist * v
-    diffsqrs = s ** 2 - cval ** 2
+    v1 = (-ydist*d_diff + np.sqrt(discriminant))/dist**2
+    v2 = np.sqrt(s**2 - v1**2)
 
-    if diffsqrs == 0.0:
-        if dotprod == 0.0:
-            return np.inf
-        else:
-            if ((dist ** 2) / (2 * dotprod)) < 0:
-                return np.inf
-            else:
-                traveltime = dist * dist / (2 * dotprod)
-                return traveltime
+    w1 = v1 + u
+    w2 = v2 + v
+    w_mag = np.sqrt(w1**2+w2**2)
 
-    traveltime = (np.sqrt(dotprod ** 2 + (dist ** 2) * diffsqrs) - dotprod) / diffsqrs
+    traveltime = dist/w_mag
+
     if traveltime < 0:
         traveltime = np.inf
+
     return traveltime, dist
 
 
@@ -290,7 +287,8 @@ def order_track(df, track_points):
             track_id     = np.argmin([distance(entry,end_point_segment) for entry in track_points['startPoints']])
             track_misfit = min([distance(entry,end_point_segment) for entry in track_points['startPoints']])
             if track_misfit >= 0.05:
-                raise Exception('Path Segmentment not adding - ID={},Misfit={},distance from end={}'.format(track_id,track_misfit,distance(end_point_segment,end_point)))
+                raise Exception(f'Path Segment not adding - ID={track_id},Misfit={track_misfit},distance from'
+                                f' end={distance(end_point_segment,end_point)}')
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
     return user_track
