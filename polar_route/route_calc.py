@@ -31,14 +31,21 @@ def traveltime_in_cell(xdist, ydist, u, v, s):
     d_diff = u*ydist - v*xdist
     discriminant = (ydist**2*d_diff**2) - (dist**2*(d_diff**2 - s**2*xdist**2))
 
-    v1 = (-ydist*d_diff + np.sqrt(discriminant))/dist**2
-    v2 = np.sqrt(s**2 - v1**2)
+    if xdist > 0:
+        v1 = (-ydist*d_diff + np.sqrt(discriminant))/dist**2
+    else:
+        v1 = (-ydist * d_diff - np.sqrt(discriminant)) / dist ** 2
 
-    w1 = v1 + u
-    w2 = v2 + v
-    w_mag = np.sqrt(w1**2+w2**2)
+    if  ydist > 0:
+        v2 = np.sqrt(s**2 - v1**2)
+    else:
+        v2 = -np.sqrt(s**2 - v1**2)
 
-    traveltime = dist/w_mag
+    r1 = v1 + u
+    r2 = v2 + v
+    r_mag = np.sqrt(r1 ** 2 + r2 ** 2)
+
+    traveltime = dist / r_mag
 
     if traveltime < 0:
         traveltime = np.inf
@@ -65,7 +72,7 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     """
 
     idx = np.where(case_indices==case)[0][0]
-    # Conversion factors from lat/long degrees to metres TODO: replace as part of route planner refactor
+    # Conversion factors from lat/long degrees to metres
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
     x = (cp[0] - wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
