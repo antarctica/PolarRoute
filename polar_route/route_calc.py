@@ -78,8 +78,12 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     m_lat = 111.386 * 1000
     x = _dist_around_globe(cp[0], wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
     y = (cp[1] - wp[1]) * m_lat
-    su = cellbox[vector_x]
-    sv = cellbox[vector_y]
+    if (vector_x in cellbox) and (vector_y in cellbox):
+        su = cellbox[vector_x]
+        sv = cellbox[vector_y]
+    else:
+        su = 0
+        sv = 0
     ssp = cellbox[speed][idx] * (1000 / (60 * 60))
     try:
         traveltime, _ = traveltime_in_cell(x, y, su, sv, ssp)
@@ -200,6 +204,10 @@ def load_mesh(mesh_file):
     with open(mesh_file, 'r') as fp:
         info = json.load(fp)
     mesh = pd.DataFrame(info['cellboxes'])
+
+    if (not any('uC' in cb for cb in mesh)) or (not any('vC' in cb for cb in mesh)):
+        logging.info("No data for currents in mesh, setting default value to zero!")
+
     mesh['geometry'] = mesh['geometry'].apply(wkt.loads)
     mesh = gpd.GeoDataFrame(mesh, crs='EPSG:4326', geometry='geometry')
 
