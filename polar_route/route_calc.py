@@ -6,52 +6,12 @@ import geopandas as gpd
 from shapely import wkt, distance
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
 from polar_route.utils import gpx_route_import
-from polar_route.route_planner.crossing_smoothing import _rhumb_line_distance, _dist_around_globe
+from polar_route.route_planner.crossing import traveltime_in_cell
+from polar_route.route_planner.crossing_smoothing import rhumb_line_distance, dist_around_globe
 
 
 # Define ordering of cases in array data
 case_indices = np.array([1, 2, 3, 4, -1, -2, -3, -4])
-
-def traveltime_in_cell(xdist, ydist, u, v, s):
-    """
-        Calculate travel time inside cell.
-
-        Args:
-            xdist (float): x distance
-            ydist (float): y distance
-            u (float): current x component
-            v (float): current y component
-            s (float): ship speed
-
-        Returns:
-            traveltime (float): the travel time
-            distance (float): the distance
-    """
-
-    dist = np.sqrt(xdist ** 2 + ydist ** 2)
-    d_diff = u*ydist - v*xdist
-    discriminant = (ydist**2*d_diff**2) - (dist**2*(d_diff**2 - s**2*xdist**2))
-
-    if xdist > 0:
-        v1 = (-ydist*d_diff + np.sqrt(discriminant))/dist**2
-    else:
-        v1 = (-ydist * d_diff - np.sqrt(discriminant)) / dist ** 2
-
-    if  ydist > 0:
-        v2 = np.sqrt(s**2 - v1**2)
-    else:
-        v2 = -np.sqrt(s**2 - v1**2)
-
-    r1 = v1 + u
-    r2 = v2 + v
-    r_mag = np.sqrt(r1 ** 2 + r2 ** 2)
-
-    traveltime = dist / r_mag
-
-    if traveltime < 0:
-        traveltime = np.inf
-
-    return traveltime, dist
 
 
 def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y='vC', case=0):
@@ -76,7 +36,7 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     # Conversion factors from lat/long degrees to metres
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
-    x = _dist_around_globe(cp[0], wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
+    x = dist_around_globe(cp[0], wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
     y = (cp[1] - wp[1]) * m_lat
     if (vector_x in cellbox) and (vector_y in cellbox):
         su = cellbox[vector_x]
@@ -86,13 +46,13 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
         sv = 0
     ssp = cellbox[speed][idx] * (1000 / (60 * 60))
     try:
-        traveltime, _ = traveltime_in_cell(x, y, su, sv, ssp)
-        distance = _rhumb_line_distance(cp, wp)
+        traveltime = traveltime_in_cell(x, y, su, sv, ssp)
+        dist = rhumb_line_distance(cp, wp)
     except:
-        traveltime=0
-        distance=0
+        traveltime = 0
+        dist = 0
 
-    return traveltime, distance
+    return traveltime, dist
 
 
 def case_from_angle(start, end):

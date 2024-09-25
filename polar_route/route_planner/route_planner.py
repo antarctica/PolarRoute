@@ -17,7 +17,7 @@ from polar_route.route_planner.waypoint import Waypoint
 from polar_route.route_planner.segment import Segment
 from polar_route.route_planner.routing_info import RoutingInfo
 from polar_route.route_planner.crossing import NewtonianDistance
-from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues, _rhumb_line_distance
+from polar_route.route_planner.crossing_smoothing import Smoothing, FindEdge, PathValues, rhumb_line_distance
 from polar_route.config_validation.config_validator import validate_route_config
 from polar_route.config_validation.config_validator import validate_waypoints
 from polar_route.utils import json_str, unit_speed, pandas_dataframe_str, case_from_angle, timed_call
@@ -282,7 +282,7 @@ class RoutePlanner:
 
         # Define attributes
         self.src_wps = []
-        self.waypoints_df = []
+        self.waypoints_df = None
         self.routes_dijkstra = []
         self.routes_smoothed = []
         self.neighbour_legs = {}
@@ -672,7 +672,7 @@ class RoutePlanner:
                 end_location = route_json['geometry']['coordinates'][1]
                 route_cell = route_json['properties']['CellIndices'][0]
                 route_case = case_from_angle(start_location, end_location)
-                route_json['properties']['distance'] = [0., _rhumb_line_distance(start_location, end_location)]
+                route_json['properties']['distance'] = [0., rhumb_line_distance(start_location, end_location)]
                 route_json['properties']['speed'] = [0., self.cellboxes_lookup[route_cell].agg_data['speed'][route_case]]
                 for var in self.config['path_variables']:
                     route_json['properties'][var].insert(0, 0.)
