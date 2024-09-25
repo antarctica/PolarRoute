@@ -1414,5 +1414,5 @@ class Smoothing:
                             firstpoint = midpoint_prime
 
             # Early stopping criterion
-            if self.jj == self.max_iterations:
+            if self.jj >= self.max_iterations:
                 break
