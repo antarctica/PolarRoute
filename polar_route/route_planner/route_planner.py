@@ -238,7 +238,7 @@ class RoutePlanner:
             self.config['adjust_waypoints'] = True
 
         # Set default time unit if not specified in config
-        if 'adjust_waypoints' not in self.config:
+        if 'time_unit' not in self.config:
             self.config['time_unit'] = "days"
 
         # Load mesh json from file or dict
