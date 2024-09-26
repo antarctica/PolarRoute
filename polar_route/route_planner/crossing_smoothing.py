@@ -1242,7 +1242,7 @@ class Smoothing:
             https://arxiv.org/pdf/2209.02389
 
         """
-        self.jj = 1
+        self.jj = 0
         self.previous_aps = []
         converged = False
         self.all_aps = []
@@ -1250,6 +1250,10 @@ class Smoothing:
         self.previous_us_info = []
         self.previous_diagonal_info = []
         while not converged:
+            # Early stopping criterion
+            if self.jj == self.max_iterations:
+                break
+
             path_length = len(self.aps)
             firstpoint = self.start_waypoint
             midpoint   = None 
@@ -1413,6 +1417,3 @@ class Smoothing:
                             ii += 1
                             firstpoint = midpoint_prime
 
-            # Early stopping criterion
-            if self.jj == self.max_iterations:
-                break
