@@ -5,9 +5,6 @@ from polar_route.route_planner.crossing import traveltime_in_cell
 
 class TestRouteCalc(unittest.TestCase):
 
-    def setUp(self):
-        pass
-
     def test_traveltime_in_cell(self):
         bx = 30
         by = 15

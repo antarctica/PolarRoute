@@ -101,7 +101,7 @@ def load_route(route_file):
         Load route information from file
 
         Args:
-            route_file (str): Path to user defined route
+            route_file (str): Path to user defined route in json, csv or gpx format
 
         Returns:
             df (Dataframe): Dataframe with route info
@@ -332,9 +332,9 @@ def route_calc(route_file, mesh_file):
         traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
                                                    vector_y='vC', case=case)
         traveltime = ((traveltime_s / 60) / 60) / 24
-        distance = distance_m / 1000
+        segment_distance = distance_m / 1000
         traveltimes.append(traveltime)
-        distances.append(distance)
+        distances.append(segment_distance)
         cellboxes.append(cell_box)
         cases.append(case)
 
