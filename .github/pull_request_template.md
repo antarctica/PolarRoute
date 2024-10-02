@@ -22,7 +22,7 @@ This includes a collection of test files which should be run according to which 
 >
 > The files which have been changed during this PR can be listed using the command
 
-    git diff --name-only 0.7.x
+    git diff --name-only 1.1.x
 
 - [ ] My changes require one or more test files to be updated for all regression tests to pass.   
 
