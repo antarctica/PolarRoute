@@ -5,7 +5,7 @@ from polar_route.route_planner.crossing import traveltime_in_cell
 from polar_route.utils import unit_time, unit_speed, case_from_angle
 
 
-def _dist_around_globe(start_point,crossing_point):
+def dist_around_globe(start_point,crossing_point):
     """
         Determining the longitude distance around the globe between two points
     
@@ -25,7 +25,7 @@ def _dist_around_globe(start_point,crossing_point):
     return a
 
 
-def _rhumb_line_distance(start_waypoint, end_waypoint):
+def rhumb_line_distance(start_waypoint, end_waypoint):
     """
         Defining the rhumb line distance from a given waypoint start and end point
 
@@ -161,7 +161,7 @@ class PathValues:
         #environmental forcing variables
         m_long  = 111.321*1000
         m_lat   = 111.386*1000
-        x = _dist_around_globe(Cp[0], Wp[0]) * m_long * np.cos(Wp[1] * (np.pi/180))
+        x = dist_around_globe(Cp[0], Wp[0]) * m_long * np.cos(Wp[1] * (np.pi / 180))
         y = (Cp[1]-Wp[1]) * m_lat
         case = case_from_angle(Cp, Wp)
         Su  = source_graph['Vector_x']
@@ -169,7 +169,7 @@ class PathValues:
         Ssp = unit_speed(source_graph['speed'][case], self.unit_shipspeed)
         traveltime = traveltime_in_cell(x, y, Su, Sv, Ssp)
         traveltime = unit_time(traveltime, self.unit_time)
-        distance = _rhumb_line_distance(Wp, Cp)
+        distance = rhumb_line_distance(Wp, Cp)
 
         # Given the traveltime and distance between the two waypoints
         # determine the path related variables (e.g. fuel usage, traveltime)
@@ -471,8 +471,8 @@ class Smoothing:
         λ_s  = Sp[1]*(np.pi/180)
         φ_r  = Np[1]*(np.pi/180)
 
-        x = _dist_around_globe(Cp[0],Sp[0])*111.321*1000.
-        a = _dist_around_globe(Np[0],Cp[0])*111.321*1000.
+        x = dist_around_globe(Cp[0], Sp[0]) * 111.321 * 1000.
+        a = dist_around_globe(Np[0], Cp[0]) * 111.321 * 1000.
 
         Y           = (Np[1]-Sp[1])*111.386*1000.
         y0          = Y/2
