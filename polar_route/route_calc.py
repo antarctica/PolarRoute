@@ -6,47 +6,12 @@ import geopandas as gpd
 from shapely import wkt, distance
 from shapely.geometry import Point, LineString, MultiLineString, Polygon
 from polar_route.utils import gpx_route_import
+from polar_route.route_planner.crossing import traveltime_in_cell
+from polar_route.route_planner.crossing_smoothing import rhumb_line_distance, dist_around_globe
 
 
 # Define ordering of cases in array data
 case_indices = np.array([1, 2, 3, 4, -1, -2, -3, -4])
-
-def traveltime_in_cell(xdist, ydist, u, v, s):
-    """
-        Calculate travel time inside cell.
-
-        Args:
-            xdist (float): x distance
-            ydist (float): y distance
-            u (float): current x component
-            v (float): current y component
-            s (float): ship speed
-
-        Returns:
-            traveltime (float): the travel time
-            distance (float): the distance
-    """
-
-    dist = np.sqrt(xdist ** 2 + ydist ** 2)
-    cval = np.sqrt(u ** 2 + v ** 2)
-
-    dotprod = xdist * u + ydist * v
-    diffsqrs = s ** 2 - cval ** 2
-
-    if diffsqrs == 0.0:
-        if dotprod == 0.0:
-            return np.inf
-        else:
-            if ((dist ** 2) / (2 * dotprod)) < 0:
-                return np.inf
-            else:
-                traveltime = dist * dist / (2 * dotprod)
-                return traveltime
-
-    traveltime = (np.sqrt(dotprod ** 2 + (dist ** 2) * diffsqrs) - dotprod) / diffsqrs
-    if traveltime < 0:
-        traveltime = np.inf
-    return traveltime, dist
 
 
 def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y='vC', case=0):
@@ -68,21 +33,26 @@ def traveltime_distance(cellbox, wp, cp, speed='speed', vector_x='uC', vector_y=
     """
 
     idx = np.where(case_indices==case)[0][0]
-    # Conversion factors from lat/long degrees to metres TODO: replace as part of route planner refactor
+    # Conversion factors from lat/long degrees to metres
     m_long = 111.321 * 1000
     m_lat = 111.386 * 1000
-    x = (cp[0] - wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
+    x = dist_around_globe(cp[0], wp[0]) * m_long * np.cos(wp[1] * (np.pi / 180))
     y = (cp[1] - wp[1]) * m_lat
-    su = cellbox[vector_x]
-    sv = cellbox[vector_y]
+    if (vector_x in cellbox) and (vector_y in cellbox):
+        su = cellbox[vector_x]
+        sv = cellbox[vector_y]
+    else:
+        su = 0
+        sv = 0
     ssp = cellbox[speed][idx] * (1000 / (60 * 60))
     try:
-        traveltime, distance = traveltime_in_cell(x, y, su, sv, ssp)
+        traveltime = traveltime_in_cell(x, y, su, sv, ssp)
+        dist = rhumb_line_distance(cp, wp)
     except:
-        traveltime=0
-        distance=0
+        traveltime = 0
+        dist = 0
 
-    return traveltime, distance
+    return traveltime, dist
 
 
 def case_from_angle(start, end):
@@ -131,7 +101,7 @@ def load_route(route_file):
         Load route information from file
 
         Args:
-            route_file (str): Path to user defined route
+            route_file (str): Path to user defined route in json, csv or gpx format
 
         Returns:
             df (Dataframe): Dataframe with route info
@@ -194,6 +164,10 @@ def load_mesh(mesh_file):
     with open(mesh_file, 'r') as fp:
         info = json.load(fp)
     mesh = pd.DataFrame(info['cellboxes'])
+
+    if (not any('uC' in cb for cb in mesh)) or (not any('vC' in cb for cb in mesh)):
+        logging.info("No data for currents in mesh, setting default value to zero!")
+
     mesh['geometry'] = mesh['geometry'].apply(wkt.loads)
     mesh = gpd.GeoDataFrame(mesh, crs='EPSG:4326', geometry='geometry')
 
@@ -285,12 +259,15 @@ def order_track(df, track_points):
                 cell_ids.append(track_points['cellID'].iloc[track_id])
 
         if  distance(end_point_segment,end_point) < 0.05:
+            path_point.append(end_point_segment)
+            cell_ids.append(track_points['cellID'].iloc[track_id])
             pathing = False
         else:
             track_id     = np.argmin([distance(entry,end_point_segment) for entry in track_points['startPoints']])
             track_misfit = min([distance(entry,end_point_segment) for entry in track_points['startPoints']])
             if track_misfit >= 0.05:
-                raise Exception('Path Segmentment not adding - ID={},Misfit={},distance from end={}'.format(track_id,track_misfit,distance(end_point_segment,end_point)))
+                raise Exception(f'Path Segment not adding - ID={track_id},Misfit={track_misfit},distance from'
+                                f' end={distance(end_point_segment,end_point)}')
 
     user_track = pd.DataFrame({'Point': path_point, 'CellID': cell_ids})
     return user_track
@@ -355,9 +332,9 @@ def route_calc(route_file, mesh_file):
         traveltime_s, distance_m = traveltime_distance(cell_box, start_point, end_point, speed='speed', vector_x='uC',
                                                    vector_y='vC', case=case)
         traveltime = ((traveltime_s / 60) / 60) / 24
-        distance = distance_m / 1000
+        segment_distance = distance_m / 1000
         traveltimes.append(traveltime)
-        distances.append(distance)
+        distances.append(segment_distance)
         cellboxes.append(cell_box)
         cases.append(case)
 
