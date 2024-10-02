@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>10. Methods - Route Planner &mdash; polar_route 0.6.4 documentation</title>
+  <title>10. Methods - Route Planner &mdash; polar_route 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=51a37f06"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=af2ce170"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
         <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
@@ -72,8 +72,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#module-polar_route.route_planner.crossing_smoothing">10.2.3. Crossing Point Smoothing</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.crossing_smoothing.FindEdge"><code class="docutils literal notranslate"><span class="pre">FindEdge</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.crossing_smoothing.PathValues"><code class="docutils literal notranslate"><span class="pre">PathValues</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.crossing_smoothing._dist_around_globe"><code class="docutils literal notranslate"><span class="pre">_dist_around_globe()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.crossing_smoothing._rhumb_line_distance"><code class="docutils literal notranslate"><span class="pre">_rhumb_line_distance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.crossing_smoothing.dist_around_globe"><code class="docutils literal notranslate"><span class="pre">dist_around_globe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#polar_route.route_planner.crossing_smoothing.rhumb_line_distance"><code class="docutils literal notranslate"><span class="pre">rhumb_line_distance()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -597,8 +597,8 @@ end_waypoint (tuple) - End waypoint (long,lat)</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="polar_route.route_planner.crossing_smoothing._dist_around_globe">
-<span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">_dist_around_globe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crossing_point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.crossing_smoothing._dist_around_globe" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="polar_route.route_planner.crossing_smoothing.dist_around_globe">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">dist_around_globe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crossing_point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.crossing_smoothing.dist_around_globe" title="Permalink to this definition"></a></dt>
 <dd><p>Determining the longitude distance around the globe between two points</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -617,8 +617,8 @@ end_waypoint (tuple) - End waypoint (long,lat)</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="polar_route.route_planner.crossing_smoothing._rhumb_line_distance">
-<span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">_rhumb_line_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_waypoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_waypoint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.crossing_smoothing._rhumb_line_distance" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py" id="polar_route.route_planner.crossing_smoothing.rhumb_line_distance">
+<span class="sig-prename descclassname"><span class="pre">polar_route.route_planner.crossing_smoothing.</span></span><span class="sig-name descname"><span class="pre">rhumb_line_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_waypoint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_waypoint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#polar_route.route_planner.crossing_smoothing.rhumb_line_distance" title="Permalink to this definition"></a></dt>
 <dd><p>Defining the rhumb line distance from a given waypoint start and end point</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
