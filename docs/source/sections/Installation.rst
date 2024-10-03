@@ -21,6 +21,11 @@ For development purposes you can install PolarRoute by downloading the source co
 
 Use of :code:`-e` is optional, depending on whether you want to be able to edit the installed copy of the package.
 
+In order to run the test suite you will also need to include the `[test]` flag to install the optional test dependencies:
+::
+
+    pip install -e ./PolarRoute[test]
+
 Installing GeoPlot
 #####################
 

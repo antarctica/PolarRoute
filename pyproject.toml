@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polar-route"
+description = "PolarRoute: Long-distance maritime polar route planning taking into account complex changing environmental conditions"
+authors = [
+    {name = "Autonomous Marine Operations Planning (AMOP) Team, AI Lab, British Antarctic Survey", email = "amop@bas.ac.uk"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">= 3.8"
+classifiers = ["Intended Audience :: Science/Research",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14"
+]
+keywords= ["Polar Science",
+    "Marine Routing",
+    "Marine Science",
+    "Marine Operations"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+[tool.setuptools]
+packages = ["polar_route"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+version = {attr = "polar_route.__version__"}
+optional-dependencies.test = { file = ["tests/requirements.txt"] }
+
+[project.urls]
+Homepage = "https://www.bas.ac.uk/project/autonomous-marine-operations-planning"
+Documentation = "https://antarctica.github.io/PolarRoute"
+Repository = "https://github.com/antarctica/PolarRoute"
+Issues = "https://github.com/antarctica/PolarRoute/issues"
+
+[project.scripts]
+add_vehicle = "polar_route.cli:add_vehicle_cli"
+optimise_routes = "polar_route.cli:optimise_routes_cli"
+calculate_route = "polar_route.cli:calculate_route_cli"
+resimulate_vehicle = "polar_route.cli:resimulate_vehicle_cli"
+extract_routes = "polar_route.cli:extract_routes_cli"

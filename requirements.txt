@@ -1,4 +1,4 @@
-meshiphi
+meshiphi==2.1.13
 dask
 geopandas
 jsonschema
@@ -13,3 +13,4 @@ scikit-learn
 scipy
 tqdm
 xarray
+fiona

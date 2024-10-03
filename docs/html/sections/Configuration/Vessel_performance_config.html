@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>5.1. Configuration - Vessel Performance Modeller &mdash; polar_route 0.3.10 documentation</title>
+  <title>5.1. Configuration - Vessel Performance Modeller &mdash; polar_route 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=e7531570"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=af2ce170"></script>
         <script src="../../_static/doctools.js?v=888ff710"></script>
         <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
@@ -102,7 +102,8 @@ the ‘add_vehicle’ entry point.</p>
   <span class="s2">&quot;max_ice_conc&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
   <span class="s2">&quot;min_depth&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
   <span class="s2">&quot;max_wave&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-  <span class="s2">&quot;excluded_zones&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;exclusion_zone&quot;</span><span class="p">]</span>
+  <span class="s2">&quot;excluded_zones&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;exclusion_zone&quot;</span><span class="p">],</span>
+  <span class="s2">&quot;neighbour_splitting&quot;</span><span class="p">:</span> <span class="n">true</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -118,6 +119,7 @@ the ‘add_vehicle’ entry point.</p>
 <li><p><strong>min_depth</strong> <em>(float)</em> : The minimum depth of water the vessel is able to travel through in metres.</p></li>
 <li><p><strong>max_wave</strong> <em>(float)</em> : The maximum significant wave height the vessel is able to travel through in metres.</p></li>
 <li><p><strong>excluded_zones</strong> <em>(float)</em> : A list of of strings that name different boolean properties of a cell. Any cell with a value of True for any of the entered keys will be marked as unnavigable.</p></li>
+<li><p><strong>neighbour_splitting</strong> <em>(bool)</em> : Used to enable or disable a feature that splits all accessible cells neighbouring inaccessible cells. This improves routing performance but can be disabled to speed up the vessel performance modelling.</p></li>
 </ul>
 </section>
 
@@ -132,7 +134,7 @@ the ‘add_vehicle’ entry point.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
+    <p>&#169; Copyright 2021-, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

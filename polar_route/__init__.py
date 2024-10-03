@@ -1,4 +1,4 @@
-__version__ = "0.5.2"
+__version__ = "1.0.0"
 __description__ = "PolarRoute: Long-distance maritime polar route planning taking into account complex changing environmental conditions"
 __license__ = "MIT"
 __author__ = "Autonomous Marine Operations Planning (AMOP) Team, AI Lab, British Antarctic Survey"
@@ -12,8 +12,7 @@ try:
     from meshiphi.mesh_generation.boundary import Boundary as Boundary
 
     from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller as VesselPerformanceModeller
-
-    from polar_route.route_planner import RoutePlanner as RoutePlanner
+    from polar_route.route_planner.route_planner import RoutePlanner as RoutePlanner
 
 except ModuleNotFoundError as err:
     print(f'{err}\n Is PolarRoute installed correctly?')

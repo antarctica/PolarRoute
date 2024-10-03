@@ -1,38 +1,11 @@
-import json
 import jsonschema
 import pandas as pd
 
+from polar_route.utils import json_str
 from polar_route.config_validation.vessel_schema import vessel_schema
 from polar_route.config_validation.route_schema import route_schema
 from polar_route.config_validation.waypoints_schema import waypoints_columns
 
-def flexi_json_input(config):
-    """
-    Allows flexible inputs. If a string is parsed, then assume it's a file path
-    and read in as a json. If a dict is parsed, then assume it's already a 
-    valid loaded json, and return it as is
-
-    Args:
-        config (str or dict): Input to translate into a dict.
-
-    Raises:
-        TypeError: If input is neither a str nor a dict, then wrong input type
-
-    Returns:
-        dict: Dictionary read from JSON
-    """
-    if type(config) is str:
-        # If str, assume filename
-        with open(config, 'r') as fp:
-            config_json = json.load(fp)
-    elif type(config) is dict:
-        # If dict, assume it's the config
-        config_json = config
-    else:
-        # Otherwise, can't deal with it
-        raise TypeError(f"Expected 'str' or 'dict', instead got '{type(config)}'")
-    
-    return config_json
     
 def validate_vessel_config(config):
     """
@@ -51,7 +24,7 @@ def validate_vessel_config(config):
 
     """
     # Deals with flexible input
-    config_json = flexi_json_input(config)
+    config_json = json_str(config)
     # Validate against schema
     jsonschema.validate(instance=config_json, schema=vessel_schema)
 
@@ -72,15 +45,16 @@ def validate_route_config(config):
 
     """
     # Deals with flexible input
-    config_json = flexi_json_input(config)
+    config_json = json_str(config)
     # Validate against schema
     jsonschema.validate(instance=config_json, schema=route_schema)
 
 def validate_waypoints(waypoints):
-    """_summary_
+    """
+    Validates the input from a waypoints csv file
 
     Args:
-        waypoints (str or pd.DataFrame): _description_
+        waypoints (str or pd.DataFrame): the waypoint file to be validated
 
     Raises:
         TypeError: Incorrect config parsed in. Must be 'str' or 'pd.DataFrame' 
@@ -97,7 +71,7 @@ def validate_waypoints(waypoints):
     else:
         # Otherwise, can't deal with it
         raise TypeError(
-            f"Expected 'str' or 'dict', instead got '{type(waypoints)}'"
+            f"Expected 'str' or 'DataFrame', instead got '{type(waypoints)}'"
             )
     # Assert that all the required columns exist
     assert(all(col in waypoints_df.columns for col in waypoints_columns)), \

@@ -19,7 +19,8 @@ the 'add_vehicle' entry point.
      "max_ice_conc": 80,
      "min_depth": 10,
      "max_wave": 3,
-     "excluded_zones": ["exclusion_zone"]
+     "excluded_zones": ["exclusion_zone"],
+     "neighbour_splitting": true
    }
 
 Above are a typical set of configuration parameters used for a vessel where the variables are as follows:
@@ -34,3 +35,4 @@ Above are a typical set of configuration parameters used for a vessel where the 
 * **min_depth** *(float)* : The minimum depth of water the vessel is able to travel through in metres.
 * **max_wave** *(float)* : The maximum significant wave height the vessel is able to travel through in metres.
 * **excluded_zones** *(float)* : A list of of strings that name different boolean properties of a cell. Any cell with a value of True for any of the entered keys will be marked as unnavigable.
+* **neighbour_splitting** *(bool)* : Used to enable or disable a feature that splits all accessible cells neighbouring inaccessible cells. This improves routing performance but can be disabled to speed up the vessel performance modelling.

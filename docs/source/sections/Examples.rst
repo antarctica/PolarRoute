@@ -171,23 +171,22 @@ Route Optimisation
 Now that the vessel dependent environmental mesh is defined, and represented in the **VesselPerformanceModeller** object,
 we can construct routes, with parameters defined by the user in the :ref:`route config file <route config>`.
 
-Waypoints are passed as an input file path, `waypoints.csv`, discussed more in the Inputs section of the manual pages.
-The route construction is performed in two stages: construction of the meshed dijkstra optimal routes, using
-`.compute_routes()`, and the smoothing of the dijkstra routes to further optimise the solution and reduce mesh
-dependency, using `.compute_smooth_routes()`. During the execution of `.compute_routes()` the paths are stored as an
-attribute of the **RoutePlanner** object under `paths`. These are then replaced by the smoothed paths after running
-`.compute_smooth_routes()`. An additional entry `waypoints` is generated to store the waypoints information used in
-route construction. For further details about the structure of the outputs of the route planner please see the
-:ref:`Outputs` section of this documentation.
+Waypoints are passed as an input file path, `waypoints.csv`, an example file is give in the :ref:`Command Line Interface <cli>`
+section of this documentation. The route construction is performed in two stages: construction of the mesh optimal dijkstra
+routes, using the `.compute_routes()` method, and the smoothing of the dijkstra routes to further optimise the solution
+and reduce mesh dependency, using `.compute_smooth_routes()`. During the execution of `.compute_routes()` the routes are
+stored as an attribute of the **RoutePlanner** object under `routes_dijkstra`. These are then complemented by the smoothed
+routes under `routes_smoothed` after running `.compute_smooth_routes()`. An additional entry `waypoints` is generated to
+store the waypoints information used in route construction. For further details about the structure of the outputs of the
+route planner please see the :ref:`Outputs` section of this documentation.
 
 ::
 
-    from polar_route.route_planner import RoutePlanner
+    from polar_route.route_planner.route_planner import RoutePlanner
     rp = RoutePlanner('/path/to/grf_example.vessel.json', 
-                      '/path/to/traveltime.config.json', 
-                      '/path/to/waypoints_example.csv')
+                      '/path/to/traveltime.config.json')
     # Calculate optimal dijkstra path between waypoints
-    rp.compute_routes()
+    rp.compute_routes('/path/to/waypoints_example.csv')
     # Smooth the dijkstra routes
     rp.compute_smoothed_routes()
 

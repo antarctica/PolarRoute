@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2. Command Line Interface Examples &mdash; polar_route 0.3.10 documentation</title>
+  <title>2. Command Line Interface Examples &mdash; polar_route 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=e7531570"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=af2ce170"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
         <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
@@ -244,20 +244,19 @@ console.</p>
 <h2><span class="section-number">3.3. </span>Route Optimisation<a class="headerlink" href="#route-optimisation" title="Permalink to this heading"></a></h2>
 <p>Now that the vessel dependent environmental mesh is defined, and represented in the <strong>VesselPerformanceModeller</strong> object,
 we can construct routes, with parameters defined by the user in the <a class="reference internal" href="Configuration/Route_planning_config.html#route-config"><span class="std std-ref">route config file</span></a>.</p>
-<p>Waypoints are passed as an input file path, <cite>waypoints.csv</cite>, discussed more in the Inputs section of the manual pages.
-The route construction is performed in two stages: construction of the meshed dijkstra optimal routes, using
-<cite>.compute_routes()</cite>, and the smoothing of the dijkstra routes to further optimise the solution and reduce mesh
-dependency, using <cite>.compute_smooth_routes()</cite>. During the execution of <cite>.compute_routes()</cite> the paths are stored as an
-attribute of the <strong>RoutePlanner</strong> object under <cite>paths</cite>. These are then replaced by the smoothed paths after running
-<cite>.compute_smooth_routes()</cite>. An additional entry <cite>waypoints</cite> is generated to store the waypoints information used in
-route construction. For further details about the structure of the outputs of the route planner please see the
-<a class="reference internal" href="Outputs.html#outputs"><span class="std std-ref">Outputs - Data Types</span></a> section of this documentation.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.route_planner</span> <span class="kn">import</span> <span class="n">RoutePlanner</span>
+<p>Waypoints are passed as an input file path, <cite>waypoints.csv</cite>, an example file is give in the <a class="reference internal" href="Command_line_interface.html#cli"><span class="std std-ref">Command Line Interface</span></a>
+section of this documentation. The route construction is performed in two stages: construction of the mesh optimal dijkstra
+routes, using the <cite>.compute_routes()</cite> method, and the smoothing of the dijkstra routes to further optimise the solution
+and reduce mesh dependency, using <cite>.compute_smooth_routes()</cite>. During the execution of <cite>.compute_routes()</cite> the routes are
+stored as an attribute of the <strong>RoutePlanner</strong> object under <cite>routes_dijkstra</cite>. These are then complemented by the smoothed
+routes under <cite>routes_smoothed</cite> after running <cite>.compute_smooth_routes()</cite>. An additional entry <cite>waypoints</cite> is generated to
+store the waypoints information used in route construction. For further details about the structure of the outputs of the
+route planner please see the <a class="reference internal" href="Outputs.html#outputs"><span class="std std-ref">Outputs - Data Types</span></a> section of this documentation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">polar_route.route_planner.route_planner</span> <span class="kn">import</span> <span class="n">RoutePlanner</span>
 <span class="n">rp</span> <span class="o">=</span> <span class="n">RoutePlanner</span><span class="p">(</span><span class="s1">&#39;/path/to/grf_example.vessel.json&#39;</span><span class="p">,</span>
-                  <span class="s1">&#39;/path/to/traveltime.config.json&#39;</span><span class="p">,</span>
-                  <span class="s1">&#39;/path/to/waypoints_example.csv&#39;</span><span class="p">)</span>
+                  <span class="s1">&#39;/path/to/traveltime.config.json&#39;</span><span class="p">)</span>
 <span class="c1"># Calculate optimal dijkstra path between waypoints</span>
-<span class="n">rp</span><span class="o">.</span><span class="n">compute_routes</span><span class="p">()</span>
+<span class="n">rp</span><span class="o">.</span><span class="n">compute_routes</span><span class="p">(</span><span class="s1">&#39;/path/to/waypoints_example.csv&#39;</span><span class="p">)</span>
 <span class="c1"># Smooth the dijkstra routes</span>
 <span class="n">rp</span><span class="o">.</span><span class="n">compute_smoothed_routes</span><span class="p">()</span>
 
@@ -305,7 +304,7 @@ any python interpreter:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2022-2023, BAS AI Lab.</p>
+    <p>&#169; Copyright 2021-, BAS AI Lab.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
