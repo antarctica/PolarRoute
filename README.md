@@ -25,6 +25,12 @@ pip install -e ./PolarRoute
 ```
 Use of `-e` is optional, based on whether you want to be able to edit the installed copy of the package.
 
+In order to run the test suite you will also need to include the `[test]` flag to install the optional test dependencies:
+
+```
+pip install -e ./PolarRoute[test]
+```
+
 > NOTE: Some features of the PolarRoute package require GDAL to be installed. Please consult the documentation for further guidance.
 
 ## Required Data sources
