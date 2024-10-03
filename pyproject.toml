@@ -22,10 +22,12 @@ classifiers = ["Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12"
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14"
 ]
-keywords= ["Polar",
-    "Routing",
+keywords= ["Polar Science",
+    "Marine Routing",
     "Marine Science",
     "Marine Operations"]
 dynamic = ["version", "dependencies"]
@@ -38,8 +40,8 @@ dependencies = {file = ["requirements.txt"]}
 version = {attr = "polar_route.__version__"}
 
 [project.urls]
-Homepage = "https://www.bas.ac.uk/project/autonomous-marine-operations-planning/"
-Documentation = "https://antarctica.github.io/PolarRoute/html/index.html"
+Homepage = "https://www.bas.ac.uk/project/autonomous-marine-operations-planning"
+Documentation = "https://antarctica.github.io/PolarRoute"
 Repository = "https://github.com/antarctica/PolarRoute"
 Issues = "https://github.com/antarctica/PolarRoute/issues"
 
