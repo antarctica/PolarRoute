@@ -13,12 +13,13 @@ class VesselPerformanceModeller:
         Takes both an environmental mesh and vessel config as input in json format and modifies the input mesh to
         include vessel specifics.
     """
-    def __init__(self, env_mesh_json, vessel_config):
+    def __init__(self, env_mesh_json, vessel_config, custom_vessel=None):
         """
 
         Args:
             env_mesh_json (dict): a dictionary loaded from an environmental mesh json file
             vessel_config (dict): a dictionary loaded from a vessel config json file
+            custom_vessel (class): a custom vessel object that specifies a set of performance and accessibility models
         """
         logging.info("Initialising Vessel Performance Modeller")
         validate_vessel_config(vessel_config)
@@ -30,7 +31,11 @@ class VesselPerformanceModeller:
         if 'neighbour_splitting' not in self.config:
             self.config['neighbour_splitting'] = True
 
-        self.vessel = VesselFactory.get_vessel(vessel_config)
+        if custom_vessel is not None:
+            logging.info(f"Loading custom vessel class: {type(custom_vessel).__name__}")
+            self.vessel = custom_vessel(vessel_config)
+        else:
+            self.vessel = VesselFactory.get_vessel(vessel_config)
 
         self.filter_nans()
 

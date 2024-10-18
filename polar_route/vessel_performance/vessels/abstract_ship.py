@@ -13,7 +13,7 @@ class AbstractShip(AbstractVessel):
                 params (dict): vessel parameters from the vessel config file
         """
         self.vessel_params = params
-        logging.info(f"Initialising a vessel object of type: {self.vessel_params['vessel_type']}")
+        logging.info(f"Initialising a vessel object of type: {self.__class__.__name__}")
 
         self.max_speed = self.vessel_params['max_speed']
         self.speed_unit = self.vessel_params['unit']
@@ -32,7 +32,7 @@ class AbstractShip(AbstractVessel):
             Returns:
                 performance_values (dict): the value of the modelled performance characteristics for the ship
         """
-        logging.debug(f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.vessel_params['vessel_type']}")
+        logging.debug(f"Modelling performance in cell {cellbox.id} for a vessel of type: {self.__class__.__name__}")
         # Check if the speed is defined in the input cellbox
         if 'speed' not in cellbox.agg_data:
             logging.debug(f'No speed in cell, assigning default value of {self.max_speed} '
@@ -56,8 +56,7 @@ class AbstractShip(AbstractVessel):
             Returns:
                 access_values (dict): boolean values for the modelled accessibility criteria
         """
-        logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: "
-                      f"{self.vessel_params['vessel_type']}")
+        logging.debug(f"Modelling accessibility in cell {cellbox.id} for a vessel of type: {self.__class__.__name__}")
         access_values = dict()
 
         # Make land and extreme ice cells inaccessible

@@ -29,7 +29,7 @@ class ExampleShip(AbstractShip):
                 cellbox (AggregatedCellBox): updated cell with speed values
         """
 
-        logging.debug(f"Calculating new speed for cellbox {cellbox.id} based on SDA resistance models")
+        logging.debug(f"Calculating new speed for cellbox {cellbox.id} based on resistance modelling")
         speed = cellbox.agg_data['speed']
         ice_resistance = None
 
