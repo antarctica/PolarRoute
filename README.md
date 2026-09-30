@@ -44,7 +44,7 @@ pip install --group test
 
 ## Usage
 
-PolarRoute operates by creating an environmental mesh, adding vessel performance characteristics, and optimizing routes between waypoints. Environmental meshes are created using [MeshiPhi](https://github.com/bas-amop/MeshiPhi), which is installed automatically when installing PolarRoute.
+PolarRoute operates by creating an environmental mesh, adding vessel performance characteristics, and optimising routes between waypoints. Environmental meshes are created using [MeshiPhi](https://github.com/bas-amop/MeshiPhi), which is installed automatically when installing PolarRoute.
 
 ### Quick Start (CLI)
 
@@ -55,7 +55,7 @@ create_mesh examples/environment_config/grf_example.config.json -o mesh.json
 # Add vessel performance model
 add_vehicle examples/vessel_config/SDA.config.json mesh.json -o vessel_mesh.json
 
-# Optimize routes
+# Optimise routes
 optimise_routes examples/route_config/traveltime.config.json vessel_mesh.json examples/waypoints_example.csv -o routes.json
 ```
 

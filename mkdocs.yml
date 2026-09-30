@@ -33,7 +33,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: polar_route
+          paths: [., polar_route]
           options:
             docstring_style: google
             # show_object_full_path: true
@@ -59,13 +59,17 @@ nav:
   - cli.md
   - Configuration:
     - Overview: config/overview.md
-    - config/vessel_performance.md
-    - config/route_planning.md
+    - Vessel Performance: config/vessel_performance.md
+    - Vessel Gallery: config/vessel_gallery.md
+    - Route Planning: config/route_planning.md
   - output.md
   - Methods:
     - Vessel Performance: methods/vessel_performance.md
+    - Resistance Models: methods/resistance_models.md
     - Route Calculation: methods/route_calculation.md
     - Route Optimisation: methods/route_optimisation.md
+  - Reference:
+    - Model Parameters: reference/model_parameters.md
 
 markdown_extensions:
   - toc:
@@ -77,6 +81,11 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji # (1)!
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 
 copyright: Copyright &copy; 2026 British Antarctic Survey

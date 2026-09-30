@@ -54,7 +54,7 @@ This will ensure your code passes all style checks before submission.
 - Use the issue tracker to report bugs or request features.
 - For bug reports, please include:
   - A clear and concise description of the bug and what you expected to happen.
-  - Steps to reproduce the behavior.
+  - Steps to reproduce the behaviour.
   - Screenshots and configuration/data files if relevant.
 - For feature/enhancement requests, please include:
   - A clear description of the problem or feature you want.

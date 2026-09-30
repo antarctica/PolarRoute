@@ -27,7 +27,7 @@ is some example data which you can use. Simply extract the configs out of the zi
 appropriate files. To map the commands to the files in the zip archive:
 
 * `<mesh_config_file>` is called `grf_example.config.json`
-* `<vessel_config_file>` is called `ship.config.json`
+* `<vessel_config_file>` is called `SDA.config.json` (see [vessel configuration docs](config/vessel_performance.md) for v2.0 format)
 * `<route_config_file>` is called `traveltime.config.json`
 * `<waypoints_file>` is called `waypoints_example.csv`
 
@@ -134,16 +134,20 @@ with open('/path/to/grf_example.mesh.json', 'r') as f:
     mesh = json.load(f)  
 
 # Loading vessel configuration parameters from file
-with open('/path/to/ship.json', 'r') as f:
+with open('/path/to/SDA.config.json', 'r') as f:
     vessel = json.load(f) 
 ```
 
 The `VesselPerformanceModeller` object can then be initialised. This can be used to simulate the performance of the
 vessel and encode this information into the digital environment.
 
+!!! note "Vessel Configuration v2.0"
+    PolarRoute v2.0 uses a model-based vessel configuration format. See the [vessel configuration documentation](config/vessel_performance.md) 
+    for details. Example configurations are available in `examples/vessel_config/` and the [vessel gallery](config/vessel_gallery.md).
+
 ```py
 from polar_route.vessel_performance.vessel_performance_modeller import VesselPerformanceModeller
-vp = VesselPerformance(mesh, vessel)
+vp = VesselPerformanceModeller(mesh, vessel)
 vp.model_accessibility() # Method to determine any inaccessible areas, e.g. land
 vp.model_performance() # Method to determine the performance of the vessel in accessible regions, e.g speed or fuel consumption
 ```

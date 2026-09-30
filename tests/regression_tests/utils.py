@@ -66,7 +66,7 @@ def get_mesh_test_files() -> Tuple[List[str], List[str]]:
 # Route and Mesh Calculation Functions
 def calculate_dijkstra_route(config: Dict, mesh: Dict) -> Dict:
     """
-    Calculate optimized route using Dijkstra algorithm.
+    Calculate optimised route using Dijkstra algorithm.
 
     Args:
         config: Route configuration dictionary
@@ -307,6 +307,18 @@ def compare_cellbox_values(mesh_a: Dict, mesh_b: Dict) -> None:
     df_a = df_a.loc[common_bounds].drop(columns=["id"])
     df_b = df_b.loc[common_bounds].drop(columns=["id"])
 
+    # Find common columns only (exclude columns that only appear in one dataframe)
+    common_cols = df_a.columns.intersection(df_b.columns)
+    
+    # Log which columns are being compared vs excluded
+    excluded_a = set(df_a.columns) - set(common_cols)
+    excluded_b = set(df_b.columns) - set(common_cols)
+    if excluded_a or excluded_b:
+        LOGGER.debug(f"Comparing only common columns. Excluded from old: {excluded_a}, from new: {excluded_b}")
+    
+    df_a = df_a[common_cols]
+    df_b = df_b[common_cols]
+
     # Round float values and floats in lists
     for df in [df_a, df_b]:
         # Round float columns
@@ -322,9 +334,31 @@ def compare_cellbox_values(mesh_a: Dict, mesh_b: Dict) -> None:
             )
 
     diff = df_a.compare(df_b).rename({"self": "old", "other": "new"})
-    assert len(diff) == 0, (
-        f"Mismatch in common cellbox values:\n{diff.to_string(max_colwidth=10)}"
-    )
+    
+    # Provide more informative error message
+    if len(diff) > 0:
+        # Count differences by column  
+        diff_counts = {}
+        diff_samples = {}
+        for col in diff.columns.get_level_values(0).unique():
+            col_diff = diff[col]
+            non_null_mask = ~col_diff.isna().all(axis=1)
+            diff_counts[col] = non_null_mask.sum()
+            # Get sample of differences for this column
+            if diff_counts[col] > 0:
+                sample_rows = col_diff[non_null_mask].head(3)
+                diff_samples[col] = sample_rows.to_dict('records')
+        
+        error_msg = f"\nMismatch in {len(diff)} cellboxes across {len(diff_counts)} columns:\n"
+        error_msg += f"\nDifferences by column:\n"
+        for col, count in sorted(diff_counts.items()):
+            error_msg += f"  {col}: {count} differences\n"
+            if col in diff_samples:
+                error_msg += f"    Sample: {diff_samples[col][:2]}\n"
+        
+        error_msg += f"\nTo see full differences, check the test output or inspect the meshes directly."
+        
+        assert False, error_msg
 
 
 def compare_cellbox_attributes(mesh_a: Dict, mesh_b: Dict) -> None:

@@ -201,18 +201,46 @@
             }
         },
         "vessel_info": {
-            "vessel_type": "SDA",
+            "vessel_class": "ship",
             "max_speed": 26.5,
             "unit": "km/hr",
-            "beam": 24.0,
-            "hull_type": "slender",
-            "force_limit": 96634.5,
             "max_ice_conc": 80,
             "min_depth": 10,
+            "num_directions": 8,
             "max_wave": 8.0,
             "excluded_zones": [
                 "offshore_platforms"
-            ]
+            ],
+            "resistance_models": [
+                {
+                    "type": "ice_resistance",
+                    "params": {
+                        "k": 4.4,
+                        "b": -0.8267,
+                        "n": 2.0,
+                        "beam": 24.0,
+                        "force_limit": 96634.5,
+                        "gravity": 9.81
+                    }
+                },
+                {
+                    "type": "wind_resistance",
+                    "params": {
+                        "frontal_area": 750.0,
+                        "air_density": 1.225,
+                        "interpolation": "linear",
+                        "angles": [0, 30, 60, 90, 120, 150, 180],
+                        "coefficients": [0.94, 0.77, 0.42, 0.48, 0.17, -0.30, -0.34]
+                    }
+                }
+            ],
+            "consumption_model": {
+                "type": "polynomial_fuel",
+                "params": {
+                    "speed_coeffs": [0.00137247, -0.0029601, 0.25290433],
+                    "resistance_coeffs": [7.75218178e-11, 6.48113363e-06]
+                }
+            }
         }
     },
     "cellboxes": [

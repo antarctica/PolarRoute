@@ -85,12 +85,19 @@
             }
         },
         "vessel_info": {
-            "vessel_type": "BoatyMcBoatFace",
+            "vessel_class": "auv",
             "max_speed": 3.6,
             "unit": "km/hr",
             "max_ice_conc": 10,
             "min_depth": 10,
-            "neighbour_splitting": true
+            "num_directions": 8,
+            "neighbour_splitting": true,
+            "consumption_model": {
+                "type": "constant_consumption",
+                "params": {
+                    "consumption_rate": 4.75
+                }
+            }
         }
     },
     "cellboxes": [

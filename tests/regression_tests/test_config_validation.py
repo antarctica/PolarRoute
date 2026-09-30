@@ -33,7 +33,18 @@ def load_csv_example(path):
 @pytest.fixture
 def valid_vessel_config():
     """Fixture providing a minimal valid vessel config."""
-    return {"vessel_type": "SDA", "max_speed": 26.5, "unit": "km/hr"}
+    return {
+        "vessel_class": "ship",
+        "max_speed": 26.5,
+        "unit": "km/hr",
+        "consumption_model": {
+            "type": "polynomial_fuel",
+            "params": {
+                "speed_coeffs": [0.001, -0.003, 0.25],
+                "resistance_coeffs": [7.75e-11, 6.48e-06]
+            }
+        }
+    }
 
 
 @pytest.fixture
@@ -69,11 +80,11 @@ def test_validate_vessel_config_file():
 @pytest.mark.parametrize(
     "config, match",
     [
-        ({"vessel_type": "SDA", "unit": "km/hr"}, "max_speed"),
-        ({"vessel_type": "SDA", "unit": "km/hr", "max_speed": "fast"}, "max_speed"),
-        ({"vessel_type": None, "max_speed": 26.5, "unit": "km/hr"}, "vessel_type"),
-        ({"vessel_type": "SDA", "max_speed": None, "unit": "km/hr"}, "max_speed"),
-        ({"vessel_type": "SDA", "max_speed": 26.5, "unit": None}, "unit"),
+        ({"vessel_class": "ship", "unit": "km/hr", "consumption_model": {"type": "polynomial_fuel", "params": {"speed_coeffs": [0.001, -0.003, 0.25], "resistance_coeffs": [7.75e-11, 6.48e-06]}}}, "max_speed"),
+        ({"vessel_class": "ship", "unit": "km/hr", "max_speed": "fast", "consumption_model": {"type": "polynomial_fuel", "params": {"speed_coeffs": [0.001, -0.003, 0.25], "resistance_coeffs": [7.75e-11, 6.48e-06]}}}, "max_speed"),
+        ({"vessel_class": None, "max_speed": 26.5, "unit": "km/hr", "consumption_model": {"type": "polynomial_fuel", "params": {"speed_coeffs": [0.001, -0.003, 0.25], "resistance_coeffs": [7.75e-11, 6.48e-06]}}}, "vessel_class"),
+        ({"vessel_class": "ship", "max_speed": None, "unit": "km/hr", "consumption_model": {"type": "polynomial_fuel", "params": {"speed_coeffs": [0.001, -0.003, 0.25], "resistance_coeffs": [7.75e-11, 6.48e-06]}}}, "max_speed"),
+        ({"vessel_class": "ship", "max_speed": 26.5, "unit": None, "consumption_model": {"type": "polynomial_fuel", "params": {"speed_coeffs": [0.001, -0.003, 0.25], "resistance_coeffs": [7.75e-11, 6.48e-06]}}}, "unit"),
         ({}, ""),  # Empty dict
     ],
 )
@@ -89,11 +100,13 @@ def test_validate_vessel_config_not_dict():
         validate_vessel_config(["not", "a", "dict"])
 
 
-def test_validate_vessel_config_extra_keys(valid_vessel_config):
-    """Test that unexpected fields in vessel config are allowed as expected."""
+def test_validate_vessel_config_no_extra_keys(valid_vessel_config):
+    """Test that unexpected fields in vessel config are NOT allowed (changed from legacy)."""
     config = valid_vessel_config.copy()
     config["additional_field"] = "some_value"
-    validate_vessel_config(config)
+    # New schema has additionalProperties: False, so this should fail
+    with pytest.raises(ValidationError, match="additional_field"):
+        validate_vessel_config(config)
 
 
 # Route config validation testing

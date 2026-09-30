@@ -47,11 +47,18 @@
             }
         },
         "vessel_info": {
-            "vessel_type": "TwinOtter",
+            "vessel_class": "aircraft",
             "max_speed": 240,
             "unit": "km/hr",
-            "max_elevation": 3000,
-            "neighbour_splitting": true
+            "max_altitude": 3000,
+            "num_directions": 8,
+            "neighbour_splitting": true,
+            "consumption_model": {
+                "type": "constant_consumption",
+                "params": {
+                    "consumption_rate": 3.858
+                }
+            }
         }
     },
     "cellboxes": [

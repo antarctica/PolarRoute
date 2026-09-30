@@ -16,7 +16,7 @@ The PolarRoute package can be separated into the four main sections shown in the
 
 The separate stages can be broken down into:
 
-1. :ref:`Vessel Performance <vessel-performance>` - Application of vehicle specific features applied to the discrete mesh. In this section we will supply the user with the knowledge of how vehicle specific features are applied to the discrete mesh or with variables applied to the computational graph of the mesh.
+1. :ref:`Vessel Performance <vessel-performance>` - Application of vehicle specific features applied to the discrete mesh. **v2.0 uses a model-based architecture** where vessels compose resistance models (ice, wind, waves) and consumption models (fuel, battery, constant) configured explicitly in JSON files. See [Vessel Performance Configuration](config/vessel_performance.md) for details.
 2. :ref:`Route Planner` - Generating grid-based dijkstra paths and data constrained path smoothing from the gridded solutions - In this section we will give the user the background to constructing paths between user defined waypoints that minimise a specific objective function (e.g. travel time, fuel). Once the gridded Dijkstra paths are formulated we outline a smoothing based procedure that uses the data information to generate non-gridded improved route paths.
 
 ![](assets/figures/PolarRoute_CodeFlowDiagram.png)

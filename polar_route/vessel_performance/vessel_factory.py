@@ -1,49 +1,73 @@
-from polar_route.vessel_performance.vessels.SDA import SDA
-from polar_route.vessel_performance.vessels.SDA_wind import SDAWind
-from polar_route.vessel_performance.vessels.slocum import SlocumGlider
-from polar_route.vessel_performance.vessels.boatymcboatface import BoatyMcBoatFace
-from polar_route.vessel_performance.vessels.twin_otter import TwinOtter
-from polar_route.vessel_performance.vessels.windracer import Windracer
-from polar_route.vessel_performance.vessels.example_ship import ExampleShip
+"""
+Vessel factory for model-based vessel performance system.
+
+Creates vessel instances dynamically based on vessel_class specification
+in configuration files. Vessels compose resistance and consumption models
+defined in configuration.
+"""
+
+import logging
+from polar_route.vessel_performance.vessels.generic_vessels import Ship, Glider, AUV, Aircraft
+
+logger = logging.getLogger(__name__)
+
 
 class VesselFactory:
     """
-        Factory class to produce initialised vessel objects.
+    Factory class to produce initialised vessel objects using pluggable models.
+    
+    Vessels are instantiated based on 'vessel_class' in configuration:
+        - 'ship': Surface vessels with configurable resistance models
+        - 'glider': Underwater gliders with battery consumption
+        - 'auv': Autonomous underwater vehicles with battery consumption
+        - 'aircraft': Airborne vehicles with fuel/battery consumption
     """
+    
+    # Mapping of vessel_class strings to implementation classes
+    VESSEL_CLASSES = {
+        "ship": Ship,
+        "glider": Glider,
+        "auv": AUV,
+        "aircraft": Aircraft
+    }
+    
     @classmethod
     def get_vessel(cls, config):
         """
-            Method to return an initialised instance of a vessel class designed for performance modelling
-
-            Args:
-                config (dict): a vessel config dictionary
-
-            Returns:
-                vessel: an instance of a vessel class designed for performance modelling
+        Create vessel instance from configuration.
+        
+        The configuration should be validated against vessel_schema.py before
+        calling this method. This factory relies on schema validation for
+        parameter checking and model type validation.
+        
+        Args:
+            config (dict): Validated vessel configuration dictionary containing:
+                - vessel_class (str): Type of vessel ("ship", "glider", "auv", "aircraft")
+                - max_speed (float): Maximum vessel speed
+                - unit (str): Speed unit
+                - resistance_models (list, optional): Resistance model specifications
+                - consumption_model (dict): Consumption model specification
+                - Additional vessel-specific parameters
+        
+        Returns:
+            AbstractVessel: Initialized vessel instance with configured models
+            
+        Raises:
+            ValueError: If vessel_class is not recognised
         """
-        vessel_requirements = {"SDA": (SDA, ["max_speed", "unit", "beam", "hull_type", "force_limit", "max_ice_conc",
-                                             "min_depth"]),
-                               "SDAWind": (SDAWind, ["max_speed", "unit", "beam", "hull_type", "force_limit", "max_ice_conc",
-                                             "min_depth"]),
-                               "Slocum": (SlocumGlider, ["max_speed", "unit", "max_ice_conc", "min_depth"]),
-                               "BoatyMcBoatFace": (BoatyMcBoatFace, ["max_speed", "unit", "max_ice_conc", "min_depth"]),
-                               "TwinOtter": (TwinOtter, ["max_speed", "unit", "max_elevation"]),
-                               "Windracer": (Windracer, ["max_speed", "unit","max_ice_conc", "max_elevation"]),
-                               "example_ship": (ExampleShip, ["max_speed", "unit", "beam", "hull_type", "force_limit",
-                                                              "max_ice_conc", "min_depth"])
-                               }
-
-        vessel_type = config['vessel_type']
-
-        if vessel_type in vessel_requirements:
-            vessel_class = vessel_requirements[vessel_type][0]
-            required_params = vessel_requirements[vessel_type][1]
-        else:
-            raise ValueError(f'{vessel_type} not in known list of vessels')
-
-        assert all(key in config for key in required_params), \
-            f'Dataloader {vessel_type} is missing some parameters! Requires {required_params}. Has {list(config.keys())}'
-
-        vessel = vessel_class(config)
-
+        vessel_class = config.get('vessel_class')
+        
+        if vessel_class not in cls.VESSEL_CLASSES:
+            available = ", ".join(cls.VESSEL_CLASSES.keys())
+            raise ValueError(
+                f"Unknown vessel_class '{vessel_class}'. "
+                f"Available classes: {available}"
+            )
+        
+        vessel_impl = cls.VESSEL_CLASSES[vessel_class]
+        logger.info(f"Creating vessel of class '{vessel_class}'")
+        
+        # Instantiate vessel (will create models via ModelRegistry)
+        vessel = vessel_impl(config)
+        
         return vessel

@@ -85,12 +85,20 @@
             }
         },
         "vessel_info": {
-            "vessel_type": "Slocum",
+            "vessel_class": "glider",
             "max_speed": 1.25,
             "unit": "km/hr",
             "max_ice_conc": 10,
             "min_depth": 40,
-            "neighbour_splitting": true
+            "num_directions": 8,
+            "neighbour_splitting": true,
+            "consumption_model": {
+                "type": "polynomial_battery",
+                "params": {
+                    "speed_coeffs": [4.44444444, -0.5555555499999991],
+                    "depth_coeffs": [0.001, 2]
+                }
+            }
         }
     },
     "cellboxes": [
