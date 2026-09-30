@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VesselFactory: Simplified factory using VESSEL_CLASSES mapping instead of hard-coded requirements dictionary.
 - Physical Constants: Now configurable per-vessel (gravity, air_density, rho_water) with sensible defaults.
 - Model Composition: Vessels compose multiple resistance models; total resistance is sum of all active models.
+- Declare dependencies in `pyproject.toml` instead of `requirements.txt` and remove `requirements.txt`.
+- Adjust `pip install -e .[dev]` command in CONTRIBUTING.md to use the `dev` dependency group.
+- `route_calc()` can now accept a route as a GeoJSON in addition to a DataFrame.
+- Extracted geojson-to-DataFrame parsing in `load_route()` into a shared `route_geojson_to_df()` helper, reused by both the json and gpx.
 
 ### Removed
 - Legacy Vessel Classes (BREAKING): Deleted 12 hard-coded vessel files:
@@ -46,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Top-level `beam`, `force_limit` (now in resistance model params)
 
 ## [1.1.11] - 2026-07-02
+
 
 ### Added
 

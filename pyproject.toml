@@ -28,13 +28,29 @@ keywords= ["Polar Science",
     "Marine Routing",
     "Marine Science",
     "Marine Operations"]
-dynamic = ["version", "dependencies"]
+dynamic = ["version"]
+dependencies = [
+    "meshiphi",
+    "dask",
+    "geopandas",
+    "jsonschema",
+    "matplotlib",
+    "netcdf4",
+    "numpy>=1.21.6",
+    "pandas>=1.3.5",
+    "pyproj",
+    "shapely",
+    "scikit-learn",
+    "scipy",
+    "tqdm",
+    "xarray",
+    "fiona",
+]
 
 [tool.setuptools]
 packages = {find = {}}
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
 version = {attr = "polar_route.__version__"}
 
 [project.urls]
@@ -71,4 +87,5 @@ docs = [
 test = [
     "pytest",
     "pytest-xdist",
+    "pytest-cov",
 ]

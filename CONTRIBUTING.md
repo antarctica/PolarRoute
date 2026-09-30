@@ -13,7 +13,7 @@ Thank you for considering contributing to PolarRoute!
 We provide a `Makefile` with common development commands to streamline your workflow. After cloning the repository, set up your development environment:
 
 ```sh
-pip install -e .[dev]
+pip install -e . --group dev
 ```
 
 ### Makefile Commands

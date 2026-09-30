@@ -114,6 +114,52 @@ def case_from_angle(start, end):
     return case
 
 
+def route_geojson_to_df(route_json):
+    """
+    Convert a route geojson into the DataFrame format used internally by route_calc.
+
+    Args:
+        route_json (dict): Route in geojson format, either a FeatureCollection with a
+            "features" key, or a full pipeline output containing a "paths" key with a
+            nested FeatureCollection.
+
+    Returns:
+        df (DataFrame): Dataframe with route info (Long, Lat columns)
+        from_wp (str): Name of start waypoint
+        to_wp (str): Name of end waypoint
+        route_type (str): Type of route, either 'smoothed' or 'dijkstra'
+    """
+    if "features" in route_json.keys():
+        feature_collection = route_json
+    else:
+        feature_collection = route_json["paths"]
+
+    route_feature = feature_collection["features"][0]
+    route_coords = route_feature["geometry"]["coordinates"]
+    to_wp = route_feature["properties"]["to"]
+    from_wp = route_feature["properties"]["from"]
+    longs = [c[0] for c in route_coords]
+    lats = [c[1] for c in route_coords]
+    df = pd.DataFrame()
+    df["Long"] = longs
+    df["Lat"] = lats
+
+    # Read in type of route if available
+    if "route_type" in route_feature["properties"].keys():
+        if route_feature["properties"]["route_type"] == "dijkstra":
+            route_type = "dijkstra"
+        elif route_feature["properties"]["route_type"] == "smoothed":
+            route_type = "smoothed"
+        else:
+            raise ValueError(
+                "'route_type' key must be 'dijkstra' or 'smoothed'. Other route types not implemented yet."
+            )
+    else:
+        route_type = "smoothed"
+
+    return df, from_wp, to_wp, route_type
+
+
 def load_route(route_file):
     """
     Load route information from file
@@ -140,42 +186,11 @@ def load_route(route_file):
     elif route_file[-4:] == "json":
         with open(route_file, "r") as f:
             route_json = json.load(f)
-        if "features" in route_json.keys():
-            route_coords = route_json["features"][0]["geometry"]["coordinates"]
-        else:
-            route_json = route_json["paths"]
-            route_coords = route_json["features"][0]["geometry"]["coordinates"]
-        to_wp = route_json["features"][0]["properties"]["to"]
-        from_wp = route_json["features"][0]["properties"]["from"]
-        longs = [c[0] for c in route_coords]
-        lats = [c[1] for c in route_coords]
-        df = pd.DataFrame()
-        df["Long"] = longs
-        df["Lat"] = lats
-        # Read in type of route if available
-        if "route_type" in route_json["features"][0]["properties"].keys():
-            if route_json["features"][0]["properties"]["route_type"] == "dijkstra":
-                route_type = "dijkstra"
-            elif route_json["features"][0]["properties"]["route_type"] == "smoothed":
-                route_type = "smoothed"
-            else:
-                raise ValueError(
-                    "'route_type' key must be 'dijkstra' or 'smoothed'. Other route types not implemented yet."
-                )
-        else:
-            route_type = "smoothed"
+        df, from_wp, to_wp, route_type = route_geojson_to_df(route_json)
 
     elif route_file[-3:] == "gpx":
         route_json = gpx_route_import(route_file)
-        route_coords = route_json["features"][0]["geometry"]["coordinates"]
-        to_wp = route_json["features"][0]["properties"]["to"]
-        from_wp = route_json["features"][0]["properties"]["from"]
-        longs = [c[0] for c in route_coords]
-        lats = [c[1] for c in route_coords]
-        df = pd.DataFrame()
-        df["Long"] = longs
-        df["Lat"] = lats
-        route_type = "smoothed"
+        df, from_wp, to_wp, route_type = route_geojson_to_df(route_json)
     else:
         logger.warning(
             "Invalid route input! Please supply either a csv, gpx or geojson file with the route waypoints."
@@ -341,20 +356,31 @@ def order_track(df, track_points):
     return user_track
 
 
-def route_calc(df, from_wp, to_wp, mesh, route_type):
+def route_calc(df, from_wp=None, to_wp=None, mesh=None, route_type=None):
     """
     Function to calculate the fuel/time cost of a user defined route in a given mesh
 
     Args:
-        df (DataFrame): Route info in dataframe format
-        from_wp (str): Name of start waypoint
-        to_wp (str): Name of end waypoint
+        df (DataFrame or dict): Route info in dataframe format, or a route geojson (either
+            a FeatureCollection with a "features" key, or a full pipeline output containing
+            a "paths" key with a nested FeatureCollection). When a geojson is supplied,
+            `from_wp`, `to_wp` and `route_type` are read from its properties and any values
+            passed for those arguments are ignored.
+        from_wp (str): Name of start waypoint (ignored when `df` is a geojson)
+        to_wp (str): Name of end waypoint (ignored when `df` is a geojson)
         mesh (json): A Mesh with encoded vehicle information
         route_type(str): Type of route being calculated, either 'dijkstra' or 'smoothed'
+            (ignored when `df` is a geojson)
 
     Returns:
         user_path (dict): User defined route in geojson format with calculated cost information
     """
+    # Allow route to be supplied as a geojson dict instead of a pre-built DataFrame
+    if isinstance(df, dict):
+        df, from_wp, to_wp, route_type = route_geojson_to_df(df)
+        df["id"] = 1
+        df["order"] = np.arange(len(df))
+
     # Flag indicating whether should compute route length using dijkstra or smoothed method
     dijkstra_route = True if route_type == "dijkstra" else False
 
