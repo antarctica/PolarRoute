@@ -11,20 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Model Registry System: Plugin-based architecture for resistance and consumption models using `@register_model` decorator.
 - Generic Vessel Classes: Ship, Glider, AUV, and Aircraft classes replacing hard-coded vessel types.
 - Resistance Models: Three pluggable resistance models:
-  - `ice_froude`: Froude number-based ice resistance with configurable k/b/n coefficients
-  - `wind_drag`: Angle-dependent wind drag with interpolation options (linear/cubic/spline)
-  - `wave_kreitner`: Kreitner wave resistance with beam/length/block coefficient parameters
+  - `ice_resistance`: Froude number-based ice resistance with configurable k/b/n coefficients
+  - `wind_resistance`: Angle-dependent wind drag with interpolation options (linear/cubic/spline)
+  - `wave_resistance`: Kreitner wave resistance with beam/length/block coefficient parameters
 - Consumption Models: Three pluggable consumption models:
   - `polynomial_fuel`: Speed and resistance-based fuel consumption with polynomial coefficients
   - `polynomial_battery`: Speed and depth-based battery consumption for underwater vehicles
   - `constant_consumption`: Fixed-rate consumption for simple vehicles
-- Configuration Validation: Comprehensive JSON schema for vessel configurations with detailed parameter documentation including units.
+- Configuration Validation: JSON schema validating vessel configuration structure; per-model parameters are validated by the model constructors at instantiation time.
 - Documentation: 
   - Vessel configuration gallery with ready-to-use examples (`docs/config/vessel_gallery.md`)
   - Resistance models theory documentation (`docs/methods/resistance_models.md`)
   - Complete model parameters reference (`docs/reference/model_parameters.md`)
 - Example Configurations: Updated vessel configs for SDA, SDA_wind, Slocum, and BoatyMcBoatFace using new format.
-- Unit Tests: 27 comprehensive tests covering model registry, all resistance/consumption models, generic vessel classes, and factory.
+- Unit Tests: Coverage for the model registry, resistance and consumption models, generic vessel classes, and the vessel factory.
 
 ### Changed
 - Vessel Configuration Format: `vessel_type` replaced with `vessel_class` + explicit model specifications.

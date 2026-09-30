@@ -213,7 +213,7 @@
             ],
             "resistance_models": [
                 {
-                    "type": "ice_froude",
+                    "type": "ice_resistance",
                     "params": {
                         "k": 4.4,
                         "b": -0.8267,
@@ -224,7 +224,7 @@
                     }
                 },
                 {
-                    "type": "wind_drag",
+                    "type": "wind_resistance",
                     "params": {
                         "frontal_area": 750.0,
                         "air_density": 1.225,

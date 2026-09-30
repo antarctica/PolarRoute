@@ -65,23 +65,6 @@ Typical parameter ranges:
 | $beam$ | 10 - 50 m | Ship width |
 | $R_{limit}$ | 50,000 - 200,000 N | Maximum safe resistance |
 
-### Example Configuration
-
-RRS Sir David Attenborough:
-
-```json
-{
-  "type": "ice_froude",
-  "params": {
-    "k": 4.4,
-    "b": -0.8267,
-    "n": 2.0,
-    "beam": 24.0,
-    "force_limit": 96634.5
-  }
-}
-```
-
 ## Wind Drag Resistance
 
 ### Physical Basis
@@ -127,23 +110,6 @@ The drag coefficient varies with wind angle. Users provide discrete angle-coeffi
 
 Negative drag coefficients for tail winds indicate propulsive assistance.
 
-### Example Configuration
-
-Research vessel with comprehensive wind data:
-
-```json
-{
-  "type": "wind_drag",
-  "params": {
-    "frontal_area": 750.0,
-    "air_density": 1.225,
-    "interpolation": "linear",
-    "angles": [0, 30, 60, 90, 120, 150, 180],
-    "coefficients": [0.94, 0.77, 0.42, 0.48, 0.17, -0.30, -0.34]
-  }
-}
-```
-
 ## Kreitner Wave Resistance
 
 ### Physical Basis
@@ -179,21 +145,6 @@ Wave resistance exhibits different behaviour in different speed regimes:
 
 where $\text{Fr}_L = \frac{v}{\sqrt{g \cdot length}}$ is the length-based Froude number.
 
-### Example Configuration
-
-Medium-sized research vessel:
-
-```json
-{
-  "type": "wave_kreitner",
-  "params": {
-    "beam": 24.0,
-    "length": 128.0,
-    "c_block": 0.7
-  }
-}
-```
-
 ## Model Combination
 
 ### Total Resistance
@@ -210,42 +161,8 @@ Given total resistance $R_{total}$, the vessel speed is determined by the power-
 
 $$ v_{achievable} = f^{-1}(R_{total}, P_{available}) $$
 
-### Example: Multi-Model Ship
-
-Icebreaker with all three resistance models:
-
-```json
-{
-  "resistance_models": [
-    {
-      "type": "ice_froude",
-      "params": {
-        "k": 4.4,
-        "b": -0.8267,
-        "n": 2.0,
-        "beam": 24.0,
-        "force_limit": 96634.5
-      }
-    },
-    {
-      "type": "wind_drag",
-      "params": {
-        "frontal_area": 750.0,
-        "angles": [0, 30, 60, 90, 120, 150, 180],
-        "coefficients": [0.94, 0.77, 0.42, 0.48, 0.17, -0.30, -0.34]
-      }
-    },
-    {
-      "type": "wave_kreitner",
-      "params": {
-        "beam": 24.0,
-        "length": 128.0,
-        "c_block": 0.7
-      }
-    }
-  ]
-}
-```
+For a worked multi-model vessel configuration, see the
+[Vessel Gallery](../config/vessel_gallery.md).
 
 ## See Also
 

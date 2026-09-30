@@ -64,9 +64,9 @@ The latter two quantities are derived from the former.*
          ↓                           ↓
 ┌──────────────────┐        ┌──────────────────┐
 │ ResistanceModels │        │ConsumptionModels │
-│ • ice_froude     │        │ • polynomial_fuel│
-│ • wind_drag      │        │ • poly_battery   │
-│ • wave_kreitner  │        │ • constant       │
+│ • ice_resistance │        │ • polynomial_fuel│
+│ • wind_resistance│        │ • poly_battery   │
+│ • wave_resistance│        │ • constant       │
 └──────────────────┘        └──────────────────┘
 ```
 
@@ -160,20 +160,20 @@ Base class and implementations for calculating forces opposing motion.
       - calculate_resistance
       - invert_resistance
 
-::: polar_route.vessel_performance.models.resistance.FroudeIceResistance
+::: polar_route.vessel_performance.models.resistance.IceResistance
    options:
       merge_init_into_class: true
       members:
       - calculate_resistance
       - invert_resistance
 
-::: polar_route.vessel_performance.models.resistance.WindDragResistance
+::: polar_route.vessel_performance.models.resistance.WindResistance
    options:
       merge_init_into_class: true
       members:
       - calculate_resistance
 
-::: polar_route.vessel_performance.models.resistance.KreitnerWaveResistance
+::: polar_route.vessel_performance.models.resistance.WaveResistance
    options:
       merge_init_into_class: true
       members:

@@ -5,8 +5,30 @@ from polar_route.utils import json_str
 from polar_route.config_validation.vessel_schema import vessel_schema
 from polar_route.config_validation.route_schema import route_schema
 from polar_route.config_validation.waypoints_schema import waypoints_columns
+from polar_route.vessel_performance.models import ModelRegistry
 
-    
+
+def _validate_model_spec(model_spec, context):
+    """
+    Validate a single model spec (``{"type": ..., "params": ...}``) by attempting
+    to build it via the registry, so unknown model types and invalid parameters
+    are caught at config-validation time rather than at instantiation time.
+
+    Args:
+        model_spec (dict): Model spec with 'type' and 'params' keys.
+        context (str): Human-readable location for error messages.
+
+    Raises:
+        ValidationError: If the model type is unknown or the params are invalid.
+    """
+    model_type = model_spec["type"]
+    params = model_spec.get("params", {})
+    try:
+        ModelRegistry.create(model_type, params)
+    except (ValueError, TypeError) as e:
+        raise jsonschema.ValidationError(f"{context} ('{model_type}'): {e}") from e
+
+
 def validate_vessel_config(config):
     """
     Validates a vessel config
@@ -25,8 +47,12 @@ def validate_vessel_config(config):
     """
     # Deals with flexible input
     config_json = json_str(config)
-    # Validate against schema
+    # Validate top-level structure against schema
     jsonschema.validate(instance=config_json, schema=vessel_schema)
+    # Validate per-model type names and params early by building each model
+    for resistance_model in config_json.get("resistance_models", []):
+        _validate_model_spec(resistance_model, "Invalid resistance model")
+    _validate_model_spec(config_json["consumption_model"], "Invalid consumption model")
 
 def validate_route_config(config):
     """

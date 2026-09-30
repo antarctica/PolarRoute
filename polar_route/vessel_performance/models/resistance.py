@@ -12,8 +12,8 @@ from polar_route.vessel_performance.models import register_model, ResistanceMode
 logger = logging.getLogger(__name__)
 
 
-@register_model("ice_froude")
-class FroudeIceResistance(ResistanceModel):
+@register_model("ice_resistance")
+class IceResistance(ResistanceModel):
     """
     Froude-based ice resistance model for ships.
     
@@ -39,7 +39,7 @@ class FroudeIceResistance(ResistanceModel):
         self.gravity = gravity
         
         logger.debug(
-            f"Initialized FroudeIceResistance: k={k}, b={b}, n={n}, "
+            f"Initialized IceResistance: k={k}, b={b}, n={n}, "
             f"beam={beam}m, force_limit={force_limit}N"
         )
     
@@ -131,8 +131,8 @@ class FroudeIceResistance(ResistanceModel):
         return v_kmh
 
 
-@register_model("wind_drag")
-class WindDragResistance(ResistanceModel):
+@register_model("wind_resistance")
+class WindResistance(ResistanceModel):
     """
     Wind resistance model using drag coefficients and apparent wind.
     
@@ -158,7 +158,7 @@ class WindDragResistance(ResistanceModel):
         self.coefficients = np.array(coefficients)
         
         logger.debug(
-            f"Initialized WindDragResistance: frontal_area={frontal_area}m², "
+            f"Initialized WindResistance: frontal_area={frontal_area}m², "
             f"air_density={air_density}kg/m³, interpolation={interpolation}"
         )
     
@@ -274,8 +274,8 @@ class WindDragResistance(ResistanceModel):
         return resistance
 
 
-@register_model("wave_kreitner")
-class KreitnerWaveResistance(ResistanceModel):
+@register_model("wave_resistance")
+class WaveResistance(ResistanceModel):
     """
     Wave resistance model using Kreitner formula.
     
@@ -299,7 +299,7 @@ class KreitnerWaveResistance(ResistanceModel):
         self.rho_water = rho_water
         
         logger.debug(
-            f"Initialized KreitnerWaveResistance: beam={beam}m, length={length}m, "
+            f"Initialized WaveResistance: beam={beam}m, length={length}m, "
             f"c_block={c_block}, rho_water={rho_water}N/m³"
         )
     

@@ -4,7 +4,7 @@ Complete reference for all parameters used in vessel performance models.
 
 ## Resistance Model Parameters
 
-### Ice Froude Resistance (`ice_froude`)
+### Ice Resistance (`ice_resistance`)
 
 | Parameter | Type | Units | Required | Default | Range | Description |
 |-----------|------|-------|----------|---------|-------|-------------|
@@ -19,7 +19,7 @@ Complete reference for all parameters used in vessel performance models.
 **Example:**
 ```json
 {
-  "type": "ice_froude",
+  "type": "ice_resistance",
   "params": {
     "k": 4.4,
     "b": -0.8267,
@@ -30,7 +30,7 @@ Complete reference for all parameters used in vessel performance models.
 }
 ```
 
-### Wind Drag Resistance (`wind_drag`)
+### Wind Resistance (`wind_resistance`)
 
 | Parameter | Type | Units | Required | Default | Range | Description |
 |-----------|------|-------|----------|---------|-------|-------------|
@@ -43,7 +43,7 @@ Complete reference for all parameters used in vessel performance models.
 **Example:**
 ```json
 {
-  "type": "wind_drag",
+  "type": "wind_resistance",
   "params": {
     "frontal_area": 750.0,
     "air_density": 1.225,
@@ -54,7 +54,7 @@ Complete reference for all parameters used in vessel performance models.
 }
 ```
 
-### Wave Resistance (`wave_kreitner`)
+### Wave Resistance (`wave_resistance`)
 
 | Parameter | Type | Units | Required | Default | Range | Description |
 |-----------|------|-------|----------|---------|-------|-------------|
@@ -66,7 +66,7 @@ Complete reference for all parameters used in vessel performance models.
 **Example:**
 ```json
 {
-  "type": "wave_kreitner",
+  "type": "wave_resistance",
   "params": {
     "beam": 24.0,
     "length": 128.0,

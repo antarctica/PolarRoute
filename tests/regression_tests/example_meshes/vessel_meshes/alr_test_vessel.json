@@ -95,7 +95,7 @@
             "consumption_model": {
                 "type": "constant_consumption",
                 "params": {
-                    "rate": 4.75
+                    "consumption_rate": 4.75
                 }
             }
         }

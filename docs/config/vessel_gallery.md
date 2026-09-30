@@ -18,7 +18,7 @@ Research icebreaker for polar operations with ice resistance modeling.
   "num_directions": 8,
   "resistance_models": [
     {
-      "type": "ice_froude",
+      "type": "ice_resistance",
       "params": {
         "k": 4.4,
         "b": -0.8267,
@@ -29,7 +29,7 @@ Research icebreaker for polar operations with ice resistance modeling.
       }
     },
     {
-      "type": "wind_drag",
+      "type": "wind_resistance",
       "params": {
         "frontal_area": 750.0,
         "air_density": 1.225,
@@ -63,7 +63,7 @@ Same vessel with additional speed adjustment for strong wind conditions.
   "num_directions": 8,
   "resistance_models": [
     {
-      "type": "ice_froude",
+      "type": "ice_resistance",
       "params": {
         "k": 4.4,
         "b": -0.8267,
@@ -74,7 +74,7 @@ Same vessel with additional speed adjustment for strong wind conditions.
       }
     },
     {
-      "type": "wind_drag",
+      "type": "wind_resistance",
       "params": {
         "frontal_area": 750.0,
         "air_density": 1.225,
@@ -165,7 +165,7 @@ Deep-diving AUV for abyssal research with constant power consumption.
   "consumption_model": {
     "type": "constant_consumption",
     "params": {
-      "rate": 4.75
+      "consumption_rate": 4.75
     }
   }
 }
@@ -278,7 +278,7 @@ Example ship using all three resistance models.
   "num_directions": 8,
   "resistance_models": [
     {
-      "type": "ice_froude",
+      "type": "ice_resistance",
       "params": {
         "k": 4.0,
         "b": -0.8,
@@ -288,7 +288,7 @@ Example ship using all three resistance models.
       }
     },
     {
-      "type": "wind_drag",
+      "type": "wind_resistance",
       "params": {
         "frontal_area": 600.0,
         "angles": [0, 45, 90, 135, 180],
@@ -296,7 +296,7 @@ Example ship using all three resistance models.
       }
     },
     {
-      "type": "wave_kreitner",
+      "type": "wave_resistance",
       "params": {
         "beam": 20.0,
         "length": 100.0,
@@ -318,7 +318,7 @@ Example ship using all three resistance models.
 
 ### Adjusting Ice Capability
 
-Modify `k`, `b`, `n` coefficients in `ice_froude` model:
+Modify `k`, `b`, `n` coefficients in `ice_resistance` model:
 - **Stronger icebreaker**: Increase `force_limit`, adjust `k` (higher = less resistance)
 - **Weaker ice capability**: Decrease `force_limit`, increase `k`
 
@@ -330,10 +330,10 @@ Adjust `polynomial_fuel` coefficients:
 
 ### Adding Wave Resistance
 
-For vessels operating in rough seas, add `wave_kreitner`:
+For vessels operating in rough seas, add `wave_resistance`:
 ```json
 {
-  "type": "wave_kreitner",
+  "type": "wave_resistance",
   "params": {
     "beam": 24.0,
     "length": 128.0,

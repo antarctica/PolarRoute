@@ -139,13 +139,13 @@ class ConstantConsumptionModel(ConsumptionModel):
     Returns a fixed consumption rate regardless of speed or conditions.
     
     Parameters:
-        rate (float): Fixed consumption rate [tons/day, Ah/day, or W]
+        consumption_rate (float): Fixed consumption rate [tons/day, Ah/day, or W]
     """
     
-    def __init__(self, rate: float):
-        self.rate = rate
+    def __init__(self, consumption_rate: float):
+        self.consumption_rate = consumption_rate
         
-        logger.debug(f"Initialized ConstantConsumptionModel: rate={rate}")
+        logger.debug(f"Initialized ConstantConsumptionModel: consumption_rate={consumption_rate}")
     
     def calculate_consumption(self, speed: float, resistance: float = 0.0, **kwargs) -> float:
         """
@@ -159,4 +159,4 @@ class ConstantConsumptionModel(ConsumptionModel):
         Returns:
             float: Fixed consumption rate [tons/day, Ah/day, or W]
         """
-        return self.rate
+        return self.consumption_rate

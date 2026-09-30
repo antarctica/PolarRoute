@@ -213,7 +213,7 @@ class Ship(AbstractVessel):
             
             # Extract wind resistance component and wind data if wind model exists
             for model in self.resistance_models:
-                if model.__class__.__name__ == "WindDragResistance":
+                if model.__class__.__name__ == "WindResistance":
                     wind_resistances[i] = model.calculate_resistance(
                         cellbox, speed, heading
                     )
@@ -305,22 +305,25 @@ class Ship(AbstractVessel):
         return access
 
 
-class Glider(AbstractVessel):
+class AUV(AbstractVessel):
     """
-    Generic underwater glider with configurable consumption model.
+    Generic Autonomous Underwater Vehicle with configurable consumption model.
     
-    Gliders are battery-powered underwater vehicles.
+    AUVs are battery-powered underwater vehicles.
     Performance depends on speed and depth polynomials.
     
     Configuration parameters:
-        max_speed (float): Maximum glider speed [km/h]
+        max_speed (float): Maximum speed [km/h]
         unit (str): Speed unit
         max_ice_conc (float): Maximum ice concentration accessible [%]
         min_depth (float): Minimum water depth required [m]
         num_directions (int): Number of compass directions (default 8)
         consumption_model (dict): Battery consumption model with 'type' and 'params'
     """
-    
+
+    #: Whether operating depth is capped at max_dive_depth (yo-yo dive assumption)
+    caps_dive_depth = False
+
     def __init__(self, params: dict):
         self.vessel_params = params
         self.max_speed = params["max_speed"]
@@ -335,19 +338,20 @@ class Glider(AbstractVessel):
             consumption_spec["type"], consumption_spec["params"]
         )
         
-        logger.info(f"Initialized Glider: max_speed={self.max_speed}{self.unit}")
+        logger.info(f"Initialized {type(self).__name__}: max_speed={self.max_speed}{self.unit}")
     
     def model_performance(self, cellbox):
-        """Calculate glider performance (speed and battery consumption)."""
+        """Calculate performance (speed and battery consumption)."""
         speed = cellbox.agg_data.get("speed", self.max_speed)
         speeds = [speed] * self.num_directions
         
         # Get elevation (negative value, depth below sea level)
         elevation = cellbox.agg_data.get("elevation", 0.0)
         
-        # Cap depth at max dive depth (yo-yo dive assumption)
-        max_dive_depth = self.vessel_params.get("max_dive_depth", 1000.0)
-        elevation = max(elevation, -max_dive_depth)
+        # Cap depth at max dive depth (yo-yo dive assumption) for gliders
+        if self.caps_dive_depth:
+            max_dive_depth = self.vessel_params.get("max_dive_depth", 1000.0)
+            elevation = max(elevation, -max_dive_depth)
         
         # Calculate battery consumption
         battery = self.consumption_model.calculate_consumption(
@@ -361,7 +365,7 @@ class Glider(AbstractVessel):
         }
     
     def model_accessibility(self, cellbox):
-        """Determine glider accessibility."""
+        """Determine underwater-vehicle accessibility."""
         access = {
             "land": False,
             "ext_ice": False,
@@ -389,73 +393,18 @@ class Glider(AbstractVessel):
         return access
 
 
-class AUV(AbstractVessel):
+class Glider(AUV):
     """
-    Generic Autonomous Underwater Vehicle with configurable consumption model.
+    Generic underwater glider with configurable consumption model.
     
-    Similar to gliders but have different performance characteristics.
+    A glider is a type of AUV that caps its operating depth at a maximum dive
+    depth (yo-yo dive assumption). Otherwise it behaves like an AUV
+    (battery-powered, same accessibility rules).
     
-    Configuration: Same as Glider
+    Configuration: Same as AUV
     """
     
-    def __init__(self, params: dict):
-        self.vessel_params = params
-        self.max_speed = params["max_speed"]
-        self.unit = params["unit"]
-        self.max_ice = params.get("max_ice_conc", 100.0)
-        self.min_depth = params.get("min_depth", 0.0)
-        self.num_directions = params.get("num_directions", 8)
-        
-        consumption_spec = params["consumption_model"]
-        self.consumption_model = ModelRegistry.create(
-            consumption_spec["type"], consumption_spec["params"]
-        )
-        
-        logger.info(f"Initialized AUV: max_speed={self.max_speed}{self.unit}")
-    
-    def model_performance(self, cellbox):
-        """Calculate AUV performance (speed and battery consumption)."""
-        speed = cellbox.agg_data.get("speed", self.max_speed)
-        speeds = [speed] * self.num_directions
-        
-        elevation = cellbox.agg_data.get("elevation", 0.0)
-        battery = self.consumption_model.calculate_consumption(
-            speed, depth=elevation
-        )
-        batteries = [battery] * self.num_directions
-        
-        return {
-            "speed": speeds,
-            "battery": batteries
-        }
-    
-    def model_accessibility(self, cellbox):
-        """Determine AUV accessibility."""
-        access = {
-            "land": False,
-            "ext_ice": False,
-            "shallow": False,
-            "inaccessible": False
-        }
-        
-        elevation = cellbox.agg_data.get("elevation", -100)
-        if elevation >= 0:
-            access["land"] = True
-            access["inaccessible"] = True
-            return access
-        
-        depth = abs(elevation)
-        if depth < self.min_depth:
-            access["shallow"] = True
-            access["inaccessible"] = True
-            return access
-        
-        sic = cellbox.agg_data.get("SIC", 0.0)
-        if sic > self.max_ice:
-            access["ext_ice"] = True
-            access["inaccessible"] = True
-        
-        return access
+    caps_dive_depth = True
 
 
 class Aircraft(AbstractVessel):

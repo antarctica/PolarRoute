@@ -1,22 +1,22 @@
 """
-Unit tests for model-based vessel performance system.
+Unit tests for the individual vessel performance models.
 
-Tests individual resistance models, consumption models, and generic vessel classes.
+Tests resistance models, consumption models, and the model registry in isolation.
+Vessel-class and factory behaviour is covered in test_vessel_performance.py.
 """
 
 import pytest
 import numpy as np
 from polar_route.vessel_performance.models.resistance import (
-    FroudeIceResistance,
-    WindDragResistance,
-    KreitnerWaveResistance
+    IceResistance,
+    WindResistance,
+    WaveResistance
 )
 from polar_route.vessel_performance.models.consumption import (
     PolynomialFuelModel,
     PolynomialBatteryModel,
     ConstantConsumptionModel
 )
-from polar_route.vessel_performance.vessels.generic_vessels import Ship, Glider, AUV, Aircraft
 from polar_route.vessel_performance.models import ModelRegistry
 from meshiphi.mesh_generation.aggregated_cellbox import AggregatedCellBox
 from meshiphi.mesh_generation.boundary import Boundary
@@ -24,13 +24,13 @@ from meshiphi.mesh_generation.boundary import Boundary
 
 # Resistance Model Tests
 
-class TestFroudeIceResistance:
+class TestIceResistance:
     """Test Froude-based ice resistance model."""
     
     @pytest.fixture
     def ice_model(self):
         """Create ice resistance model with SDA slender hull parameters."""
-        return FroudeIceResistance(
+        return IceResistance(
             k=4.4, b=-0.8267, n=2.0,
             beam=24.0, force_limit=96634.5, gravity=9.81
         )
@@ -78,13 +78,13 @@ class TestFroudeIceResistance:
         assert abs(resistance - 96634.5) / 96634.5 < 0.1  # Within 10%
 
 
-class TestWindDragResistance:
+class TestWindResistance:
     """Test wind drag resistance model."""
     
     @pytest.fixture
     def wind_model(self):
         """Create wind resistance model with SDA parameters."""
-        return WindDragResistance(
+        return WindResistance(
             frontal_area=750.0,
             angles=[0, 30, 60, 90, 120, 150, 180],
             coefficients=[0.94, 0.77, 0.42, 0.48, 0.17, -0.30, -0.34],
@@ -137,7 +137,7 @@ class TestWaveResistance:
     @pytest.fixture
     def wave_model(self):
         """Create wave resistance model."""
-        return KreitnerWaveResistance(
+        return WaveResistance(
             beam=24.0, length=129.0, c_block=0.75, rho_water=9807
         )
     
@@ -238,7 +238,7 @@ class TestConstantConsumptionModel:
     
     def test_constant_consumption(self):
         """Test that consumption is constant."""
-        model = ConstantConsumptionModel(rate=4.75)
+        model = ConstantConsumptionModel(consumption_rate=4.75)
         
         c1 = model.calculate_consumption(speed=1.0)
         c2 = model.calculate_consumption(speed=10.0, resistance=10000.0)
@@ -258,7 +258,7 @@ class TestModelRegistry:
         registered = ModelRegistry.get_registered_models()
         
         expected_models = [
-            "ice_froude", "wind_drag", "wave_kreitner",
+            "ice_resistance", "wind_resistance", "wave_resistance",
             "polynomial_fuel", "polynomial_battery", "constant_consumption"
         ]
         
@@ -267,143 +267,16 @@ class TestModelRegistry:
     
     def test_create_ice_model(self):
         """Test creating ice model via registry."""
-        model = ModelRegistry.create("ice_froude", {
+        model = ModelRegistry.create("ice_resistance", {
             "k": 4.4, "b": -0.8267, "n": 2.0,
             "beam": 24.0, "force_limit": 96634.5
         })
-        assert isinstance(model, FroudeIceResistance)
+        assert isinstance(model, IceResistance)
     
     def test_create_unknown_model_raises_error(self):
         """Test that unknown model name raises ValueError."""
         with pytest.raises(ValueError, match="Unknown model type"):
             ModelRegistry.create("nonexistent_model", {})
-
-
-# Generic Vessel Tests
-
-class TestShip:
-    """Test generic Ship vessel class."""
-    
-    @pytest.fixture
-    def ship_config(self):
-        """Configuration for SDA-like ship."""
-        return {
-            "vessel_class": "ship",
-            "max_speed": 26.5,
-            "unit": "km/hr",
-            "max_ice_conc": 80,
-            "min_depth": 10,
-            "num_directions": 8,
-            "resistance_models": [
-                {
-                    "type": "ice_froude",
-                    "params": {
-                        "k": 4.4, "b": -0.8267, "n": 2.0,
-                        "beam": 24.0, "force_limit": 96634.5, "gravity": 9.81
-                    }
-                }
-            ],
-            "consumption_model": {
-                "type": "polynomial_fuel",
-                "params": {
-                    "speed_coeffs": [0.00137247, -0.0029601, 0.25290433],
-                    "resistance_coeffs": [7.75218178e-11, 6.48113363e-06]
-                }
-            }
-        }
-    
-    @pytest.fixture
-    def ship(self, ship_config):
-        """Create ship instance."""
-        return Ship(ship_config)
-    
-    def test_ship_initialization(self, ship):
-        """Test that ship initializes correctly."""
-        assert ship.max_speed == 26.5
-        assert ship.num_directions == 8
-        assert len(ship.resistance_models) == 1
-    
-    def test_ship_model_performance_returns_correct_keys(self, ship):
-        """Test that model_performance returns expected keys."""
-        boundary = Boundary([-85, -84.9], [-135, -134.9], ["1970-01-01", "2021-12-31"])
-        cellbox = AggregatedCellBox(boundary, {}, "0")
-        cellbox.agg_data = {
-            "SIC": 30.0,
-            "thickness": 0.5,
-            "density": 900.0,
-            "speed": 26.5
-        }
-        
-        performance = ship.model_performance(cellbox)
-        
-        assert "speed" in performance
-        assert "resistance" in performance
-        assert "fuel" in performance
-        assert len(performance["speed"]) == 8
-        assert len(performance["resistance"]) == 8
-        assert len(performance["fuel"]) == 8
-    
-    def test_ship_accessibility_land(self, ship):
-        """Test that ship detects land correctly."""
-        boundary = Boundary([-85, -84.9], [-135, -134.9], ["1970-01-01", "2021-12-31"])
-        cellbox = AggregatedCellBox(boundary, {}, "0")
-        cellbox.agg_data = {"elevation": 10.0}  # Above sea level
-        
-        access = ship.model_accessibility(cellbox)
-        
-        assert access["land"] is True
-        assert access["inaccessible"] is True
-    
-    def test_ship_accessibility_extreme_ice(self, ship):
-        """Test that ship detects extreme ice."""
-        boundary = Boundary([-85, -84.9], [-135, -134.9], ["1970-01-01", "2021-12-31"])
-        cellbox = AggregatedCellBox(boundary, {}, "0")
-        cellbox.agg_data = {"elevation": -100.0, "SIC": 90.0}
-        
-        access = ship.model_accessibility(cellbox)
-        
-        assert access["ext_ice"] is True
-        assert access["inaccessible"] is True
-
-
-class TestGlider:
-    """Test generic Glider vessel class."""
-    
-    @pytest.fixture
-    def glider_config(self):
-        """Configuration for Slocum-like glider."""
-        return {
-            "vessel_class": "glider",
-            "max_speed": 1.25,
-            "unit": "km/hr",
-            "max_ice_conc": 10,
-            "min_depth": 10,
-            "num_directions": 8,
-            "consumption_model": {
-                "type": "polynomial_battery",
-                "params": {
-                    "speed_coeffs": [4.44444444, -0.5555555499999991],
-                    "depth_coeffs": [0.001, 2]
-                }
-            }
-        }
-    
-    @pytest.fixture
-    def glider(self, glider_config):
-        """Create glider instance."""
-        return Glider(glider_config)
-    
-    def test_glider_model_performance_returns_battery(self, glider):
-        """Test that glider returns battery consumption."""
-        boundary = Boundary([-85, -84.9], [-135, -134.9], ["1970-01-01", "2021-12-31"])
-        cellbox = AggregatedCellBox(boundary, {}, "0")
-        cellbox.agg_data = {"elevation": -50.0, "speed": 1.25}
-        
-        performance = glider.model_performance(cellbox)
-        
-        assert "speed" in performance
-        assert "battery" in performance
-        assert len(performance["battery"]) == 8
 
 
 if __name__ == "__main__":

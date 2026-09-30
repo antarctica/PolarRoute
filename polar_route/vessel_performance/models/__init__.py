@@ -82,8 +82,8 @@ def register_model(name: str):
     Decorator to register a model class in the global registry.
     
     Usage:
-        @register_model("ice_froude")
-        class FroudeIceResistance(ResistanceModel):
+        @register_model("ice_resistance")
+        class IceResistance(ResistanceModel):
             ...
     
     Args:
