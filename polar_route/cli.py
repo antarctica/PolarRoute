@@ -2,7 +2,6 @@ import argparse
 import json
 import inspect
 import logging
-import fiona
 import pandas as pd
 import geopandas as gpd
 from meshiphi.mesh_generation.mesh_builder import MeshBuilder
@@ -22,10 +21,6 @@ from polar_route.route_calc import route_calc, load_route
 
 # Module logger
 logger = logging.getLogger(__name__)
-
-fiona.drvsupport.supported_drivers["KML"] = (
-    "rw"  # enable KML support which is disabled by default
-)
 
 
 @setup_logging
@@ -269,7 +264,7 @@ def optimise_routes_cli():
             )
             gdf = gpd.GeoDataFrame.from_features([route])
             logger.info(f"Saving route to {route_output_str}")
-            gdf["geometry"].to_file(route_output_str, "KML")
+            gdf["geometry"].to_file(route_output_str, "KML", engine="pyogrio")
 
     # Optional output of smoothed route(s) to standalone GPX file(s)
     if args.path_gpx:
@@ -282,7 +277,7 @@ def optimise_routes_cli():
             )
             gdf = gpd.GeoDataFrame.from_features([route])
             logger.info(f"Saving route to {route_output_str}")
-            gdf["geometry"].to_file(route_output_str, "GPX")
+            gdf["geometry"].to_file(route_output_str, "GPX", engine="pyogrio")
 
     # Optional output of Chart Track formatted csv
     if args.chart_track:
@@ -357,7 +352,7 @@ def extract_routes_cli():
             )
             gdf = gpd.GeoDataFrame.from_features([geojson_output])
             logger.info(f"Saving route to {route_output_str}")
-            gdf["geometry"].to_file(route_output_str, "GPX")
+            gdf["geometry"].to_file(route_output_str, "GPX", engine="pyogrio")
 
     elif output_file_strs[-1] == "kml":
         logger.info("Extracting routes in kml format")
@@ -369,7 +364,7 @@ def extract_routes_cli():
             )
             gdf = gpd.GeoDataFrame.from_features([geojson_output])
             logger.info(f"Saving route to {route_output_str}")
-            gdf["geometry"].to_file(route_output_str, "KML")
+            gdf["geometry"].to_file(route_output_str, "KML", engine="pyogrio")
 
     elif output_file_strs[-1] == "csv":
         logger.info("Extracting routes in ChartTrack csv format")

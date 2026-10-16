@@ -32,7 +32,7 @@ dynamic = ["version"]
 dependencies = [
     "meshiphi",
     "dask",
-    "geopandas",
+    "geopandas>=1.0",
     "jsonschema",
     "matplotlib",
     "netcdf4",
@@ -44,7 +44,7 @@ dependencies = [
     "scipy",
     "tqdm",
     "xarray",
-    "fiona",
+    "pyogrio",
 ]
 
 [tool.setuptools]

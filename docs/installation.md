@@ -49,7 +49,6 @@ With that said, below are instructions for various operating systems.
 ```sh
 pip install pipwin # pipwin is a package that allows for easy installation of windows binaries
 pipwin install gdal
-pipwin install fiona
 ```
 
 ### Linux/MacOS
