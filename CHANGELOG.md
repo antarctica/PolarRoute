@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+* Replaced `fiona` with `pyogrio` for KML/GPX/GeoPackage I/O via GeoPandas (requires `geopandas>=1.0`). `pyogrio` ships wheels with GDAL bundled, so no system GDAL is needed to install PolarRoute on Python 3.14.
 * Declare dependencies in `pyproject.toml` instead of `requirements.txt` and remove `requirements.txt`.
 * Adjust `pip install -e .[dev]` command in CONTRIBUTING.md to use the `dev` dependency group.
 * `route_calc()` can now accept a route as a GeoJSON in addition to a DataFrame.

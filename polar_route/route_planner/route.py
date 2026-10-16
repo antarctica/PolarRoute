@@ -144,7 +144,7 @@ class Route:
                 json.dump(self.to_geojson(), f)
         elif file_path_strs[-1] == "gpx":
             gdf = self.to_gpx()
-            gdf["geometry"].to_file(file_path, "GPX")
+            gdf["geometry"].to_file(file_path, "GPX", engine="pyogrio")
         else:
             raise ValueError(
                 'Provide a path with a supported file extension: "json", "gpx"'

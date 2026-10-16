@@ -423,8 +423,8 @@ def gpx_route_import(f_name):
     Returns:
         geojson: Route in geojson format
     """
-    gdf_r = gpd.read_file(f_name, layer="routes")
-    gdf_p = gpd.read_file(f_name, layer="route_points")
+    gdf_r = gpd.read_file(f_name, layer="routes", engine="pyogrio")
+    gdf_p = gpd.read_file(f_name, layer="route_points", engine="pyogrio")
 
     # Drop empty fields from original gpx file
     gdf_r = gdf_r.dropna(how="all", axis=1)
